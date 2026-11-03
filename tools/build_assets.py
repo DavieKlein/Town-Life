@@ -150,18 +150,18 @@ def kmeans(points, k, weights=None, iters=12, seed=1):
 
 # Special palette entries (same positions in every map; the game animates / relights them):
 #   class 1 window glass -> 2 entries (dark, bright), lit at night
-#   class 2 water        -> N entries with a ripple pattern, cycled (palette cycling)
+#   class 2 water glints -> 4 entries (twinkle ramp rotated by the game); the water itself is quantized normally
 #   class 3 lamp glass   -> 1 entry, bright at night
-FLOOR_WATER_BANKS = (6, 7)          # floor banks that hold water (entries 10..15)
-FLOOR_WATER_FIRST = 10
+FLOOR_WATER_BANKS = (6, 7)          # floor banks that hold water (entries 12..15, glints only)
+FLOOR_WATER_FIRST = 12
 FLOOR_WATER_CYCLE = 4               # entries rotated by the palette cycling (smooth brightness wave)
-FLOOR_WATER_FIXED = 2               # then fixed entries: darkest (edges / deep) and highlight
+FLOOR_WATER_FIXED = 0               # then fixed entries: darkest (edges / deep) and highlight
 OBJ_GLASS_FIRST = 13                # objects: glass 13, 14 and lamp 15 in every bank
 OBJ_LAMP_INDEX = 15
 OBJ_WATER_BANKS = (6,)              # objects banks with water (fountain), entries 9..12
 OBJ_WATER_FIRST = 9
-OBJ_WATER_CYCLE = 3
-OBJ_WATER_FIXED = 1                 # highlight only
+OBJ_WATER_CYCLE = 4
+OBJ_WATER_FIXED = 0
 
 
 def special_layout(layer, present, banks):
@@ -188,54 +188,21 @@ def special_layout(layer, present, banks):
     return layout, info
 
 
-WATER_PERIOD = 64
-_WATER_RANK = None
+GLINT_FRACTION = 0.012      # brightest share of the water pixels that twinkle
 
 
-def _water_field(x, y):
-    """Seamless (period 64 px) ripple field: smooth phase f and caustic term c (0..1), broad and irregular."""
-    P = 2 * np.pi / WATER_PERIOD
-    waves = ((1, 1, 0.7, 1.0), (2, -1, 2.1, 0.9), (-1, 2, 4.0, 0.8), (1, -3, 5.3, 0.55), (3, 2, 1.1, 0.45),
-             (-3, 1, 3.4, 0.4), (2, 5, 0.3, 0.25), (5, -2, 2.8, 0.25))
-    f = sum(np.sin(P * (a * x + b * y) + ph) * amp for (a, b, ph, amp) in waves)
-    g1 = np.sin(P * (3 * x + 1 * y) + 1.3) + np.sin(P * (-2 * x + 3 * y) + 0.2) + np.sin(P * (1 * x - 4 * y) + 2.2)
-    g2 = np.sin(P * (1 * x + 3 * y) + 3.1) + np.sin(P * (4 * x - 1 * y) + 5.0) + np.sin(P * (-3 * x - 2 * y) + 0.9)
-    c = 1.0 - np.minimum(np.abs(g1), np.abs(g2))
-    return f, c
+def glint_index(x, y, n):
+    """Deterministic twinkle phase (entry index) per pixel."""
+    return (((x * 73856093) ^ (y * 19349663)) >> 3) % n
 
 
-def water_pattern(x, y, cycle, fixed, edge=None):
-    """Palette index (into the water entry list) per pixel. x, y: image pixel coordinates (arrays).
-    Entries: [0..cycle) ripple phases (rotated by the game), then dark (if fixed == 2), then highlight.
-    edge: bool array, pixel within 2 px of the water's edge -> darkest level."""
-    f, c = _water_field(x % WATER_PERIOD, y % WATER_PERIOD)
-    global _WATER_RANK
-    if _WATER_RANK is None:     # equalise the phase so every shade covers the same area (no global flashing)
-        gy, gx = np.mgrid[0:WATER_PERIOD, 0:WATER_PERIOD]
-        f0 = _water_field(gx, gy)[0].ravel()
-        _WATER_RANK = np.sort(f0)
-    u = np.searchsorted(_WATER_RANK, f) / float(len(_WATER_RANK))
-    idx = np.floor(u * cycle * 2).astype(np.int64) % cycle
-    idx = np.where(c > 0.992, cycle + fixed - 1, idx)          # sparkles
-    if fixed == 2 and edge is not None:
-        idx = np.where(edge, cycle, idx)
-    return idx
-
-
-def water_shades(base, cycle, fixed):
-    """Colours for the water entries from the mean rendered water colour."""
+def glint_ramp(base, n):
+    """Twinkle ramp: water colour -> highlight -> water colour; the game rotates the entries."""
     base = np.asarray(base, dtype=np.float64)
-    deep = np.clip(base * 0.72 + np.array([-8, 6, 4]), 0, 255)
-    light = np.clip(base * 1.0 + np.array([10, 34, 32]), 0, 255)
-    cols = []
-    for m in range(cycle):
-        b = 0.5 - 0.5 * np.cos(2 * np.pi * m / cycle)
-        tint = np.array([-6, 7, 0]) * np.sin(2 * np.pi * m / cycle)     # bluer going up, greener going down
-        cols.append(np.clip(deep + (light - deep) * b + tint, 0, 255))
-    if fixed == 2:
-        cols.append(np.clip(base * 0.38 + np.array([-6, 4, 8]), 0, 255))
-    cols.append(np.array([226, 244, 250], dtype=np.float64))
-    return np.array(cols)
+    hi = np.array([232, 246, 252], dtype=np.float64)
+    mid = (base + hi) / 2
+    seq = [base * 1.05, mid, hi, mid]
+    return np.array([seq[i % len(seq)] for i in range(n)])
 
 
 def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
@@ -249,6 +216,14 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
     if cls_img is None:
         cls_img = np.zeros((h, w), dtype=np.uint8)
     cls_img = np.where(opaque, cls_img, 0).astype(np.uint8)
+    water_mean = None
+    if (cls_img == 2).any():
+        # water keeps its rendered colours; only the brightest pixels become twinkling glints (class 2)
+        wmask = cls_img == 2
+        water_mean = rgb[wmask].mean(0)
+        luma = (rgb * [0.299, 0.587, 0.114]).sum(2)
+        thr = np.quantile(luma[wmask], 1.0 - GLINT_FRACTION)
+        cls_img = np.where(wmask & (luma < thr), 0, cls_img).astype(np.uint8)
     present = set(int(c) for c in np.unique(cls_img)) - {0}
     layout, info = special_layout(layer, present, banks)
     # classes without reserved entries in this layer are treated as normal colours
@@ -290,16 +265,7 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
         px = rgb[cls_img == 3]
         special_cols[3] = to5(px.mean(0)[None] if len(px) else np.array([[255, 240, 200]])) * WEIGHT
     if 2 in reserved:
-        base = rgb[cls_img == 2].mean(0)
-        wc = info["water_count"]
-        special_cols[2] = to5(water_shades(base, wc, 2 if wc == FLOOR_WATER_CYCLE else 1)) * WEIGHT
-        wmask = cls_img == 2
-        near = wmask.copy()
-        for _ in range(2):          # water pixels within 2 px of a non-water pixel
-            e = near.copy()
-            e[1:] &= near[:-1]; e[:-1] &= near[1:]; e[:, 1:] &= near[:, :-1]; e[:, :-1] &= near[:, 1:]
-            near = e
-        tiles_edge = tiled(wmask & ~near)
+        special_cols[2] = to5(glint_ramp(water_mean, info["water_count"])) * WEIGHT
 
     # initial bank assignment: k-means on tile mean colour + spread (normal pixels)
     feats = []
@@ -361,8 +327,7 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
                 if not m.any():
                     continue
                 if c == 2:
-                    wc = info["water_count"]
-                    pat = water_pattern(tiles_x[chunk], tiles_y[chunk], wc, len(entries) - wc, tiles_edge[chunk])
+                    pat = glint_index(tiles_x[chunk], tiles_y[chunk], len(entries))
                     idx[m] = (entries[0] + pat[m]).astype(np.uint8)
                 else:
                     sc_ = special_cols[c]

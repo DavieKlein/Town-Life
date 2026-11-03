@@ -153,6 +153,49 @@ def grit_material(nt, bsdf, coords, kind, spec):
     L.new(col, bsdf.inputs["Base Color"])
 
 
+def water_material(nt, bsdf, spec):
+    """Water seen from above: deep teal base with slow colour variation, glossy reflection of the sky
+    and a wave bump (noise + wave textures) that breaks the reflection into soft glints."""
+    coords = surface_coords(nt)
+    # slow colour variation (depth)
+    n1 = nt.nodes.new("ShaderNodeTexNoise")
+    n1.inputs["Scale"].default_value = spec.get("depth_scale", 0.5)
+    n1.inputs["Detail"].default_value = 2.0
+    nt.links.new(coords, n1.inputs["Vector"])
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = rgb(spec["c"])
+    ramp.color_ramp.elements[1].color = rgb(spec["c2"])
+    ramp.color_ramp.elements[0].position = 0.3
+    ramp.color_ramp.elements[1].position = 0.7
+    nt.links.new(n1.outputs["Fac"], ramp.inputs["Fac"])
+    nt.links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
+    # waves: stretched noise + wave bands drive a bump
+    n2 = nt.nodes.new("ShaderNodeTexNoise")
+    n2.inputs["Scale"].default_value = spec.get("wave_scale", 5.0)
+    n2.inputs["Detail"].default_value = 3.0
+    n2.inputs["Roughness"].default_value = 0.6
+    nt.links.new(coords, n2.inputs["Vector"])
+    w = nt.nodes.new("ShaderNodeTexWave")
+    w.wave_type = "BANDS"
+    w.bands_direction = "DIAGONAL"
+    w.inputs["Scale"].default_value = spec.get("wave_scale", 5.0) * 0.6
+    w.inputs["Distortion"].default_value = 4.0
+    w.inputs["Detail"].default_value = 2.0
+    nt.links.new(coords, w.inputs["Vector"])
+    add = nt.nodes.new("ShaderNodeMath")
+    add.operation = "ADD"
+    nt.links.new(n2.outputs["Fac"], add.inputs[0])
+    nt.links.new(w.outputs["Fac"], add.inputs[1])
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = spec.get("bump", 0.35)
+    bump.inputs["Distance"].default_value = 0.05
+    nt.links.new(add.outputs[0], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+    bsdf.inputs["IOR"].default_value = 1.33
+    if "Specular IOR Level" in bsdf.inputs:
+        bsdf.inputs["Specular IOR Level"].default_value = 0.8
+
+
 def make_material(name, spec):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
@@ -202,6 +245,10 @@ def make_material(name, spec):
     elif kind in ("asphalt_grit", "paving_grit", "slab_grit"):
         coords = surface_coords(nt)
         grit_material(nt, bsdf, coords, kind, spec)
+    elif kind == "water":
+        water_material(nt, bsdf, spec)
+    if "alpha" in spec:
+        bsdf.inputs["Alpha"].default_value = spec["alpha"]
     if "emit" in spec:
         bsdf.inputs["Emission Color"].default_value = rgb(spec.get("emit_c", col))
         bsdf.inputs["Emission Strength"].default_value = spec["emit"]
@@ -275,7 +322,13 @@ MATERIALS = {
     "gold": dict(c="#e8b840", rough=0.25, metal=0.9),
     "gold_dark": dict(c="#a87c28", rough=0.35, metal=0.8),
     "gold_bright": dict(c="#ffd860", emit=0.8),
-    "water": dict(c="#2a5a8a", rough=0.05),
+    "water": dict(kind="water", c="#143f5c", c2="#2a6f86", rough=0.07, depth_scale=0.4),
+    "water_pond": dict(kind="water", c="#27503f", c2="#4a7a58", rough=0.12, depth_scale=0.9, bump=0.25),
+    "water_clear": dict(kind="water", c="#1d5f98", c2="#3a8cc4", rough=0.04, depth_scale=1.5, wave_scale=9.0, bump=0.2),
+    "stream": dict(c="#bfe4f6", rough=0.1, alpha=0.55),
+    "stone_worn": dict(kind="noise", c="#c4bba4", c2="#8e8672", scale=14),
+    "stone_stain": dict(c="#6e685c", rough=0.95),
+    "moss": dict(kind="noise", c="#4d7a2e", c2="#7a9a3c", scale=30, rough=1.0),
     "pond_edge": dict(kind="noise", c="#a8a294", c2="#948e80", scale=10),
     "path_dirt": dict(kind="noise", c="#c8a878", c2="#b8986a", scale=8),
     "plaza_stone": dict(kind="brick", c="#d8d0bc", c2="#c8c0aa", mortar="#9a9284", bw=0.6, bh=0.6,

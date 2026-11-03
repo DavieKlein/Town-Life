@@ -320,19 +320,67 @@ def vaulttech_tower(s, x0, y0, x1, y1):
 
 
 def fountain(s, cx, cy, r=2.2):
+    """Old weathered stone fountain: octagonal moulded basin with scalloped edge, fluted pedestal,
+    scalloped upper bowl, an urn on top and thin falling streams (material 'stream', not water)."""
+    rnd = random.Random(7)
     R = r * CELL_M
-    s.cyl(cx, cy, 0, 0.45, R, "stone", verts=32)                       # basin body
-    s.cyl(cx, cy, 0.4, 0.5, R - 0.2, "water", verts=32)                # water surface inside the rim
-    ring = [(cx + math.cos(a * math.pi / 16) * (R - 0.1) / CELL_M, cy + math.sin(a * math.pi / 16) * (R - 0.1) / CELL_M, 0.52)
-            for a in range(33)]
-    s.tube(ring, 0.1, "stone")                                         # rounded stone rim
-    s.cyl(cx, cy, 0.5, 1.4, 0.35, "stone", verts=16)
-    s.cyl(cx, cy, 1.4, 1.5, 0.9, "stone", verts=16)
-    s.cyl(cx, cy, 1.45, 1.52, 0.75, "water", verts=16)
-    s.cyl(cx, cy, 1.5, 2.1, 0.12, "stone", verts=10)
-    s.sphere(cx, cy, 2.15, 0.16, "water")
+    cm = CELL_M
+
+    def ring(rad, z, n=32, a0=0.0):
+        return [(cx + math.cos(a0 + k * 2 * math.pi / n) * rad / cm, cy + math.sin(a0 + k * 2 * math.pi / n) * rad / cm, z)
+                for k in range(n + 1)]
+    # basin: plinth, octagonal body, moulded lip, scalloped outer edge
+    s.cyl(cx, cy, 0, 0.1, R + 0.12, "stone_stain", verts=8)
+    s.cyl(cx, cy, 0.1, 0.45, R, "stone_worn", verts=8)
+    s.tube(ring(R - 0.02, 0.4, 33), 0.07, "stone_worn")                  # outer lip
+    s.tube(ring(R - 0.14, 0.53, 33), 0.09, "stone_worn")                 # inner rim (rounded)
+    for k in range(16):                                                  # scallops on the body
+        a = (k + 0.5) * 2 * math.pi / 16
+        s.sphere(cx + math.cos(a) * (R + 0.01) / cm, cy + math.sin(a) * (R + 0.01) / cm, 0.28, 0.15, "stone_worn", sz=0.9)
+    s.cyl(cx, cy, 0.4, 0.5, R - 0.2, "water_clear", verts=32)            # basin water
+    s.tube(ring(R - 0.21, 0.5, 33), 0.03, "moss")                        # moss at the waterline
+    for _ in range(18):                                                  # moss in the joints / on the lip
+        a = rnd.uniform(0, 2 * math.pi)
+        rad = rnd.choice((R + 0.02, R - 0.05, R + 0.14))
+        z = 0.14 if rad > R + 0.1 else (0.5 if rad < R else 0.3)
+        s.sphere(cx + math.cos(a) * rad / cm, cy + math.sin(a) * rad / cm, z, rnd.uniform(0.04, 0.08), "moss", sz=0.45)
+    for _ in range(10):                                                  # dark stains running down the body
+        a = rnd.uniform(0, 2 * math.pi)
+        rr = R + 0.012
+        x = cx + math.cos(a) * rr / cm
+        y = cy + math.sin(a) * rr / cm
+        s.box(x - 0.03, y - 0.03, x + 0.03, y + 0.03, rnd.uniform(0.12, 0.2), 0.43, "stone_stain")
+    for (dx, dy) in ((0.9, 0.2), (1.1, -0.5), (-0.7, 0.8), (-1.0, -0.3)):   # a few coins in the water
+        s.cyl(cx + dx / cm, cy + dy / cm, 0.49, 0.515, 0.06, "gold", verts=10)
+    # fluted pedestal
+    s.cyl(cx, cy, 0.5, 1.3, 0.3, "stone_worn", verts=16)
+    for k in range(12):
+        a = k * 2 * math.pi / 12
+        s.cyl(cx + math.cos(a) * 0.3 / cm, cy + math.sin(a) * 0.3 / cm, 0.5, 1.28, 0.055, "stone_worn", verts=8)
+    s.cyl(cx, cy, 0.5, 0.62, 0.45, "stone_worn", verts=8)                # pedestal foot
+    s.tube(ring(0.35, 1.3, 16), 0.05, "stone_worn")                      # collar
+    # upper bowl
+    s.cyl(cx, cy, 1.25, 1.45, 0.34, "stone_worn", verts=16, r2=0.9)
+    s.tube(ring(0.84, 1.47, 24), 0.07, "stone_worn")                     # bowl lip
+    for k in range(12):
+        a = (k + 0.5) * 2 * math.pi / 12
+        s.sphere(cx + math.cos(a) * 0.84 / cm, cy + math.sin(a) * 0.84 / cm, 1.38, 0.1, "stone_worn", sz=0.9)
+    s.cyl(cx, cy, 1.4, 1.5, 0.78, "water_clear", verts=24)               # bowl water
+    s.tube(ring(0.77, 1.5, 24), 0.025, "moss")
+    # urn on top
+    s.cyl(cx, cy, 1.45, 1.8, 0.1, "stone_worn", verts=10)
+    s.sphere(cx, cy, 1.98, 0.22, "stone_worn", sz=1.15)
+    s.cyl(cx, cy, 2.12, 2.2, 0.17, "stone_worn", verts=12, r2=0.19)
+    s.sphere(cx, cy, 2.2, 0.1, "stone_worn", sz=0.5)
+    # falling streams from the bowl rim into the basin
+    for k in range(8):
+        a = (k + 0.25) * math.pi / 4
+        pts = []
+        for (rad, z) in ((0.86, 1.46), (0.98, 1.38), (1.07, 1.15), (1.12, 0.85), (1.15, 0.53)):
+            pts.append((cx + math.cos(a) * rad / cm, cy + math.sin(a) * rad / cm, z))
+        s.tube(pts, 0.022, "stream")
     s.set_solid(cx - r, cy - r, cx + r - 0.001, cy + r - 0.001)
-    s.occluder(cx - r, cy - r, cx + r, cy + r, 2.3)
+    s.occluder(cx - r, cy - r, cx + r, cy + r, 2.4)
 
 
 def barrier(s, x0, x1, y, closed_sign=False):
@@ -593,13 +641,13 @@ def city_centre():
     bench_along_x(s, 6.0, 8.6, 39.4)
     bench_along_x(s, 14.0, 16.6, 39.4)
     s.box(14.5, 43.5, 20.5, 46.8, -0.1, 0.09, "pond_edge", layer="floor")
-    s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "water", layer="floor")
+    s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "water_pond", layer="floor")
     s.set_solid(14.5, 43.5, 20.499, 46.799)
     for (x, y, sc) in ((3.5, 36.5, 1.0), (19.5, 36.5, 1.1), (4.0, 45.5, 1.05), (7.5, 46.0, 0.85), (21.0, 41.0, 0.9)):
         tree(s, x, y, sc)
     for (x, y) in ((6.0, 43.5), (13.5, 36.8)):
         planter(s, x, y)
-    flower_bed(s, 2.0, 38.0, 5.0, 38.9)
+    flower_bed(s, 1.5, 38.0, 3.8, 38.9)
     flower_bed(s, 12.4, 42.4, 14.0, 43.2)
     flower_bed(s, 16.4, 37.6, 18.4, 38.5)
     hedge(s, 1.4, 9.6, P1 - 0.5)
