@@ -195,7 +195,11 @@ Placeholder graphics come from `tools/gen_graphics.py`:
 
 ## Roadmap / status
 
-Something must be playable after every step. Update the checkboxes at the end of each session.
+**Development is district by district.** We finish one district (map, systems, story, polish)
+until the owner is happy with it, and only then move on to the next one. Every step below must
+produce a playable ROM so the owner can test it on the phone. Systems (needs, dialogue,
+missions, save) are built the first time a district needs them and reused afterwards.
+Update the checkboxes at the end of each session.
 
 ### 0. Foundation — DONE
 - [x] Butano project (submodule at 21.9.0), Makefile, `.gitignore`
@@ -204,7 +208,15 @@ Something must be playable after every step. Update the checkboxes at the end of
 - [x] Player with d-pad, 4-direction walk animation, collision, following camera, run with B
 - [x] Design document (this file) with full game design
 
-### 1. Needs + HUD — TODO
+### District 1: City Centre + Old Block (Chapter 1: Survive) — IN PROGRESS
+
+1.1 Real map — TODO
+- [ ] Replace the placeholder town with City Centre + Old Block (one or two connected maps)
+- [ ] Landmarks: Victor Vault's golden VaultTech tower, Corner Market, the park bench, Old Block streets
+- [ ] Visible blocked route to the Docks (closed bridge / dock gate)
+- [ ] Map transitions (district edge / door into Corner Market interior)
+
+1.2 Needs + HUD + clock — TODO
 - [ ] `needs` struct: Hunger, Energy, Hygiene, Fun (0–100), decaying over time
 - [ ] HUD: 4 small bars/icons (sprites or a high-priority second bg layer)
 - [ ] Game clock (day/time); START opens a pause menu with exact values
@@ -212,64 +224,69 @@ Something must be playable after every step. Update the checkboxes at the end of
 - [ ] Text: `bn::sprite_text_generator` with a font (see `butano/common`)
 - [ ] Split `main.cpp` into scenes (`tl_scene.h` with an enum, one class per scene with `update()`)
 
-### 2. Dialogue system + NPCs — TODO
+1.3 Dialogue + NPCs — TODO
 - [ ] NPC class (sprite, position, simple wander pattern, collision with player)
 - [ ] Dialogue box at the bottom with text paging (A = next) and simple choices
 - [ ] Dialogue data in a compact table format (speaker, lines, choices, effects)
-- [ ] A few original NPCs in the City Centre / Old Block
+- [ ] Original NPCs: Corner Market coworkers, regular customers, Old Block residents
 
-### 3. Mission system + mission log + district locks — TODO
+1.4 Missions + mission log — TODO
 - [ ] Mission data: id, objective text, conditions (talk to X, go to Y, earn $Z), rewards
 - [ ] Story flags + current chapter/mission state
 - [ ] Mission log in the pause menu showing the current objective
-- [ ] District lock system: locked districts with visible in-world blockers that open via flags
-- [ ] Map transitions between districts (separate maps per district)
+- [ ] District lock system driven by flags (the Docks blocker)
 
-### 4. Opening chapter (Chapter 1: Survive) — TODO
-- [ ] Corner Market interior (warm palette), coworkers and regular customers
+1.5 Chapter 1 story — TODO
+- [ ] Working at Corner Market (warm palette)
 - [ ] Cutscene: Victor Vault buys the store and fires everyone
 - [ ] VaultMart transformation (cold palette, self-checkouts, robot voice)
-- [ ] Start state: $20, park bench as home, only City Centre + Old Block open
-- [ ] Money variable + HUD; first odd jobs paying small amounts
+- [ ] Start state: $20, park bench as home; money in HUD
+- [ ] First odd jobs paying small amounts
 - [ ] Introduce the rival character
-- [ ] Warm/cold palette state per area
 - [ ] Chapter end: unlock the Docks
 
-### 5. First full type: Grafters (Docks) — TODO
-- [ ] Docks district map
-- [ ] Mentor NPC + Grafters mission chain
-- [ ] Career path jobs (shelf stacker → forklift driver → shift lead → own transport company)
-- [ ] Minigames: stacking boxes, driving
-- [ ] Skills (Strength, Creativity, Logic, Charm, Fitness) + reputation stars, incl. rival half-speed rule
-
-### 6. Friendship + City Coins perks — TODO
-- [ ] Friendship per NPC (0–100), raised by talking, gifts, helping
-- [ ] City Coins at 70+ friendship; perk shop (higher pay, slower need decay, faster walking)
-
-### 7. Housing ladder + shop — TODO
-- [ ] Housing ladder: park bench → rented room → studio → apartment → house in chosen type's style
-- [ ] Enterable homes; shop scene with items and prices
-- [ ] Furniture that refills needs (bed, shower, fridge, TV)
-- [ ] Vehicles as rewards: bike → scooter → car
-
-### 8. Save/load — TODO
+1.6 Save/load — TODO (moved forward: needed to play a whole district on the phone)
 - [ ] Versioned save struct with `bn::sram::write/read` (see `butano/examples/sram`)
 - [ ] Title screen: New Game / Continue
 - [ ] Verify SRAM saves work in Lemuroid
 
-### 9. Remaining districts, types and chapters (in unlock order) — TODO
-- [ ] Makers / Old Factory (Chapter 2: Get By) — rhythm and drawing minigames
-- [ ] Techies / Station Quarter (Chapter 3: Build Up) — puzzle and code-pattern minigames
-- [ ] Ballers / Sports Park (Chapter 3–4: Break Through) — penalties, timing, fitness minigames
-- [ ] Posh / Hilltop (Chapter 4–5: Legacy) — bluffing and negotiating minigames
-- [ ] Own businesses with passive daily income; investing
-- [ ] Finale: Victor Vault's downfall, Old Block saved
-
-### 10. Better graphics and music — TODO
-- [ ] Real pixel-art tilesets and characters (original designs), multiple palettes
+1.7 Polish — TODO
+- [ ] Better pixel art for this district (original designs), warm/cold palette per area
 - [ ] Objects drawn over the player (tree tops, roofs) via a second bg layer
-- [ ] Music (.mod/.xm/.s3m in `audio/`, maxmod) and sound effects; warm vs. cold music
+- [ ] Music + sound effects for this district (maxmod, `audio/`)
+- [ ] Owner approves the district → move on
+
+### District 2: Docks (Grafters, Chapter 1 end / Chapter 2) — TODO
+- [ ] Docks map, mentor NPC, Grafters mission chain
+- [ ] Career path (shelf stacker → forklift driver → shift lead → own transport company)
+- [ ] Minigames: stacking boxes, driving
+- [ ] Skills (Strength, Creativity, Logic, Charm, Fitness) + reputation stars, incl. rival half-speed rule
+- [ ] Friendship per NPC + City Coins perks (introduced here)
+- [ ] Housing ladder step: rented room (Chapter 2 big moment) + first shop/furniture
+- [ ] Polish + owner approval
+
+### District 3: Old Factory (Makers, Chapter 2: Get By) — TODO
+- [ ] Map, mentor, missions; career path street musician → own gallery
+- [ ] Minigames: rhythm, drawing; first vehicle (bike)
+- [ ] Polish + owner approval
+
+### District 4: Station Quarter (Techies, Chapter 3: Build Up) — TODO
+- [ ] Map, mentor, missions; career path phone repair → own startup
+- [ ] Minigames: puzzles, code patterns; own business with passive daily income
+- [ ] Polish + owner approval
+
+### District 5: Sports Park (Ballers, Chapter 3–4: Break Through) — TODO
+- [ ] Map, mentor, missions; career path amateur club → own club
+- [ ] Minigames: penalties, timing, fitness; scooter
+- [ ] Polish + owner approval
+
+### District 6: Hilltop (Posh, Chapter 4–5: Legacy) — TODO
+- [ ] Map, mentor, missions; career path waiter → property empire
+- [ ] Minigames: bluffing, negotiating; investing; car; house in chosen type's style
+- [ ] Finale: Victor Vault's downfall, Old Block saved
+- [ ] Polish + owner approval
 
 ## Next session: start here
 
-Start with roadmap step **1** (Needs + HUD). Split `main.cpp` into scenes as part of that step.
+Continue with **District 1, step 1.1 (Real map)**: replace the placeholder town with City Centre +
+Old Block. Map first, because the bench, fountain, NPCs and missions are all placed on it.
