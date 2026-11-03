@@ -134,16 +134,27 @@ unlocks the next district. Each chapter ends with a big moment.
 
 ## Third-party assets
 
-Only assets with a licence that allows use in a public repository and game:
-- **Quaternius — Ultimate Textured Building Pack (Dec 2019)**, CC0 1.0 (public domain),
-  `art_source/quaternius_buildings/` (FBX "Models with Materials" + License.txt). Credit Quaternius
-  in the README/credits even though CC0 does not require it.
-- Never use assets ripped from commercial games (sprite/model rip sites), even as a base.
-- The owner's Google Drive folder with the source packs:
-  https://drive.google.com/drive/folders/1LiJz8K5spNzdYW3r7Fssia8VzU_aMYB3 (download via
-  `https://drive.usercontent.google.com/download?id=<file id>&export=download&confirm=t`; list a
-  folder via `https://drive.google.com/embeddedfolderview?id=<folder id>`; requires drive.google.com,
-  drive.usercontent.google.com and docs.google.com in the environment's allowed domains).
+Only assets with a licence that allows use in a public repository and game. Never use assets ripped
+from commercial games (sprite/model rip sites), even as a base. Credit authors in the README.
+
+All packs below are by **Quaternius**, licence **CC0 1.0** (public domain), supplied by the owner in
+Google Drive folder "town life art": https://drive.google.com/drive/folders/1dluGjvUV_Rs1_jEeuwdHr3roaKVz6-Il
+(list a folder: `https://drive.google.com/embeddedfolderview?id=<folder id>`; download a file:
+`https://drive.usercontent.google.com/download?id=<file id>&export=download&confirm=t`; needs
+drive.google.com, drive.usercontent.google.com and docs.google.com in the allowed domains).
+
+| Pack | In repo | Use |
+|------|---------|-----|
+| Ultimate Textured Building Pack (Dec 2019) | `art_source/quaternius_buildings/` (26 FBX "Models with Materials") | buildings via `s.model()` |
+| Animated Men + Women Characters (Feb 2019) | `art_source/quaternius_characters/` (8 FBX, rigged: Idle, Walk, Run, Sitting, Clapping, Jump, ...) | player (Male_LongSleeve, own colours) + future NPCs |
+| Downtown City MegaKit [Standard, free] | not yet | City Centre street parts, shopfronts, props |
+| Ultimate Food Pack (Oct 2019) | not yet | supermarket products |
+| Furniture Pack (March 2019) | not yet | furniture to buy/place in homes |
+| Ultimate House Interior Pack (June 2020) | not yet | home interiors, buyable furniture |
+| Furniture Pack (Oct 2017) | not yet | **no licence file in the folder** — verify before use |
+
+Formats in Drive: FBX/OBJ/Blend per model (MegaKit: FBX + glTF). Blender needs `python3-numpy`
+for the FBX importer. Quaternius FBX materials import with alpha 0 — the render scripts set it to 1.
 
 ## Visual style
 
@@ -169,7 +180,8 @@ History: top-down maps at commit `5af63a1`; first hand-painted isometric prototy
   cans with labels, bottles, jars — sizes exaggerated so they read at GBA resolution), fruit &
   vegetable crates with a "FRESH FRUIT" sign, lit "DAIRY" fridge with milk and bottles, checkout
   with conveyor belt and register, basket stack, plant, door mat (exit).
-- Player: 3D character (idle + 4-frame walk in 8 facings) with a blended shadow.
+- Player: rigged CC0 character (Quaternius Male_LongSleeve in our own colours: blue sweater,
+  khaki trousers, brown hair), idle + 8-frame walk in 8 facings, with a blended shadow.
 - HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
   The four need bars are static mock-ups.
 - Start position: on the sidewalk in front of the Corner Market door.
@@ -192,15 +204,16 @@ History: top-down maps at commit `5af63a1`; first hand-painted isometric prototy
 │   ├── tl_world.h               map_info / layer_data / warp / occluder / direction + helpers
 │   ├── tl_field.h, tl_player.h, tl_streamed_bg.h
 │   └── tl_map_id.h              GENERATED: enum map_id
-├── graphics/                    GENERATED Butano assets: hud, player (32x64 x 20 frames), shadow
+├── graphics/                    GENERATED Butano assets: hud, player (32x64 x 72 frames), shadow
 ├── audio/  dmg_audio/           (empty) for music/sound later
 ├── art_cache/                   (git-ignored) cached Blender renders
 ├── art_source/
-│   └── quaternius_buildings/    26 CC0 low-poly buildings (FBX) by Quaternius + License.txt
+│   ├── quaternius_buildings/    26 CC0 low-poly buildings (FBX) by Quaternius + License.txt
+│   └── quaternius_characters/   8 CC0 rigged, animated characters (FBX) by Quaternius + License.txt
 └── tools/
     ├── scene.py                 scene descriptions: 3D primitives + collision + warps + occluders
     ├── blender_render.py        renders a scene layer in Blender (run by build_assets.py)
-    ├── blender_character.py     builds + renders the 3D player character (run by build_assets.py)
+    ├── blender_actor.py         renders a rigged character (idle + walk, 8 facings; run by build_assets.py)
     ├── build_assets.py          renders, converts to 4bpp tiles, writes generated files
     ├── hud_sprites.py           HUD bar drawing (pixel art)
     └── headless_run.py          headless emulator test runner (screenshots + scripted input)
@@ -247,10 +260,11 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 - **build_assets.py**: per layer, k-means picks 7 palettes of 15 colours (floor) / 7 (objects);
   each 8x8 tile uses the palette that fits best; tiles are deduplicated incl. flips (tile 0 = empty).
   Prints unique tile counts and the worst 31x21 window. Bank budget: floor 7 + objects 7 + HUD 1 ≤ 16.
-- **blender_character.py**: character from primitives (hips/knees/shoulders as pivots), idle +
-  4 walk frames × 8 facings (clockwise screen order s, sw, w, nw, n, ne, e, se), rendered 4x and
-  downscaled; build_assets adds a 1 px dark outline and quantizes to one 15-colour palette.
-  Frame 32x64, feet at (16, 58); sheet = 40 frames.
+- **blender_actor.py**: imports a rigged Quaternius character FBX, recolours its materials
+  (Shirt, Pants, Hair, Skin, Shoes, Socks, Eyes; `PLAYER_COLOURS` in build_assets.py), scales it to
+  1.78 m and renders the Idle pose + 8 frames of the Walk action for 8 facings (clockwise screen
+  order s, sw, w, nw, n, ne, e, se), 4x supersampled; build_assets adds a 1 px dark outline and
+  quantizes to one 15-colour palette. Frame 32x64, feet at (16, 54); sheet = 72 frames.
 
 ### Engine
 
@@ -271,7 +285,7 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 - **Movement** (`tl_player`): sub-pixel position (`bn::fixed`) with smooth acceleration and
   braking. D-pad up/down/left/right walk straight across the screen; diagonals follow the
   isometric streets (up+right = −y, down+right = +x, ...). Speeds are equal on screen (walk 1.25,
-  run 2.25 px/frame with B). 8 facings; the walk animation advances per 6 screen pixels moved.
+  run 2.25 px/frame with B). 8 facings; the walk animation advances per 4 screen pixels moved.
   The GBA has no analog stick, so a joystick is not possible in the game itself.
 - **Warps**: trigger rect (feet point), target position + facing. Map change: fade out → free the
   layers → wait one frame (Butano frees VRAM in `core::update`) → create new layers → fade in.
@@ -314,6 +328,9 @@ Update the checkboxes at the end of each session.
 - [x] Blender pipeline: scenes in Python → Cycles renders → 4bpp multi-palette tiles
 - [x] Tile-streaming engine (big pre-rendered maps), depth via occluders, warps with fades
 - [x] Prototype: street corner with Corner Market + interior, 3D-rendered player with shadow, HUD
+- [x] Supermarket interior, smooth 8-direction movement, CC0 Quaternius buildings + animated player
+- [ ] Use the other CC0 packs: Downtown City MegaKit (City Centre), Food (supermarket products),
+      Furniture + House Interior (homes; later a buyable selection for the housing ladder/shop)
 - [ ] Owner approves the look (feedback round)
 - [ ] Full City Centre: VaultTech golden tower, park with the bench, fountain square, river with the
       closed bridge to the Docks (bigger scenes are fine: streaming has no map size limit)

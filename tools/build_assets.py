@@ -375,25 +375,33 @@ def main():
 
 
 # ---------------------------------------------------------------------------------------------
-# Player: 3D character rendered by tools/blender_character.py
+# Player: rigged CC0 character (art_source/quaternius_characters) rendered by tools/blender_actor.py
 # ---------------------------------------------------------------------------------------------
 FACINGS = ["s", "sw", "w", "nw", "n", "ne", "e", "se"]   # clockwise screen directions
-FRAMES_PER_FACING = 5
+FRAMES_PER_FACING = 9                                     # idle + 8 walk frames
 FRAME_W, FRAME_H = 32, 64
+PLAYER_MODEL = "Male_LongSleeve"
+# Our own protagonist outfit (material name -> sRGB): blue top, khaki trousers, brown hair.
+PLAYER_COLOURS = {"Shirt": "#2f5aa8", "Pants": "#c8a46a", "Hair": "#5a3420", "Skin": "#f0c09a",
+                  "Shoes": "#3a2a22", "Socks": "#f2efe6"}
 
 
 def build_player(force, fast):
+    import json
     ss, samples = (2, 16) if fast else (4, 48)
+    colours = json.dumps(PLAYER_COLOURS)
+    fbx = os.path.join(ROOT, "art_source", "quaternius_characters", PLAYER_MODEL + ".fbx")
     h = hashlib.sha1()
-    for f in ("scene.py", "blender_render.py", "blender_character.py"):
+    for f in ("scene.py", "blender_render.py", "blender_actor.py"):
         h.update(open(os.path.join(TOOLS, f), "rb").read())
-    h.update(f"{ss}{samples}".encode())
+    h.update(f"{ss}{samples}{colours}{PLAYER_MODEL}".encode())
     out_dir = os.path.join(CACHE, "player_" + h.hexdigest()[:12])
-    if force or not os.path.exists(os.path.join(out_dir, "se_4.png")):
+    last = os.path.join(out_dir, f"se_{FRAMES_PER_FACING - 1}.png")
+    if force or not os.path.exists(last):
         print("rendering player...", flush=True)
-        r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_character.py"),
-                            "--", out_dir, str(ss), str(samples)], capture_output=True, text=True)
-        if not os.path.exists(os.path.join(out_dir, "se_4.png")):
+        r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_actor.py"),
+                            "--", fbx, out_dir, str(ss), str(samples), colours], capture_output=True, text=True)
+        if not os.path.exists(last):
             print(r.stdout[-3000:], r.stderr[-3000:])
             raise RuntimeError("character render failed")
 

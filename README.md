@@ -3,5 +3,6 @@ Town Life GBA game
 
 ## Credits
 
-- Buildings: [Quaternius](https://quaternius.com) — Ultimate Textured Building Pack (CC0).
+- 3D models by [Quaternius](https://quaternius.com) (CC0): Ultimate Textured Building Pack,
+  Animated Men and Women Characters.
 - Engine: [Butano](https://github.com/GValiente/butano) by Gustavo Valiente (zlib).

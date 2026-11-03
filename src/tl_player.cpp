@@ -12,10 +12,11 @@ namespace tl
     {
         constexpr int hitbox_radius = 4;        // world units around the feet
 
-        // player.bmp: 32x64 frames rendered from the 3D character, 5 per facing (idle + 4 walk frames),
-        // 8 facings in clockwise screen order (s, sw, w, nw, n, ne, e, se). Feet at (16, 58) in each frame.
-        constexpr int frames_per_facing = 5;
-        constexpr int feet_offset_y = 58 - 32;  // feet relative to the sprite centre
+        // player.bmp: 32x64 frames rendered from the 3D character, 9 per facing (idle + 8 walk frames),
+        // 8 facings in clockwise screen order (s, sw, w, nw, n, ne, e, se). Feet at (16, 54) in each frame.
+        constexpr int frames_per_facing = 9;
+        constexpr int walk_frames = 8;
+        constexpr int feet_offset_y = 54 - 32;  // feet relative to the sprite centre
         constexpr int sprite_half_width = 10;   // body size used for the depth test
         constexpr int sprite_height = 50;
 
@@ -23,7 +24,7 @@ namespace tl
         constexpr bn::fixed run_speed = 2.25;
         constexpr bn::fixed acceleration = 0.25; // fraction of the speed difference applied per frame
         constexpr bn::fixed deceleration = 0.4;
-        constexpr bn::fixed step_length = 6;    // screen pixels per walk animation frame
+        constexpr bn::fixed step_length = 4;    // screen pixels per walk animation frame
 
         // World velocity for one screen pixel per frame, per facing. Up/down/left/right on the d-pad move
         // straight across the screen; diagonals follow the isometric streets.
@@ -206,7 +207,7 @@ namespace tl
             if(_anim_distance >= step_length)
             {
                 _anim_distance -= step_length;
-                _anim_frame = (_anim_frame % 4) + 1;
+                _anim_frame = (_anim_frame % walk_frames) + 1;
             }
 
             if(_anim_frame == 0)
