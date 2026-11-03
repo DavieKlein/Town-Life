@@ -530,8 +530,8 @@ def main():
 
         # gameplay data
         out.append(f"    constexpr uint8_t {s.ident}_solid[] = {{")
-        for cy in range(s.h):
-            out.append("        " + ",".join("1" if s.solid[cy][cx] else "0" for cx in range(s.w)) + ",")
+        for cy in range(s.h * scn.SOLID_RES):
+            out.append("        " + ",".join("1" if s.solid[cy][cx] else "0" for cx in range(s.w * scn.SOLID_RES)) + ",")
         out.append("    };")
         out.append(f"    constexpr warp {s.ident}_warps[] = {{")
         for (x0, y0, x1, y1, target, tx, ty, facing) in s.warps:

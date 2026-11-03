@@ -13,6 +13,7 @@ A scene holds:
   "objects" (drawn above or below the player depending on depth).
 * solid cells, warps and occluders for the game engine.
 """
+import math
 
 import random
 
@@ -64,6 +65,9 @@ KIT_DIMS = {
 }
 
 
+SOLID_RES = 4     # collision sub-cells per map cell (must match solid_res in include/tl_world.h)
+
+
 class Scene:
     def __init__(self, ident, name, w, h, origin_x, origin_y, img_w, img_h):
         self.ident, self.name = ident, name
@@ -71,7 +75,7 @@ class Scene:
         self.origin_x, self.origin_y = origin_x, origin_y   # image pixel of world (0, 0)
         self.img_w, self.img_h = img_w, img_h
         self.prims = []
-        self.solid = [[False] * w for _ in range(h)]
+        self.solid = [[False] * (w * SOLID_RES) for _ in range(h * SOLID_RES)]   # fine collision grid
         self.warps = []
         self.occluders = []
         self.lights = []
@@ -153,10 +157,12 @@ class Scene:
 
     # -- gameplay ---------------------------------------------------------------------
     def set_solid(self, x0, y0, x1, y1, value=True):
-        for cy in range(int(y0), int(y1 + 0.999)):
-            for cx in range(int(x0), int(x1 + 0.999)):
-                if 0 <= cx < self.w and 0 <= cy < self.h:
-                    self.solid[cy][cx] = value
+        """Marks the rect (cells, floats) solid on the fine grid (SOLID_RES sub-cells per cell),
+        rounded outward to whole sub-cells."""
+        r = SOLID_RES
+        for sy in range(max(0, math.floor(y0 * r + 1e-6)), min(self.h * r, math.ceil(y1 * r - 1e-6))):
+            for sx in range(max(0, math.floor(x0 * r + 1e-6)), min(self.w * r, math.ceil(x1 * r - 1e-6))):
+                self.solid[sy][sx] = value
 
     def occluder(self, x0, y0, x1, y1, height_m):
         """Footprint in cells + height in metres (screen bbox is computed by the asset builder)."""
@@ -314,8 +320,12 @@ def vaulttech_tower(s, x0, y0, x1, y1):
 
 
 def fountain(s, cx, cy, r=2.2):
-    s.cyl(cx, cy, 0, 0.55, r * CELL_M, "stone", verts=24)
-    s.cyl(cx, cy, 0.4, 0.5, r * CELL_M - 0.2, "water", verts=24)
+    R = r * CELL_M
+    s.cyl(cx, cy, 0, 0.45, R, "stone", verts=32)                       # basin body
+    s.cyl(cx, cy, 0.4, 0.5, R - 0.2, "water", verts=32)                # water surface inside the rim
+    ring = [(cx + math.cos(a * math.pi / 16) * (R - 0.1) / CELL_M, cy + math.sin(a * math.pi / 16) * (R - 0.1) / CELL_M, 0.52)
+            for a in range(33)]
+    s.tube(ring, 0.1, "stone")                                         # rounded stone rim
     s.cyl(cx, cy, 0.5, 1.4, 0.35, "stone", verts=16)
     s.cyl(cx, cy, 1.4, 1.5, 0.9, "stone", verts=16)
     s.cyl(cx, cy, 1.45, 1.52, 0.75, "water", verts=16)

@@ -18,6 +18,8 @@ namespace tl
     //   image_y = origin_y + (x + y) / 2
     // "Image" coordinates are pixels of the pre-rendered map image (top-left = 0, 0).
     constexpr int cell_size = 16;
+    constexpr int solid_res = 4;                     // collision sub-cells per map cell (per axis)
+    constexpr int solid_cell = cell_size / solid_res; // world units per collision sub-cell
 
     enum class direction
     {
@@ -157,6 +159,7 @@ namespace tl
         }
 
         // Returns true if the given world point is blocked (outside the map counts as blocked).
+        // The collision grid has solid_res sub-cells per map cell (row-major, width * solid_res columns).
         [[nodiscard]] constexpr bool solid_at(int x, int y) const
         {
             if(x < 0 || y < 0 || x >= width * cell_size || y >= height * cell_size)
@@ -164,14 +167,44 @@ namespace tl
                 return true;
             }
 
-            return solid[((y / cell_size) * width) + (x / cell_size)] != 0;
+            return solid[((y / solid_cell) * (width * solid_res)) + (x / solid_cell)] != 0;
         }
 
-        // Returns true if any corner of the square around (x, y) is blocked.
+        // Returns true if any sub-cell touched by the square around (x, y) is blocked.
         [[nodiscard]] constexpr bool solid_around(int x, int y, int radius) const
         {
-            return solid_at(x - radius, y - radius) || solid_at(x + radius, y - radius) ||
-                    solid_at(x - radius, y + radius) || solid_at(x + radius, y + radius);
+            for(int sy = y - radius; ; sy += solid_cell)
+            {
+                if(sy > y + radius)
+                {
+                    sy = y + radius;
+                }
+
+                for(int sx = x - radius; ; sx += solid_cell)
+                {
+                    if(sx > x + radius)
+                    {
+                        sx = x + radius;
+                    }
+
+                    if(solid_at(sx, sy))
+                    {
+                        return true;
+                    }
+
+                    if(sx == x + radius)
+                    {
+                        break;
+                    }
+                }
+
+                if(sy == y + radius)
+                {
+                    break;
+                }
+            }
+
+            return false;
         }
 
         [[nodiscard]] constexpr const warp* warp_at(int x, int y) const
