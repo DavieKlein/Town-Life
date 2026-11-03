@@ -530,7 +530,7 @@ Update the checkboxes at the end of each session.
   in the 8x8 font and an "A" button. It must also offer **choice options**. Mock-up scripts are in
   /tmp/claude-0/s34 (scratch, may be gone): `portrait.py` renders the head-and-shoulders portrait
   in Blender, 4x, rim light, 15 colours.
-- **Player:** variant V2 proposed (head 1.28x, hands 1.38x, cream collar and cuffs, belt, red
+- **Player:** variant V2 chosen by the owner (head 1.28x, hands 1.38x, cream collar and cuffs, belt, red
   sneakers with white soles, eyes). Note that the head and palm scales must be set on the Idle/Walk
   keyframes, and the FBX's "Eyes" material is actually the shoes.
 - The owner said: don't spend much time on these details now. **Focus on building the world**
