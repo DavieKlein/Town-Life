@@ -147,7 +147,7 @@ drive.google.com, drive.usercontent.google.com and docs.google.com in the allowe
 |------|---------|-----|
 | Ultimate Textured Building Pack (Dec 2019) | `art_source/quaternius_buildings/` (26 FBX "Models with Materials") | buildings via `s.model()` |
 | Animated Men + Women Characters (Feb 2019) | `art_source/quaternius_characters/` (8 FBX, rigged: Idle, Walk, Run, Sitting, Clapping, Jump, ...) | player (Male_LongSleeve, own colours) + future NPCs |
-| Downtown City MegaKit [Standard, free] | not yet | City Centre street parts, shopfronts, props |
+| Downtown City MegaKit [Standard, free] | `art_source/quaternius_downtown/` (glTF + .bin of the used models, base-colour textures downscaled to 512 px; normal/ORM maps left out) | City Centre: downtown building, planters, bollards, manholes via `s.kit()` |
 | Ultimate Food Pack (Oct 2019) | not yet | supermarket products |
 | Furniture Pack (March 2019) | not yet | furniture to buy/place in homes |
 | Ultimate House Interior Pack (June 2020) | not yet | home interiors, buyable furniture |
@@ -167,14 +167,20 @@ graphics from existing games. Budget: free tools only; the owner might spend at 
 
 ## Current state of the code
 
-**Pre-rendered isometric prototype (awaiting owner feedback):** a City Centre street corner with
-Corner Market and the Corner Market interior, a 3D-rendered player and the HUD.
-History: top-down maps at commit `5af63a1`; first hand-painted isometric prototype at `786cc4c`.
+**Full City Centre (awaiting owner feedback)** plus the Corner Market interior, a 3D-rendered
+player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted isometric prototype at
+`786cc4c`; pre-rendered street corner at `99203ab`.
 
-- Street corner (28x26 cells): Corner Market (brick, green/white awning, sign, shop windows with
-  goods, door into the interior), Quaternius buildings around it (red balcony block, purple slim
-  house, cream balcony house, blue house with columns), glass office, crossing roads
-  with zebra crossings and lane markings, curbs, lamps, trees, planters, hydrant, bench, grass.
+- City Centre (72x60 cells = 54x45 m, image 2144x1272 px): main avenue along x (y 22..30) and a
+  cross street along y (x 26..34) with curbs, lane markings, zebra crossings and manholes.
+  North-west: downtown apartment building (MegaKit). North-east: Corner Market (door → interior),
+  purple slim house (Quaternius) and Victor Vault's golden **VaultTech tower** (34 m, gold fins,
+  "VAULTTECH" sign) on a gold-checkered plaza with planters and bollards. South-west: **City Park**
+  (grass, paths, trees, benches — the bench where the player will sleep — pond). South-east:
+  fountain square with benches, trees and lamps. Bus stop on the avenue. North end of the cross
+  street: road works barrier + cones (future Station Quarter). South: riverside walk with railing,
+  river, and the **closed bridge to the Docks** (barrier with a CLOSED sign + cones). The east end
+  of the avenue is where Old Block will connect (not built yet).
 - Corner Market interior (12x9 cells), a small supermarket: open shelving (`gondola()`) with
   yellow price strips and groceries (`product()`: milk cartons with a printed band, cereal boxes,
   cans with labels, bottles, jars — sizes exaggerated so they read at GBA resolution), fruit &
@@ -184,7 +190,7 @@ History: top-down maps at commit `5af63a1`; first hand-painted isometric prototy
   khaki trousers, brown hair), idle + 8-frame walk in 8 facings, with a blended shadow.
 - HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
   The four need bars are static mock-ups.
-- Start position: on the sidewalk in front of the Corner Market door.
+- Start position: on the sidewalk in front of the Corner Market door (cell 44, 19).
 
 ### Folder structure
 
@@ -199,7 +205,9 @@ History: top-down maps at commit `5af63a1`; first hand-painted isometric prototy
 │   ├── tl_field.cpp             field scene: camera, streamed layers, player, warps with fades, HUD text + clock
 │   ├── tl_streamed_bg.cpp       tile-streaming regular BG (see "Engine")
 │   ├── tl_player.cpp            player: iso movement, collision, depth priority, animation, shadow
-│   └── tl_world_data.cpp        GENERATED: tiles/cells/palettes per layer, collision, warps, occluders, map table
+│   └── tl_world_data.cpp        GENERATED: palettes per layer, collision, warps, occluders, map table
+├── data/                        GENERATED binary layer data (Butano DATA rule): <map>_<layer>_tiles.bin
+│                                (8 words per 4bpp tile) and <map>_<layer>_cells.bin (uint32 per 8x8 cell)
 ├── include/
 │   ├── tl_world.h               map_info / layer_data / warp / occluder / direction + helpers
 │   ├── tl_field.h, tl_player.h, tl_streamed_bg.h
@@ -209,7 +217,8 @@ History: top-down maps at commit `5af63a1`; first hand-painted isometric prototy
 ├── art_cache/                   (git-ignored) cached Blender renders
 ├── art_source/
 │   ├── quaternius_buildings/    26 CC0 low-poly buildings (FBX) by Quaternius + License.txt
-│   └── quaternius_characters/   8 CC0 rigged, animated characters (FBX) by Quaternius + License.txt
+│   ├── quaternius_characters/   8 CC0 rigged, animated characters (FBX) by Quaternius + License.txt
+│   └── quaternius_downtown/     CC0 Downtown City MegaKit models used (glTF) + textures + License.txt
 └── tools/
     ├── scene.py                 scene descriptions: 3D primitives + collision + warps + occluders
     ├── blender_render.py        renders a scene layer in Blender (run by build_assets.py)
@@ -228,7 +237,7 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
    FBX importer), then `python3 tools/build_assets.py`
    (~10 min at full quality; `--fast` for quick low-quality tests; `--preview DIR` writes PNGs of the
    converted layers; `--rerender` ignores the cache). Commit the generated files:
-   `src/tl_world_data.cpp`, `include/tl_map_id.h`, `graphics/*.bmp|json`.
+   `src/tl_world_data.cpp`, `data/*.bin`, `include/tl_map_id.h`, `graphics/*.bmp|json`.
 2. `make` (Butano) converts `graphics/` (+ butano/common fonts) and compiles `src/` into `town-life.gba`.
 3. GitHub Actions (`build.yml`): job `build` runs in the `devkitpro/devkitarm` container, checks
    out the submodule, builds and uploads an artifact. Job `release` (only on `main`) deletes the
@@ -253,6 +262,13 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   occluder are derived from `MODEL_DIMS` (bounding boxes at scale 1). Colour schemes (`SCHEMES` in
   blender_render.py: red, cream, blue, mint, purple, orange, grey) recolour the materials Main,
   Bricks, Light and Dark. The FBX materials import with alpha 0; blender_render fixes that.
+  `s.kit(name, x, y, rot, layer)` places a Downtown City MegaKit model (real-world metres, origin
+  at the facade, facade facing +y at rot 0); footprint/collision/occluder from `KIT_DIMS`.
+  blender_render's `fix_kit_material` drops the kit's vertex-colour wear mask (it showed as red
+  smears) and the missing normal/ORM maps, and makes glass a glossy blue.
+  City helpers: `corner_market_building(s, x0, facade_y)`, `vaulttech_tower`, `fountain`,
+  `barrier(..., closed_sign)`, `cone`, `bus_stop`. Tall buildings are simply cut off at the image
+  top (the camera never shows more than `origin_y` px above the back corner), like the classic games.
 - **blender_render.py**: orthographic camera at 60°/45° with `sensor_fit = HORIZONTAL`;
   `ortho_scale = img_w * cos45 * CELL_M / 16` makes 1 cell = a 32x16 px diamond, exactly the
   engine projection. Floor pass: objects invisible to the camera but casting shadows. Objects pass:
@@ -260,6 +276,8 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 - **build_assets.py**: per layer, k-means picks 7 palettes of 15 colours (floor) / 7 (objects);
   each 8x8 tile uses the palette that fits best; tiles are deduplicated incl. flips (tile 0 = empty).
   Prints unique tile counts and the worst 31x21 window. Bank budget: floor 7 + objects 7 + HUD 1 ≤ 16.
+  Work is done in chunks of tiles so big maps fit in memory. City Centre: ~15.6k floor + ~9.9k
+  object tiles (~0.8 MB of tile data), full-quality build ~20 min.
 - **blender_actor.py**: imports a rigged Quaternius character FBX, recolours its materials
   (Shirt, Pants, Hair, Skin, Shoes, Socks, Eyes; `PLAYER_COLOURS` in build_assets.py), scales it to
   1.78 m and renders the Idle pose + 8 frames of the Walk action for 8 facings (clockwise screen
@@ -273,14 +291,18 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 - **Streamed BGs** (`tl_streamed_bg`): each layer (floor priority 3, objects priority 2) has
   thousands of unique tiles in ROM. A 32x32 hardware map wraps around; only cells inside the
   visible window (31x18 cells = play area above the HUD) are mapped. Tiles live in a reference
-  counted VRAM cache of 624 slots (4bpp); slots released in a frame are recycled the next frame
+  counted VRAM cache of 624 slots (4bpp), looked up through an open-addressing hash table (tile id →
+  slot, backward-shift deletion), so a layer may have up to 65535 unique tiles; slots released in a
+  frame are recycled the next frame
   (they may still be on screen until the next vblank). The layers are created before the HUD so they
   get charblock-aligned VRAM (tiles allocated without offset). Storage for the caches is in EWRAM.
 - **Camera**: top-left corner in image pixels, centred on the player above the 32 px HUD and
   clamped to the map's view bounds. Sprites use screen coordinates (no Butano camera).
 - **Depth**: player sprite priority 2 (in front of the objects layer) or 3 (behind it). Each
   occluder = world footprint + screen bbox; the player is behind it when overlapping and not past
-  its far edge (`x >= x1 || y >= y1` means in front). Limitation: one priority for the whole layer.
+  its far edge (`x >= x1 || y >= y1` means in front). One priority for the whole layer, so if the
+  player is behind a small object but in front of a taller one overlapping the sprite (bollard in
+  front of a tower), the taller one wins and the player stays in front.
 - **Collision**: per cell (`solid[]`), hitbox = square of radius 4 units around the feet.
 - **Movement** (`tl_player`): sub-pixel position (`bn::fixed`) with smooth acceleration and
   braking. D-pad up/down/left/right walk straight across the screen; diagonals follow the
@@ -329,11 +351,12 @@ Update the checkboxes at the end of each session.
 - [x] Tile-streaming engine (big pre-rendered maps), depth via occluders, warps with fades
 - [x] Prototype: street corner with Corner Market + interior, 3D-rendered player with shadow, HUD
 - [x] Supermarket interior, smooth 8-direction movement, CC0 Quaternius buildings + animated player
-- [ ] Use the other CC0 packs: Downtown City MegaKit (City Centre), Food (supermarket products),
-      Furniture + House Interior (homes; later a buyable selection for the housing ladder/shop)
+- [x] Downtown City MegaKit used in City Centre (building, planters, bollards, manholes)
+- [x] Full City Centre: VaultTech golden tower, park with benches, fountain square, river with the
+      closed bridge to the Docks, road works to the north, bus stop
+- [ ] Food pack in the supermarket (owner asked for this next)
+- [ ] Furniture + House Interior packs (homes; later a buyable selection for the housing ladder/shop)
 - [ ] Owner approves the look (feedback round)
-- [ ] Full City Centre: VaultTech golden tower, park with the bench, fountain square, river with the
-      closed bridge to the Docks (bigger scenes are fine: streaming has no map size limit)
 - [ ] Full Old Block: row houses, garden, laundromat, bakery, court, demolition site
 - [ ] Map transitions between City Centre and Old Block
 
@@ -409,7 +432,7 @@ Update the checkboxes at the end of each session.
 
 ## Next session: start here
 
-The owner is reviewing the **pre-rendered isometric prototype** (street corner + Corner Market
-interior + 3D player). Apply their feedback; once approved, build the full City Centre and
-Old Block scenes in `tools/scene.py` (rest of step 1.1), then step 1.2 (needs + HUD: make the
-four bars real, reusing the HUD bar that already exists).
+The owner asked for (1) the full City Centre — done, awaiting feedback — and then (2) the
+**Ultimate Food Pack** in the Corner Market supermarket (replace the box products in `product()` /
+`gondola()` with food models: download from the Drive folder, keep only what is used in
+`art_source/quaternius_food/`). After that: Old Block (east end of the avenue) and step 1.2.

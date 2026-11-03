@@ -174,6 +174,17 @@ MATERIALS = {
     "fridge_white": dict(c="#e4e8ec", rough=0.3),
     "fridge_glass": dict(c="#b8e0f8", emit=0.8, emit_c="#d8f0ff"),
     "screen": dict(c="#40c0b0", emit=1.0),
+    "gold": dict(c="#e8b840", rough=0.25, metal=0.9),
+    "gold_dark": dict(c="#a87c28", rough=0.35, metal=0.8),
+    "gold_bright": dict(c="#ffd860", emit=0.8),
+    "water": dict(c="#2a5a8a", rough=0.05),
+    "pond_edge": dict(kind="noise", c="#a8a294", c2="#948e80", scale=10),
+    "path_dirt": dict(kind="noise", c="#c8a878", c2="#b8986a", scale=8),
+    "plaza_stone": dict(kind="brick", c="#d8d0bc", c2="#c8c0aa", mortar="#9a9284", bw=0.6, bh=0.6,
+                        mortar_size=0.015, offset=0.0),
+    "plaza_gold": dict(kind="checker", c="#e8dcc0", c2="#c8a858", scale=1.5, rough=0.3),
+    "barrier_stripes": dict(kind="checker", c="#f08a1a", c2="#f4f2ea", scale=4.0),
+    "orange_paint": dict(c="#f07a1a", rough=0.5),
     "milk_white": dict(c="#f4f4f0", rough=0.5),
     "print_cream": dict(c="#f6eed2", rough=0.5),
     "bottle_green": dict(c="#3c8a4a", rough=0.15),
@@ -299,6 +310,64 @@ def add_model(p, layer_visible):
             o.location = (o.location.x + dx, o.location.y + dy, o.location.z - mnz)
 
 
+KIT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       "art_source", "quaternius_downtown")
+
+
+def fix_kit_material(m):
+    """Downtown City MegaKit materials mix the texture with a vertex-colour wear mask meant for game
+    engine shaders, and reference normal/ORM maps we don't ship. Use the base colour texture only."""
+    if not m.use_nodes or "Principled BSDF" not in m.node_tree.nodes:
+        return
+    nt = m.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
+    for link in list(nt.links):
+        if link.to_node == bsdf and link.to_socket.name in ("Normal", "Metallic", "Roughness", "Alpha"):
+            nt.links.remove(link)
+    base_tex = None
+    for nd in nt.nodes:
+        if nd.type == "TEX_IMAGE" and nd.image is not None:
+            n = nd.image.name
+            if "Normal" in n or "ORM" in n:
+                nd.image = None
+            elif base_tex is None:
+                base_tex = nd
+    bsdf.inputs["Metallic"].default_value = 0.0
+    bsdf.inputs["Roughness"].default_value = 0.75
+    bsdf.inputs["Alpha"].default_value = 1.0
+    if "Glass" in m.name:
+        for link in list(nt.links):
+            if link.to_node == bsdf and link.to_socket.name == "Base Color":
+                nt.links.remove(link)
+        bsdf.inputs["Base Color"].default_value = rgb("#3c5a80")
+        bsdf.inputs["Roughness"].default_value = 0.08
+    elif base_tex is not None:
+        nt.links.new(base_tex.outputs["Color"], bsdf.inputs["Base Color"])
+        if "interior" in base_tex.image.name.lower():
+            bsdf.inputs["Emission Color"].default_value = (1, 1, 1, 1)
+            nt.links.new(base_tex.outputs["Color"], bsdf.inputs["Emission Color"])
+            bsdf.inputs["Emission Strength"].default_value = 0.35
+
+
+def add_kit(p, layer_visible):
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=os.path.join(KIT_DIR, p["name"] + ".gltf"))
+    obs = [o for o in bpy.data.objects if o not in before]
+    for o in obs:
+        if o.type == "MESH":
+            for slot in o.material_slots:
+                if slot.material is not None and not slot.material.get("tl_fixed"):
+                    fix_kit_material(slot.material)
+                    slot.material["tl_fixed"] = True
+        o.visible_camera = (p["layer"] == layer_visible)
+    for o in obs:
+        if o.parent is None:
+            o.rotation_euler = (o.rotation_euler.x, o.rotation_euler.y, o.rotation_euler.z + math.radians(p["rot"]))
+            o.scale = tuple(v * p["scale"] for v in o.scale)
+            x, y, _ = bl(p["x"], p["y"])
+            o.location = (x, y, p["z"])
+
+
 def build(scene_obj, layer_visible):
     mats = {}
 
@@ -311,8 +380,10 @@ def build(scene_obj, layer_visible):
     for p in scene_obj.prims:
         if p["type"] == "model":
             add_model(p, layer_visible)
+        elif p["type"] == "kit":
+            add_kit(p, layer_visible)
     for p in scene_obj.prims:
-        if p["type"] in ("text", "model"):
+        if p["type"] in ("text", "model", "kit"):
             continue
         groups.setdefault((p["layer"], p["mat"]), []).append(p)
 

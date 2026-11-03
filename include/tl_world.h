@@ -131,20 +131,35 @@ namespace tl
         }
 
         // Returns true if the player at world (x, y) should be drawn behind the objects layer.
+        // The whole layer shares one priority, so when the player stands behind a small object but in
+        // front of a large one that also overlaps the sprite (e.g. a bollard in front of a tower), the
+        // large one wins and the player stays in front: otherwise the player would vanish.
         [[nodiscard]] constexpr bool player_hidden(int x, int y, int half_width, int sprite_height) const
         {
             int image_x = to_image_x(x, y);
             int image_y = to_image_y(x, y);
+            bool behind = false;
 
             for(int index = 0; index < occluders_count; ++index)
             {
-                if(occluders[index].hides(x, y, image_x, image_y, half_width, sprite_height))
+                const occluder& o = occluders[index];
+                bool overlaps = image_x + half_width > o.sx0 && image_x - half_width < o.sx1 && image_y > o.sy0 &&
+                        image_y - sprite_height < o.sy1;
+
+                if(overlaps)
                 {
-                    return true;
+                    if(x < o.x1 && y < o.y1)
+                    {
+                        behind = true;
+                    }
+                    else if(o.sy0 < image_y - sprite_height)
+                    {
+                        return false;   // in front of something taller than the player
+                    }
                 }
             }
 
-            return false;
+            return behind;
         }
     };
 

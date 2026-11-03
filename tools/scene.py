@@ -50,6 +50,18 @@ MODEL_DIMS = {
 }
 
 
+# Downtown City MegaKit models (art_source/quaternius_downtown, CC0): bounding boxes in metres,
+# Blender axes at rotation 0 (facades face -Y = world +y = screen down-left; origin at the facade).
+KIT_DIMS = {
+    "Building_Medium_2_001": ((-7.528, -0.568, -0.01), (7.528, 12.488, 24.998)),
+    "Prop_Bollard": ((-0.108, -0.114, 0.0), (0.108, 0.114, 0.892)),
+    "Prop_ManholeCover": ((-0.463, -0.463, -0.014), (0.463, 0.463, 0.019)),
+    "Prop_Planter_Single": ((-1.0, -1.0, 0.0), (1.0, 1.0, 0.6)),
+    "Sidewalk_Planter": ((-0.987, -0.883, 0.0), (0.987, 0.883, 0.506)),
+    "Prop_ACUnit": ((-0.411, -0.329, -0.0), (0.483, 0.019, 0.6)),
+}
+
+
 class Scene:
     def __init__(self, ident, name, w, h, origin_x, origin_y, img_w, img_h):
         self.ident, self.name = ident, name
@@ -104,6 +116,23 @@ class Scene:
         if door:
             self.set_solid(door[0], door[1], door[0] + 0.999, door[1] + 0.999, False)
         self.occluder(fp[0], fp[1], fp[2], fp[3], height + 0.3)
+        return fp
+
+    def kit(self, name, x, y, rot=0, z=0.0, layer="objects", solid=True, occlude=True, scale=1.0):
+        """Places a Downtown City MegaKit model with its origin at cell (x, y). rot in degrees (0 or 180
+        for buildings: 0 = facade facing +y). Returns the footprint (x0, y0, x1, y1) in cells."""
+        self.prims.append(dict(type="kit", name=name, x=x, y=y, z=z, rot=rot, layer=layer, scale=scale))
+        mn, mx = KIT_DIMS[name]
+        if rot % 360 == 0:
+            fp = (x + mn[0] * scale / CELL_M, y - mx[1] * scale / CELL_M, x + mx[0] * scale / CELL_M,
+                  y - mn[1] * scale / CELL_M)
+        else:
+            fp = (x - mx[0] * scale / CELL_M, y + mn[1] * scale / CELL_M, x - mn[0] * scale / CELL_M,
+                  y + mx[1] * scale / CELL_M)
+        if solid:
+            self.set_solid(fp[0], fp[1], fp[2] - 0.001, fp[3] - 0.001)
+        if occlude:
+            self.occluder(fp[0], fp[1], fp[2], fp[3], (mx[2] - mn[2]) * scale + 0.2)
         return fp
 
     def point_light(self, x, y, z, energy, colour=(1.0, 0.85, 0.6), radius=0.3):
@@ -229,105 +258,238 @@ def hydrant(s, x, y):
 # ---------------------------------------------------------------------------------------------
 # City Centre street corner (prototype)
 # ---------------------------------------------------------------------------------------------
-def street_corner():
-    W, H = 28, 26
-    s = Scene("city_centre", "City Centre", W, H, origin_x=H * 16 + 16, origin_y=208,
-              img_w=(W + H) * 16 + 32, img_h=208 + (W + H) * 8 + 16)
+def vaulttech_tower(s, x0, y0, x1, y1):
+    """Victor Vault's golden VaultTech tower: podium + tall glass shaft with gold fins and a crown."""
+    podium_h = 4.5
+    s.box(x0, y0, x1, y1, 0, podium_h, "gold_dark")
+    # podium glass front with gold mullions
+    s.box(x0 + 0.6, y1 - 0.05, x1 - 0.6, y1 + 0.03, 0.4, podium_h - 0.6, "glass_office")
+    x = x0 + 0.6
+    while x <= x1 - 0.6:
+        s.box(x - 0.06, y1 - 0.05, x + 0.06, y1 + 0.08, 0.4, podium_h - 0.6, "gold")
+        x += 1.5
+    s.box(x0, y1 - 0.1, x1, y1 + 0.12, podium_h - 0.6, podium_h, "gold")
+    # entrance + sign
+    xm = (x0 + x1) / 2
+    s.box(xm - 2.0, y1 - 0.05, xm + 2.0, y1 + 0.1, 0, 3.0, "glass")
+    s.box(xm - 2.2, y1 - 0.05, xm + 2.2, y1 + 0.15, 3.0, 3.25, "gold")
+    s.box(xm - 3.6, y1 - 0.05, xm + 3.6, y1 + 0.14, podium_h + 0.2, podium_h + 1.2, "metal_dark")
+    s.text("VAULTTECH", xm, y1 + 0.16, podium_h + 0.48, 0.62, "gold_bright", face="left")
+    # shaft (inset), glass with gold fins and floor bands
+    sx0, sy0, sx1, sy1 = x0 + 1.0, y0 + 1.0, x1 - 1.0, y1 - 1.0
+    top = 34.0
+    s.box(sx0, sy0, sx1, sy1, podium_h, top, "glass_office")
+    x = sx0
+    while x <= sx1 + 0.01:
+        s.box(x - 0.08, sy1 - 0.02, x + 0.08, sy1 + 0.12, podium_h, top, "gold")
+        x += 1.25
+    y = sy0
+    while y <= sy1 + 0.01:
+        s.box(sx1 - 0.02, y - 0.08, sx1 + 0.12, y + 0.08, podium_h, top, "gold")
+        y += 1.25
+    z = podium_h + 3.0
+    while z < top:
+        s.box(sx0, sy1 - 0.02, sx1, sy1 + 0.1, z, z + 0.25, "gold")
+        s.box(sx1 - 0.02, sy0, sx1 + 0.1, sy1, z, z + 0.25, "gold")
+        z += 3.0
+    s.box(sx0 + 0.6, sy0 + 0.6, sx1 - 0.6, sy1 - 0.6, top, top + 1.5, "gold")
+    s.box(sx0 + 1.6, sy0 + 1.6, sx1 - 1.6, sy1 - 1.6, top + 1.5, top + 3.0, "gold")
+    s.cyl((sx0 + sx1) / 2, (sy0 + sy1) / 2, top + 3.0, top + 8.0, 0.12, "gold")
+    s.set_solid(x0, y0, x1 - 0.001, y1 - 0.001)
+    s.occluder(x0, y0, x1, y1, top + 8.0)
 
-    # ---- ground (floor layer) ----
-    s.box(0, 0, W, 12, -0.1, 0.0, "paving", layer="floor")                # sidewalks
-    s.box(0, 12, 11, H, -0.1, 0.0, "paving", layer="floor")
-    s.box(19, 20, W, H, -0.1, 0.0, "paving", layer="floor")
+
+def fountain(s, cx, cy, r=2.2):
+    s.cyl(cx, cy, 0, 0.55, r * CELL_M, "stone", verts=24)
+    s.cyl(cx, cy, 0.4, 0.5, r * CELL_M - 0.2, "water", verts=24)
+    s.cyl(cx, cy, 0.5, 1.4, 0.35, "stone", verts=16)
+    s.cyl(cx, cy, 1.4, 1.5, 0.9, "stone", verts=16)
+    s.cyl(cx, cy, 1.45, 1.52, 0.75, "water", verts=16)
+    s.cyl(cx, cy, 1.5, 2.1, 0.12, "stone", verts=10)
+    s.sphere(cx, cy, 2.15, 0.16, "water")
+    s.set_solid(cx - r, cy - r, cx + r - 0.001, cy + r - 0.001)
+    s.occluder(cx - r, cy - r, cx + r, cy + r, 2.3)
+
+
+def barrier(s, x0, x1, y, closed_sign=False):
+    """Striped road barrier along x at row y."""
+    s.box(x0, y - 0.15, x1, y + 0.15, 0.55, 0.85, "barrier_stripes")
+    for x in (x0 + 0.3, (x0 + x1) / 2, x1 - 0.3):
+        s.box(x - 0.08, y - 0.08, x + 0.08, y + 0.08, 0, 0.6, "metal_dark")
+    if closed_sign:
+        xm = (x0 + x1) / 2
+        s.box(xm - 1.3, y - 0.05, xm + 1.3, y + 0.05, 0.9, 1.7, "red_paint")
+        s.text("CLOSED", xm, y + 0.06, 1.18, 0.42, "paint_white", face="left")
+    s.set_solid(x0, y - 0.3, x1 - 0.001, y + 0.299)
+    s.occluder(x0, y - 0.4, x1, y + 0.4, 1.8 if closed_sign else 0.9)
+
+
+def cone(s, x, y):
+    s.cyl(x, y, 0, 0.55, 0.13, "orange_paint", verts=10)
+    s.box(x - 0.25, y - 0.25, x + 0.25, y + 0.25, 0, 0.04, "orange_paint")
+
+
+def bus_stop(s, x0, x1, y):
+    """Bus shelter along x with its open side facing +y."""
+    s.box(x0, y - 0.6, x1, y - 0.5, 0, 2.3, "glass_office")
+    s.box(x0, y - 0.6, x0 + 0.08, y + 0.2, 0, 2.3, "metal_dark")
+    s.box(x1 - 0.08, y - 0.6, x1, y + 0.2, 0, 2.3, "metal_dark")
+    s.box(x0 - 0.1, y - 0.7, x1 + 0.1, y + 0.3, 2.3, 2.4, "metal_dark")
+    s.box(x0 + 0.3, y - 0.5, x1 - 0.3, y - 0.2, 0.42, 0.48, "wood")
+    s.box(x0 + 0.1, y - 0.5, x0 + 1.3, y - 0.45, 1.2, 2.1, "sign_blue")
+    s.text("BUS", x0 + 0.7, y - 0.44, 1.55, 0.36, "paint_white", face="left")
+    s.set_solid(x0, y - 0.7, x1 - 0.001, y - 0.3)
+    s.occluder(x0, y - 0.7, x1, y + 0.3, 2.4)
+
+
+def city_centre():
+    """District 1: City Centre. Main avenue along x, a cross street along y, the river with the closed
+    bridge to the Docks along the bottom, road works to the north (future Station Quarter)."""
+    W, H = 72, 60
+    oy = 200
+    s = Scene("city_centre", "City Centre", W, H, origin_x=H * 16 + 16, origin_y=oy,
+              img_w=(W + H) * 16 + 32, img_h=oy + (W + H) * 8 + 16)
+    AV0, AV1 = 22, 30          # avenue (road) y range
+    CS0, CS1 = 26, 34          # cross street (road) x range
+    RIVER = 52                 # water from here to H
     road_z = -0.02
-    s.box(11, 12, W, 20, -0.1, road_z, "asphalt", layer="floor")           # road along x
-    s.box(11, 20, 19, H, -0.1, road_z, "asphalt", layer="floor")           # road along y
-    # curbs
-    s.box(11, 11.85, W, 12.0, -0.1, 0.05, "curb", layer="floor")
-    s.box(19, 20.0, W, 20.15, -0.1, 0.05, "curb", layer="floor")
-    s.box(10.85, 12, 11.0, H, -0.1, 0.05, "curb", layer="floor")
-    s.box(19.0, 20, 19.15, H, -0.1, 0.05, "curb", layer="floor")
-    s.box(10.85, 11.85, 11.0, 12, -0.1, 0.05, "curb", layer="floor")
-    # lane markings
-    for x in range(20, W, 3):
-        s.box(x, 15.9, x + 1.6, 16.1, road_z, road_z + 0.01, "paint_yellow", layer="floor")
-    for y in range(21, H, 3):
-        s.box(14.9, y, 15.1, y + 1.6, road_z, road_z + 0.01, "paint_yellow", layer="floor")
-    # zebra crossings
-    for i in range(6):
-        y = 12.6 + i * 1.25
-        s.box(19.6, y, 21.6, y + 0.6, road_z, road_z + 0.01, "paint_white", layer="floor")
-    for i in range(6):
-        x = 11.6 + i * 1.25
-        s.box(x, 20.6, x + 0.6, 22.6, road_z, road_z + 0.01, "paint_white", layer="floor")
-    # little park in the front corner
-    s.box(22, 23, W, H, -0.1, 0.06, "grass", layer="floor")
-    s.box(22, 23, W, 23.12, -0.1, 0.1, "curb", layer="floor")
-    s.box(21.88, 23, 22, H, -0.1, 0.1, "curb", layer="floor")
-    # entrance tiles in front of Corner Market
-    s.box(11.6, 8.0, 14.4, 9.6, 0.0, 0.01, "tiles_checker", layer="floor")
 
-    # ---- Corner Market: x 8..18, y 0..8, front face at y = 8 ----
+    # ---- ground: sidewalks/blocks, roads, curbs, markings ----
+    s.box(0, 0, CS0, AV0, -0.1, 0.0, "paving", layer="floor")
+    s.box(CS1, 0, W, AV0, -0.1, 0.0, "paving", layer="floor")
+    s.box(0, AV1, CS0, RIVER, -0.1, 0.0, "paving", layer="floor")
+    s.box(CS1, AV1, W, RIVER, -0.1, 0.0, "paving", layer="floor")
+    s.box(0, AV0, W, AV1, -0.1, road_z, "asphalt", layer="floor")
+    s.box(CS0, 0, CS1, AV0, -0.1, road_z, "asphalt", layer="floor")
+    s.box(CS0, AV1, CS1, RIVER, -0.1, road_z, "asphalt", layer="floor")
+    for (x0, x1) in ((0, CS0), (CS1, W)):
+        s.box(x0, AV0 - 0.15, x1 - (0.15 if x0 == 0 else 0), AV0, -0.1, 0.05, "curb", layer="floor")
+        s.box(x0 + (0.15 if x0 else 0), AV1, x1, AV1 + 0.15, -0.1, 0.05, "curb", layer="floor")
+    for (y0, y1) in ((0, AV0), (AV1, RIVER)):
+        s.box(CS0 - 0.15, y0, CS0, y1, -0.1, 0.05, "curb", layer="floor")
+        s.box(CS1, y0, CS1 + 0.15, y1, -0.1, 0.05, "curb", layer="floor")
+    for x in list(range(1, CS0 - 4, 3)) + list(range(CS1 + 5, W, 3)):
+        s.box(x, 25.9, x + 1.6, 26.1, road_z, road_z + 0.01, "paint_yellow", layer="floor")
+    for y in list(range(1, AV0 - 4, 3)) + list(range(AV1 + 5, RIVER - 1, 3)):
+        s.box(29.9, y, 30.1, y + 1.6, road_z, road_z + 0.01, "paint_yellow", layer="floor")
+    for i in range(6):                                   # zebra crossings around the junction
+        yy = AV0 + 0.6 + i * 1.25
+        s.box(CS0 - 3.0, yy, CS0 - 0.8, yy + 0.6, road_z, road_z + 0.01, "paint_white", layer="floor")
+        s.box(CS1 + 0.8, yy, CS1 + 3.0, yy + 0.6, road_z, road_z + 0.01, "paint_white", layer="floor")
+        xx = CS0 + 0.6 + i * 1.25
+        s.box(xx, AV0 - 3.0, xx + 0.6, AV0 - 0.8, road_z, road_z + 0.01, "paint_white", layer="floor")
+        s.box(xx, AV1 + 0.8, xx + 0.6, AV1 + 3.0, road_z, road_z + 0.01, "paint_white", layer="floor")
+    for (x, y) in ((12, 26), (48, 24), (30, 10), (30, 40), (62, 27)):
+        s.kit("Prop_ManholeCover", x, y, layer="floor", solid=False, occlude=False)
+
+    # ---- north: road works (future Station Quarter) ----
+    barrier(s, CS0, CS1, 1.2)
+    for x in (CS0 + 1.0, CS0 + 4.0, CS1 - 1.0):
+        cone(s, x, 2.6)
+
+    # ---- north-west block: downtown apartment building (MegaKit) ----
+    s.kit("Building_Medium_2_001", 11.0, AV0 - 4.0)
+
+    # ---- north-east block: Corner Market, a slim house and the VaultTech tower ----
+    corner_market_building(s, CS1 + 5, AV0 - 4)
+    s.model("2Story_Slim_Mat", CS1 + 15.6, AV0 - 4, front="left", colours="purple")
+    s.box(54, 14, W, AV0 - 4, -0.1, 0.01, "plaza_gold", layer="floor")
+    vaulttech_tower(s, 56, 2, 70, 14)
+    for x in (55.5, 70.5):
+        s.kit("Prop_Planter_Single", x, 16.5, solid=True, occlude=True)
+    for x in (58, 61, 65, 68):
+        s.kit("Prop_Bollard", x, 17.3)
+
+    # ---- sidewalk furniture along the avenue ----
+    for x in (3, 15, 51, 66):
+        lamp_post(s, x, AV0 - 0.8)
+        lamp_post(s, x, AV1 + 0.8)
+    for x in (8.0, 19.0):
+        s.kit("Sidewalk_Planter", x, AV0 - 1.4, solid=True, occlude=False)
+        tree(s, x, AV0 - 1.4, 0.95)
+    hydrant(s, CS1 + 1.2, AV0 - 1.0)
+    bus_stop(s, 40.0, 44.0, AV1 + 3.2)
+
+    # ---- south-west block: City Park (the bench where you will sleep) ----
+    P0, P1 = AV1 + 4, RIVER - 4
+    s.box(1, P0, CS0 - 4, P1, -0.1, 0.06, "grass", layer="floor")
+    s.box(1, P0 - 0.12, CS0 - 4, P0, -0.1, 0.1, "curb", layer="floor")
+    s.box(CS0 - 4, P0, CS0 - 3.88, P1, -0.1, 0.1, "curb", layer="floor")
+    s.box(1, P1, CS0 - 4, P1 + 0.12, -0.1, 0.1, "curb", layer="floor")
+    s.box(10, P0, 12, P1, 0.0, 0.08, "path_dirt", layer="floor")
+    s.box(1, 40, 10, 42, 0.0, 0.08, "path_dirt", layer="floor")
+    s.box(12, 40, CS0 - 4, 42, 0.0, 0.08, "path_dirt", layer="floor")
+    bench_along_x(s, 6.0, 8.6, 39.4)
+    bench_along_x(s, 14.0, 16.6, 39.4)
+    s.box(14.5, 43.5, 20.5, 46.8, -0.1, 0.09, "pond_edge", layer="floor")
+    s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "water", layer="floor")
+    s.set_solid(14.5, 43.5, 20.499, 46.799)
+    for (x, y, sc) in ((3.5, 36.5, 1.0), (19.5, 36.5, 1.1), (4.0, 45.5, 1.05), (7.5, 46.0, 0.85), (21.0, 41.0, 0.9)):
+        tree(s, x, y, sc)
+    for (x, y) in ((6.0, 43.5), (13.5, 36.8)):
+        planter(s, x, y)
+
+    # ---- south-east block: fountain square ----
+    s.box(CS1 + 4, AV1 + 4, W, RIVER - 4, -0.1, 0.01, "plaza_stone", layer="floor")
+    fountain(s, 53, 41)
+    for (x0, x1, y) in ((47, 49.6, 38.0), (56.4, 59.0, 38.0), (47, 49.6, 45.0), (56.4, 59.0, 45.0)):
+        bench_along_x(s, x0, x1, y)
+    for (x, y) in ((40, 36), (66, 36), (40, 46), (66, 46)):
+        tree(s, x, y, 1.0)
+    for (x, y) in ((44, 41), (62, 41)):
+        lamp_post(s, x, y)
+
+    # ---- riverside: embankment, railing, water and the closed bridge to the Docks ----
+    for (x0, x1) in ((0, CS0), (CS1, W)):
+        s.box(x0, RIVER - 0.3, x1, RIVER, -1.2, 0.0, "stone", layer="floor")
+        s.box(x0, RIVER - 0.25, x1, RIVER - 0.15, 0.95, 1.02, "metal_dark")
+        x = x0 + 0.5
+        while x < x1:
+            s.box(x - 0.04, RIVER - 0.24, x + 0.04, RIVER - 0.16, 0, 0.98, "metal_dark")
+            x += 1.5
+        s.set_solid(x0, RIVER - 0.5, x1 - 0.001, H - 0.001)
+        s.occluder(x0, RIVER - 0.5, x1, RIVER, 1.0)
+    s.box(0, RIVER, W, H, -1.6, -0.7, "water", layer="floor")
+    s.box(CS0 - 0.6, RIVER, CS1 + 0.6, H, -0.7, road_z - 0.012, "stone", layer="floor")  # bridge deck
+    s.box(CS0, RIVER, CS1, H, road_z - 0.01, road_z, "asphalt", layer="floor")
+    for xr in (CS0 - 0.5, CS1 + 0.3):
+        s.box(xr, RIVER, xr + 0.2, H, 0, 0.9, "stone")
+    s.set_solid(CS0 - 0.6, RIVER, CS1 + 0.599, H - 0.001)
+    barrier(s, CS0, CS1, RIVER - 1.0, closed_sign=True)
+    for x in (CS0 + 1.0, CS1 - 1.0):
+        cone(s, x, RIVER - 2.4)
+
+    s.sun_strength = 4.2
+    return s
+
+
+def corner_market_building(s, x0, fy):
+    """Corner Market: 10 cells wide, 8 deep, facade at y = fy facing +y. Door warps inside."""
+    x1 = x0 + 10
+    y0 = fy - 8
     cm_h = 4.4
-    s.box(8, 0, 18, 8, 0, cm_h, "brick_red")
-    s.box(8, 7.9, 18, 8.05, 0, 0.45, "stone")                              # plinth
-    window_left_shop(s, 8.6, 11.6, 8, 0.5, 2.5)
-    window_left_shop(s, 14.4, 17.4, 8, 0.5, 2.5)
-    door_left(s, 12.2, 13.8, 8, 2.3, mat="wood_green")
-    # awning: green/white stripes sticking out
-    x = 8.2
+    s.box(x0, y0, x1, fy, 0, cm_h, "brick_red")
+    s.box(x0, fy - 0.1, x1, fy + 0.05, 0, 0.45, "stone")                       # plinth
+    window_left_shop(s, x0 + 0.6, x0 + 3.6, fy, 0.5, 2.5)
+    window_left_shop(s, x0 + 6.4, x0 + 9.4, fy, 0.5, 2.5)
+    door_left(s, x0 + 4.2, x0 + 5.8, fy, 2.3, mat="wood_green")
+    x = x0 + 0.2
     i = 0
-    while x < 17.8:
-        s.wedge(x, 8, min(x + 0.5, 17.8), 9.3, 2.95, 2.55, "y", "awning_green" if i % 2 == 0 else "awning_white")
+    while x < x1 - 0.2:
+        s.wedge(x, fy, min(x + 0.5, x1 - 0.2), fy + 1.3, 2.95, 2.55, "y",
+                "awning_green" if i % 2 == 0 else "awning_white")
         x += 0.5
         i += 1
-    # sign board
-    s.box(8.8, 7.95, 17.2, 8.12, 3.05, 3.85, "sign_green")
-    s.box(8.7, 7.95, 17.3, 8.15, 3.0, 3.07, "brass")
-    s.box(8.7, 7.95, 17.3, 8.15, 3.83, 3.9, "brass")
-    s.text("CORNER MARKET", 13.0, 8.13, 3.27, 0.42, "sign_text", face="left")
-    s.box(8, 7.9, 18, 8.1, cm_h - 0.25, cm_h, "stone")                    # cornice
-    flat_roof(s, 8, 0, 18, 8, cm_h)
-    # right side (x = 18) is hidden by the apartments
-    s.set_solid(8, 0, 17.999, 7.999)
-    s.set_solid(12, 7, 13.999, 7.999, False)                                # door cells walkable
-    s.occluder(8, 0, 18, 8, cm_h + 0.4)
-    s.warp(12, 7, 14, 8, "corner_market", 6.0, 7.6, "up")
-
-    # ---- neighbours of Corner Market (Quaternius buildings, CC0) ----
-    s.model("3Story_Balcony_Mat", 18.2, 8, front="left", colours="red")
-    s.model("2Story_Slim_Mat", 24.6, 8, front="left", colours="purple")
-
-    # ---- glass office on the corner: x 0..8, y 0..8 ----
-    of_h = 7.6
-    s.box(0, 0, 8, 8, 0, of_h, "concrete")
-    for z0 in (0.6, 2.5, 4.4):
-        s.box(0.4, 7.95, 7.6, 8.06, z0, z0 + 1.5, "glass_office")
-        s.box(7.95, 0.4, 8.06, 7.6, z0, z0 + 1.5, "glass_office")
-        for k in range(1, 6):
-            s.box(0.4 + k * 1.2, 7.95, 0.48 + k * 1.2, 8.1, z0, z0 + 1.5, "metal_light")
-            s.box(7.95, 0.4 + k * 1.2, 8.1, 0.48 + k * 1.2, z0, z0 + 1.5, "metal_light")
-    flat_roof(s, 0, 0, 8, 8, of_h, rim="metal_light")
-    s.set_solid(0, 0, 7.999, 7.999)
-    s.occluder(0, 0, 8, 8, of_h + 0.4)
-
-    # ---- townhouses: x 0..7, facades facing +x (Quaternius buildings, CC0) ----
-    s.model("2Story_Balcony_Mat", 7, 8.6, front="right", colours="cream")
-    s.model("2Story_Columns_Mat", 7, 15.2, front="right", colours="blue")
-    # garden in front-left
-    s.box(0, 22, 7, H, -0.1, 0.06, "grass", layer="floor")
-    s.box(0, 22, 7.0, 22.12, -0.1, 0.1, "curb", layer="floor")
-    tree(s, 3.5, 24.0)
-
-    # ---- street furniture ----
-    planter(s, 11.0, 9.2)
-    planter(s, 15.0, 9.2)
-    lamp_post(s, 9.4, 11.2)
-    lamp_post(s, 20.5, 21.0)
-    hydrant(s, 26.5, 10.5)
-    bench_along_x(s, 23.0, 25.2, 21.3)
-    tree(s, 24.5, 24.6)
-    tree(s, 9.0, 23.5, 0.9)
-    return s
+    s.box(x0 + 0.8, fy - 0.05, x1 - 0.8, fy + 0.12, 3.05, 3.85, "sign_green")
+    s.box(x0 + 0.7, fy - 0.05, x1 - 0.7, fy + 0.15, 3.0, 3.07, "brass")
+    s.box(x0 + 0.7, fy - 0.05, x1 - 0.7, fy + 0.15, 3.83, 3.9, "brass")
+    s.text("CORNER MARKET", x0 + 5.0, fy + 0.13, 3.27, 0.42, "sign_text", face="left")
+    s.box(x0, fy - 0.1, x1, fy + 0.1, cm_h - 0.25, cm_h, "stone")                # cornice
+    flat_roof(s, x0, y0, x1, fy, cm_h)
+    s.set_solid(x0, y0, x1 - 0.001, fy - 0.001)
+    s.set_solid(x0 + 4, fy - 1, x0 + 5.999, fy - 0.001, False)                  # door cells walkable
+    s.occluder(x0, y0, x1, fy, cm_h + 0.4)
+    s.warp(x0 + 4, fy - 1, x0 + 6, fy, "corner_market", 6.0, 7.6, "up")
 
 
 def window_left_shop(s, x0, x1, y_face, z0, z1):
@@ -526,8 +688,8 @@ def corner_market_interior():
     s.point_light(9.5, 4, 2.8, 120, colour=(1.0, 0.92, 0.78))
     s.point_light(1.5, 7.5, 2.6, 60)
     # exit
-    s.warp(5, H - 0.6, 7, H, "city_centre", 13.0, 9.0, "down")
+    s.warp(5, H - 0.6, 7, H, "city_centre", 44.0, 19.0, "down")
     return s
 
 
-SCENES = [street_corner, corner_market_interior]
+SCENES = [city_centre, corner_market_interior]

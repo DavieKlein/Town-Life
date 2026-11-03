@@ -10,7 +10,9 @@ namespace tl
 {
     struct streamed_bg::storage
     {
-        uint16_t slot_of_tile[max_tiles];   // 0 = not loaded
+        // Open-addressing hash table: tile id -> cache slot (key 0 = empty; tile 0 is never cached).
+        uint16_t hash_keys[hash_size];
+        uint16_t hash_slots[hash_size];
         uint16_t tile_of_slot[cache_slots];
         uint16_t references[cache_slots];
         uint16_t free_slots[cache_slots];
@@ -23,6 +25,77 @@ namespace tl
     {
         alignas(4) BN_DATA_EWRAM_BSS uint8_t storage_memory[2][sizeof(streamed_bg::storage)];
         constexpr int hw_map_size = 32;
+
+        [[nodiscard]] constexpr unsigned hash_of(unsigned tile_id)
+        {
+            return (tile_id * 2654435761u) >> (32 - streamed_bg::hash_bits);
+        }
+    }
+
+    int streamed_bg::_find(int tile_id) const
+    {
+        unsigned index = hash_of(unsigned(tile_id));
+
+        while(true)
+        {
+            unsigned key = _storage.hash_keys[index];
+
+            if(key == unsigned(tile_id))
+            {
+                return _storage.hash_slots[index];
+            }
+
+            if(key == 0)
+            {
+                return 0;
+            }
+
+            index = (index + 1) & (hash_size - 1);
+        }
+    }
+
+    void streamed_bg::_insert(int tile_id, int slot)
+    {
+        unsigned index = hash_of(unsigned(tile_id));
+
+        while(_storage.hash_keys[index])
+        {
+            index = (index + 1) & (hash_size - 1);
+        }
+
+        _storage.hash_keys[index] = uint16_t(tile_id);
+        _storage.hash_slots[index] = uint16_t(slot);
+    }
+
+    void streamed_bg::_erase(int tile_id)
+    {
+        unsigned index = hash_of(unsigned(tile_id));
+
+        while(_storage.hash_keys[index] != unsigned(tile_id))
+        {
+            index = (index + 1) & (hash_size - 1);
+        }
+
+        // Backward-shift deletion keeps the probe sequences intact without tombstones.
+        unsigned hole = index;
+        unsigned next = (index + 1) & (hash_size - 1);
+
+        while(_storage.hash_keys[next])
+        {
+            unsigned home = hash_of(_storage.hash_keys[next]);
+            bool movable = hole <= next ? (home <= hole || home > next) : (home <= hole && home > next);
+
+            if(movable)
+            {
+                _storage.hash_keys[hole] = _storage.hash_keys[next];
+                _storage.hash_slots[hole] = _storage.hash_slots[next];
+                hole = next;
+            }
+
+            next = (next + 1) & (hash_size - 1);
+        }
+
+        _storage.hash_keys[hole] = 0;
     }
 
     streamed_bg::streamed_bg(int storage_index, const layer_data& data, int image_width, int image_height,
@@ -32,10 +105,10 @@ namespace tl
         _columns(image_width / 8),
         _rows(image_height / 8)
     {
-        BN_ASSERT(data.tiles_count <= max_tiles, "Too many tiles: ", data.tiles_count);
+        BN_ASSERT(data.tiles_count <= 65535, "Too many tiles: ", data.tiles_count);
 
         // Reset the cache: slot 0 holds the empty tile and is never freed.
-        bn::memory::clear(max_tiles, _storage.slot_of_tile[0]);
+        bn::memory::clear(hash_size, _storage.hash_keys[0]);
         _storage.free_count = 0;
         _storage.pending_count = 0;
 
@@ -71,7 +144,7 @@ namespace tl
 
             if(_storage.references[slot] == 0)
             {
-                _storage.slot_of_tile[_storage.tile_of_slot[slot]] = 0;
+                _erase(_storage.tile_of_slot[slot]);
                 _storage.free_slots[_storage.free_count++] = uint16_t(slot);
             }
         }
@@ -81,7 +154,7 @@ namespace tl
 
     int streamed_bg::_acquire_slot(int tile_id)
     {
-        int slot = _storage.slot_of_tile[tile_id];
+        int slot = _find(tile_id);
 
         if(slot)
         {
@@ -101,7 +174,7 @@ namespace tl
         }
 
         slot = _storage.free_slots[--_storage.free_count];
-        _storage.slot_of_tile[tile_id] = uint16_t(slot);
+        _insert(tile_id, slot);
         _storage.tile_of_slot[slot] = uint16_t(tile_id);
         _storage.references[slot] = 1;
 
@@ -144,7 +217,7 @@ namespace tl
 
             if(tile_id)
             {
-                int slot = _storage.slot_of_tile[tile_id];
+                int slot = _find(tile_id);
 
                 if(slot && --_storage.references[slot] == 0)
                 {

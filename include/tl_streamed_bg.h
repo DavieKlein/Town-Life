@@ -21,7 +21,8 @@ namespace tl
         static constexpr int window_columns = 31;   // 240 px + 1 partial cell
         static constexpr int window_rows = 18;      // 128 px play area above the HUD + 1 partial cell
         static constexpr int cache_slots = 624;     // window cells + cells released during one frame
-        static constexpr int max_tiles = 8192;      // unique tiles per layer
+        static constexpr int hash_bits = 11;
+        static constexpr int hash_size = 1 << hash_bits;   // > 3x cache_slots: short probe sequences
 
         // storage_index: 0 or 1 (each streamed_bg alive at the same time needs its own storage).
         streamed_bg(int storage_index, const layer_data& data, int image_width, int image_height, int priority);
@@ -51,6 +52,9 @@ namespace tl
         int _window_y = 0;
         bool _window_valid = false;
 
+        [[nodiscard]] int _find(int tile_id) const;
+        void _insert(int tile_id, int slot);
+        void _erase(int tile_id);
         void _flush_pending();
         [[nodiscard]] int _acquire_slot(int tile_id);
         void _show_cell(int cx, int cy);
