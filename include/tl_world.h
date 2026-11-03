@@ -61,6 +61,22 @@ namespace tl
         }
     };
 
+    // Ambient animals (see tools/critters.py).
+    enum class critter_kind : uint8_t
+    {
+        pigeon,
+        squirrel
+    };
+
+    struct critter_spawn
+    {
+        critter_kind kind;
+        int x;          // world units
+        int y;
+        int tree_x;     // squirrels: tree to flee up into (world units), -1 = none
+        int tree_y;
+    };
+
     // One pre-rendered layer, split into 4bpp 8x8 tiles.
     struct layer_data
     {
@@ -88,6 +104,8 @@ namespace tl
         int warps_count;
         const occluder* occluders;
         int occluders_count;
+        const critter_spawn* critters;
+        int critters_count;
 
         [[nodiscard]] constexpr int to_image_x(int x, int y) const
         {

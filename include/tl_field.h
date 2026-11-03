@@ -8,6 +8,7 @@
 #include "bn_sprite_text_generator.h"
 
 #include "tl_player.h"
+#include "tl_critters.h"
 #include "tl_streamed_bg.h"
 
 namespace tl
@@ -37,6 +38,7 @@ namespace tl
         bn::vector<bn::sprite_ptr, 8> _clock_sprites;
         bn::vector<bn::sprite_ptr, 8> _money_sprites;
         player _player;
+        critters _critters;
         const map_info* _map = nullptr;
         const warp* _pending_warp = nullptr;
         state _state = state::fading_in;

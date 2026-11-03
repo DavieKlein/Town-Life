@@ -29,6 +29,7 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import scene as scn          # noqa: E402
 import hud_sprites           # noqa: E402
+import critters              # noqa: E402
 
 CACHE = os.path.join(ROOT, "art_cache")
 FLOOR_BANKS = 7
@@ -363,6 +364,16 @@ def main():
                        f"{int(sx0)}, {int(sy0)}, {int(sx1)}, {int(sy1)} }},")
         out.append("    };")
         out.append("")
+        spawns = critters.SPAWNS.get(s.ident, [])
+        if spawns:
+            out.append(f"    constexpr critter_spawn {s.ident}_critters[] = {{")
+            for sp in spawns:
+                tx, ty = (sp[3], sp[4]) if len(sp) > 3 else (-1 / 16, -1 / 16)
+                out.append(f"        {{ critter_kind::{sp[0]}, {int(sp[1] * 16)}, {int(sp[2] * 16)}, "
+                           f"{int(tx * 16)}, {int(ty * 16)} }},")
+            out.append("    };")
+        critter_entry = (f"{s.ident}_critters, int(sizeof({s.ident}_critters) / sizeof(critter_spawn))"
+                         if spawns else "nullptr, 0")
         xs = [s.proj(x, y)[0] for (x, y) in ((0, 0), (s.w, 0), (0, s.h), (s.w, s.h))]
         ys = [s.proj(x, y)[1] for (x, y) in ((0, 0), (s.w, 0), (0, s.h), (s.w, s.h))]
         view = (max(0, int(min(xs))), 0, min(s.img_w, int(max(xs))), min(s.img_h, int(max(ys)) + 8))
@@ -374,7 +385,8 @@ def main():
         table.append(f'        {{ "{s.name}", {layer_entry("floor")}, {layer_entry("objects")}, {s.w}, {s.h}, '
                      f"{s.origin_x}, {s.origin_y}, {s.img_w}, {s.img_h}, {view[0]}, {view[1]}, {view[2]}, {view[3]}, "
                      f"{s.ident}_solid, {s.ident}_warps, int(sizeof({s.ident}_warps) / sizeof(warp)), "
-                     f"{s.ident}_occluders, int(sizeof({s.ident}_occluders) / sizeof(occluder)) }},")
+                     f"{s.ident}_occluders, int(sizeof({s.ident}_occluders) / sizeof(occluder)), "
+                     f"{critter_entry} }},")
 
     out += ["}", "", "namespace", "{", "    constexpr map_info maps[] = {"] + table + ["    };", "}", "",
             "static_assert(sizeof(maps) / sizeof(map_info) == maps_count);", "",
@@ -398,6 +410,16 @@ def main():
                '{\n    "type": "regular_bg",\n    "bpp_mode": "bpp_4"\n}\n')
 
     build_player(force, fast)
+    build_critters()
+
+
+def build_critters():
+    for name, frames, mapping, pal in (("pigeon", critters.PIGEON, critters.P, critters.PIGEON_PAL),
+                                       ("squirrel", critters.SQUIRREL, critters.Q, critters.SQUIRREL_PAL)):
+        pixels = critters.frames_to_pixels(frames, mapping)
+        pal = list(pal) + [(0, 0, 0)] * (16 - len(pal))
+        write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), pixels, 16, 16 * len(frames), 4, pal)
+        write_text(os.path.join(ROOT, "graphics", name + ".json"), '{\n    "type": "sprite",\n    "height": 16\n}\n')
 
 
 # ---------------------------------------------------------------------------------------------

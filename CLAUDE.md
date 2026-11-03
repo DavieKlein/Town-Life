@@ -194,6 +194,13 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
   khaki trousers, brown hair), idle + 8-frame walk in 8 facings, with a blended shadow.
 - HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
   The four need bars are static mock-ups.
+- Ambient animals (`tl_critters`): pigeon groups (fountain square, avenue, VaultTech plaza) peck,
+  hop and turn around; when the player comes within 56 units they fly off over the rooftops and
+  land again later once the player is 150+ units away. Squirrels in City Park sit and look around;
+  within 60 units they dash to their tree, climb it and vanish into the canopy, then come back
+  later. Spawn points + 16x16 pixel-art sprites live in `tools/critters.py` (NOT in scene.py, so
+  moving animals never triggers a re-render); build_assets writes `graphics/pigeon|squirrel.bmp`
+  and the spawn table (`critter_spawn`, `map_info::critters`).
 - Start position: on the sidewalk in front of the Corner Market door (cell 44, 19).
 
 ### Folder structure
@@ -209,6 +216,7 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
 │   ├── tl_field.cpp             field scene: camera, streamed layers, player, warps with fades, HUD text + clock
 │   ├── tl_streamed_bg.cpp       tile-streaming regular BG (see "Engine")
 │   ├── tl_player.cpp            player: iso movement, collision, depth priority, animation, shadow
+│   ├── tl_critters.cpp          ambient pigeons + squirrels (behaviour, sprites, depth)
 │   └── tl_world_data.cpp        GENERATED: palettes per layer, collision, warps, occluders, map table
 ├── data/                        GENERATED binary layer data (Butano DATA rule): <map>_<layer>_tiles.bin
 │                                (8 words per 4bpp tile) and <map>_<layer>_cells.bin (uint32 per 8x8 cell)
@@ -229,6 +237,7 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
     ├── blender_actor.py         renders a rigged character (idle + walk, 8 facings; run by build_assets.py)
     ├── build_assets.py          renders, converts to 4bpp tiles, writes generated files
     ├── hud_sprites.py           HUD bar drawing (pixel art)
+    ├── critters.py              pigeon/squirrel pixel-art frames + spawn points per map
     └── headless_run.py          headless emulator test runner (screenshots + scripted input)
 ```
 

@@ -59,6 +59,7 @@ namespace tl
         _floor_bg.emplace(0, _map->floor, _map->image_width, _map->image_height, floor_priority);
         _objects_bg.emplace(1, _map->objects, _map->image_width, _map->image_height, objects_priority);
         _player.place(*_map, x, y, facing);
+        _critters.load(*_map);
         _update_camera();
     }
 
@@ -89,6 +90,7 @@ namespace tl
         _floor_bg->set_view(_cam_x, _cam_y);
         _objects_bg->set_view(_cam_x, _cam_y);
         _player.update_sprite(_cam_x, _cam_y);
+        _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
     }
 
     void field::_redraw_hud_text()
