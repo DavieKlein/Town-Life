@@ -188,18 +188,19 @@ def special_layout(layer, present, banks):
     return layout, info
 
 
-WATER_PERIOD = 32
+WATER_PERIOD = 64
 _WATER_RANK = None
 
 
 def _water_field(x, y):
-    """Seamless (period 32 px) ripple field: smooth phase f (about -3..3) and caustic term c (0..1)."""
+    """Seamless (period 64 px) ripple field: smooth phase f and caustic term c (0..1), broad and irregular."""
     P = 2 * np.pi / WATER_PERIOD
-    f = (np.sin(P * (1 * x + 1 * y) + 0.7) * 1.0 + np.sin(P * (2 * x - 1 * y) + 2.1) * 0.8 +
-         np.sin(P * (-1 * x + 2 * y) + 4.0) * 0.7 + np.sin(P * (1 * x - 3 * y) + 5.3) * 0.4)
-    g1 = np.sin(P * (2 * x + 1 * y) + 1.3) + np.sin(P * (-1 * x + 2 * y) + 0.2)
-    g2 = np.sin(P * (1 * x + 2 * y) + 3.1) + np.sin(P * (2 * x - 1 * y) + 5.0)
-    c = 1.0 - np.minimum(np.abs(g1), np.abs(g2)) * 0.9       # bright thin ridges where both cross zero
+    waves = ((1, 1, 0.7, 1.0), (2, -1, 2.1, 0.9), (-1, 2, 4.0, 0.8), (1, -3, 5.3, 0.55), (3, 2, 1.1, 0.45),
+             (-3, 1, 3.4, 0.4), (2, 5, 0.3, 0.25), (5, -2, 2.8, 0.25))
+    f = sum(np.sin(P * (a * x + b * y) + ph) * amp for (a, b, ph, amp) in waves)
+    g1 = np.sin(P * (3 * x + 1 * y) + 1.3) + np.sin(P * (-2 * x + 3 * y) + 0.2) + np.sin(P * (1 * x - 4 * y) + 2.2)
+    g2 = np.sin(P * (1 * x + 3 * y) + 3.1) + np.sin(P * (4 * x - 1 * y) + 5.0) + np.sin(P * (-3 * x - 2 * y) + 0.9)
+    c = 1.0 - np.minimum(np.abs(g1), np.abs(g2))
     return f, c
 
 
@@ -215,7 +216,7 @@ def water_pattern(x, y, cycle, fixed, edge=None):
         _WATER_RANK = np.sort(f0)
     u = np.searchsorted(_WATER_RANK, f) / float(len(_WATER_RANK))
     idx = np.floor(u * cycle * 2).astype(np.int64) % cycle
-    idx = np.where(c > 0.975, cycle + fixed - 1, idx)          # sparkles
+    idx = np.where(c > 0.992, cycle + fixed - 1, idx)          # sparkles
     if fixed == 2 and edge is not None:
         idx = np.where(edge, cycle, idx)
     return idx
@@ -224,8 +225,8 @@ def water_pattern(x, y, cycle, fixed, edge=None):
 def water_shades(base, cycle, fixed):
     """Colours for the water entries from the mean rendered water colour."""
     base = np.asarray(base, dtype=np.float64)
-    deep = np.clip(base * 0.62 + np.array([-8, 6, 4]), 0, 255)
-    light = np.clip(base * 1.0 + np.array([14, 46, 42]), 0, 255)
+    deep = np.clip(base * 0.72 + np.array([-8, 6, 4]), 0, 255)
+    light = np.clip(base * 1.0 + np.array([10, 34, 32]), 0, 255)
     cols = []
     for m in range(cycle):
         b = 0.5 - 0.5 * np.cos(2 * np.pi * m / cycle)
