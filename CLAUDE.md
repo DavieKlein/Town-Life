@@ -132,6 +132,19 @@ unlocks the next district. Each chapter ends with a big moment.
 
 ---
 
+## Third-party assets
+
+Only assets with a licence that allows use in a public repository and game:
+- **Quaternius — Ultimate Textured Building Pack (Dec 2019)**, CC0 1.0 (public domain),
+  `art_source/quaternius_buildings/` (FBX "Models with Materials" + License.txt). Credit Quaternius
+  in the README/credits even though CC0 does not require it.
+- Never use assets ripped from commercial games (sprite/model rip sites), even as a base.
+- The owner's Google Drive folder with the source packs:
+  https://drive.google.com/drive/folders/1LiJz8K5spNzdYW3r7Fssia8VzU_aMYB3 (download via
+  `https://drive.usercontent.google.com/download?id=<file id>&export=download&confirm=t`; list a
+  folder via `https://drive.google.com/embeddedfolderview?id=<folder id>`; requires drive.google.com,
+  drive.usercontent.google.com and docs.google.com in the environment's allowed domains).
+
 ## Visual style
 
 **Pre-rendered 3D in isometric 2:1, like the GBA life-sims of that era**: scenes are modelled as
@@ -148,7 +161,8 @@ Corner Market and the Corner Market interior, a 3D-rendered player and the HUD.
 History: top-down maps at commit `5af63a1`; first hand-painted isometric prototype at `786cc4c`.
 
 - Street corner (28x26 cells): Corner Market (brick, green/white awning, sign, shop windows with
-  goods, door into the interior), brick apartments, glass office, two townhouses, crossing roads
+  goods, door into the interior), Quaternius buildings around it (red balcony block, purple slim
+  house, cream balcony house, blue house with columns), glass office, crossing roads
   with zebra crossings and lane markings, curbs, lamps, trees, planters, hydrant, bench, grass.
 - Corner Market interior (12x9 cells), a small supermarket: open shelving (`gondola()`) with
   yellow price strips and groceries (`product()`: milk cartons with a printed band, cereal boxes,
@@ -181,6 +195,8 @@ History: top-down maps at commit `5af63a1`; first hand-painted isometric prototy
 ├── graphics/                    GENERATED Butano assets: hud, player (32x64 x 20 frames), shadow
 ├── audio/  dmg_audio/           (empty) for music/sound later
 ├── art_cache/                   (git-ignored) cached Blender renders
+├── art_source/
+│   └── quaternius_buildings/    26 CC0 low-poly buildings (FBX) by Quaternius + License.txt
 └── tools/
     ├── scene.py                 scene descriptions: 3D primitives + collision + warps + occluders
     ├── blender_render.py        renders a scene layer in Blender (run by build_assets.py)
@@ -195,7 +211,8 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 ### How the build works
 
 1. **Art (only when scenes change, in the Claude container):**
-   `apt-get install -y blender` (once per container), then `python3 tools/build_assets.py`
+   `apt-get install -y blender python3-numpy` (once per container; numpy is needed by Blender's
+   FBX importer), then `python3 tools/build_assets.py`
    (~10 min at full quality; `--fast` for quick low-quality tests; `--preview DIR` writes PNGs of the
    converted layers; `--rerender` ignores the cache). Commit the generated files:
    `src/tl_world_data.cpp`, `include/tl_map_id.h`, `graphics/*.bmp|json`.
@@ -217,6 +234,12 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   Helpers: `window_left/right`, `door_left/right`, `flat_roof`, `tree`, `lamp_post`, `planter`,
   `bench_along_x`, `hydrant`, `window_left_shop`. Add a scene function to `SCENES`.
   Avoid coplanar overlapping faces (they render black in Cycles).
+  `s.model(name, x, y, front, colours)` places a Quaternius building from `art_source/` at a fixed
+  realistic scale (2.1 ≈ 3 m per storey): front `left` = facade faces +y (x = left edge, y =
+  facade line), `right` = facade faces +x (x = facade line, y = top edge). Footprint, collision and
+  occluder are derived from `MODEL_DIMS` (bounding boxes at scale 1). Colour schemes (`SCHEMES` in
+  blender_render.py: red, cream, blue, mint, purple, orange, grey) recolour the materials Main,
+  Bricks, Light and Dark. The FBX materials import with alpha 0; blender_render fixes that.
 - **blender_render.py**: orthographic camera at 60°/45° with `sensor_fit = HORIZONTAL`;
   `ortho_scale = img_w * cos45 * CELL_M / 16` makes 1 cell = a 32x16 px diamond, exactly the
   engine projection. Floor pass: objects invisible to the camera but casting shadows. Objects pass:

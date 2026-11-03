@@ -18,6 +18,38 @@ CELL_M = 0.75          # metres per cell
 PX_PER_M_Z = 19.6 / CELL_M   # vertical screen pixels per metre of height
 
 
+# Bounding boxes (metres, Blender axes, front facing -Y) of the CC0 Quaternius buildings in
+# art_source/quaternius_buildings, measured after import.
+MODEL_DIMS = {
+    "1Story_GableRoof_Mat": ((-1.05, -1.19, -0.01), (1.05, 1.19, 2.02)),
+    "1Story_Mat": ((-1.08, -1.1, -0.02), (1.08, 1.08, 1.66)),
+    "1Story_RoundRoof_Mat": ((-1.05, -1.06, -0.02), (1.04, 1.06, 2.37)),
+    "1Story_Sign_Mat": ((-1.08, -1.08, -0.02), (1.08, 1.08, 1.78)),
+    "2Story_2_Mat": ((-1.08, -1.1, -0.02), (1.08, 1.08, 2.75)),
+    "2Story_Balcony_Mat": ((-1.08, -1.45, -0.0), (1.08, 1.08, 2.94)),
+    "2Story_Center_Mat": ((-1.21, -1.42, -0.0), (1.21, 1.08, 2.73)),
+    "2Story_Columns_Mat": ((-1.08, -1.41, -0.01), (1.08, 1.08, 2.76)),
+    "2Story_Double_Mat": ((-1.03, -1.45, -0.0), (1.39, 1.08, 2.74)),
+    "2Story_GableRoof_Mat": ((-1.08, -1.19, -0.02), (1.08, 1.19, 3.12)),
+    "2Story_Mat": ((-1.08, -1.45, -0.0), (1.08, 1.08, 2.74)),
+    "2Story_RoundRoof_Mat": ((-1.06, -1.06, -0.02), (1.06, 1.06, 2.88)),
+    "2Story_Sidehouse_Mat": ((-2.39, -1.26, -0.01), (1.07, 1.27, 2.75)),
+    "2Story_Sign_Mat": ((-1.08, -1.08, -0.02), (1.08, 1.08, 2.74)),
+    "2Story_Slim_Mat": ((-0.55, -1.08, -0.02), (0.57, 1.08, 2.74)),
+    "2Story_Stairs_Mat": ((-1.08, -1.45, -0.0), (1.08, 1.08, 2.74)),
+    "2Story_Wide_2Doors_Mat": ((-3.41, -1.18, -0.02), (3.41, 1.08, 2.73)),
+    "2Story_Wide_Mat": ((-1.91, -1.18, -0.02), (1.91, 1.08, 2.73)),
+    "3Story_Balcony_Mat": ((-1.08, -1.43, -0.0), (1.08, 1.08, 4.21)),
+    "3Story_Slim_Mat": ((-0.55, -1.08, -0.02), (0.57, 1.08, 3.98)),
+    "3Story_Small_Mat": ((-0.96, -0.93, -0.01), (0.95, 1.13, 3.84)),
+    "4Story_Center_Mat": ((-1.21, -1.45, -0.0), (1.21, 1.08, 5.09)),
+    "4Story_Mat": ((-1.03, -1.45, -0.0), (1.39, 1.08, 5.09)),
+    "4Story_Wide_2Doors_Mat": ((-3.41, -1.62, -0.02), (3.41, 1.08, 5.13)),
+    "4Story_Wide_2Doors_Roof_Mat": ((-3.41, -1.62, -0.02), (3.41, 1.08, 5.66)),
+    "6Story_Stack_Mat": ((-1.08, -1.42, -0.0), (1.08, 1.08, 7.8)),
+}
+
+
 class Scene:
     def __init__(self, ident, name, w, h, origin_x, origin_y, img_w, img_h):
         self.ident, self.name = ident, name
@@ -52,6 +84,27 @@ class Scene:
         """Awning: a slanted slab sticking out of a wall. depth_axis 'y' = sticks out towards +y."""
         self.prims.append(dict(type="wedge", x0=x0, y0=y0, x1=x1, y1=y1, z_top=z_top, z_bottom=z_bottom,
                                axis=depth_axis, mat=mat, layer=layer))
+
+    def model(self, name, x, y, front="left", colours="red", scale=2.1, door=None, layer="objects"):
+        """Places a CC0 Quaternius building (art_source/quaternius_buildings/<name>.fbx).
+        front 'left': facade faces +y (down-left on screen); x = left edge, y = facade line (cells).
+        front 'right': facade faces +x (down-right); x = facade line, y = top edge (cells).
+        door: (cx, cy) cell that stays walkable. Returns the footprint (x0, y0, x1, y1) in cells."""
+        mn, mx = MODEL_DIMS[name]
+        w = (mx[0] - mn[0]) * scale / CELL_M
+        d = (mx[1] - mn[1]) * scale / CELL_M
+        height = (mx[2] - mn[2]) * scale
+        if front == "left":
+            fp = (x, y - d, x + w, y)
+        else:
+            fp = (x - d, y, x, y + w)
+        self.prims.append(dict(type="model", name=name, fp=fp, front=front, colours=colours, scale=scale,
+                               layer=layer))
+        self.set_solid(fp[0], fp[1], fp[2] - 0.001, fp[3] - 0.001)
+        if door:
+            self.set_solid(door[0], door[1], door[0] + 0.999, door[1] + 0.999, False)
+        self.occluder(fp[0], fp[1], fp[2], fp[3], height + 0.3)
+        return fp
 
     def point_light(self, x, y, z, energy, colour=(1.0, 0.85, 0.6), radius=0.3):
         self.lights.append(dict(x=x, y=y, z=z, energy=energy, colour=colour, radius=radius))
@@ -240,19 +293,9 @@ def street_corner():
     s.occluder(8, 0, 18, 8, cm_h + 0.4)
     s.warp(12, 7, 14, 8, "corner_market", 6.0, 7.6, "up")
 
-    # ---- apartments: x 18..28, y 0..8 ----
-    ap_h = 7.2
-    s.box(18, 0, 28, 8, 0, ap_h, "brick_brown")
-    s.box(18, 7.9, 28, 8.05, 0, 0.5, "stone")
-    for fl, z0 in enumerate((1.0, 4.1)):
-        for xi in (19.0, 21.4, 24.6, 26.8):
-            window_left(s, xi, xi + 1.4, 8, z0 + (0.0 if fl else 0.0), z0 + 1.9)
-    door_left(s, 22.9, 24.1, 8, 2.3, mat="wood_blue")
-    s.box(18, 7.9, 28, 8.1, 3.4, 3.55, "stone")                             # floor band
-    s.box(18, 7.9, 28, 8.12, ap_h - 0.3, ap_h, "stone")
-    flat_roof(s, 18, 0, 28, 8, ap_h)
-    s.set_solid(18, 0, 27.999, 7.999)
-    s.occluder(18, 0, 28, 8, ap_h + 0.4)
+    # ---- neighbours of Corner Market (Quaternius buildings, CC0) ----
+    s.model("3Story_Balcony_Mat", 18.2, 8, front="left", colours="red")
+    s.model("2Story_Slim_Mat", 24.6, 8, front="left", colours="purple")
 
     # ---- glass office on the corner: x 0..8, y 0..8 ----
     of_h = 7.6
@@ -267,22 +310,9 @@ def street_corner():
     s.set_solid(0, 0, 7.999, 7.999)
     s.occluder(0, 0, 8, 8, of_h + 0.4)
 
-    # ---- townhouses: x 0..7, front face at x = 7 ----
-    for (y0, y1, mat, door_mat) in ((8, 15, "plaster_cream", "wood_red"), (15, 22, "plaster_mint", "wood_blue")):
-        th = 6.2
-        s.box(0, y0, 7, y1, 0, th, mat)
-        s.box(6.9, y0, 7.05, y1, 0, 0.45, "stone")
-        door_right(s, y0 + 3.0, y0 + 4.4, 7, 2.3, mat=door_mat)
-        window_right(s, y0 + 0.8, y0 + 2.3, 7, 0.9, 2.5)
-        window_right(s, y0 + 5.0, y1 - 0.6, 7, 0.9, 2.5)
-        window_right(s, y0 + 0.8, y0 + 2.3, 7, 3.6, 5.2)
-        window_right(s, y0 + 2.9, y0 + 4.4, 7, 3.6, 5.2)
-        window_right(s, y0 + 5.0, y1 - 0.6, 7, 3.6, 5.2)
-        s.box(6.9, y0, 7.12, y1, th - 0.35, th, "trim_white")
-        s.box(6.75, y1 - 0.25, 7.05, y1 + 0.02, 0, th, "trim_white")
-        flat_roof(s, 0, y0, 7, y1, th)
-        s.set_solid(0, y0, 6.999, y1 - 0.001)
-        s.occluder(0, y0, 7, y1, th + 0.4)
+    # ---- townhouses: x 0..7, facades facing +x (Quaternius buildings, CC0) ----
+    s.model("2Story_Balcony_Mat", 7, 8.6, front="right", colours="cream")
+    s.model("2Story_Columns_Mat", 7, 15.2, front="right", colours="blue")
     # garden in front-left
     s.box(0, 22, 7, H, -0.1, 0.06, "grass", layer="floor")
     s.box(0, 22, 7.0, 22.12, -0.1, 0.1, "curb", layer="floor")

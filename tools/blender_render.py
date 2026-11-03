@@ -241,6 +241,64 @@ def add_sphere(bm, p):
     bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, p["z"])))
 
 
+MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "art_source", "quaternius_buildings")
+
+# Colour schemes for the Quaternius buildings: material base name -> sRGB hex.
+SCHEMES = {
+    "red": {"Main": "#b4523e", "Bricks": "#8e3c30", "Light": "#efe2c0", "Dark": "#4a3434"},
+    "cream": {"Main": "#e8d6a8", "Bricks": "#cdb688", "Light": "#f6f2e6", "Dark": "#6a5844"},
+    "blue": {"Main": "#7c90cc", "Bricks": "#5c6ea8", "Light": "#eeeef4", "Dark": "#3a4060"},
+    "mint": {"Main": "#9ccab2", "Bricks": "#7aae96", "Light": "#f2f4ee", "Dark": "#3c5a50"},
+    "purple": {"Main": "#9a84c4", "Bricks": "#7a66a4", "Light": "#f0ecf6", "Dark": "#463c60"},
+    "orange": {"Main": "#e08a50", "Bricks": "#c06c3c", "Light": "#f6ead8", "Dark": "#5a3a2a"},
+    "grey": {"Main": "#b8b8bc", "Bricks": "#9a9aa0", "Light": "#f0f0f0", "Dark": "#404048"},
+}
+
+
+def add_model(p, layer_visible):
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.fbx(filepath=os.path.join(MODEL_DIR, p["name"] + ".fbx"))
+    obs = [o for o in bpy.data.objects if o not in before]
+    scheme = SCHEMES.get(p["colours"], {})
+    for o in obs:
+        if o.type != "MESH":
+            continue
+        for slot in o.material_slots:
+            if slot.material is None:
+                continue
+            m = slot.material.copy()
+            base = m.name.split(".")[0]
+            if m.use_nodes and "Principled BSDF" in m.node_tree.nodes:
+                bsdf = m.node_tree.nodes["Principled BSDF"]
+                bsdf.inputs["Alpha"].default_value = 1.0      # the FBX files import with alpha 0
+                bsdf.inputs["Roughness"].default_value = 0.7
+                if base in scheme:
+                    bsdf.inputs["Base Color"].default_value = rgb(scheme[base])
+                if base == "Glass":
+                    bsdf.inputs["Roughness"].default_value = 0.1
+            slot.material = m
+        o.rotation_euler = (o.rotation_euler.x, o.rotation_euler.y,
+                            o.rotation_euler.z + (math.radians(90) if p["front"] == "right" else 0))
+        o.scale = tuple(v * p["scale"] for v in o.scale)
+        o.visible_camera = (p["layer"] == layer_visible)
+    bpy.context.view_layer.update()
+    pts = [o.matrix_world @ Vector(c) for o in obs if o.type == "MESH" for c in o.bound_box]
+    mnx, mxx = min(v.x for v in pts), max(v.x for v in pts)
+    mny, mxy = min(v.y for v in pts), max(v.y for v in pts)
+    mnz = min(v.z for v in pts)
+    x0, y0, x1, y1 = p["fp"]
+    if p["front"] == "left":
+        dx = x0 * CELL_M - mnx          # left edge
+        dy = -y1 * CELL_M - mny         # facade (min Blender Y) on the facade line
+    else:
+        dx = x1 * CELL_M - mxx          # facade (max Blender X) on the facade line
+        dy = -y0 * CELL_M - mxy         # top edge (engine y0 = max Blender Y)
+    for o in obs:
+        if o.parent is None:
+            o.location = (o.location.x + dx, o.location.y + dy, o.location.z - mnz)
+
+
 def build(scene_obj, layer_visible):
     mats = {}
 
@@ -251,7 +309,10 @@ def build(scene_obj, layer_visible):
 
     groups = {}
     for p in scene_obj.prims:
-        if p["type"] == "text":
+        if p["type"] == "model":
+            add_model(p, layer_visible)
+    for p in scene_obj.prims:
+        if p["type"] in ("text", "model"):
             continue
         groups.setdefault((p["layer"], p["mat"]), []).append(p)
 
