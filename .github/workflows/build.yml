@@ -1,0 +1,65 @@
+name: Build ROM
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    steps:
+      - name: Checkout (with Butano submodule)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Make sure Python 3 is available
+        run: |
+          if ! command -v python3 >/dev/null 2>&1; then
+            apt-get update
+            apt-get install -y --no-install-recommends python3
+          fi
+          python3 --version
+
+      - name: Build ROM
+        run: make -j"$(nproc)"
+
+      - name: Upload ROM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: town-life
+          path: town-life.gba
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download ROM artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: town-life
+
+      - name: Publish release "latest" (replaces the previous one)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          # Make sure the tag is really gone before recreating it.
+          gh api -X DELETE "repos/${GH_REPO}/git/refs/tags/latest" >/dev/null 2>&1 || true
+          gh release create latest town-life.gba \
+            --target "${GITHUB_SHA}" \
+            --title "Town Life (latest build)" \
+            --notes "Automatic build of commit ${GITHUB_SHA} on main. Download town-life.gba and open it in an emulator such as Lemuroid." \
+            --latest

@@ -1,0 +1,14 @@
+# Build output
+build/
+*.gba
+*.elf
+*.sav
+*.map
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+__pycache__/
