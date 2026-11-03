@@ -473,6 +473,11 @@ Update the checkboxes at the end of each session.
 
 ## Next session: start here
 
+**New (owner, latest):** the owner added more packs to the Drive folder in the agreed
+**isometric urban** style: commercial and residential buildings plus texture packs. List the
+Drive folder first, check each licence, and propose (with preview renders) how to use them
+(Old Block row houses, shops, ground textures) before building.
+
 The owner asked for (1) the full City Centre — done, awaiting feedback — and then (2) the
 **Ultimate Food Pack** in the Corner Market supermarket (replace the box products in `product()` /
 `gondola()` with food models: download from the Drive folder, keep only what is used in
