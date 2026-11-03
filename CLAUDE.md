@@ -155,7 +155,7 @@ drive.google.com, drive.usercontent.google.com and docs.google.com in the allowe
 | Furniture Pack (March 2019) | not yet | furniture to buy/place in homes |
 | Ultimate House Interior Pack (June 2020) | not yet | home interiors, buyable furniture |
 | Furniture Pack (Oct 2017) | not yet | **no licence file in the folder** — verify before use |
-| David OReilly — Everything Library: Animals (Drive folder `EverythingLibrary_Animals_002`: one FBX + one .blend, ~240 static animal models incl. Pigeon/GroundedPigeon, Gray/RedSquirrel, Crow, Gull, Cat, dogs, Rat, Duck) | not yet (proposal stage) | **CC BY 4.0 according to search results (not CC0) — attribution required; the itch.io page could not be opened from the container, owner to confirm.** Models are static (no animations); colours are vertex colours (`colorSet1`) that must be wired to Base Color after FBX import; FBX root objects carry a cm scale/rotation that must be preserved. |
+| David OReilly — Everything Library: Animals (Drive folder `EverythingLibrary_Animals_002`, ~240 static models incl. Crow, Gull, Cat, dogs, Rat, Duck, Raccoon) | `art_source/everything_library_animals/city_animals.glb` (GroundedPigeon, Pigeon, GraySquirrel only) + License.txt | **CC BY 4.0 (not CC0) — attribution required, credited in README.** Static models; colours are vertex colours; the GLB is in centimetres and lost the FBX up-axis rotation (blender_critter.py compensates: `UNIT`, `BASE_PITCH`, per-model `YAW`). |
 
 Formats in Drive: FBX/OBJ/Blend per model (MegaKit: FBX + glTF). Blender needs `python3-numpy`
 for the FBX importer. Quaternius FBX materials import with alpha 0 — the render scripts set it to 1.
@@ -198,13 +198,16 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
   khaki trousers, brown hair), idle + 8-frame walk in 8 facings, with a blended shadow.
 - HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
   The four need bars are static mock-ups.
-- Ambient animals (`tl_critters`): pigeon groups (fountain square, avenue, VaultTech plaza) peck,
+- Ambient animals (`tl_critters`), rendered from the CC BY Everything Library models by
+  `tools/blender_critter.py` (32x32 frames facing right, mirrored for left, feet at (16, 23);
+  pigeon: stand, peck, wings up/mid/down — wing beats made by bending the wings; squirrel: sit,
+  run A/B, climb — made by tilting the body): pigeon groups (fountain square, avenue, VaultTech plaza) peck,
   hop and turn around; when the player comes within 56 units they fly off over the rooftops and
   land again later once the player is 150+ units away. Squirrels in City Park sit and look around;
   within 60 units they dash to their tree, climb it and vanish into the canopy, then come back
-  later. Spawn points + 16x16 pixel-art sprites live in `tools/critters.py` (NOT in scene.py, so
-  moving animals never triggers a re-render); build_assets writes `graphics/pigeon|squirrel.bmp`
-  and the spawn table (`critter_spawn`, `map_info::critters`).
+  later. Spawn points live in `tools/critters.py` (NOT in scene.py, so moving animals never
+  triggers a map re-render); build_assets renders the frames (cached), writes
+  `graphics/pigeon|squirrel.bmp` and the spawn table (`critter_spawn`, `map_info::critters`).
 - Start position: on the sidewalk in front of the Corner Market door (cell 44, 19).
 
 ### Folder structure
@@ -234,14 +237,16 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
 ├── art_source/
 │   ├── quaternius_buildings/    26 CC0 low-poly buildings (FBX) by Quaternius + License.txt
 │   ├── quaternius_characters/   8 CC0 rigged, animated characters (FBX) by Quaternius + License.txt
-│   └── quaternius_downtown/     CC0 Downtown City MegaKit models used (glTF) + textures + License.txt
+│   ├── quaternius_downtown/     CC0 Downtown City MegaKit models used (glTF) + textures + License.txt
+│   └── everything_library_animals/  CC BY 4.0 animal models (pigeon, squirrel) + License.txt
 └── tools/
     ├── scene.py                 scene descriptions: 3D primitives + collision + warps + occluders
     ├── blender_render.py        renders a scene layer in Blender (run by build_assets.py)
     ├── blender_actor.py         renders a rigged character (idle + walk, 8 facings; run by build_assets.py)
     ├── build_assets.py          renders, converts to 4bpp tiles, writes generated files
     ├── hud_sprites.py           HUD bar drawing (pixel art)
-    ├── critters.py              pigeon/squirrel pixel-art frames + spawn points per map
+    ├── critters.py              animal spawn points per map
+    ├── blender_critter.py       poses + renders the animal models into sprite frames
     └── headless_run.py          headless emulator test runner (screenshots + scripted input)
 ```
 

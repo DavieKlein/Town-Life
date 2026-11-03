@@ -5,4 +5,7 @@ Town Life GBA game
 
 - 3D models by [Quaternius](https://quaternius.com) (CC0): Ultimate Textured Building Pack,
   Animated Men and Women Characters.
+- Pigeons and squirrels: "Everything Library: Animals" by
+  [David OReilly](https://davidoreilly.itch.io/everything-library-animals),
+  licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (posed and rendered to sprites).
 - Engine: [Butano](https://github.com/GValiente/butano) by Gustavo Valiente (zlib).

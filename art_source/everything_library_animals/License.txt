@@ -1,0 +1,8 @@
+Models: "Everything Library: Animals" by David OReilly
+Source: https://davidoreilly.itch.io/everything-library-animals
+Licence: Creative Commons Attribution 4.0 International (CC BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/
+
+city_animals.glb contains three models extracted from the pack (GroundedPigeon, Pigeon,
+GraySquirrel), exported from the pack's FBX without changes to the meshes. In the game they are
+posed (tilted, wings bent), rendered to small sprites and recoloured to the GBA palette.

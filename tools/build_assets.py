@@ -410,16 +410,69 @@ def main():
                '{\n    "type": "regular_bg",\n    "bpp_mode": "bpp_4"\n}\n')
 
     build_player(force, fast)
-    build_critters()
+    build_critters(force, fast)
 
 
-def build_critters():
-    for name, frames, mapping, pal in (("pigeon", critters.PIGEON, critters.P, critters.PIGEON_PAL),
-                                       ("squirrel", critters.SQUIRREL, critters.Q, critters.SQUIRREL_PAL)):
-        pixels = critters.frames_to_pixels(frames, mapping)
-        pal = list(pal) + [(0, 0, 0)] * (16 - len(pal))
-        write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), pixels, 16, 16 * len(frames), 4, pal)
-        write_text(os.path.join(ROOT, "graphics", name + ".json"), '{\n    "type": "sprite",\n    "height": 16\n}\n')
+CRITTER_FRAMES = {"pigeon": 5, "squirrel": 4}
+
+
+def sprite_frame(path, ss, w, h):
+    """Supersampled RGBA render -> (rgb float array, alpha mask) with a 1 px dark outline."""
+    img = np.asarray(Image.open(path).convert("RGBA")).astype(np.float64) / 255.0
+    img[..., :3] *= img[..., 3:4]
+    img = img.reshape(h, ss, w, ss, 4).mean(axis=(1, 3))
+    rgb = np.where(img[..., 3:4] > 0, img[..., :3] / np.maximum(img[..., 3:4], 1e-6), 0) * 255
+    alpha = img[..., 3] >= 0.45
+    grown = alpha.copy()
+    grown[1:, :] |= alpha[:-1, :]
+    grown[:-1, :] |= alpha[1:, :]
+    grown[:, 1:] |= alpha[:, :-1]
+    grown[:, :-1] |= alpha[:, 1:]
+    edge = grown & ~alpha
+    rgb[edge] = [40.0, 30.0, 40.0]
+    return rgb, alpha | edge
+
+
+def write_sprite_sheet(name, frames, w, h):
+    """frames: list of (rgb, alpha). One shared 15-colour palette, outline colour reserved."""
+    outline = np.array([40.0, 30.0, 40.0])
+    px = np.concatenate([rgb[alpha] for rgb, alpha in frames]) * WEIGHT
+    cols = to5(kmeans(px, 14, iters=15) / WEIGHT)
+    cols = np.concatenate([cols, [outline]])
+    palette = [(255, 0, 255)] + [tuple(int(v) for v in c) for c in to5(cols)]
+    palette += [(0, 0, 0)] * (16 - len(palette))
+    cw = cols * WEIGHT
+    pixels = []
+    for rgb, alpha in frames:
+        d = ((rgb[..., None, :] * WEIGHT - cw[None, None]) ** 2).sum(3)
+        idx = d.argmin(2) + 1
+        idx[~alpha] = 0
+        pixels.extend(idx.astype(np.uint8).tolist())
+    write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), pixels, w, h * len(frames), 4, palette)
+    write_text(os.path.join(ROOT, "graphics", name + ".json"),
+               f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
+
+
+def build_critters(force, fast):
+    """Pigeons and squirrels: static Everything Library models (CC BY 4.0, David OReilly) posed
+    and rendered by tools/blender_critter.py into 32x32 frames."""
+    ss, samples = (2, 16) if fast else (4, 48)
+    h = hashlib.sha1()
+    for f in ("scene.py", "blender_critter.py"):
+        h.update(open(os.path.join(TOOLS, f), "rb").read())
+    h.update(f"{ss}{samples}".encode())
+    out_dir = os.path.join(CACHE, "critters_" + h.hexdigest()[:12])
+    last = os.path.join(out_dir, "squirrel_3.png")
+    if force or not os.path.exists(last):
+        print("rendering animals...", flush=True)
+        r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_critter.py"),
+                            "--", out_dir, str(ss), str(samples)], capture_output=True, text=True)
+        if not os.path.exists(last):
+            print(r.stdout[-3000:], r.stderr[-3000:])
+            raise RuntimeError("animal render failed")
+    for name, count in CRITTER_FRAMES.items():
+        frames = [sprite_frame(os.path.join(out_dir, f"{name}_{i}.png"), ss, 32, 32) for i in range(count)]
+        write_sprite_sheet(name, frames, 32, 32)
 
 
 # ---------------------------------------------------------------------------------------------

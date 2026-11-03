@@ -8,12 +8,10 @@ namespace tl
 {
     namespace
     {
-        // Sprite frames (see tools/critters.py)
+        // Sprite frames (32x32, rendered by tools/blender_critter.py, facing right)
         constexpr int pigeon_stand = 0;
         constexpr int pigeon_peck = 1;
-        constexpr int pigeon_hop = 2;
-        constexpr int pigeon_fly_up = 3;
-        constexpr int pigeon_fly_down = 4;
+        constexpr int pigeon_wing_frames[] = { 2, 3, 4, 3 };    // wings up, mid, down, mid
         constexpr int squirrel_sit = 0;
         constexpr int squirrel_run_a = 1;
         constexpr int squirrel_climb = 3;
@@ -21,7 +19,7 @@ namespace tl
         constexpr int pigeon_scare_distance = 56;     // world units
         constexpr int squirrel_scare_distance = 60;
         constexpr int return_distance = 150;          // player must be this far away before animals come back
-        constexpr int feet_y = 13 - 8;                 // feet inside the 16x16 frame, relative to its centre
+        constexpr int feet_y = 23 - 16;                // feet inside the 32x32 frame, relative to its centre
 
         [[nodiscard]] int distance2(bn::fixed ax, bn::fixed ay, int bx, int by)
         {
@@ -138,7 +136,8 @@ namespace tl
                         c.y = ny;
                     }
 
-                    c.frame = pigeon_hop;
+                    c.frame = pigeon_stand;
+                    c.z = 3;                        // little hop
                     c.anim = 6;
                 }
             }
@@ -146,6 +145,11 @@ namespace tl
             if(c.anim > 0 && --c.anim == 0)
             {
                 c.frame = pigeon_stand;
+            }
+
+            if(c.z > 0 && c.anim < 4)
+            {
+                c.z = 0;
             }
             break;
 
@@ -155,7 +159,7 @@ namespace tl
             c.z += c.vz;
             c.vz += bn::fixed(0.04);
             c.flip = (c.vx - c.vy) < 0;     // screen-x direction
-            c.frame = ((++c.anim / 3) % 2) ? pigeon_fly_up : pigeon_fly_down;
+            c.frame = pigeon_wing_frames[(++c.anim / 3) % 4];
 
             if(c.z > 170)
             {
@@ -179,7 +183,7 @@ namespace tl
 
         case state::returning:
             c.z -= bn::fixed(1.4);
-            c.frame = ((++c.anim / 3) % 2) ? pigeon_fly_up : pigeon_fly_down;
+            c.frame = pigeon_wing_frames[(++c.anim / 3) % 4];
 
             if(c.z <= 0)
             {
@@ -311,7 +315,7 @@ namespace tl
         int screen_y = image_y - cam_y - 80;
 
         // Off screen (with margin) or behind the HUD bar: hide.
-        bool visible = screen_x > -136 && screen_x < 136 && screen_y > -96 && screen_y < 52;
+        bool visible = screen_x > -144 && screen_x < 144 && screen_y > -100 && screen_y < 56;
         c.sprite.set_visible(visible);
 
         if(! visible)
@@ -320,13 +324,13 @@ namespace tl
         }
 
         c.sprite.set_position(screen_x, screen_y - feet_y);
-        c.sprite.set_horizontal_flip(! c.flip);
+        c.sprite.set_horizontal_flip(c.flip);     // frames face right; flip = facing left
         bn::sprite_tiles_item tiles = c.spawn->kind == critter_kind::pigeon ?
                     bn::sprite_items::pigeon.tiles_item() : bn::sprite_items::squirrel.tiles_item();
         c.sprite.set_tiles(tiles, c.frame);
 
         // Flying birds above everything except the HUD; on the ground the same depth rule as the player.
-        if(c.z > 24 && c.current != state::climbing)
+        if(c.z > 16 && c.current != state::climbing)
         {
             c.sprite.set_bg_priority(1);
         }
@@ -334,7 +338,7 @@ namespace tl
         {
             int ground_x = c.x.integer();
             int ground_y = c.y.integer();
-            c.sprite.set_bg_priority(_map->player_hidden(ground_x, ground_y, 5, 12) ? 3 : 2);
+            c.sprite.set_bg_priority(_map->player_hidden(ground_x, ground_y, 8, 14) ? 3 : 2);
         }
     }
 }
