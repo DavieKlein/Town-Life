@@ -68,6 +68,10 @@ namespace tl
         _hud_bg->set_priority(hud_priority);
         _redraw_hud_text();
 
+        // Build date at the top left for a few seconds, so the owner can check which ROM is running.
+        _text_generator.set_left_alignment();
+        _text_generator.generate(-116, -74, "build " __DATE__ " " __TIME__, _version_sprites);
+
         // Need bars: one sprite per need over the dark bar slots of the HUD background.
         for(int need = 0; need < needs::count; ++need)
         {
@@ -394,6 +398,11 @@ namespace tl
             break;
 
         case state::playing:
+            if(_version_frames > 0 && --_version_frames == 0)
+            {
+                _version_sprites.clear();
+            }
+
             if(_menu.is_open())
             {
                 int choice = _menu.update();

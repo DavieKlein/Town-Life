@@ -47,6 +47,8 @@ namespace tl
         bn::vector<bn::sprite_ptr, needs::count> _bar_sprites;
         bn::vector<bn::sprite_ptr, 4> _zzz_sprites;
         bn::vector<bn::sprite_ptr, 6> _pool_sprites;
+        bn::vector<bn::sprite_ptr, 12> _version_sprites;
+        int _version_frames = 300;     // the build date is shown for 5 seconds at start
         light_params _light;
         int _light_minutes = -1;
         int _water_phase = 0;
