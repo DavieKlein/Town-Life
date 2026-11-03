@@ -473,6 +473,24 @@ Update the checkboxes at the end of each session.
 
 ## Next session: start here
 
+**Graphics upgrade proposal (sent to the owner, awaiting approval):** "Urbz essence, modern
+fidelity". Mock-ups were made from real emulator screenshots with GBA-legal operations only.
+1. Light and atmosphere:
+   - Cloud shadows on the free BG3, alpha-blended with the same EVA/EVB as the player shadow.
+   - Day/night cycle by palette transforms driven by the clock.
+   - Night lights: lamp pools as additive blending on BG3, and lit windows via reserved palette
+     entries.
+   - Blending is one global setting, so clouds (day) and lights (night) take turns.
+2. Life: water and fountain ripples by palette cycling (4 reserved entries), flickering signs.
+3. Depth:
+   - Bake per-tile depth from Blender. The player sprite always draws over the map, and only the
+     object tiles that are really in front are redrawn over it as small mask sprites (objects
+     palettes copied into sprite palettes).
+   - This replaces the whole-layer priority switch; an always-on-top layer for canopies and
+     awnings is included.
+4. Render fidelity: bevelled edges, the owner's own texture/graphics packs (to be uploaded to
+   Drive; no Remote Control folder is connected), glossy water with reflections, denser props.
+
 **New (owner, latest):** the owner added more packs to the Drive folder in the agreed
 **isometric urban** style: commercial and residential buildings plus texture packs. List the
 Drive folder first, check each licence, and propose (with preview renders) how to use them
