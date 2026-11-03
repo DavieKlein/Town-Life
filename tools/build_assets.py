@@ -70,7 +70,21 @@ def render(s, layer, force, fast):
         rgb = np.where(a[..., 3:4] > 0, a[..., :3] / np.maximum(a[..., 3:4], 1e-6), 0)
         a = np.concatenate([rgb, a[..., 3:4]], axis=2)
         img = Image.fromarray(np.clip(a * 255 + 0.5, 0, 255).astype(np.uint8), "RGBA")
-    return img
+    return grade(img)
+
+
+def grade(img):
+    """Colour grade before quantization: a bit more contrast and saturation and cool, slightly
+    purple shadows, for the moodier look of classic pre-rendered city games."""
+    a = np.asarray(img).astype(np.float64) / 255.0
+    rgb = a[..., :3]
+    luma = (rgb * [0.299, 0.587, 0.114]).sum(2, keepdims=True)
+    rgb = luma + (rgb - luma) * 1.15                                   # saturation
+    rgb = np.clip(0.5 + (rgb - 0.5) * 1.1, 0, 1)                       # contrast
+    shadow = np.clip(1.0 - luma / 0.45, 0, 1)                          # 1 in deep shadow
+    rgb = rgb * (1 - 0.18 * shadow) + shadow * 0.18 * rgb * np.array([0.82, 0.8, 1.15])
+    a[..., :3] = np.clip(rgb, 0, 1)
+    return Image.fromarray(np.clip(a * 255 + 0.5, 0, 255).astype(np.uint8), "RGBA")
 
 
 # ---------------------------------------------------------------------------------------------

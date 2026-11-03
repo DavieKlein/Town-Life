@@ -70,6 +70,89 @@ def surface_coords(nt):
     return mix.outputs[1]
 
 
+def grit_material(nt, bsdf, coords, kind, spec):
+    """Worn city surfaces: fine grain, large dirt patches, cracks and weeds in the joints."""
+    L = nt.links
+
+    def noise(scale, detail=3.0):
+        n = nt.nodes.new("ShaderNodeTexNoise")
+        n.inputs["Scale"].default_value = scale
+        n.inputs["Detail"].default_value = detail
+        L.new(coords, n.inputs["Vector"])
+        return n.outputs["Fac"]
+
+    def ramp(fac, stops):
+        r = nt.nodes.new("ShaderNodeValToRGB")
+        r.color_ramp.elements[0].position, r.color_ramp.elements[0].color = stops[0][0], rgb(stops[0][1])
+        r.color_ramp.elements[1].position, r.color_ramp.elements[1].color = stops[-1][0], rgb(stops[-1][1])
+        for pos, col in stops[1:-1]:
+            e = r.color_ramp.elements.new(pos)
+            e.color = rgb(col)
+        L.new(fac, r.inputs["Fac"])
+        return r.outputs["Color"]
+
+    def mix(a, b, fac, mode="MIX"):
+        m = nt.nodes.new("ShaderNodeMix")
+        m.data_type = "RGBA"
+        m.blend_type = mode
+        if isinstance(fac, float):
+            m.inputs["Factor"].default_value = fac
+        else:
+            L.new(fac, m.inputs["Factor"])
+        L.new(a, m.inputs[6])
+        L.new(b, m.inputs[7])
+        return m.outputs[2]
+
+    def threshold(fac, lo, hi):
+        mr = nt.nodes.new("ShaderNodeMapRange")
+        mr.inputs["From Min"].default_value = lo
+        mr.inputs["From Max"].default_value = hi
+        L.new(fac, mr.inputs["Value"])
+        return mr.outputs["Result"]
+
+    # cracks: thin Voronoi cell edges, only in some areas
+    vor = nt.nodes.new("ShaderNodeTexVoronoi")
+    vor.feature = "DISTANCE_TO_EDGE"
+    vor.inputs["Scale"].default_value = spec.get("crack_scale", 1.6)
+    L.new(coords, vor.inputs["Vector"])
+    crack = threshold(vor.outputs["Distance"], 0.035, 0.0)          # 1 on the edge
+    crack_mask = threshold(noise(0.7), 0.52, 0.62)                  # cracks only in patches
+    cm = nt.nodes.new("ShaderNodeMath")
+    cm.operation = "MULTIPLY"
+    L.new(crack, cm.inputs[0])
+    L.new(crack_mask, cm.inputs[1])
+
+    if kind == "asphalt_grit":
+        base = ramp(noise(70.0, 2.0), [(0.3, "#3e3e48"), (0.5, "#4c4c56"), (0.7, "#5a5a64")])
+        patch = ramp(noise(1.8), [(0.4, "#ffffff"), (0.7, "#a8a8b4")])
+        col = mix(base, patch, 1.0, "MULTIPLY")
+        dark = nt.nodes.new("ShaderNodeRGB")
+        dark.outputs[0].default_value = rgb("#22222a")
+        col = mix(col, dark.outputs[0], cm.outputs[0])
+    else:
+        brick = nt.nodes.new("ShaderNodeTexBrick")
+        brick.inputs["Color1"].default_value = rgb(spec["c"])
+        brick.inputs["Color2"].default_value = rgb(spec["c2"])
+        brick.inputs["Mortar"].default_value = (0, 0, 0, 1)
+        brick.inputs["Scale"].default_value = 1.0
+        brick.inputs["Mortar Size"].default_value = spec.get("mortar_size", 0.012)
+        brick.inputs["Brick Width"].default_value = spec.get("bw", 0.22)
+        brick.inputs["Row Height"].default_value = spec.get("bh", 0.11)
+        brick.inputs["Color2"].default_value = rgb(spec["c2"])
+        L.new(coords, brick.inputs["Vector"])
+        grain = ramp(noise(40.0, 2.0), [(0.3, "#d8d8d8"), (0.7, "#ffffff")])
+        col = mix(brick.outputs["Color"], grain, 1.0, "MULTIPLY")
+        dirt = ramp(noise(2.2), [(0.45, "#ffffff"), (0.75, "#9c9484")])
+        col = mix(col, dirt, 1.0, "MULTIPLY")
+        # joints: dark mortar, with green weeds in places
+        weeds = ramp(noise(5.0), [(0.55, spec["mortar"]), (0.62, "#4e7a30")])
+        col = mix(col, weeds, brick.outputs["Fac"])
+        dark = nt.nodes.new("ShaderNodeRGB")
+        dark.outputs[0].default_value = rgb("#3a3430")
+        col = mix(col, dark.outputs[0], cm.outputs[0])
+    L.new(col, bsdf.inputs["Base Color"])
+
+
 def make_material(name, spec):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
@@ -116,6 +199,9 @@ def make_material(name, spec):
         chk.inputs["Scale"].default_value = spec.get("scale", 3.0)
         nt.links.new(coords, chk.inputs["Vector"])
         nt.links.new(chk.outputs["Color"], bsdf.inputs["Base Color"])
+    elif kind in ("asphalt_grit", "paving_grit", "slab_grit"):
+        coords = surface_coords(nt)
+        grit_material(nt, bsdf, coords, kind, spec)
     if "emit" in spec:
         bsdf.inputs["Emission Color"].default_value = rgb(spec.get("emit_c", col))
         bsdf.inputs["Emission Strength"].default_value = spec["emit"]
@@ -123,9 +209,12 @@ def make_material(name, spec):
 
 
 MATERIALS = {
-    "paving": dict(kind="brick", c="#b8644a", c2="#a0503c", mortar="#7a5a4a", bw=0.22, bh=0.11, mortar_size=0.01),
-    "asphalt": dict(kind="noise", c="#4a4a52", c2="#5a5a62", scale=14, rough=0.9),
-    "curb": dict(kind="noise", c="#b4b2aa", c2="#a2a098", scale=10),
+    "paving": dict(kind="paving_grit", c="#b05e48", c2="#94503e", mortar="#5e4a40", bw=0.22, bh=0.11,
+                   mortar_size=0.014),
+    "slabs": dict(kind="paving_grit", c="#b8b2a6", c2="#a8a296", mortar="#6a665e", bw=0.75, bh=0.75,
+                  mortar_size=0.02, crack_scale=0.9),
+    "asphalt": dict(kind="asphalt_grit", rough=0.9),
+    "curb": dict(kind="noise", c="#c8c4ba", c2="#9e9a90", scale=14),
     "paint_white": dict(c="#e8e8e0"),
     "paint_yellow": dict(c="#e8b830"),
     "grass": dict(kind="noise", c="#4f9a3a", c2="#6cb24a", scale=6, rough=0.95),
@@ -141,8 +230,8 @@ MATERIALS = {
     "glass_office": dict(c="#5a88b8", rough=0.05),
     "lamp_glass": dict(c="#fff0c0", emit=2.0, emit_c="#ffe8a8"),
     "roof": dict(kind="noise", c="#7c7c84", c2="#6a6a72", scale=20),
-    "leaves": dict(kind="noise", c="#3c7a34", c2="#5a9a40", scale=4, rough=0.9),
-    "leaves_light": dict(kind="noise", c="#4c9a3c", c2="#74b850", scale=6, rough=0.9),
+    "leaves": dict(kind="noise", c="#2a5c30", c2="#4c8438", scale=5, rough=0.9),
+    "leaves_light": dict(kind="noise", c="#3a7a36", c2="#62983e", scale=7, rough=0.9),
     "trunk": dict(c="#6a4428"),
     "pot": dict(c="#b0603c"),
     "red_paint": dict(c="#c02828", rough=0.4),
@@ -185,6 +274,13 @@ MATERIALS = {
     "plaza_gold": dict(kind="checker", c="#e8dcc0", c2="#c8a858", scale=1.5, rough=0.3),
     "barrier_stripes": dict(kind="checker", c="#f08a1a", c2="#f4f2ea", scale=4.0),
     "orange_paint": dict(c="#f07a1a", rough=0.5),
+    "metal_grey": dict(c="#8a8c94", rough=0.4, metal=0.5),
+    "bin_green": dict(c="#2e5a3a", rough=0.5),
+    "fence_wood": dict(kind="noise", c="#8a6a48", c2="#6e543a", scale=12),
+    "chain_link": dict(kind="checker", c="#5a5c64", c2="#3a3c44", scale=40.0, rough=0.5),
+    "poster_red": dict(kind="noise", c="#c83838", c2="#f0d8a0", scale=9),
+    "poster_yellow": dict(kind="noise", c="#e8c040", c2="#3a4a8a", scale=7),
+    "poster_blue": dict(kind="noise", c="#3a6ac8", c2="#f0ece0", scale=8),
     "milk_white": dict(c="#f4f4f0", rough=0.5),
     "print_cream": dict(c="#f6eed2", rough=0.5),
     "bottle_green": dict(c="#3c8a4a", rough=0.15),
@@ -491,6 +587,71 @@ def setup_camera_and_lights(s, scale):
         po.location = bl(L["x"], L["y"], L["z"])
 
 
+def add_grime(m):
+    """Darkens creases, corners and the bottom of walls with an ambient-occlusion multiply: the
+    lived-in, slightly dirty look of classic pre-rendered city games."""
+    if not m.use_nodes or "Principled BSDF" not in m.node_tree.nodes or m.get("tl_grime"):
+        return
+    m["tl_grime"] = True
+    nt = m.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
+    src = None
+    for link in list(nt.links):
+        if link.to_node == bsdf and link.to_socket.name == "Base Color":
+            src = link.from_socket
+            nt.links.remove(link)
+    ao = nt.nodes.new("ShaderNodeAmbientOcclusion")
+    ao.inputs["Distance"].default_value = 0.9
+    ao.samples = 8
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].position = 0.0
+    ramp.color_ramp.elements[0].color = (0.32, 0.3, 0.38, 1)     # cool, slightly purple grime
+    ramp.color_ramp.elements[1].position = 0.85
+    nt.links.new(ao.outputs["AO"], ramp.inputs["Fac"])
+    mul = nt.nodes.new("ShaderNodeMix")
+    mul.data_type = "RGBA"
+    mul.blend_type = "MULTIPLY"
+    mul.inputs["Factor"].default_value = 1.0
+    if src is not None:
+        nt.links.new(src, mul.inputs[6])
+    else:
+        mul.inputs[6].default_value = bsdf.inputs["Base Color"].default_value
+    nt.links.new(ramp.outputs["Color"], mul.inputs[7])
+    nt.links.new(mul.outputs[2], bsdf.inputs["Base Color"])
+
+
+def stylize(layer_visible):
+    """Outlines (Freestyle) on the visible layer + grime on every material."""
+    sc = bpy.context.scene
+    col = bpy.data.collections.new("tl_visible")
+    sc.collection.children.link(col)
+    for o in list(sc.objects):
+        if o.type in ("MESH", "FONT") and o.visible_camera:
+            col.objects.link(o)
+    for m in bpy.data.materials:
+        add_grime(m)
+    sc.render.use_freestyle = True
+    sc.render.line_thickness_mode = "ABSOLUTE"
+    sc.render.line_thickness = 1.0
+    vl = sc.view_layers[0]
+    vl.use_freestyle = True
+    fs = vl.freestyle_settings
+    fs.crease_angle = math.radians(120)
+    ls = fs.linesets[0] if len(fs.linesets) else fs.linesets.new("tl")
+    ls.select_by_collection = True
+    ls.collection = col
+    ls.select_by_visibility = True
+    ls.select_silhouette = True
+    ls.select_border = True
+    ls.select_crease = True
+    if ls.linestyle is None:
+        ls.linestyle = bpy.data.linestyles.new("tl_lines")
+    style = ls.linestyle
+    style.color = (0.07, 0.05, 0.09)
+    style.thickness = 1.6
+    style.alpha = 0.85
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:]
     ident, layer, out = argv[0], argv[1], argv[2]
@@ -513,6 +674,16 @@ def main():
     sc.render.filepath = out
     build(s, layer)
     setup_camera_and_lights(s, scale)
+    stylize(layer)
+    if len(argv) > 5 and argv[5]:
+        # optional crop for quick tests: x0,y0,x1,y1 in image pixels (top-left origin)
+        x0, y0, x1, y1 = (float(v) for v in argv[5].split(","))
+        sc.render.use_border = True
+        sc.render.use_crop_to_border = True
+        sc.render.border_min_x = x0 / s.img_w
+        sc.render.border_max_x = x1 / s.img_w
+        sc.render.border_min_y = 1 - y1 / s.img_h
+        sc.render.border_max_y = 1 - y0 / s.img_h
     bpy.ops.render.render(write_still=True)
 
 

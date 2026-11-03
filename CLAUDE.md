@@ -162,7 +162,11 @@ for the FBX importer. Quaternius FBX materials import with alpha 0 — the rende
 simple 3D geometry in Blender, rendered with sunlight, soft shadows and real materials, and then
 converted to GBA tiles. Zoomed in: the player is ~46 px tall (1 map cell = 0.75 m). HUD bar at the
 bottom (clock + money panel, need icons with green/red bars). Own designs only — never copy
-graphics from existing games. Budget: free tools only; the owner might spend at most ~€50 later
+graphics from existing games. **Lived-in, gritty city mood** (owner feedback): worn
+surfaces (cracked asphalt and slabs, weeds in joints, dirt patches), white curb lines, dark
+outlines on every object, darker corners, slightly saturated colours with cool shadows, and lots
+of small street details (bins, newspaper boxes, parking meters, curved lamps, fences, posters,
+ivy, weeds). Budget: free tools only; the owner might spend at most ~€50 later
 (e.g. a character asset pack) if the scripted 3D characters are not good enough.
 
 ## Current state of the code
@@ -267,7 +271,16 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   blender_render's `fix_kit_material` drops the kit's vertex-colour wear mask (it showed as red
   smears) and the missing normal/ORM maps, and makes glass a glossy blue.
   City helpers: `corner_market_building(s, x0, facade_y)`, `vaulttech_tower`, `fountain`,
-  `barrier(..., closed_sign)`, `cone`, `bus_stop`. Tall buildings are simply cut off at the image
+  `barrier(..., closed_sign)`, `cone`, `bus_stop`, `lamp_curved`, `newspaper_box`, `trash_can`,
+  `parking_meter`, `fence_wood`, `chain_link`, `poster`, `weeds`, `ivy`.
+  **Style pass** (`stylize()` in blender_render.py, always on): Freestyle outlines (silhouette,
+  border, crease; only on the layer being rendered, via the `tl_visible` collection) and
+  `add_grime()` which multiplies every material's base colour with an ambient-occlusion term
+  (dark, slightly purple corners). Worn ground materials: kinds `asphalt_grit` / `paving_grit`
+  (materials `asphalt`, `paving`, `slabs`) with grain, dirt patches, Voronoi cracks and weeds.
+  `grade()` in build_assets.py adds saturation, contrast and cool shadows before quantization.
+  Quick look at a small area: `blender -b --python tools/blender_render.py -- <scene> <layer>
+  <out.png> 2 32 "x0,y0,x1,y1"` (crop in image pixels). Tall buildings are simply cut off at the image
   top (the camera never shows more than `origin_y` px above the back corner), like the classic games.
 - **blender_render.py**: orthographic camera at 60°/45° with `sensor_fit = HORIZONTAL`;
   `ortho_scale = img_w * cos45 * CELL_M / 16` makes 1 cell = a 32x16 px diamond, exactly the

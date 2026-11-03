@@ -342,6 +342,103 @@ def bus_stop(s, x0, x1, y):
     s.occluder(x0, y - 0.7, x1, y + 0.3, 2.4)
 
 
+def lamp_curved(s, x, y, arm="y"):
+    """Street lamp with a curved arm reaching over the road (arm towards +y or -y)."""
+    d = 1 if arm == "y" else -1
+    s.cyl(x, y, 0, 0.3, 0.12, "metal_dark")
+    s.cyl(x, y, 0, 4.2, 0.07, "metal_grey")
+    for i, (dy, dz) in enumerate(((0.15, 4.25), (0.4, 4.4), (0.7, 4.5), (1.0, 4.52))):
+        s.sphere(x, y + d * dy / CELL_M, dz, 0.075, "metal_grey")
+    s.box(x - 0.25, y + d * 1.0 / CELL_M - 0.3, x + 0.25, y + d * 1.0 / CELL_M + 0.3, 4.38, 4.5, "metal_grey")
+    s.box(x - 0.2, y + d * 1.0 / CELL_M - 0.25, x + 0.2, y + d * 1.0 / CELL_M + 0.25, 4.34, 4.39, "lamp_glass")
+    s.set_solid(x - 0.2, y - 0.2, x + 0.2, y + 0.2)
+    s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 4.6)
+
+
+def newspaper_box(s, x, y, colour="sign_blue"):
+    s.box(x - 0.3, y - 0.25, x + 0.3, y + 0.25, 0.25, 1.05, colour)
+    s.box(x - 0.24, y + 0.22, x + 0.24, y + 0.27, 0.55, 0.95, "glass")
+    s.box(x - 0.18, y + 0.23, x + 0.18, y + 0.28, 0.6, 0.85, "print_cream")
+    s.box(x - 0.3, y - 0.25, x + 0.3, y + 0.25, 1.05, 1.1, "metal_dark")
+    for (dx, dy) in ((-0.2, -0.15), (0.2, -0.15), (-0.2, 0.15), (0.2, 0.15)):
+        s.box(x + dx - 0.03, y + dy - 0.03, x + dx + 0.03, y + dy + 0.03, 0, 0.25, "metal_dark")
+    s.set_solid(x - 0.3, y - 0.3, x + 0.3, y + 0.3)
+    s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 1.2)
+
+
+def trash_can(s, x, y):
+    s.cyl(x, y, 0, 0.85, 0.24, "bin_green", verts=12)
+    s.cyl(x, y, 0.85, 0.92, 0.27, "metal_dark", verts=12)
+    s.box(x - 0.05, y + 0.15, x + 0.12, y + 0.3, 0.92, 1.0, "goods_white")      # litter sticking out
+    s.set_solid(x - 0.25, y - 0.25, x + 0.25, y + 0.25)
+    s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 1.0)
+
+
+def parking_meter(s, x, y):
+    s.cyl(x, y, 0, 1.1, 0.04, "metal_grey", verts=8)
+    s.box(x - 0.12, y - 0.1, x + 0.12, y + 0.1, 1.1, 1.45, "metal_grey")
+    s.box(x - 0.08, y + 0.08, x + 0.08, y + 0.11, 1.22, 1.38, "glass")
+    s.set_solid(x - 0.1, y - 0.1, x + 0.1, y + 0.1)
+    s.occluder(x - 0.3, y - 0.3, x + 0.3, y + 0.3, 1.5)
+
+
+def fence_wood(s, x0, x1, y, h=1.4):
+    """Wooden board fence along x."""
+    s.box(x0, y - 0.08, x1, y + 0.08, 0.3, 0.42, "wood_dark")
+    s.box(x0, y - 0.08, x1, y + 0.08, h - 0.35, h - 0.23, "wood_dark")
+    x = x0
+    i = 0
+    while x < x1 - 0.05:
+        top = h + (0.06 if i % 2 else 0.0)
+        s.box(x, y + 0.04, min(x + 0.17, x1), y + 0.1, 0.05, top, "fence_wood" if i % 3 else "wood")
+        x += 0.2
+        i += 1
+    s.set_solid(x0, y - 0.2, x1 - 0.001, y + 0.2)
+    s.occluder(x0, y - 0.3, x1, y + 0.3, h + 0.1)
+
+
+def chain_link(s, x0, x1, y, h=2.0):
+    """Chain-link fence along x (mesh drawn as a dark see-through pattern)."""
+    s.box(x0, y - 0.02, x1, y + 0.02, 0.05, h, "chain_link")
+    s.box(x0, y - 0.04, x1, y + 0.04, h - 0.04, h, "metal_grey")
+    x = x0
+    while x <= x1 + 0.01:
+        s.cyl(x, y, 0, h + 0.05, 0.04, "metal_grey", verts=8)
+        x += 2.5
+    s.set_solid(x0, y - 0.2, x1 - 0.001, y + 0.2)
+    s.occluder(x0, y - 0.3, x1, y + 0.3, h + 0.1)
+
+
+def poster(s, x0, x1, y_face, z0, z1, mat):
+    """Poster pasted on a wall that faces +y."""
+    s.box(x0, y_face - 0.01, x1, y_face + 0.025, z0, z1, mat)
+
+
+def weeds(s, x, y, n=3, rnd=None):
+    """A clump of weeds / small bushes on the ground (objects layer, not solid)."""
+    import random
+    rnd = rnd or random.Random(int(x * 97 + y * 13))
+    for _ in range(n):
+        dx, dy = rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3)
+        s.sphere(x + dx, y + dy, 0.05, rnd.uniform(0.1, 0.18), "leaves_light" if rnd.random() < 0.5 else "leaves",
+                 sz=0.7)
+
+
+def ivy(s, x0, x1, y_face, z1, rnd=None):
+    """Climbing plants on a wall facing +y, from the ground up to about z1."""
+    import random
+    rnd = rnd or random.Random(int(x0 * 31 + y_face))
+    x = x0
+    while x < x1:
+        top = rnd.uniform(0.6, z1)
+        z = 0.15
+        while z < top:
+            s.sphere(x + rnd.uniform(-0.15, 0.15), y_face + 0.08, z, rnd.uniform(0.14, 0.24),
+                     "leaves" if rnd.random() < 0.6 else "leaves_light", sz=0.8)
+            z += 0.28
+        x += rnd.uniform(0.3, 0.55)
+
+
 def city_centre():
     """District 1: City Centre. Main avenue along x, a cross street along y, the river with the closed
     bridge to the Docks along the bottom, road works to the north (future Station Quarter)."""
@@ -381,14 +478,36 @@ def city_centre():
         s.box(xx, AV1 + 0.8, xx + 0.6, AV1 + 3.0, road_z, road_z + 0.01, "paint_white", layer="floor")
     for (x, y) in ((12, 26), (48, 24), (30, 10), (30, 40), (62, 27)):
         s.kit("Prop_ManholeCover", x, y, layer="floor", solid=False, occlude=False)
+    # white edge lines along the curbs, grey stone slabs on the avenue sidewalks
+    for (x0, x1) in ((0, CS0), (CS1, W)):
+        s.box(x0 + (0.6 if x0 else 0), AV0 + 0.45, x1 - (0.6 if x0 == 0 else 0), AV0 + 0.6,
+              road_z, road_z + 0.012, "paint_white", layer="floor")
+        s.box(x0 + (0.6 if x0 else 0), AV1 - 0.6, x1 - (0.6 if x0 == 0 else 0), AV1 - 0.45,
+              road_z, road_z + 0.012, "paint_white", layer="floor")
+        s.box(x0, AV0 - 4, x1, AV0 - 0.15, 0.0, 0.012, "slabs", layer="floor")
+        s.box(x0, AV1 + 0.15, x1, AV1 + 4, 0.0, 0.012, "slabs", layer="floor")
+    for (y0, y1) in ((0, AV0), (AV1, RIVER)):
+        s.box(CS0 + 0.45, y0 + (0.6 if y0 else 0), CS0 + 0.6, y1 - (0.6 if y0 == 0 else 0.6), road_z, road_z + 0.012,
+              "paint_white", layer="floor")
+        s.box(CS1 - 0.6, y0 + (0.6 if y0 else 0), CS1 - 0.45, y1 - (0.6 if y0 == 0 else 0.6), road_z, road_z + 0.012,
+              "paint_white", layer="floor")
 
     # ---- north: road works (future Station Quarter) ----
     barrier(s, CS0, CS1, 1.2)
     for x in (CS0 + 1.0, CS0 + 4.0, CS1 - 1.0):
         cone(s, x, 2.6)
+    chain_link(s, CS0 - 4, CS0 - 0.3, 0.4)
+    chain_link(s, CS1 + 0.3, CS1 + 4, 0.4)
+    for x in (CS0 - 3.4, CS0 - 1.8, CS1 + 1.2, CS1 + 3.1):
+        weeds(s, x, 0.9, 4)
 
     # ---- north-west block: downtown apartment building (MegaKit) ----
     s.kit("Building_Medium_2_001", 11.0, AV0 - 4.0)
+    for (x0, x1, mat) in ((2.2, 3.4, "poster_red"), (3.6, 4.6, "poster_yellow"), (17.4, 18.6, "poster_blue")):
+        poster(s, x0, x1, AV0 - 4.0 + 0.62, 0.55, 2.0, mat)
+    ivy(s, 0.3, 1.6, AV0 - 4.0 + 0.6, 2.6)
+    for x in (0.8, 6.0, 20.6):
+        weeds(s, x, AV0 - 3.0, 3)
 
     # ---- north-east block: Corner Market, a slim house and the VaultTech tower ----
     corner_market_building(s, CS1 + 5, AV0 - 4)
@@ -402,8 +521,19 @@ def city_centre():
 
     # ---- sidewalk furniture along the avenue ----
     for x in (3, 15, 51, 66):
-        lamp_post(s, x, AV0 - 0.8)
-        lamp_post(s, x, AV1 + 0.8)
+        lamp_curved(s, x, AV0 - 0.8, arm="y")
+        lamp_curved(s, x, AV1 + 0.8, arm="-y")
+    for x in (5.0, 17.0, 53.0, 68.0):
+        trash_can(s, x, AV0 - 0.9)
+    for x in (9.5, 12.5, 58.5, 61.5):
+        parking_meter(s, x, AV0 - 0.7)
+    newspaper_box(s, 45.0, AV1 + 2.6, "sign_blue")
+    newspaper_box(s, 46.0, AV1 + 2.6, "red_paint")
+    trash_can(s, 38.5, AV1 + 1.0)
+    for x in (CS1 + 16.6, CS1 + 18.0):
+        weeds(s, x, AV0 - 3.6, 3)
+    ivy(s, CS1 + 15.6, CS1 + 16.6, AV0 - 4 + 0.05, 2.2)
+    poster(s, CS1 + 5.2, CS1 + 6.2, AV0 - 4 + 0.08, 0.6, 1.8, "poster_yellow")
     for x in (8.0, 19.0):
         s.kit("Sidewalk_Planter", x, AV0 - 1.4, solid=True, occlude=False)
         tree(s, x, AV0 - 1.4, 0.95)
