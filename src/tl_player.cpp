@@ -1,7 +1,9 @@
 #include "tl_player.h"
 
 #include "bn_keypad.h"
+#include "bn_blending.h"
 #include "bn_sprite_items_player.h"
+#include "bn_sprite_items_shadow.h"
 
 namespace tl
 {
@@ -9,16 +11,23 @@ namespace tl
     {
         constexpr int hitbox_radius = 4;        // world units around the feet
 
-        // Frames in player.bmp (16x32): 0-2 front (facing down-left), 3-5 back (facing up-left).
-        constexpr int back_frames = 3;
-        constexpr int anim_wait = 8;            // game frames per animation step
-        constexpr int walk_cycle[] = { 0, 1, 0, 2 };
+        // player.bmp: 32x64 frames rendered from the 3D character, 5 per facing (idle + 4 walk frames),
+        // facings in the order down, right, up, left. The feet are at (16, 58) inside each frame.
+        constexpr int frames_per_facing = 5;
+        constexpr int anim_wait = 7;            // game frames per animation step
+        constexpr int feet_offset_y = 58 - 32;  // feet relative to the sprite centre
+        constexpr int sprite_half_width = 10;   // body size used for the depth test
+        constexpr int sprite_height = 50;
     }
 
-    player::player(const bn::camera_ptr& camera) :
+    player::player() :
+        _shadow(bn::sprite_items::shadow.create_sprite(0, 0)),
         _sprite(bn::sprite_items::player.create_sprite(0, 0))
     {
-        _sprite.set_camera(camera);
+        // Soft shadow under the feet: a dark ellipse drawn with 50% alpha blending, behind the player.
+        bn::blending::set_transparency_alpha(0.5);
+        _shadow.set_blending_enabled(true);
+        _shadow.set_z_order(1);
     }
 
     void player::place(const map_info& map, int x, int y, direction facing)
@@ -28,7 +37,6 @@ namespace tl
         _y = y;
         _direction = facing;
         _anim_counter = 0;
-        _update_sprite();
         _update_graphics(false);
     }
 
@@ -103,52 +111,54 @@ namespace tl
             _anim_counter = 0;
         }
 
-        _update_sprite();
         _update_graphics(moving);
     }
 
-    void player::_update_sprite()
+    void player::update_sprite(int cam_x, int cam_y)
     {
-        int bg_x = _map->to_bg_x(_x, _y);
-        int bg_y = _map->to_bg_y(_x, _y);
+        int image_x = _map->to_image_x(_x, _y);
+        int image_y = _map->to_image_y(_x, _y);
 
-        // Butano coordinates: the bg is centred on (0, 0). The sprite is 16x32 with the feet at the bottom.
-        _sprite.set_position(bg_x - (_map->bg_width / 2), bg_y - (_map->bg_height / 2) - 15);
+        // Screen coordinates are relative to the screen centre.
+        int screen_x = image_x - cam_x - 120;
+        int screen_y = image_y - cam_y - 80;
+        _sprite.set_position(screen_x, screen_y - feet_offset_y);
+        _shadow.set_position(screen_x, screen_y - 1);
 
         // Behind a building/tree: draw below the objects layer (priority 2), otherwise above it.
-        _sprite.set_bg_priority(_map->player_hidden(_x, _y) ? 3 : 2);
+        int priority = _map->player_hidden(_x, _y, sprite_half_width, sprite_height) ? 3 : 2;
+        _sprite.set_bg_priority(priority);
+        _shadow.set_bg_priority(priority);
     }
 
     void player::_update_graphics(bool moving)
     {
-        int base_frame = 0;
-        bool flip = false;
+        int facing_index = 0;
 
         switch(_direction)
         {
 
-        case direction::down:       // down-left: front view
+        case direction::down:
+            facing_index = 0;
             break;
 
-        case direction::right:      // down-right: front view mirrored
-            flip = true;
+        case direction::right:
+            facing_index = 1;
             break;
 
-        case direction::left:       // up-left: back view
-            base_frame = back_frames;
+        case direction::up:
+            facing_index = 2;
             break;
 
-        case direction::up:         // up-right: back view mirrored
-            base_frame = back_frames;
-            flip = true;
+        case direction::left:
+            facing_index = 3;
             break;
 
         default:
             break;
         }
 
-        int step = moving ? walk_cycle[(_anim_counter / anim_wait) % 4] : 0;
-        _sprite.set_tiles(bn::sprite_items::player.tiles_item(), base_frame + step);
-        _sprite.set_horizontal_flip(flip);
+        int frame = moving ? 1 + ((_anim_counter / anim_wait) % 4) : 0;
+        _sprite.set_tiles(bn::sprite_items::player.tiles_item(), (facing_index * frames_per_facing) + frame);
     }
 }

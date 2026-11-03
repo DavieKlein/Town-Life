@@ -7,15 +7,16 @@
 
 namespace bn
 {
-    class regular_bg_item;
+    class color;
 }
 
 namespace tl
 {
     // World units: 1 unit = 1 screen pixel horizontally; one map cell is 16x16 units.
     // Isometric projection (2:1): +x goes down-right on screen, +y goes down-left.
-    //   bg_x = origin_x + x - y
-    //   bg_y = origin_y + (x + y) / 2
+    //   image_x = origin_x + x - y
+    //   image_y = origin_y + (x + y) / 2
+    // "Image" coordinates are pixels of the pre-rendered map image (top-left = 0, 0).
     constexpr int cell_size = 16;
 
     enum class direction
@@ -48,40 +49,52 @@ namespace tl
     struct occluder
     {
         int x0, y0, x1, y1;         // world footprint
-        int sx0, sy0, sx1, sy1;     // screen bounding box (bg pixels)
+        int sx0, sy0, sx1, sy1;     // screen bounding box (image pixels)
 
         // Iso depth test for disjoint boxes: the player is in front if past the far edge on either axis.
-        [[nodiscard]] constexpr bool hides(int px, int py, int bg_x, int bg_y) const
+        [[nodiscard]] constexpr bool hides(int px, int py, int image_x, int image_y, int half_width,
+                                           int height) const
         {
-            bool overlaps = bg_x + 8 > sx0 && bg_x - 8 < sx1 && bg_y > sy0 && bg_y - 32 < sy1;
+            bool overlaps = image_x + half_width > sx0 && image_x - half_width < sx1 && image_y > sy0 &&
+                    image_y - height < sy1;
             return overlaps && px < x1 && py < y1;
         }
+    };
+
+    // One pre-rendered layer, split into 4bpp 8x8 tiles.
+    struct layer_data
+    {
+        const uint32_t* tiles;      // 8 words per tile; tile 0 is empty
+        int tiles_count;
+        const uint32_t* cells;      // per 8x8 cell: bits 0-15 tile, bit 16 hflip, bit 17 vflip, bits 20-23 bank
+        const bn::color* palette;   // 16 colours per bank
+        int banks;
     };
 
     struct map_info
     {
         const char* name;
-        const bn::regular_bg_item* floor_item;
-        const bn::regular_bg_item* objects_item;
-        int width;      // cells
-        int height;     // cells
-        int origin_x;   // bg pixel of world (0, 0)
+        layer_data floor;
+        layer_data objects;
+        int width;      // map cells (16 world units)
+        int height;
+        int origin_x;   // image pixel of world (0, 0)
         int origin_y;
-        int bg_width;
-        int bg_height;
-        int view_x0, view_y0, view_x1, view_y1;     // area the camera may show (bg pixels)
+        int image_width;
+        int image_height;
+        int view_x0, view_y0, view_x1, view_y1;     // area the camera may show (image pixels)
         const uint8_t* solid;
         const warp* warps;
         int warps_count;
         const occluder* occluders;
         int occluders_count;
 
-        [[nodiscard]] constexpr int to_bg_x(int x, int y) const
+        [[nodiscard]] constexpr int to_image_x(int x, int y) const
         {
             return origin_x + x - y;
         }
 
-        [[nodiscard]] constexpr int to_bg_y(int x, int y) const
+        [[nodiscard]] constexpr int to_image_y(int x, int y) const
         {
             return origin_y + ((x + y) / 2);
         }
@@ -118,14 +131,14 @@ namespace tl
         }
 
         // Returns true if the player at world (x, y) should be drawn behind the objects layer.
-        [[nodiscard]] constexpr bool player_hidden(int x, int y) const
+        [[nodiscard]] constexpr bool player_hidden(int x, int y, int half_width, int sprite_height) const
         {
-            int bg_x = to_bg_x(x, y);
-            int bg_y = to_bg_y(x, y);
+            int image_x = to_image_x(x, y);
+            int image_y = to_image_y(x, y);
 
             for(int index = 0; index < occluders_count; ++index)
             {
-                if(occluders[index].hides(x, y, bg_x, bg_y))
+                if(occluders[index].hides(x, y, image_x, image_y, half_width, sprite_height))
                 {
                     return true;
                 }

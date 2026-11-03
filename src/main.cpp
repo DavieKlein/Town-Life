@@ -12,7 +12,7 @@ int main()
     bn::core::init();
 
     // Start on the sidewalk in front of Corner Market.
-    tl::field field(tl::map_id::city_centre, 6 * tl::cell_size + 8, 3 * tl::cell_size + 10, tl::direction::down);
+    tl::field field(tl::map_id::city_centre, 13 * tl::cell_size, 9 * tl::cell_size + 8, tl::direction::down);
 
     while(true)
     {

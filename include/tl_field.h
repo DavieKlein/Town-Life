@@ -3,16 +3,16 @@
 
 #include "bn_vector.h"
 #include "bn_optional.h"
-#include "bn_camera_ptr.h"
 #include "bn_sprite_ptr.h"
 #include "bn_regular_bg_ptr.h"
 #include "bn_sprite_text_generator.h"
 
 #include "tl_player.h"
+#include "tl_streamed_bg.h"
 
 namespace tl
 {
-    // The "overworld" scene: map layers, the player, the camera, map transitions and the HUD.
+    // The "overworld" scene: streamed map layers, the player, the camera, map transitions and the HUD.
     class field
     {
 
@@ -30,10 +30,9 @@ namespace tl
             loading
         };
 
-        bn::camera_ptr _camera;
-        bn::optional<bn::regular_bg_ptr> _floor_bg;
-        bn::optional<bn::regular_bg_ptr> _objects_bg;
-        bn::regular_bg_ptr _hud_bg;
+        bn::optional<streamed_bg> _floor_bg;
+        bn::optional<streamed_bg> _objects_bg;
+        bn::optional<bn::regular_bg_ptr> _hud_bg;
         bn::sprite_text_generator _text_generator;
         bn::vector<bn::sprite_ptr, 8> _clock_sprites;
         bn::vector<bn::sprite_ptr, 8> _money_sprites;
@@ -42,6 +41,8 @@ namespace tl
         const warp* _pending_warp = nullptr;
         state _state = state::fading_in;
         int _fade_counter = 0;
+        int _cam_x = 0;
+        int _cam_y = 0;
         int _minutes = 8 * 60;          // time of day in minutes (prototype clock)
         int _minute_frames = 0;
         int _money = 20;

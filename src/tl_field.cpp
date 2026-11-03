@@ -2,7 +2,6 @@
 
 #include "bn_color.h"
 #include "bn_string.h"
-#include "bn_regular_bg_item.h"
 #include "bn_bg_palettes.h"
 #include "bn_sprite_palettes.h"
 
@@ -31,15 +30,15 @@ namespace tl
     }
 
     field::field(map_id start_map, int start_x, int start_y, direction facing) :
-        _camera(bn::camera_ptr::create(0, 0)),
-        _hud_bg(bn::regular_bg_items::hud.create_bg(0, 0)),
-        _text_generator(common::variable_8x8_sprite_font),
-        _player(_camera)
+        _text_generator(common::variable_8x8_sprite_font)
     {
-        _hud_bg.set_priority(hud_priority);
         _text_generator.set_bg_priority(hud_priority);
         _set_fade(fade_frames);
+
+        // Create the big streamed layers before the HUD so they get the charblock-aligned VRAM.
         _load_map(start_map, start_x, start_y, facing);
+        _hud_bg = bn::regular_bg_items::hud.create_bg(0, 0);
+        _hud_bg->set_priority(hud_priority);
         _redraw_hud_text();
         _fade_counter = fade_frames;
         _state = state::fading_in;
@@ -55,34 +54,41 @@ namespace tl
     void field::_load_map(map_id id, int x, int y, direction facing)
     {
         _map = &get_map(id);
-
-        // Release the old layers first so their tiles don't have to coexist with the new ones.
-        _objects_bg.reset();
         _floor_bg.reset();
-        _floor_bg = _map->floor_item->create_bg(0, 0);
-        _floor_bg->set_priority(floor_priority);
-        _floor_bg->set_camera(_camera);
-        _objects_bg = _map->objects_item->create_bg(0, 0);
-        _objects_bg->set_priority(objects_priority);
-        _objects_bg->set_camera(_camera);
-
+        _objects_bg.reset();
+        _floor_bg.emplace(0, _map->floor, _map->image_width, _map->image_height, floor_priority);
+        _objects_bg.emplace(1, _map->objects, _map->image_width, _map->image_height, objects_priority);
         _player.place(*_map, x, y, facing);
         _update_camera();
     }
 
     void field::_update_camera()
     {
-        // Centre the player in the visible area above the HUD, but stay inside the map's view bounds.
-        int target_x = _map->to_bg_x(_player.x(), _player.y());
-        int target_y = _map->to_bg_y(_player.x(), _player.y()) - 15 + (hud_height / 2);
+        // Centre the player in the play area above the HUD, but stay inside the map's view bounds.
+        constexpr int view_width = 240;
+        constexpr int view_height = 160 - hud_height;
+        int min_x = _map->view_x0;
+        int max_x = _map->view_x1 - view_width;
+        int min_y = _map->view_y0;
+        int max_y = _map->view_y1 - view_height;
+        int target_x = _player.focus_x() - (view_width / 2);
+        int target_y = _player.focus_y() - (view_height / 2);
+        _cam_x = min_x <= max_x ? clamp(target_x, min_x, max_x) : (min_x + max_x) / 2;
+        _cam_y = min_y <= max_y ? clamp(target_y, min_y, max_y) : (min_y + max_y) / 2;
 
-        int min_x = _map->view_x0 + 120;
-        int max_x = _map->view_x1 - 120;
-        int min_y = _map->view_y0 + 80;
-        int max_y = _map->view_y1 - 80 + hud_height;
-        int x = min_x <= max_x ? clamp(target_x, min_x, max_x) : (min_x + max_x) / 2;
-        int y = min_y <= max_y ? clamp(target_y, min_y, max_y) : (min_y + max_y) / 2;
-        _camera.set_position(x - (_map->bg_width / 2), y - (_map->bg_height / 2));
+        if(_cam_x < 0)
+        {
+            _cam_x = 0;
+        }
+
+        if(_cam_y < 0)
+        {
+            _cam_y = 0;
+        }
+
+        _floor_bg->set_view(_cam_x, _cam_y);
+        _objects_bg->set_view(_cam_x, _cam_y);
+        _player.update_sprite(_cam_x, _cam_y);
     }
 
     void field::_redraw_hud_text()
