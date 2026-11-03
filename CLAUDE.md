@@ -537,7 +537,12 @@ lamps, a café table, a mailbox, etc. It was reverted from main until the owner 
   food (menu with prices: money down, Hunger up).
 - **First home:** must be smaller, cheap/shabby and mostly empty when you move in (mattress, crate,
   tiny fridge, hot plate, small bathroom). Furniture is bought later. A new proposal is pending.
-- **Enterable City Centre buildings (all 5 approved as concept, interiors to be proposed):**
+- **Interior proposals APPROVED:** shabby first home, diner, community centre, VaultTech
+  lobby (proposal code in /tmp/claude-0/s36/tools; uses the CC0 Quaternius House Interior and
+  Food packs, which go to `art_source/quaternius_house/` and `art_source/quaternius_food/`). The
+  park building is a small **public toilet** (a few WCs and sinks, no showers); a new proposal is
+  pending.
+- **Enterable City Centre buildings (all 5 approved as concept):**
   Corner Market, park bathhouse (showers/toilets), diner in the purple house, community centre /
   library with a job notice board (NW building), VaultTech lobby.
 - Pending proposals: finer collision (4 sub-cells per cell), water in the fountain basin, and a
