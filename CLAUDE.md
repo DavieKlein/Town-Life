@@ -197,7 +197,15 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
 - Player: rigged CC0 character (Quaternius Male_LongSleeve in our own colours: blue sweater,
   khaki trousers, brown hair), idle + 8-frame walk in 8 facings, with a blended shadow.
 - HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
-  The four need bars are static mock-ups.
+  Needs (`tl_needs.h`: Hunger, Energy, Hygiene, Fun, 0-100) decay per game minute and drive the
+  four HUD bars (`need_bar` sprites, 16 fill levels, green/orange/red).
+- Interactions: `tools/interactions.py` lists interactable objects per map (kind, x, y[, radius]),
+  emitted as `map_info::interactables`. A (while walking) opens a menu (`tl_menu`: dark panel
+  top-right, cursor, A ok / B back) for the nearest object in reach: **park bench** → Sit (Fun +,
+  small Energy +; seated pose, 4 frames) or Sleep (side-lying pose, zZz text, clock runs 4x faster,
+  Energy +); **fountain** → Wash face (8-facing washing animation, Hygiene +35). D-pad or B gets up.
+  Player poses come from `blender_actor.py` mode `actions` (`player_rest.bmp` 64x64: 0-3 sit,
+  4 lie; `player_wash.bmp` 32x64, 8 facings x 4; the wash sheet has its own palette).
 - Ambient animals (`tl_critters`), rendered from the CC BY Everything Library models by
   `tools/blender_critter.py` (32x32 frames facing right, mirrored for left, feet at (16, 23);
   pigeon: stand, peck, wings up/mid/down — wing beats made by bending the wings; squirrel: sit,
@@ -355,6 +363,7 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
 ### Controls (current)
 
 - D-pad: walk (straight on screen; diagonals follow the streets) · hold B: run
+- A: interact (menu) · in menus: up/down, A ok, B back · while sitting/sleeping: D-pad or B gets up
 
 ---
 
@@ -391,12 +400,13 @@ Update the checkboxes at the end of each session.
 - [ ] Full Old Block: row houses, garden, laundromat, bakery, court, demolition site
 - [ ] Map transitions between City Centre and Old Block
 
-1.2 Needs + HUD + clock — TODO
-- [ ] `needs` struct: Hunger, Energy, Hygiene, Fun (0–100), decaying over time
-- [ ] HUD: 4 small bars/icons (sprites or a high-priority second bg layer)
+1.2 Needs + HUD + clock — IN PROGRESS
+- [x] `needs` struct: Hunger, Energy, Hygiene, Fun (0–100), decaying over time
+- [x] HUD: 4 small bars/icons (sprites or a high-priority second bg layer)
 - [ ] Game clock (day/time); START opens a pause menu with exact values
-- [ ] Interact with objects (A in front of you): park bench = sleep/Energy, fountain = Hygiene, etc.
-- [ ] Text: `bn::sprite_text_generator` with a font (see `butano/common`)
+- [x] Interact with objects (A + option menu): park bench = sit/sleep, fountain = wash
+- [ ] More interactions with furniture (shower, toilet, fridge, cooking, repairing) once homes exist
+- [x] Text: `bn::sprite_text_generator` with a font (see `butano/common`)
 - [ ] Split `main.cpp` into scenes (`tl_scene.h` with an enum, one class per scene with `update()`)
 
 1.3 Dialogue + NPCs — TODO

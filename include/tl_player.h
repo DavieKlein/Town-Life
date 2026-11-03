@@ -2,6 +2,7 @@
 #define TL_PLAYER_H
 
 #include "bn_fixed.h"
+#include "bn_optional.h"
 #include "bn_sprite_ptr.h"
 
 #include "tl_world.h"
@@ -12,7 +13,36 @@ namespace tl
     {
 
     public:
+        enum class activity
+        {
+            walking,
+            sitting,    // on a bench
+            sleeping,   // lying on a bench
+            washing     // at the fountain
+        };
+
         player();
+
+        // Interactions (positions in world units).
+        void sit_on(int seat_x, int seat_y);
+        void sleep_on(int seat_x, int seat_y);
+        void start_washing(int target_x, int target_y);
+
+        [[nodiscard]] activity current_activity() const
+        {
+            return _activity;
+        }
+
+        // True during the frame a washing animation finishes.
+        [[nodiscard]] bool washing_finished() const
+        {
+            return _washing_finished;
+        }
+
+        [[nodiscard]] int facing_index() const
+        {
+            return _facing;
+        }
 
         // Places the player on a map at world position (x, y) = the feet.
         void place(const map_info& map, int x, int y, direction facing);
@@ -58,6 +88,12 @@ namespace tl
     private:
         bn::sprite_ptr _shadow;
         bn::sprite_ptr _sprite;
+        bn::optional<bn::sprite_ptr> _rest_sprite;     // 64x64 sitting / sleeping sprite
+        activity _activity = activity::walking;
+        int _activity_timer = 0;
+        int _seat_x = 0;
+        int _seat_y = 0;
+        bool _washing_finished = false;
         const map_info* _map = nullptr;
         bn::fixed _x;
         bn::fixed _y;
@@ -68,6 +104,8 @@ namespace tl
         int _anim_frame = 0;
 
         void _update_graphics();
+        void _stand_up();
+        void _update_activity();
     };
 }
 

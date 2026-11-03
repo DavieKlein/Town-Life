@@ -5,7 +5,9 @@
 #include "bn_bg_palettes.h"
 #include "bn_sprite_palettes.h"
 
+#include "bn_keypad.h"
 #include "bn_regular_bg_items_hud.h"
+#include "bn_sprite_items_need_bar.h"
 #include "common_variable_8x8_sprite_font.h"
 
 namespace tl
@@ -14,6 +16,21 @@ namespace tl
     {
         constexpr int fade_frames = 12;
         constexpr int frames_per_game_minute = 60;     // 1 real second = 1 game minute
+        constexpr int frames_per_game_minute_asleep = 4;   // time flies while sleeping
+        constexpr int bar_levels = 16;                 // frames in need_bar.bmp
+        constexpr int interact_reach = 26;             // world units from a bench seat
+        constexpr int fountain_reach = 32;             // world units beyond the fountain radius
+
+        // Effects per game minute while resting.
+        constexpr bn::fixed sit_fun = 0.35;
+        constexpr bn::fixed sit_energy = 0.15;
+        constexpr bn::fixed sleep_energy = 0.5;
+        constexpr bn::fixed wash_hygiene = 35;
+
+        [[nodiscard]] int distance2(int ax, int ay, int bx, int by)
+        {
+            return ((ax - bx) * (ax - bx)) + ((ay - by) * (ay - by));
+        }
 
         // Bg priorities: HUD 0, (player when in front: 2), objects 2, (player when behind: 3), floor 3.
         constexpr int floor_priority = 3;
@@ -30,7 +47,8 @@ namespace tl
     }
 
     field::field(map_id start_map, int start_x, int start_y, direction facing) :
-        _text_generator(common::variable_8x8_sprite_font)
+        _text_generator(common::variable_8x8_sprite_font),
+        _menu(_text_generator)
     {
         _text_generator.set_bg_priority(hud_priority);
         _set_fade(fade_frames);
@@ -40,6 +58,16 @@ namespace tl
         _hud_bg = bn::regular_bg_items::hud.create_bg(0, 0);
         _hud_bg->set_priority(hud_priority);
         _redraw_hud_text();
+
+        // Need bars: one sprite per need over the dark bar slots of the HUD background.
+        for(int need = 0; need < needs::count; ++need)
+        {
+            bn::sprite_ptr bar = bn::sprite_items::need_bar.create_sprite(77 + (need * 42) + 16 - 120, 151 + 4 - 80);
+            bar.set_bg_priority(0);
+            _bar_sprites.push_back(bn::move(bar));
+        }
+
+        _update_bars();
         _fade_counter = fade_frames;
         _state = state::fading_in;
     }
@@ -124,11 +152,130 @@ namespace tl
 
     void field::_update_clock()
     {
-        if(++_minute_frames >= frames_per_game_minute)
+        player::activity act = _player.current_activity();
+        int frames_per_minute = act == player::activity::sleeping ? frames_per_game_minute_asleep :
+                                                                    frames_per_game_minute;
+
+        if(++_minute_frames >= frames_per_minute)
         {
             _minute_frames = 0;
             _minutes = (_minutes + 1) % (24 * 60);
+            _needs.minute_passed();
+
+            if(act == player::activity::sitting)
+            {
+                _needs.add(needs::fun, sit_fun);
+                _needs.add(needs::energy, sit_energy);
+            }
+            else if(act == player::activity::sleeping)
+            {
+                _needs.add(needs::energy, sleep_energy - needs::decay[needs::energy]);
+                _needs.add(needs::hunger, -needs::decay[needs::hunger] / 2);    // hunger slows down asleep
+            }
+
             _redraw_hud_text();
+            _update_bars();
+        }
+    }
+
+    void field::_update_bars()
+    {
+        for(int need = 0; need < needs::count; ++need)
+        {
+            int level = (_needs.values[need] * (bar_levels - 1) / 100).round_integer();
+            _bar_sprites[need].set_tiles(bn::sprite_items::need_bar.tiles_item(), level);
+        }
+    }
+
+    void field::_open_interaction_menu()
+    {
+        // nearest usable object in reach of the player's feet
+        const interactable* best = nullptr;
+        int best_distance = 0;
+        int px = _player.x();
+        int py = _player.y();
+
+        for(int index = 0; index < _map->interactables_count; ++index)
+        {
+            const interactable& it = _map->interactables[index];
+            int reach = it.kind == interactable_kind::fountain ? it.radius + fountain_reach : interact_reach;
+            int d2 = distance2(px, py, it.x, it.y);
+
+            if(d2 <= reach * reach && (! best || d2 < best_distance))
+            {
+                best = &it;
+                best_distance = d2;
+            }
+        }
+
+        if(! best)
+        {
+            return;
+        }
+
+        _menu_target = best;
+
+        if(best->kind == interactable_kind::bench)
+        {
+            constexpr bn::string_view options[] = { "Sit", "Sleep" };
+            _menu.open("Park Bench", options, 2);
+        }
+        else
+        {
+            constexpr bn::string_view options[] = { "Wash face" };
+            _menu.open("Fountain", options, 1);
+        }
+    }
+
+    void field::_handle_menu_choice(int choice)
+    {
+        const interactable* target = _menu_target;
+        _menu_target = nullptr;
+
+        if(! target || choice < 0)
+        {
+            return;
+        }
+
+        if(target->kind == interactable_kind::bench)
+        {
+            _rest_target = target;
+
+            if(choice == 0)
+            {
+                _player.sit_on(target->x, target->y);
+            }
+            else
+            {
+                _player.sleep_on(target->x, target->y);
+            }
+        }
+        else
+        {
+            _player.start_washing(target->x, target->y);
+        }
+    }
+
+    void field::_update_zzz()
+    {
+        if(_player.current_activity() != player::activity::sleeping || ! _rest_target)
+        {
+            _zzz_sprites.clear();
+            return;
+        }
+
+        static int phase = 0;
+        ++phase;
+
+        if(_zzz_sprites.empty() || phase % 40 == 0)
+        {
+            _zzz_sprites.clear();
+            int sx = _map->to_image_x(_rest_target->x, _rest_target->y) - _cam_x - 120;
+            int sy = _map->to_image_y(_rest_target->x, _rest_target->y) - _cam_y - 80;
+            int rise = (phase / 40) % 3;
+            _text_generator.set_left_alignment();
+            _text_generator.generate(sx - 18, sy - 34 - (rise * 3), rise == 0 ? "z" : (rise == 1 ? "zZ" : "zZz"),
+                                     _zzz_sprites);
         }
     }
 
@@ -148,7 +295,44 @@ namespace tl
             break;
 
         case state::playing:
+            if(_menu.is_open())
+            {
+                int choice = _menu.update();
+
+                if(choice != menu::open_still)
+                {
+                    _handle_menu_choice(choice);
+                }
+
+                _update_camera();
+                _update_clock();
+                break;
+            }
+
+            if(_player.current_activity() == player::activity::walking && bn::keypad::a_pressed())
+            {
+                _open_interaction_menu();
+
+                if(_menu.is_open())
+                {
+                    break;
+                }
+            }
+
             _player.update();
+
+            if(_player.washing_finished())
+            {
+                _needs.add(needs::hygiene, wash_hygiene);
+                _update_bars();
+            }
+
+            if(_player.current_activity() == player::activity::walking)
+            {
+                _rest_target = nullptr;
+            }
+
+            _update_zzz();
             _update_camera();
             _update_clock();
             _pending_warp = _map->warp_at(_player.x(), _player.y());

@@ -153,11 +153,8 @@ def build_hud():
                 if ch == "#":
                     cv.set(x + 12 + xx + 1, top + 3 + yy + 1, panel_d)
                     cv.set(x + 12 + xx, top + 3 + yy, WHITE)
-        # bar background (bar fill is drawn by sprites/updates later; mock fill for now)
+        # bar background; the fill is a sprite (graphics/need_bar.bmp) updated by the game
         cv.rect(x + 4, top + 22, 32, 5, (16, 16, 24))
-        fill = (26, 18, 22, 28)[i]
-        cv.rect(x + 5, top + 23, fill, 3, (88, 200, 88) if fill > 16 else (232, 160, 48))
-        cv.rect(x + 5 + fill, top + 23, 30 - fill, 3, (168, 48, 48))
     return cv
 
 
@@ -275,3 +272,48 @@ def build_player():
     return pixels, 16, 32 * len(frames)
 
 
+
+
+BAR_LEVELS = 16
+
+
+def build_need_bar():
+    """32x8 frames, BAR_LEVELS levels: frame i fills i * 30 / (BAR_LEVELS - 1) px of a 30x3 bar
+    (green when high, orange in the middle, red when low)."""
+    pal = [(255, 0, 255), (88, 200, 88), (232, 160, 48), (200, 56, 48), (60, 24, 28)]
+    pixels = []
+    for level in range(BAR_LEVELS):
+        fill = round(level * 30 / (BAR_LEVELS - 1))
+        colour = 1 if fill > 18 else (2 if fill > 9 else 3)
+        for y in range(8):
+            row = [0] * 32
+            if y < 3:
+                for x in range(30):
+                    row[x] = colour if x < fill else 4
+            pixels.append(row)
+    return pixels, pal
+
+
+def build_menu_panel():
+    """96x64 menu panel (title strip + body) split by the game into a 64x64 and a 32x64 sprite,
+    plus a 64x16 selection highlight split into two 32x16 frames (left, right). Same colours as the HUD bar."""
+    pal = [(255, 0, 255), (24, 28, 56), (40, 48, 88), (72, 84, 136), (16, 16, 24)]
+    w, h = 96, 64
+    panel = [[0] * w for _ in range(h)]
+    for y in range(h):
+        for x in range(w):
+            if x == 0 or y == 0 or x == w - 1 or y == h - 1:
+                panel[y][x] = 3
+            elif y <= 12:
+                panel[y][x] = 2
+            else:
+                panel[y][x] = 1
+    for x in range(1, w - 1):
+        panel[13][x] = 3
+    left = [row[:64] for row in panel]
+    right = [row[64:] for row in panel]
+    full = [[3 if (y in (0, 13) or x in (0, 63)) else 2 for x in range(64)] if y < 14 else [0] * 64
+            for y in range(16)]
+    # two 32x16 frames (left half, right half) stacked vertically
+    highlight = [row[:32] for row in full] + [row[32:] for row in full]
+    return left, right, highlight, pal

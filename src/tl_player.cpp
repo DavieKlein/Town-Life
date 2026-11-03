@@ -5,6 +5,8 @@
 #include "bn_blending.h"
 #include "bn_sprite_items_player.h"
 #include "bn_sprite_items_shadow.h"
+#include "bn_sprite_items_player_rest.h"
+#include "bn_sprite_items_player_wash.h"
 
 namespace tl
 {
@@ -25,6 +27,26 @@ namespace tl
         constexpr bn::fixed acceleration = 0.25; // fraction of the speed difference applied per frame
         constexpr bn::fixed deceleration = 0.4;
         constexpr bn::fixed step_length = 4;    // screen pixels per walk animation frame
+
+        // player_rest.bmp: 64x64, frames 0-3 sitting (facing down-left), 4 sleeping on the side; the
+        // seat point is at (32, 44). player_wash.bmp: 32x64, 4 frames per facing.
+        constexpr int rest_origin_y = 44 - 32;
+        constexpr int sleep_frame = 4;
+        constexpr int wash_frames = 4;
+        constexpr int wash_duration = 150;      // frames
+
+        [[nodiscard]] int facing_towards(int dx, int dy)
+        {
+            // world delta -> screen direction -> one of the 8 facings (s, sw, w, nw, n, ne, e, se)
+            int sx = dx - dy;
+            int sy = (dx + dy) / 2;
+            int ax = sx < 0 ? -sx : sx;
+            int ay = sy < 0 ? -sy : sy;
+            int hx = ax * 2 > ay ? (sx > 0 ? 1 : -1) : 0;
+            int hy = ay * 2 > ax ? (sy > 0 ? 1 : -1) : 0;
+            constexpr int table[3][3] = { { 3, 4, 5 }, { 2, 0, 6 }, { 1, 0, 7 } };   // [hy + 1][hx + 1]
+            return table[hy + 1][hx + 1];
+        }
 
         // World velocity for one screen pixel per frame, per facing. Up/down/left/right on the d-pad move
         // straight across the screen; diagonals follow the isometric streets.
@@ -141,8 +163,98 @@ namespace tl
         _update_graphics();
     }
 
+    void player::sit_on(int seat_x, int seat_y)
+    {
+        _activity = activity::sitting;
+        _seat_x = seat_x;
+        _seat_y = seat_y;
+        _activity_timer = 0;
+        _vx = 0;
+        _vy = 0;
+        _rest_sprite = bn::sprite_items::player_rest.create_sprite(0, 0);
+        _sprite.set_visible(false);
+        _shadow.set_visible(false);
+    }
+
+    void player::sleep_on(int seat_x, int seat_y)
+    {
+        sit_on(seat_x, seat_y);
+        _activity = activity::sleeping;
+    }
+
+    void player::start_washing(int target_x, int target_y)
+    {
+        _activity = activity::washing;
+        _activity_timer = 0;
+        _vx = 0;
+        _vy = 0;
+        _facing = facing_towards(target_x - x(), target_y - y());
+        _sprite.set_palette(bn::sprite_items::player_wash.palette_item());
+    }
+
+    void player::_stand_up()
+    {
+        if(_activity == activity::sitting || _activity == activity::sleeping)
+        {
+            // stand in front of the bench, facing away from it
+            _x = _seat_x;
+            _y = _seat_y + 14;
+            _facing = 1;
+            _rest_sprite.reset();
+            _sprite.set_visible(true);
+            _shadow.set_visible(true);
+        }
+
+        if(_activity == activity::washing)
+        {
+            _sprite.set_palette(bn::sprite_items::player.palette_item());
+        }
+
+        _activity = activity::walking;
+        _anim_frame = 0;
+        _update_graphics();
+    }
+
+    void player::_update_activity()
+    {
+        ++_activity_timer;
+
+        if(_activity == activity::washing)
+        {
+            int frame = (_activity_timer / 6) % wash_frames;
+            _sprite.set_tiles(bn::sprite_items::player_wash.tiles_item(), (_facing * wash_frames) + frame);
+
+            if(_activity_timer >= wash_duration)
+            {
+                _washing_finished = true;
+                _stand_up();
+            }
+
+            return;
+        }
+
+        // sitting / sleeping: any direction or B gets up again
+        if(bn::keypad::b_pressed() || bn::keypad::left_pressed() || bn::keypad::right_pressed() ||
+           bn::keypad::up_pressed() || bn::keypad::down_pressed())
+        {
+            _stand_up();
+            return;
+        }
+
+        int frame = _activity == activity::sleeping ? sleep_frame : (_activity_timer / 20) % 4;
+        _rest_sprite->set_tiles(bn::sprite_items::player_rest.tiles_item(), frame);
+    }
+
     void player::update()
     {
+        _washing_finished = false;
+
+        if(_activity != activity::walking)
+        {
+            _update_activity();
+            return;
+        }
+
         int facing = input_facing();
         bn::fixed target_vx;
         bn::fixed target_vy;
@@ -226,6 +338,15 @@ namespace tl
 
     void player::update_sprite(int cam_x, int cam_y)
     {
+        if(_rest_sprite)
+        {
+            int seat_image_x = _map->to_image_x(_seat_x, _seat_y);
+            int seat_image_y = _map->to_image_y(_seat_x, _seat_y);
+            _rest_sprite->set_position(seat_image_x - cam_x - 120, seat_image_y - cam_y - 80 - rest_origin_y);
+            _rest_sprite->set_bg_priority(2);       // on top of the bench
+            return;
+        }
+
         // Screen coordinates are relative to the screen centre.
         int screen_x = image_x() - cam_x - 120;
         int screen_y = image_y() - cam_y - 80;

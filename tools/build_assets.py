@@ -30,6 +30,7 @@ sys.path.insert(0, TOOLS)
 import scene as scn          # noqa: E402
 import hud_sprites           # noqa: E402
 import critters              # noqa: E402
+import interactions          # noqa: E402
 
 CACHE = os.path.join(ROOT, "art_cache")
 FLOOR_BANKS = 7
@@ -374,6 +375,16 @@ def main():
             out.append("    };")
         critter_entry = (f"{s.ident}_critters, int(sizeof({s.ident}_critters) / sizeof(critter_spawn))"
                          if spawns else "nullptr, 0")
+        things = interactions.INTERACTABLES.get(s.ident, [])
+        if things:
+            out.append(f"    constexpr interactable {s.ident}_interactables[] = {{")
+            for t in things:
+                radius = t[3] if len(t) > 3 else 0
+                out.append(f"        {{ interactable_kind::{t[0]}, {int(t[1] * 16)}, {int(t[2] * 16)}, "
+                           f"{int(radius * 16)} }},")
+            out.append("    };")
+        interact_entry = (f"{s.ident}_interactables, int(sizeof({s.ident}_interactables) / sizeof(interactable))"
+                          if things else "nullptr, 0")
         xs = [s.proj(x, y)[0] for (x, y) in ((0, 0), (s.w, 0), (0, s.h), (s.w, s.h))]
         ys = [s.proj(x, y)[1] for (x, y) in ((0, 0), (s.w, 0), (0, s.h), (s.w, s.h))]
         view = (max(0, int(min(xs))), 0, min(s.img_w, int(max(xs))), min(s.img_h, int(max(ys)) + 8))
@@ -386,7 +397,7 @@ def main():
                      f"{s.origin_x}, {s.origin_y}, {s.img_w}, {s.img_h}, {view[0]}, {view[1]}, {view[2]}, {view[3]}, "
                      f"{s.ident}_solid, {s.ident}_warps, int(sizeof({s.ident}_warps) / sizeof(warp)), "
                      f"{s.ident}_occluders, int(sizeof({s.ident}_occluders) / sizeof(occluder)), "
-                     f"{critter_entry} }},")
+                     f"{critter_entry}, {interact_entry} }},")
 
     out += ["}", "", "namespace", "{", "    constexpr map_info maps[] = {"] + table + ["    };", "}", "",
             "static_assert(sizeof(maps) / sizeof(map_info) == maps_count);", "",
@@ -410,7 +421,9 @@ def main():
                '{\n    "type": "regular_bg",\n    "bpp_mode": "bpp_4"\n}\n')
 
     build_player(force, fast)
+    build_player_actions(force, fast)
     build_critters(force, fast)
+    build_ui_sprites()
 
 
 CRITTER_FRAMES = {"pigeon": 5, "squirrel": 4}
@@ -451,6 +464,49 @@ def write_sprite_sheet(name, frames, w, h):
     write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), pixels, w, h * len(frames), 4, palette)
     write_text(os.path.join(ROOT, "graphics", name + ".json"),
                f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
+
+
+def build_ui_sprites():
+    pixels, pal = hud_sprites.build_need_bar()
+    pal = pal + [(0, 0, 0)] * (16 - len(pal))
+    write_bmp(os.path.join(ROOT, "graphics", "need_bar.bmp"), pixels, 32, len(pixels), 4, pal)
+    write_text(os.path.join(ROOT, "graphics", "need_bar.json"), '{\n    "type": "sprite",\n    "height": 8\n}\n')
+    left, right, highlight, pal = hud_sprites.build_menu_panel()
+    pal = pal + [(0, 0, 0)] * (16 - len(pal))
+    for name, px, w, h in (("menu_left", left, 64, 64), ("menu_right", right, 32, 64),
+                           ("menu_highlight", highlight, 32, 16)):
+        write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), px, w, len(px), 4, pal)
+        write_text(os.path.join(ROOT, "graphics", name + ".json"),
+                   f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
+
+
+def build_player_actions(force, fast):
+    """Interaction poses of the player (approved designs): sitting + sleeping on a bench
+    (64x64 frames, origin at (32, 44)) and washing (32x64 frames, 8 facings x 4)."""
+    import json
+    ss, samples = (2, 16) if fast else (4, 48)
+    colours = json.dumps(PLAYER_COLOURS)
+    fbx = os.path.join(ROOT, "art_source", "quaternius_characters", PLAYER_MODEL + ".fbx")
+    h = hashlib.sha1()
+    for f in ("scene.py", "blender_render.py", "blender_actor.py"):
+        h.update(open(os.path.join(TOOLS, f), "rb").read())
+    h.update(f"actions{ss}{samples}{colours}{PLAYER_MODEL}".encode())
+    out_dir = os.path.join(CACHE, "player_actions_" + h.hexdigest()[:12])
+    last = os.path.join(out_dir, "wash_se_3.png")
+    if force or not os.path.exists(last):
+        print("rendering player actions...", flush=True)
+        r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_actor.py"),
+                            "--", fbx, out_dir, str(ss), str(samples), colours, "0", "actions"],
+                           capture_output=True, text=True)
+        if not os.path.exists(last):
+            print(r.stdout[-3000:], r.stderr[-3000:])
+            raise RuntimeError("player action render failed")
+    frames = [sprite_frame(os.path.join(out_dir, f"sit_{i}.png"), ss, 64, 64) for i in range(4)]
+    frames.append(sprite_frame(os.path.join(out_dir, "lie_0.png"), ss, 64, 64))
+    write_sprite_sheet("player_rest", frames, 64, 64)
+    frames = [sprite_frame(os.path.join(out_dir, f"wash_{f}_{i}.png"), ss, FRAME_W, FRAME_H)
+              for f in FACINGS for i in range(4)]
+    write_sprite_sheet("player_wash", frames, FRAME_W, FRAME_H)
 
 
 def build_critters(force, fast):

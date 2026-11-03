@@ -7,6 +7,8 @@
 #include "bn_regular_bg_ptr.h"
 #include "bn_sprite_text_generator.h"
 
+#include "tl_menu.h"
+#include "tl_needs.h"
 #include "tl_player.h"
 #include "tl_critters.h"
 #include "tl_streamed_bg.h"
@@ -39,6 +41,12 @@ namespace tl
         bn::vector<bn::sprite_ptr, 8> _money_sprites;
         player _player;
         critters _critters;
+        menu _menu;
+        needs _needs;
+        bn::vector<bn::sprite_ptr, needs::count> _bar_sprites;
+        bn::vector<bn::sprite_ptr, 4> _zzz_sprites;
+        const interactable* _menu_target = nullptr;
+        const interactable* _rest_target = nullptr;
         const map_info* _map = nullptr;
         const warp* _pending_warp = nullptr;
         state _state = state::fading_in;
@@ -53,6 +61,10 @@ namespace tl
         void _update_camera();
         void _update_clock();
         void _redraw_hud_text();
+        void _update_bars();
+        void _open_interaction_menu();
+        void _handle_menu_choice(int choice);
+        void _update_zzz();
         static void _set_fade(int counter);
     };
 }

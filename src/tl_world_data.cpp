@@ -177,6 +177,15 @@ namespace
         { critter_kind::squirrel, 280, 608, 312, 584 },
         { critter_kind::squirrel, 104, 720, 64, 728 },
     };
+    constexpr interactable city_centre_interactables[] = {
+        { interactable_kind::bench, 116, 630, 0 },
+        { interactable_kind::bench, 244, 630, 0 },
+        { interactable_kind::bench, 772, 608, 0 },
+        { interactable_kind::bench, 923, 608, 0 },
+        { interactable_kind::bench, 772, 720, 0 },
+        { interactable_kind::bench, 923, 720, 0 },
+        { interactable_kind::fountain, 848, 656, 35 },
+    };
     constexpr int corner_market_floor_tiles_count = 428;
     constexpr bn::color corner_market_floor_palette[] = {
         bn::color(0, 0, 0), bn::color(21, 11, 4), bn::color(21, 5, 4), bn::color(13, 8, 7), bn::color(10, 7, 10), bn::color(18, 9, 3), bn::color(11, 8, 9), bn::color(20, 12, 6), bn::color(19, 10, 4), bn::color(15, 9, 4), bn::color(23, 13, 4), bn::color(16, 6, 8), bn::color(22, 13, 7), bn::color(20, 5, 5), bn::color(15, 9, 8), bn::color(17, 10, 5),
@@ -229,8 +238,8 @@ namespace
 namespace
 {
     constexpr map_info maps[] = {
-        { "City Centre", { city_centre_floor_tiles_bin, city_centre_floor_tiles_count, city_centre_floor_cells_bin, city_centre_floor_palette, int(sizeof(city_centre_floor_palette) / sizeof(bn::color)) / 16 }, { city_centre_objects_tiles_bin, city_centre_objects_tiles_count, city_centre_objects_cells_bin, city_centre_objects_palette, int(sizeof(city_centre_objects_palette) / sizeof(bn::color)) / 16 }, 72, 60, 976, 200, 2144, 1272, 16, 0, 2128, 1264, city_centre_solid, city_centre_warps, int(sizeof(city_centre_warps) / sizeof(warp)), city_centre_occluders, int(sizeof(city_centre_occluders) / sizeof(occluder)), city_centre_critters, int(sizeof(city_centre_critters) / sizeof(critter_spawn)) },
-        { "Corner Market", { corner_market_floor_tiles_bin, corner_market_floor_tiles_count, corner_market_floor_cells_bin, corner_market_floor_palette, int(sizeof(corner_market_floor_palette) / sizeof(bn::color)) / 16 }, { corner_market_objects_tiles_bin, corner_market_objects_tiles_count, corner_market_objects_cells_bin, corner_market_objects_palette, int(sizeof(corner_market_objects_palette) / sizeof(bn::color)) / 16 }, 12, 9, 168, 104, 384, 296, 24, 0, 360, 280, corner_market_solid, corner_market_warps, int(sizeof(corner_market_warps) / sizeof(warp)), corner_market_occluders, int(sizeof(corner_market_occluders) / sizeof(occluder)), nullptr, 0 },
+        { "City Centre", { city_centre_floor_tiles_bin, city_centre_floor_tiles_count, city_centre_floor_cells_bin, city_centre_floor_palette, int(sizeof(city_centre_floor_palette) / sizeof(bn::color)) / 16 }, { city_centre_objects_tiles_bin, city_centre_objects_tiles_count, city_centre_objects_cells_bin, city_centre_objects_palette, int(sizeof(city_centre_objects_palette) / sizeof(bn::color)) / 16 }, 72, 60, 976, 200, 2144, 1272, 16, 0, 2128, 1264, city_centre_solid, city_centre_warps, int(sizeof(city_centre_warps) / sizeof(warp)), city_centre_occluders, int(sizeof(city_centre_occluders) / sizeof(occluder)), city_centre_critters, int(sizeof(city_centre_critters) / sizeof(critter_spawn)), city_centre_interactables, int(sizeof(city_centre_interactables) / sizeof(interactable)) },
+        { "Corner Market", { corner_market_floor_tiles_bin, corner_market_floor_tiles_count, corner_market_floor_cells_bin, corner_market_floor_palette, int(sizeof(corner_market_floor_palette) / sizeof(bn::color)) / 16 }, { corner_market_objects_tiles_bin, corner_market_objects_tiles_count, corner_market_objects_cells_bin, corner_market_objects_palette, int(sizeof(corner_market_objects_palette) / sizeof(bn::color)) / 16 }, 12, 9, 168, 104, 384, 296, 24, 0, 360, 280, corner_market_solid, corner_market_warps, int(sizeof(corner_market_warps) / sizeof(warp)), corner_market_occluders, int(sizeof(corner_market_occluders) / sizeof(occluder)), nullptr, 0, nullptr, 0 },
     };
 }
 

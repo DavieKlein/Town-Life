@@ -33,6 +33,33 @@ WALK_FRAMES = 8
 FACINGS = {"s": 45, "sw": 0, "w": -45, "nw": -90, "n": -135, "ne": 180, "e": 135, "se": 90}
 
 
+def setup_camera(fw, fh, fx, fy, co=None):
+    """Orthographic camera with the map projection; world origin lands on frame pixel (fx, fy)."""
+    sc = bpy.context.scene
+    sc.render.resolution_x = fw * SS_CURRENT[0]
+    sc.render.resolution_y = fh * SS_CURRENT[0]
+    if co is None:
+        cam = bpy.data.cameras.new("cam")
+        cam.type = "ORTHO"
+        cam.sensor_fit = "HORIZONTAL"
+        co = bpy.data.objects.new("cam", cam)
+        sc.collection.objects.link(co)
+        sc.camera = co
+    co.data.ortho_scale = fw * math.cos(math.radians(45)) * CELL_M / 16
+    co.rotation_euler = (math.radians(60), 0, math.radians(45))
+    a = fw / 2 - fx
+    b = fh / 2 - fy
+    ux, uy = b + a / 2, b - a / 2
+    target = Vector((ux / 16 * CELL_M, -uy / 16 * CELL_M, 0))
+    fwd = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)),
+                  math.cos(math.radians(45)) * math.sin(math.radians(60)), -0.5))
+    co.location = target - fwd * 40
+    return co
+
+
+SS_CURRENT = [4]
+
+
 def find_action(suffix):
     for a in bpy.data.actions:
         if a.name.endswith(suffix):
@@ -47,6 +74,8 @@ def main():
     samples = int(argv[3]) if len(argv) > 3 else 32
     colours = json.loads(argv[4]) if len(argv) > 4 else {}
     model_yaw = float(argv[5]) if len(argv) > 5 else 0.0
+    mode = argv[6] if len(argv) > 6 else "walk"
+    SS_CURRENT[0] = ss
     os.makedirs(out_dir, exist_ok=True)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -95,22 +124,7 @@ def main():
     root.scale = (s, s, s)
     root.location = (0, 0, -min(zs) * s)
 
-    # camera: same projection as the maps, feet at (FEET_X, FEET_Y)
-    cam = bpy.data.cameras.new("cam")
-    cam.type = "ORTHO"
-    cam.sensor_fit = "HORIZONTAL"
-    cam.ortho_scale = FRAME_W * math.cos(math.radians(45)) * CELL_M / 16
-    co = bpy.data.objects.new("cam", cam)
-    sc.collection.objects.link(co)
-    sc.camera = co
-    co.rotation_euler = (math.radians(60), 0, math.radians(45))
-    a = FRAME_W / 2 - FEET_X
-    b = FRAME_H / 2 - FEET_Y
-    ux, uy = b + a / 2, b - a / 2
-    target = Vector((ux / 16 * CELL_M, -uy / 16 * CELL_M, 0))
-    fwd = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)),
-                  math.cos(math.radians(45)) * math.sin(math.radians(60)), -0.5))
-    co.location = target - fwd * 40
+    co = setup_camera(FRAME_W, FRAME_H, FEET_X, FEET_Y)
 
     world = bpy.data.worlds.new("world")
     sc.world = world
@@ -123,6 +137,10 @@ def main():
     so = bpy.data.objects.new("sun", sun)
     sc.collection.objects.link(so)
     so.rotation_euler = Vector((-0.25, 0.7, -0.65)).normalized().to_track_quat("-Z", "Y").to_euler()
+
+    if mode == "actions":
+        render_actions(sc, arm, meshes, root, co, out_dir, model_yaw)
+        return
 
     w0, w1 = int(walk.frame_range[0]), int(walk.frame_range[1])
     cycle = w1 - w0
@@ -138,5 +156,67 @@ def main():
             sc.render.filepath = os.path.join(out_dir, f"{name}_{i + 1}.png")
             bpy.ops.render.render(write_still=True)
 
+
+# Interaction poses (approved by the owner): sitting on a bench, sleeping on the side, washing.
+ACTION_FRAME = 64                      # sit / sleep frames are 64x64, origin at (32, 44)
+ACTION_FEET = (32, 44)
+SIT_FRAMES = (80, 100, 120, 140)       # inside the Sitting action's seated loop
+WASH_FRAMES = 4
+
+
+def render_actions(sc, arm, meshes, root, co, out_dir, model_yaw):
+    base_loc = root.location.copy()
+
+    def shot(path):
+        sc.render.filepath = os.path.join(out_dir, path)
+        bpy.ops.render.render(write_still=True)
+
+    # sitting, facing screen down-left (benches have their back towards -y)
+    setup_camera(ACTION_FRAME, ACTION_FRAME, *ACTION_FEET, co=co)
+    sit = find_action("_Sitting")
+    arm.animation_data.action = sit
+    f0 = int(sit.frame_range[0])
+    root.rotation_euler = (0, 0, math.radians(model_yaw))
+    for i, f in enumerate(SIT_FRAMES):
+        sc.frame_set(f0 + f)
+        shot(f"sit_{i}.png")
+
+    # sleeping on the side: 40 % sitting blended into idle, laid on its side along the bench (x)
+    arm.animation_data.action = None
+    ad = arm.animation_data
+    t1 = ad.nla_tracks.new()
+    t1.strips.new("idle", 1, find_action("_Idle"))
+    t2 = ad.nla_tracks.new()
+    s2 = t2.strips.new("sit", 1, sit)
+    s2.influence = 0.4
+    sc.frame_set(60)
+    root.rotation_euler = (0, math.radians(-90), 0)
+    bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get()
+    pts = []
+    for o in meshes:
+        ev = o.evaluated_get(deps)
+        me = ev.to_mesh()
+        pts += [ev.matrix_world @ v.co for v in me.vertices]
+        ev.to_mesh_clear()
+    cx = (min(p.x for p in pts) + max(p.x for p in pts)) / 2
+    cy = (min(p.y for p in pts) + max(p.y for p in pts)) / 2
+    mz = min(p.z for p in pts)
+    root.location = (root.location.x - cx, root.location.y - cy, root.location.z - mz + 0.48)
+    shot("lie_0.png")
+    ad.nla_tracks.remove(t2)
+    ad.nla_tracks.remove(t1)
+    root.location = base_loc
+
+    # washing (hands rubbing in front of the chest), 8 facings, normal 32x64 frames
+    setup_camera(FRAME_W, FRAME_H, FEET_X, FEET_Y, co=co)
+    clap = find_action("_Clapping")
+    arm.animation_data.action = clap
+    c0, c1 = int(clap.frame_range[0]), int(clap.frame_range[1])
+    for name, angle in FACINGS.items():
+        root.rotation_euler = (0, 0, math.radians(angle + model_yaw))
+        for i in range(WASH_FRAMES):
+            sc.frame_set(c0 + round(i * (c1 - c0) / WASH_FRAMES))
+            shot(f"wash_{name}_{i}.png")
 
 main()

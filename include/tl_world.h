@@ -77,6 +77,21 @@ namespace tl
         int tree_y;
     };
 
+    // Objects the player can use with A (see tools/interactions.py).
+    enum class interactable_kind : uint8_t
+    {
+        bench,
+        fountain
+    };
+
+    struct interactable
+    {
+        interactable_kind kind;
+        int x;          // world units: bench = seat centre, fountain = centre
+        int y;
+        int radius;     // fountain radius (world units), 0 for benches
+    };
+
     // One pre-rendered layer, split into 4bpp 8x8 tiles.
     struct layer_data
     {
@@ -106,6 +121,8 @@ namespace tl
         int occluders_count;
         const critter_spawn* critters;
         int critters_count;
+        const interactable* interactables;
+        int interactables_count;
 
         [[nodiscard]] constexpr int to_image_x(int x, int y) const
         {
