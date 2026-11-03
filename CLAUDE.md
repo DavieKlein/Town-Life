@@ -524,6 +524,10 @@ Update the checkboxes at the end of each session.
 
 ## Next session: start here
 
+**Eye-level street details proposal (parked, "details later"):** the scene.py and
+blender_render.py code is in commit `c3aaccc` (WIP). It adds projecting shop signs, bikes, wall
+lamps, a café table, a mailbox, etc. It was reverted from main until the owner wants details.
+
 **Owner decisions (latest):**
 - **Dialogue box:** variant 2. A 40 px box at the bottom with the speaker's 64x64 portrait
   standing on it at the left, overlapping the view. The name tag is gold, there are 3 text lines
