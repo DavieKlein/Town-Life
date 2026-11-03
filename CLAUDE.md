@@ -23,6 +23,8 @@ other existing games.
 - **Propose designs first (owner's rule):** before building anything visual (new graphics,
   characters, animals, buildings, UI), show the owner a design proposal (mock-up / preview
   renders, ideally placed in an in-game screenshot) and wait for approval. Only then implement.
+  The owner also wants **no new ROM until all pending proposals are approved**: collect
+  proposals, get approval, then do one build and release.
 - **Test the ROM headlessly before pushing** (see "Headless testing" below): it runs the same mGBA
   core as Lemuroid and saves screenshots, so you can verify maps, movement and transitions.
 
@@ -529,6 +531,17 @@ blender_render.py code is in commit `c3aaccc` (WIP). It adds projecting shop sig
 lamps, a café table, a mailbox, etc. It was reverted from main until the owner wants details.
 
 **Owner decisions (latest):**
+- **Corner Market v2 interior: APPROVED.** It is bigger and L-shaped, with 2-cell aisles, wall
+  shelves, 2 gondolas, a freezer, a fridge, crates, a checkout and a storeroom. The proposal
+  scene code is in /tmp/claude-0/s36/tools (scratch). Still to add: Mia at the checkout and buying
+  food (menu with prices: money down, Hunger up).
+- **First home:** must be smaller, cheap/shabby and mostly empty when you move in (mattress, crate,
+  tiny fridge, hot plate, small bathroom). Furniture is bought later. A new proposal is pending.
+- **Enterable City Centre buildings (all 5 approved as concept, interiors to be proposed):**
+  Corner Market, park bathhouse (showers/toilets), diner in the purple house, community centre /
+  library with a job notice board (NW building), VaultTech lobby.
+- Pending proposals: finer collision (4 sub-cells per cell), water in the fountain basin, and a
+  more natural water texture.
 - **Dialogue box:** variant 2. A 40 px box at the bottom with the speaker's 64x64 portrait
   standing on it at the left, overlapping the view. The name tag is gold, there are 3 text lines
   in the 8x8 font and an "A" button. It must also offer **choice options**. Mock-up scripts are in
