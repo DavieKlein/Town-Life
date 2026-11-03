@@ -658,14 +658,21 @@ def eye_level_details(s, AV0, AV1, CS0, CS1):
     mailbox(s, 43.0, 21.35)
     street_sign_pole(s, 47.9, 21.45, [("left", "sign_blue", "MAIN AVE"), ("right", "sign_yellow", "")])
 
-    # -- north-west apartment building (facade ~y 18.6, door around x 10.7) --
-    wy = fy + 0.62
-    wall_lamp(s, 9.4, wy, 2.0)
-    wall_lamp(s, 12.1, wy, 2.0)
-    blade_sign(s, 13.1, wy, 2.5, "sign_yellow", "cup")
-    bench_along_x(s, 2.2, 4.8, wy + 0.5)
-    bicycle(s, 14.4, wy + 0.4, "x", "bike_blue", lean=-0.18)
-    phone_booth(s, 16.0, wy + 0.8)
+    # -- north-west apartment building (wall at y ~ 18.1, ledge to 18.76, door around x 10.7) --
+    wy = fy + 0.1
+    wall_lamp(s, 9.5, wy, 2.0)
+    wall_lamp(s, 12.0, wy, 2.0)
+    blade_sign(s, 13.2, wy, 2.5, "sign_yellow", "cup")
+    flower_box(s, 13.5, 15.6, wy + 0.65, 1.0)
+    bench_along_x(s, 12.6, 14.8, 19.35)
+    bicycle(s, 3.2, fy + 0.95, "x", "bike_blue", lean=-0.2)
+    bicycle(s, 4.9, fy + 1.0, "x", "bike_red", lean=-0.2)
+    bin_bags(s, 1.2, fy + 1.1)
+    # -- avenue south sidewalk (bus stop at x 40..44, newspaper boxes at 45/46, y ~ 32.6) --
+    bike_rack(s, 49.2, 51.4, 31.4)
+    phone_booth(s, 53.4, 32.6)
+    cafe_set(s, 56.5, 32.4, "x")
+    street_sign_pole(s, 38.0, 31.3, [("right", "sign_blue", "BUS"), ("left", "sign_yellow", "")])
 
 
 # ---- small "lived-in" details (inspired by the owner's own building packs) -----------------------
@@ -816,17 +823,16 @@ def bicycle(s, x, y, axis="x", mat="bike_red", lean=0.0, solid=True):
         s.set_solid(x - max(dx, 0.2), y - max(dy, 0.2), x + max(dx, 0.2), y + max(dy, 0.2))
 
 
-def bike_rack(s, x0, x1, y, bikes=("bike_blue", "bike_yellow")):
-    """Row of inverted-U bicycle hoops along x with bikes parked across them (bikes point along y)."""
-    n = int((x1 - x0) / 0.75)
-    for i in range(n + 1):
-        x = x0 + i * (x1 - x0) / n
-        s.tube([(x, y - 0.5, 0.0), (x, y - 0.5, 0.7), (x, y + 0.5, 0.7), (x, y + 0.5, 0.0)], 0.025, "metal_light")
-        s.box(x - 0.1, y - 0.55, x + 0.1, y - 0.45, 0, 0.02, "metal_dark")
-        s.box(x - 0.1, y + 0.45, x + 0.1, y + 0.55, 0, 0.02, "metal_dark")
-    for i, m in enumerate(bikes):
-        bicycle(s, x0 + (i + 0.5) * (x1 - x0) / n, y, "y", m, solid=False)
-    s.set_solid(x0 - 0.1, y - 0.7, x1 + 0.1, y + 0.7)
+def bike_rack(s, x0, y, n=2, bikes=("bike_blue", "bike_yellow")):
+    """Bicycles parked in a row along x (parallel to the curb), each locked to an inverted-U hoop beside
+    it. Bikes are ~1.1 cells long, spaced 1.9 cells apart."""
+    for i in range(n):
+        x = x0 + i * 1.9
+        for dx in (-0.45, 0.45):
+            s.tube([(x + dx / CELL_M, y + 0.3, 0.0), (x + dx / CELL_M, y + 0.3, 0.78)], 0.025, "metal_light")
+        s.tube([(x - 0.45 / CELL_M, y + 0.3, 0.78), (x + 0.45 / CELL_M, y + 0.3, 0.78)], 0.025, "metal_light")
+        bicycle(s, x, y, "x", bikes[i % len(bikes)], lean=0.1, solid=False)
+    s.set_solid(x0 - 1.0, y - 0.2, x0 + (n - 1) * 1.9 + 1.0, y + 0.45)
 
 
 def blade_sign(s, x, y_wall, z, board, icon, length=1.1):
