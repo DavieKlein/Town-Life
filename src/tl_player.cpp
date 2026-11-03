@@ -3,22 +3,15 @@
 #include "bn_keypad.h"
 #include "bn_sprite_items_player.h"
 
-
 namespace tl
 {
     namespace
     {
-        // Hitbox around the feet, relative to the sprite centre (16x16 sprite).
-        constexpr int hitbox_left = -5;
-        constexpr int hitbox_right = 4;
-        constexpr int hitbox_top = 2;
-        constexpr int hitbox_bottom = 7;
+        constexpr int hitbox_radius = 4;        // world units around the feet
 
-        // Frames in player.bmp: 0-2 down, 3-5 up, 6-8 side (facing right).
-        constexpr int frames_per_direction = 3;
-        constexpr int anim_wait = 8;    // game frames per animation step
-
-        // Walking cycle: stand, step A, stand, step B.
+        // Frames in player.bmp (16x32): 0-2 front (facing down-left), 3-5 back (facing up-left).
+        constexpr int back_frames = 3;
+        constexpr int anim_wait = 8;            // game frames per animation step
         constexpr int walk_cycle[] = { 0, 1, 0, 2 };
     }
 
@@ -28,31 +21,21 @@ namespace tl
         _sprite.set_camera(camera);
     }
 
-    void player::place(const map_info& map, int map_x, int map_y, direction facing)
+    void player::place(const map_info& map, int x, int y, direction facing)
     {
         _map = &map;
-        _map_x = map_x;
-        _map_y = map_y;
+        _x = x;
+        _y = y;
         _direction = facing;
         _anim_counter = 0;
-        _update_sprite_position();
+        _update_sprite();
         _update_graphics(false);
-    }
-
-    bool player::_can_move_to(int map_x, int map_y) const
-    {
-        return ! _map->solid_rect(map_x + hitbox_left, map_y + hitbox_top,
-                                  map_x + hitbox_right, map_y + hitbox_bottom);
-    }
-
-    void player::_update_sprite_position()
-    {
-        // Butano world coordinates: the map background is centred on (0, 0).
-        _sprite.set_position(_map_x - (_map->pixel_width() / 2), _map_y - (_map->pixel_height() / 2));
     }
 
     void player::update()
     {
+        // D-pad follows the isometric axes: up = up-right, right = down-right, down = down-left,
+        // left = up-left. Pressing two directions walks straight across the screen.
         int dx = 0;
         int dy = 0;
 
@@ -78,7 +61,6 @@ namespace tl
 
         if(moving)
         {
-            // Facing: horizontal input wins when moving diagonally.
             if(dy > 0)
             {
                 _direction = direction::down;
@@ -103,14 +85,14 @@ namespace tl
             for(int step = 0; step < steps; ++step)
             {
                 // Move each axis separately so the player slides along walls.
-                if(dx != 0 && _can_move_to(_map_x + dx, _map_y))
+                if(dx != 0 && ! _map->solid_around(_x + dx, _y, hitbox_radius))
                 {
-                    _map_x += dx;
+                    _x += dx;
                 }
 
-                if(dy != 0 && _can_move_to(_map_x, _map_y + dy))
+                if(dy != 0 && ! _map->solid_around(_x, _y + dy, hitbox_radius))
                 {
-                    _map_y += dy;
+                    _y += dy;
                 }
             }
 
@@ -121,8 +103,20 @@ namespace tl
             _anim_counter = 0;
         }
 
-        _update_sprite_position();
+        _update_sprite();
         _update_graphics(moving);
+    }
+
+    void player::_update_sprite()
+    {
+        int bg_x = _map->to_bg_x(_x, _y);
+        int bg_y = _map->to_bg_y(_x, _y);
+
+        // Butano coordinates: the bg is centred on (0, 0). The sprite is 16x32 with the feet at the bottom.
+        _sprite.set_position(bg_x - (_map->bg_width / 2), bg_y - (_map->bg_height / 2) - 15);
+
+        // Behind a building/tree: draw below the objects layer (priority 2), otherwise above it.
+        _sprite.set_bg_priority(_map->player_hidden(_x, _y) ? 3 : 2);
     }
 
     void player::_update_graphics(bool moving)
@@ -133,34 +127,27 @@ namespace tl
         switch(_direction)
         {
 
-        case direction::down:
-            base_frame = 0;
+        case direction::down:       // down-left: front view
             break;
 
-        case direction::up:
-            base_frame = frames_per_direction;
-            break;
-
-        case direction::left:
-            base_frame = frames_per_direction * 2;
+        case direction::right:      // down-right: front view mirrored
             flip = true;
             break;
 
-        case direction::right:
-            base_frame = frames_per_direction * 2;
+        case direction::left:       // up-left: back view
+            base_frame = back_frames;
+            break;
+
+        case direction::up:         // up-right: back view mirrored
+            base_frame = back_frames;
+            flip = true;
             break;
 
         default:
             break;
         }
 
-        int step = 0;
-
-        if(moving)
-        {
-            step = walk_cycle[(_anim_counter / anim_wait) % 4];
-        }
-
+        int step = moving ? walk_cycle[(_anim_counter / anim_wait) % 4] : 0;
         _sprite.set_tiles(bn::sprite_items::player.tiles_item(), base_frame + step);
         _sprite.set_horizontal_flip(flip);
     }

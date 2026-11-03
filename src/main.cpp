@@ -1,5 +1,5 @@
 /*
- * Town Life - a story-driven top-down life-sim for the Game Boy Advance.
+ * Town Life - a story-driven isometric life-sim for the Game Boy Advance.
  * Built with Butano (https://github.com/GValiente/butano).
  */
 
@@ -12,8 +12,7 @@ int main()
     bn::core::init();
 
     // Start on the sidewalk in front of Corner Market.
-    tl::field field(tl::map_id::city_centre, 14 * tl::metatile_size + 8, 13 * tl::metatile_size + 6,
-                    tl::direction::down);
+    tl::field field(tl::map_id::city_centre, 6 * tl::cell_size + 8, 3 * tl::cell_size + 10, tl::direction::down);
 
     while(true)
     {
