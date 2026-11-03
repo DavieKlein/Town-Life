@@ -20,6 +20,9 @@ other existing games.
   Clean up `build/`, `*.gba` and `*.elf` afterwards (they are in `.gitignore`).
 - **Language:** all in-game text, names, menus and dialogue are in **English**. This file is in English too.
 - Every playable step of the roadmap must leave the game in a playable state.
+- **Propose designs first (owner's rule):** before building anything visual (new graphics,
+  characters, animals, buildings, UI), show the owner a design proposal (mock-up / preview
+  renders, ideally placed in an in-game screenshot) and wait for approval. Only then implement.
 - **Test the ROM headlessly before pushing** (see "Headless testing" below): it runs the same mGBA
   core as Lemuroid and saves screenshots, so you can verify maps, movement and transitions.
 
@@ -152,6 +155,7 @@ drive.google.com, drive.usercontent.google.com and docs.google.com in the allowe
 | Furniture Pack (March 2019) | not yet | furniture to buy/place in homes |
 | Ultimate House Interior Pack (June 2020) | not yet | home interiors, buyable furniture |
 | Furniture Pack (Oct 2017) | not yet | **no licence file in the folder** — verify before use |
+| David OReilly — Everything Library: Animals (Drive folder `EverythingLibrary_Animals_002`: one FBX + one .blend, ~240 static animal models incl. Pigeon/GroundedPigeon, Gray/RedSquirrel, Crow, Gull, Cat, dogs, Rat, Duck) | not yet (proposal stage) | **CC BY 4.0 according to search results (not CC0) — attribution required; the itch.io page could not be opened from the container, owner to confirm.** Models are static (no animations); colours are vertex colours (`colorSet1`) that must be wired to Base Color after FBX import; FBX root objects carry a cm scale/rotation that must be preserved. |
 
 Formats in Drive: FBX/OBJ/Blend per model (MegaKit: FBX + glTF). Blender needs `python3-numpy`
 for the FBX importer. Quaternius FBX materials import with alpha 0 — the render scripts set it to 1.
