@@ -3,7 +3,6 @@
 #include "bn_keypad.h"
 #include "bn_sprite_items_player.h"
 
-#include "tl_town_map.h"
 
 namespace tl
 {
@@ -23,19 +22,33 @@ namespace tl
         constexpr int walk_cycle[] = { 0, 1, 0, 2 };
     }
 
-    player::player(int map_x, int map_y, const bn::camera_ptr& camera) :
-        _sprite(bn::sprite_items::player.create_sprite(0, 0)),
-        _map_x(map_x),
-        _map_y(map_y)
+    player::player(const bn::camera_ptr& camera) :
+        _sprite(bn::sprite_items::player.create_sprite(0, 0))
     {
         _sprite.set_camera(camera);
-        _sprite.set_position(_map_x - (town_map::pixel_width / 2), _map_y - (town_map::pixel_height / 2));
+    }
+
+    void player::place(const map_info& map, int map_x, int map_y, direction facing)
+    {
+        _map = &map;
+        _map_x = map_x;
+        _map_y = map_y;
+        _direction = facing;
+        _anim_counter = 0;
+        _update_sprite_position();
+        _update_graphics(false);
     }
 
     bool player::_can_move_to(int map_x, int map_y) const
     {
-        return ! town_map::solid_rect(map_x + hitbox_left, map_y + hitbox_top,
-                                      map_x + hitbox_right, map_y + hitbox_bottom);
+        return ! _map->solid_rect(map_x + hitbox_left, map_y + hitbox_top,
+                                  map_x + hitbox_right, map_y + hitbox_bottom);
+    }
+
+    void player::_update_sprite_position()
+    {
+        // Butano world coordinates: the map background is centred on (0, 0).
+        _sprite.set_position(_map_x - (_map->pixel_width() / 2), _map_y - (_map->pixel_height() / 2));
     }
 
     void player::update()
@@ -65,7 +78,7 @@ namespace tl
 
         if(moving)
         {
-            // Facing: horizontal wins when moving diagonally only if there was no vertical input before.
+            // Facing: horizontal input wins when moving diagonally.
             if(dy > 0)
             {
                 _direction = direction::down;
@@ -108,7 +121,7 @@ namespace tl
             _anim_counter = 0;
         }
 
-        _sprite.set_position(_map_x - (town_map::pixel_width / 2), _map_y - (town_map::pixel_height / 2));
+        _update_sprite_position();
         _update_graphics(moving);
     }
 
@@ -135,6 +148,9 @@ namespace tl
 
         case direction::right:
             base_frame = frames_per_direction * 2;
+            break;
+
+        default:
             break;
         }
 

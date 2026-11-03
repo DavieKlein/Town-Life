@@ -20,6 +20,8 @@ other existing games.
   Clean up `build/`, `*.gba` and `*.elf` afterwards (they are in `.gitignore`).
 - **Language:** all in-game text, names, menus and dialogue are in **English**. This file is in English too.
 - Every playable step of the roadmap must leave the game in a playable state.
+- **Test the ROM headlessly before pushing** (see "Headless testing" below): it runs the same mGBA
+  core as Lemuroid and saves screenshots, so you can verify maps, movement and transitions.
 
 ---
 
@@ -132,8 +134,20 @@ unlocks the next district. Each chapter ends with a big moment.
 
 ## Current state of the code
 
-Right now the game is a single placeholder town map with a walking player (no text yet).
-That map will later be replaced/split into the real districts (City Centre, Old Block, ...).
+District 1 maps exist: **City Centre**, **Old Block** and the **Corner Market** interior, with
+transitions (fade to black) between them. No text, needs or NPCs yet.
+
+- **City Centre** (512x512): Corner Market (door → interior), Victor Vault's golden VaultTech
+  tower with plaza, apartments, offices, a cafe with bus stop, a fountain square, the City Park
+  (benches, pond — the player's future "home" bench is here), the river along the south with the
+  **closed bridge to the Docks** (barrier + "CLOSED" sign), and road works blocking the main street
+  to the north (future district). The avenue continues east into Old Block.
+- **Old Block** (512x512): cobbled streets, row houses, community garden, graffiti wall,
+  laundromat, bakery, basketball court, river, and the fenced **VaultTech demolition site** with
+  a crane, bulldozer and a "SMART CITY — COMING SOON" billboard. West edge leads back to the City Centre.
+- **Corner Market interior** (256x256): wooden floor, shelves, fridge, counter with register;
+  the door mat leads back outside.
+- Start position: on the sidewalk in front of Corner Market.
 
 ### Folder structure
 
@@ -142,16 +156,21 @@ That map will later be replaced/split into the real districts (City Centre, Old 
 ├── .github/workflows/build.yml  CI: builds ROM in devkitpro/devkitarm, publishes release "latest"
 ├── butano/                      git submodule: Butano engine (pinned to tag 21.9.0)
 ├── Makefile                     Butano project makefile (TARGET=town-life, ROMTITLE=TOWN LIFE)
-├── src/                         C++ sources
-│   ├── main.cpp                 init, camera, main loop
-│   └── tl_player.cpp            player: input, movement, collision, walk animation
-├── include/                     headers
-│   ├── tl_player.h
-│   ├── tl_town_map.h            collision helpers (solid_at / solid_rect) at metatile level
-│   └── town_map_data.h          GENERATED: collision data per 16x16 metatile
-├── graphics/                    Butano assets (.bmp + .json); town.* and player.* are GENERATED
+├── src/
+│   ├── main.cpp                 init + main loop (creates the field scene)
+│   ├── tl_field.cpp             field scene: current map bg, camera, player, warps with fades
+│   ├── tl_player.cpp            player: input, movement, collision, walk animation
+│   └── tl_world.cpp             map table lookup (includes the generated tl_world_data.h)
+├── include/
+│   ├── tl_world.h               map_info / warp / direction types, collision helpers
+│   ├── tl_field.h, tl_player.h
+│   ├── tl_map_id.h              GENERATED: enum map_id
+│   └── tl_world_data.h          GENERATED: per-map collision, warps and the map table
+├── graphics/                    Butano assets (.bmp + .json); all current ones are GENERATED
 ├── audio/  dmg_audio/           (empty) for music/sound later
-└── tools/gen_graphics.py        generates placeholder graphics + town_map_data.h (pure Python 3)
+└── tools/
+    ├── gen_graphics.py          generates maps, sprite sheet and the generated headers
+    └── headless_run.py          headless emulator test runner (screenshots + scripted input)
 ```
 
 Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case, `_member`).
@@ -159,7 +178,7 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 ### How the build works
 
 1. `make` (Butano's `butano.mak`) converts `graphics/*.bmp` + `.json` into headers such as
-   `bn_regular_bg_items_town.h` and `bn_sprite_items_player.h` in `build/`.
+   `bn_regular_bg_items_city_centre.h` and `bn_sprite_items_player.h` in `build/`.
 2. Compiles `src/*.cpp` and links `town-life.gba` (header fixed with ROM title `TOWN LIFE`).
 3. GitHub Actions (`build.yml`): job `build` runs in the `devkitpro/devkitarm` container, checks
    out the submodule, builds and uploads an artifact. Job `release` (only on `main`) deletes the
@@ -167,25 +186,47 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 4. Updating Butano: `cd butano && git fetch --tags && git checkout <tag>`, then commit the
    submodule. Watch out for API changes.
 
-### Editing graphics
+### Maps and graphics (tools/gen_graphics.py)
 
-Placeholder graphics come from `tools/gen_graphics.py`:
-- Palette: 16 colours (index 0 = transparent), shared by background and sprite.
-- Town: 32x32 metatiles of 16x16 px = 512x512 px regular background (4bpp).
-  Metatile characters (`.` grass, `R/h/v` road, `s` sidewalk, `T/W/D` house, `t` tree, `~` water, ...)
-  are defined in `TILES`, each with a "solid" flag. The layout is built in `build_layout()`.
-- Player: `player.bmp` 16x144, 9 frames of 16x16 (0-2 down, 3-5 up, 6-8 side/right;
-  left = horizontally flipped).
-- After changes: run `python3 tools/gen_graphics.py` and commit the generated files
-  (CI does not run the script).
-- Butano BMP requirements: indexed, uncompressed; regular bg dimensions multiples of 256 px.
+Python is the single source of truth for maps. Run `python3 tools/gen_graphics.py` after any
+change and commit the generated files (CI does not run the script).
+`python3 tools/gen_graphics.py --preview <dir>` also writes PNG previews (needs Pillow).
+
+- Backgrounds are **8bpp** regular BGs sharing one palette (`BG_COLOURS`, named colours,
+  index 0 = black backdrop). Map sizes must be multiples of 256 px (≤ 512 for normal BGs).
+  The generator asserts ≤ 800 unique 8x8 tiles per map (VRAM budget, 8bpp tiles are 64 bytes).
+  Keep textures periodic per 8/16 px so tiles deduplicate.
+- A map is a grid of 16x16 **metatiles**. Each cell has a terrain character from `TERRAIN`
+  (painter function + solid flag), e.g. `s` sidewalk, `P` plaza, `R/h/v` road, `Z/z` zebra
+  crossing, `c` cobbles, `o` old sidewalk, `~` water, `E` embankment, `X` barrier, `t` tree,
+  `q` planter tree, `b/B/n` benches, `l/L` lamps, `H` hedge, `F` wood fence, `C` site fence,
+  `w` wood floor, `W/Y` interior walls, `m` door mat, ` ` void.
+- **Stamps** draw large objects in pixels (`tower`, `corner_market`, `apartment`, `office`,
+  `cafe`, `laundromat`, `bakery`, `fountain`, `billboard`, `crane`, `shelf`, ...) and make their
+  footprint solid, except cells passed as `walkable` (doors).
+- **Warps**: `m.warp(mx, my, w, h, target, tx, ty, facing)` — trigger rect in metatiles, target
+  position in pixels (`None` keeps the current coordinate, used for edge transitions). The player
+  triggers a warp with the point at their feet; place the arrival point outside the target's
+  own warp rects.
+- A small 3x5 pixel font (`_GLYPHS`) is available for signs: `cv.text(...)`.
+- Player sprite: `player.bmp` 16x144, 4bpp with its own 16-colour palette, 9 frames of 16x16
+  (0-2 down, 3-5 up, 6-8 side/right; left = horizontally flipped).
 
 ### Coordinates
 
-- Player position is in **map pixels** (0..511), centre of the sprite.
-- Butano world coordinate = map pixel − 256 (the bg is centred on 0,0).
-- The camera follows the player and is clamped so it never scrolls past the edge of the map.
+- Player position is in **map pixels**, centre of the sprite.
+- Butano world coordinate = map pixel − (map size / 2) (each bg is centred on 0,0).
+- The camera follows the player and is clamped to the map edges.
 - Collision: hitbox around the feet (10x6 px), checked per axis so the player slides along walls.
+
+### Headless testing
+
+```
+apt-get install -y libretro-mgba          # once per container; Pillow is already installed
+docker run --rm -v "$PWD":/src -w /src devkitpro/devkitarm make -j8
+python3 tools/headless_run.py town-life.gba "wait 60; shot /tmp/a.png; hold up 30; wait 30; shot /tmp/b.png"
+```
+Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. Look at the PNGs.
 
 ### Controls (current)
 
@@ -210,11 +251,13 @@ Update the checkboxes at the end of each session.
 
 ### District 1: City Centre + Old Block (Chapter 1: Survive) — IN PROGRESS
 
-1.1 Real map — TODO
-- [ ] Replace the placeholder town with City Centre + Old Block (one or two connected maps)
-- [ ] Landmarks: Victor Vault's golden VaultTech tower, Corner Market, the park bench, Old Block streets
-- [ ] Visible blocked route to the Docks (closed bridge / dock gate)
-- [ ] Map transitions (district edge / door into Corner Market interior)
+1.1 Real map — DONE (awaiting owner feedback)
+- [x] Replace the placeholder town with City Centre + Old Block (two connected 512x512 maps)
+- [x] Landmarks: Victor Vault's golden VaultTech tower, Corner Market, the park benches, Old Block streets,
+      VaultTech demolition site with "SMART CITY — COMING SOON" billboard
+- [x] Visible blocked route to the Docks (closed bridge with barrier + "CLOSED" sign)
+- [x] Map transitions with fade (district edge City Centre ↔ Old Block, door into Corner Market interior)
+- [x] Headless test runner (`tools/headless_run.py`)
 
 1.2 Needs + HUD + clock — TODO
 - [ ] `needs` struct: Hunger, Energy, Hygiene, Fun (0–100), decaying over time
@@ -288,5 +331,6 @@ Update the checkboxes at the end of each session.
 
 ## Next session: start here
 
-Continue with **District 1, step 1.1 (Real map)**: replace the placeholder town with City Centre +
-Old Block. Map first, because the bench, fountain, NPCs and missions are all placed on it.
+Step 1.1 (real map) is done; apply any feedback from the owner on the maps first. Then continue
+with **District 1, step 1.2 (Needs + HUD + clock)**, including splitting `main.cpp` into scenes
+(the field scene already lives in `tl_field.cpp`).
