@@ -314,7 +314,7 @@ MATERIALS = {
     "tire": dict(c="#1c1c20", rough=0.9),
     "mail_blue": dict(c="#27478c", rough=0.4),
     "booth_teal": dict(c="#1f7a78", rough=0.4, metal=0.3),
-    "cafe_chair": dict(c="#3a7a5a", rough=0.5, metal=0.3),
+    "cafe_chair": dict(c="#4aa878", rough=0.5, metal=0.3),
     "bag_black": dict(c="#1e2024", rough=0.25),
     "bread_brown": dict(c="#b87a34", rough=0.6),
     "bread_light": dict(c="#e0b068", rough=0.6),

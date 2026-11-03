@@ -648,8 +648,6 @@ def eye_level_details(s, AV0, AV1, CS0, CS1):
     fy = AV0 - 4                                            # facade line of the north blocks (y = 18)
     # -- Corner Market + purple house (sidewalk x 38..56, y 18..22) --
     door_mat(s, 43.35, 18.12, 44.85, 18.8)
-    wall_lamp(s, 42.96, fy, 2.0)
-    wall_lamp(s, 45.04, fy, 2.0)
     blade_sign(s, 49.9, fy, 2.55, "sign_cream", "loaf")
     crate_stack(s, 49.3, fy + 0.5)
     bicycle(s, 51.6, fy + 0.55, "x", "bike_red", lean=-0.18)
@@ -658,7 +656,16 @@ def eye_level_details(s, AV0, AV1, CS0, CS1):
     for x in (40.2, 41.6):
         s.kit("Prop_Bollard", x, 21.35)
     mailbox(s, 43.0, 21.35)
-    street_sign_pole(s, 46.0, 21.45, [("left", "sign_blue", "MAIN AVE"), ("right", "sign_yellow", "")])
+    street_sign_pole(s, 47.9, 21.45, [("left", "sign_blue", "MAIN AVE"), ("right", "sign_yellow", "")])
+
+    # -- north-west apartment building (facade ~y 18.6, door around x 10.7) --
+    wy = fy + 0.62
+    wall_lamp(s, 9.4, wy, 2.0)
+    wall_lamp(s, 12.1, wy, 2.0)
+    blade_sign(s, 13.1, wy, 2.5, "sign_yellow", "cup")
+    bench_along_x(s, 2.2, 4.8, wy + 0.5)
+    bicycle(s, 14.4, wy + 0.4, "x", "bike_blue", lean=-0.18)
+    phone_booth(s, 16.0, wy + 0.8)
 
 
 # ---- small "lived-in" details (inspired by the owner's own building packs) -----------------------
