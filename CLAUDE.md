@@ -157,6 +157,20 @@ drive.google.com, drive.usercontent.google.com and docs.google.com in the allowe
 | Furniture Pack (Oct 2017) | not yet | **no licence file in the folder** — verify before use |
 | David OReilly — Everything Library: Animals (Drive folder `EverythingLibrary_Animals_002`, ~240 static models incl. Crow, Gull, Cat, dogs, Rat, Duck, Raccoon) | `art_source/everything_library_animals/city_animals.glb` (GroundedPigeon, Pigeon, GraySquirrel only) + License.txt | **CC BY 4.0 (not CC0) — attribution required, credited in README.** Static models; colours are vertex colours; the GLB is in centimetres and lost the FBX up-axis rotation (blender_critter.py compensates: `UNIT`, `BASE_PITCH`, per-model `YAW`). |
 
+**Owner's own packs (made by the owner, free to use):** Drive folders `commercial_part_1..3` and
+`house_part_1..2`. These are pre-rendered 2D isometric building sprites, one building per lot
+(e.g. `1x1_commercial_26_florist`, ...).
+- Lots come in sizes 8..128 px, with sun/studio/flat lighting and palette variants (24bit,
+  16bit, voyager, dither).
+- Each sheet has 8 columns x 4 rows. Column 5 is the 2:1 isometric view; the 4 rows are the 4
+  sides.
+- `heightmap/` and `normals/` folders exist in the commercial packs; they could give per-pixel
+  depth: `x + y = 2 * (image_y + z_px - origin_y)`.
+- Scale issue: at 128 px a lot is only 4 cells, so houses look doll-sized next to the 46 px
+  player. 256 px exports would match. Waiting for the owner's choice.
+
+The SBS packs (Screaming Brain Studios: iso floor tiles, wall textures) still need a licence check.
+
 Formats in Drive: FBX/OBJ/Blend per model (MegaKit: FBX + glTF). Blender needs `python3-numpy`
 for the FBX importer. Quaternius FBX materials import with alpha 0 — the render scripts set it to 1.
 
