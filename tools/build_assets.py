@@ -152,15 +152,16 @@ def kmeans(points, k, weights=None, iters=12, seed=1):
 #   class 1 window glass -> 2 entries (dark, bright), lit at night
 #   class 2 water        -> N entries with a ripple pattern, cycled (palette cycling)
 #   class 3 lamp glass   -> 1 entry, bright at night
-FLOOR_WATER_BANKS = (6, 7)          # floor banks that hold water (entries 12..15)
-FLOOR_WATER_FIRST = 12
-FLOOR_WATER_COUNT = 4
+FLOOR_WATER_BANKS = (6, 7)          # floor banks that hold water (entries 10..15)
+FLOOR_WATER_FIRST = 10
+FLOOR_WATER_CYCLE = 4               # entries rotated by the palette cycling (smooth brightness wave)
+FLOOR_WATER_FIXED = 2               # then fixed entries: darkest (edges / deep) and highlight
 OBJ_GLASS_FIRST = 13                # objects: glass 13, 14 and lamp 15 in every bank
 OBJ_LAMP_INDEX = 15
-OBJ_WATER_BANKS = (6,)              # objects banks with water (fountain), entries 10..12
-OBJ_WATER_FIRST = 10
-OBJ_WATER_COUNT = 3
-WATER_TINTS = np.array([[-16, -12, -6], [0, 0, 0], [14, 16, 20], [34, 38, 36]], dtype=np.float64)
+OBJ_WATER_BANKS = (6,)              # objects banks with water (fountain), entries 9..12
+OBJ_WATER_FIRST = 9
+OBJ_WATER_CYCLE = 3
+OBJ_WATER_FIXED = 1                 # highlight only
 
 
 def special_layout(layer, present, banks):
@@ -170,9 +171,9 @@ def special_layout(layer, present, banks):
     if layer == "floor":
         if 2 in present:
             for b in FLOOR_WATER_BANKS:
-                layout[b][2] = list(range(FLOOR_WATER_FIRST, FLOOR_WATER_FIRST + FLOOR_WATER_COUNT))
+                layout[b][2] = list(range(FLOOR_WATER_FIRST, FLOOR_WATER_FIRST + FLOOR_WATER_CYCLE + FLOOR_WATER_FIXED))
                 info["water_banks"] |= 1 << b
-            info.update(water_first=FLOOR_WATER_FIRST, water_count=FLOOR_WATER_COUNT)
+            info.update(water_first=FLOOR_WATER_FIRST, water_count=FLOOR_WATER_CYCLE)
     else:
         if present & {1, 3}:
             for b in range(banks):
@@ -181,17 +182,59 @@ def special_layout(layer, present, banks):
             info.update(glass_first=OBJ_GLASS_FIRST, lamp_index=OBJ_LAMP_INDEX)
         if 2 in present:
             for b in OBJ_WATER_BANKS:
-                layout[b][2] = list(range(OBJ_WATER_FIRST, OBJ_WATER_FIRST + OBJ_WATER_COUNT))
+                layout[b][2] = list(range(OBJ_WATER_FIRST, OBJ_WATER_FIRST + OBJ_WATER_CYCLE + OBJ_WATER_FIXED))
                 info["water_banks"] |= 1 << b
-            info.update(water_first=OBJ_WATER_FIRST, water_count=OBJ_WATER_COUNT)
+            info.update(water_first=OBJ_WATER_FIRST, water_count=OBJ_WATER_CYCLE)
     return layout, info
 
 
-def water_pattern(x, y, n):
-    """Diagonal ripple bands, periodic every 16x8 pixels (2 tiles) so water tiles deduplicate."""
-    wobble = np.round(np.sin(x * (2 * np.pi / 16)) * 2).astype(np.int64)
-    band = (x + 2 * y + wobble) // 4
-    return band % n
+WATER_PERIOD = 32
+_WATER_RANK = None
+
+
+def _water_field(x, y):
+    """Seamless (period 32 px) ripple field: smooth phase f (about -3..3) and caustic term c (0..1)."""
+    P = 2 * np.pi / WATER_PERIOD
+    f = (np.sin(P * (1 * x + 1 * y) + 0.7) * 1.0 + np.sin(P * (2 * x - 1 * y) + 2.1) * 0.8 +
+         np.sin(P * (-1 * x + 2 * y) + 4.0) * 0.7 + np.sin(P * (1 * x - 3 * y) + 5.3) * 0.4)
+    g1 = np.sin(P * (2 * x + 1 * y) + 1.3) + np.sin(P * (-1 * x + 2 * y) + 0.2)
+    g2 = np.sin(P * (1 * x + 2 * y) + 3.1) + np.sin(P * (2 * x - 1 * y) + 5.0)
+    c = 1.0 - np.minimum(np.abs(g1), np.abs(g2)) * 0.9       # bright thin ridges where both cross zero
+    return f, c
+
+
+def water_pattern(x, y, cycle, fixed, edge=None):
+    """Palette index (into the water entry list) per pixel. x, y: image pixel coordinates (arrays).
+    Entries: [0..cycle) ripple phases (rotated by the game), then dark (if fixed == 2), then highlight.
+    edge: bool array, pixel within 2 px of the water's edge -> darkest level."""
+    f, c = _water_field(x % WATER_PERIOD, y % WATER_PERIOD)
+    global _WATER_RANK
+    if _WATER_RANK is None:     # equalise the phase so every shade covers the same area (no global flashing)
+        gy, gx = np.mgrid[0:WATER_PERIOD, 0:WATER_PERIOD]
+        f0 = _water_field(gx, gy)[0].ravel()
+        _WATER_RANK = np.sort(f0)
+    u = np.searchsorted(_WATER_RANK, f) / float(len(_WATER_RANK))
+    idx = np.floor(u * cycle * 2).astype(np.int64) % cycle
+    idx = np.where(c > 0.975, cycle + fixed - 1, idx)          # sparkles
+    if fixed == 2 and edge is not None:
+        idx = np.where(edge, cycle, idx)
+    return idx
+
+
+def water_shades(base, cycle, fixed):
+    """Colours for the water entries from the mean rendered water colour."""
+    base = np.asarray(base, dtype=np.float64)
+    deep = np.clip(base * 0.62 + np.array([-8, 6, 4]), 0, 255)
+    light = np.clip(base * 1.0 + np.array([14, 46, 42]), 0, 255)
+    cols = []
+    for m in range(cycle):
+        b = 0.5 - 0.5 * np.cos(2 * np.pi * m / cycle)
+        tint = np.array([-6, 7, 0]) * np.sin(2 * np.pi * m / cycle)     # bluer going up, greener going down
+        cols.append(np.clip(deep + (light - deep) * b + tint, 0, 255))
+    if fixed == 2:
+        cols.append(np.clip(base * 0.38 + np.array([-6, 4, 8]), 0, 255))
+    cols.append(np.array([226, 244, 250], dtype=np.float64))
+    return np.array(cols)
 
 
 def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
@@ -246,9 +289,16 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
         px = rgb[cls_img == 3]
         special_cols[3] = to5(px.mean(0)[None] if len(px) else np.array([[255, 240, 200]])) * WEIGHT
     if 2 in reserved:
-        n = info["water_count"]
         base = rgb[cls_img == 2].mean(0)
-        special_cols[2] = to5(np.clip(base[None] + WATER_TINTS[:n], 0, 255)) * WEIGHT
+        wc = info["water_count"]
+        special_cols[2] = to5(water_shades(base, wc, 2 if wc == FLOOR_WATER_CYCLE else 1)) * WEIGHT
+        wmask = cls_img == 2
+        near = wmask.copy()
+        for _ in range(2):          # water pixels within 2 px of a non-water pixel
+            e = near.copy()
+            e[1:] &= near[:-1]; e[:-1] &= near[1:]; e[:, 1:] &= near[:, :-1]; e[:, :-1] &= near[:, 1:]
+            near = e
+        tiles_edge = tiled(wmask & ~near)
 
     # initial bank assignment: k-means on tile mean colour + spread (normal pixels)
     feats = []
@@ -310,7 +360,8 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
                 if not m.any():
                     continue
                 if c == 2:
-                    pat = water_pattern(tiles_x[chunk], tiles_y[chunk], len(entries))
+                    wc = info["water_count"]
+                    pat = water_pattern(tiles_x[chunk], tiles_y[chunk], wc, len(entries) - wc, tiles_edge[chunk])
                     idx[m] = (entries[0] + pat[m]).astype(np.uint8)
                 else:
                     sc_ = special_cols[c]
