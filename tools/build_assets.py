@@ -377,7 +377,7 @@ def main():
 # ---------------------------------------------------------------------------------------------
 # Player: 3D character rendered by tools/blender_character.py
 # ---------------------------------------------------------------------------------------------
-FACINGS = ["down", "right", "up", "left"]
+FACINGS = ["s", "sw", "w", "nw", "n", "ne", "e", "se"]   # clockwise screen directions
 FRAMES_PER_FACING = 5
 FRAME_W, FRAME_H = 32, 64
 
@@ -389,11 +389,11 @@ def build_player(force, fast):
         h.update(open(os.path.join(TOOLS, f), "rb").read())
     h.update(f"{ss}{samples}".encode())
     out_dir = os.path.join(CACHE, "player_" + h.hexdigest()[:12])
-    if force or not os.path.exists(os.path.join(out_dir, "left_4.png")):
+    if force or not os.path.exists(os.path.join(out_dir, "se_4.png")):
         print("rendering player...", flush=True)
         r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_character.py"),
                             "--", out_dir, str(ss), str(samples)], capture_output=True, text=True)
-        if not os.path.exists(os.path.join(out_dir, "left_4.png")):
+        if not os.path.exists(os.path.join(out_dir, "se_4.png")):
             print(r.stdout[-3000:], r.stderr[-3000:])
             raise RuntimeError("character render failed")
 

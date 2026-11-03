@@ -5,7 +5,7 @@ Town Life - 3D character renderer (runs INSIDE Blender, called by tools/build_as
 
 Builds a simple stylised character from primitives, poses it for an idle frame and a 4-frame walk
 cycle, and renders 4 isometric facings with the same camera scale as the maps:
-  <out_dir>/<facing>_<frame>.png   facing in down/right/up/left, frame 0 = idle, 1..4 = walk
+  <out_dir>/<facing>_<frame>.png   facing in s/sw/w/nw/n/ne/e/se (screen directions), frame 0 = idle
 Each frame is FRAME_W x FRAME_H pixels (times supersample) with the feet at (FEET_X, FEET_Y).
 """
 
@@ -186,7 +186,9 @@ def main():
     sc.collection.objects.link(so)
     so.rotation_euler = Vector((-0.25, 0.7, -0.65)).normalized().to_track_quat("-Z", "Y").to_euler()
 
-    facings = {"down": 0, "right": 90, "up": 180, "left": -90}
+    # 8 facings in clockwise screen order, starting with "screen down". Angles rotate the model
+    # (which faces Blender -Y = world +y = screen down-left) around Z.
+    facings = {"s": 45, "sw": 0, "w": -45, "nw": -90, "n": -135, "ne": 180, "e": 135, "se": 90}
     frames = [None, 0.0, 0.25, 0.5, 0.75]
     for name, angle in facings.items():
         root.rotation_euler = (0, 0, math.radians(angle))

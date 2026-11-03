@@ -322,6 +322,76 @@ def window_left_shop(s, x0, x1, y_face, z0, z1):
 # ---------------------------------------------------------------------------------------------
 # Corner Market interior
 # ---------------------------------------------------------------------------------------------
+M = 1 / CELL_M   # metres -> cells
+
+
+def product(s, kind, x, y_front, z, colour, rnd):
+    """One grocery item standing at (x, front edge y_front) on height z. Sizes are exaggerated so
+    the items stay readable at GBA resolution. Returns the item's width in cells."""
+    if kind == "milk":
+        w, d, h = 0.15 * M, 0.15 * M, 0.27
+        y0 = y_front - d
+        s.box(x, y0, x + w, y_front, z, z + h, "milk_white")
+        s.box(x - 0.01, y0 - 0.01, x + w + 0.01, y_front + 0.012, z + 0.07, z + 0.16, colour)   # printed band
+        s.box(x + 0.02, y0 + 0.04, x + w - 0.02, y_front - 0.04, z + h, z + h + 0.05, colour)  # gable top
+        return w
+    if kind == "cereal":
+        w, d, h = 0.22 * M, 0.09 * M, 0.34
+        y0 = y_front - d
+        s.box(x, y0, x + w, y_front, z, z + h, colour)
+        s.box(x + 0.05, y_front - 0.01, x + w - 0.05, y_front + 0.012, z + 0.1, z + 0.24, "print_cream")
+        return w
+    if kind == "can":
+        r = 0.065
+        cx, cy = x + r * M, y_front - r * M
+        s.cyl(cx, cy, z, z + 0.15, r, "metal_light", verts=10)
+        s.cyl(cx, cy, z + 0.025, z + 0.125, r + 0.004, colour, verts=10)
+        return 2 * r * M
+    if kind == "bottle":
+        r = 0.055
+        cx, cy = x + r * M, y_front - r * M
+        s.cyl(cx, cy, z, z + 0.2, r, colour, verts=10)
+        s.cyl(cx, cy, z + 0.2, z + 0.27, r * 0.45, colour, verts=8)
+        s.cyl(cx, cy, z + 0.27, z + 0.3, r * 0.5, "goods_red", verts=8)
+        s.cyl(cx, cy, z + 0.06, z + 0.13, r + 0.004, "print_cream", verts=10)
+        return 2 * r * M
+    if kind == "jar":
+        r = 0.07
+        cx, cy = x + r * M, y_front - r * M
+        s.cyl(cx, cy, z, z + 0.16, r, colour, verts=10)
+        s.cyl(cx, cy, z + 0.16, z + 0.19, r * 0.9, "brass", verts=10)
+        return 2 * r * M
+    raise ValueError(kind)
+
+
+def product_row(s, kind, colours, x0, x1, y_front, z, rnd):
+    x = x0 + 0.05
+    while True:
+        colour = rnd.choice(colours)
+        # measure first with a dry run width
+        widths = {"milk": 0.15 * M, "cereal": 0.22 * M, "can": 0.13 * M, "bottle": 0.11 * M, "jar": 0.14 * M}
+        if x + widths[kind] > x1 - 0.05:
+            break
+        x += product(s, kind, x, y_front, z, colour, rnd) + 0.035 * M
+
+
+def gondola(s, x0, y0, x1, y1, h, rows, rnd):
+    """Open supermarket shelving, products facing +y (towards the camera)."""
+    s.box(x0, y0, x1, y1, 0, 0.14, "shelf_base")
+    ym = (y0 + y1) / 2
+    s.box(x0, ym - 0.04, x1, ym + 0.04, 0.14, h, "shelf_back")
+    levels = [0.14 + i * (h - 0.14) / len(rows) for i in range(len(rows))]
+    for lz, (kind, colours) in zip(levels, rows):
+        s.box(x0, y0, x1, y1, lz, lz + 0.035, "shelf_white")
+        s.box(x0, y1 - 0.02, x1, y1 + 0.01, lz - 0.05, lz + 0.035, "price_yellow")   # price strip
+        product_row(s, kind, colours, x0, x1, y1 - 0.06, lz + 0.035, rnd)
+    s.box(x0, y0, x1, y1, h - 0.03, h, "shelf_white")
+    s.box(x1 - 0.06, y0, x1, y1, 0, h + 0.05, "shelf_end")                          # end panel (+x)
+    s.box(x0, y0, x0 + 0.06, y1, 0, h + 0.05, "shelf_end")
+    s.set_solid(x0, y0, x1 - 0.001, y1 - 0.001)
+    s.occluder(x0, y0, x1, y1, h + 0.3)
+
+
 def corner_market_interior():
     W, H = 12, 9
     s = Scene("corner_market", "Corner Market", W, H, origin_x=H * 16 + 24, origin_y=104,
@@ -333,72 +403,98 @@ def corner_market_interior():
     wall_h = 3.0
     s.box(-0.4, -0.4, W, 0, 0, wall_h, "wall_plaster")
     s.box(-0.4, 0, 0, H, 0, wall_h, "wall_plaster")
-    s.box(0, 0, W, 0.05, 0, 0.9, "wood")                     # wainscot
+    s.box(0, 0, W, 0.05, 0, 0.9, "wood")
     s.box(0, 0, 0.05, H, 0, 0.9, "wood")
     s.box(0, 0, W, 0.07, 0.88, 0.95, "wood_dark")
     s.box(0, 0, 0.07, H, 0.88, 0.95, "wood_dark")
     s.box(-0.4, -0.4, W, 0, wall_h, wall_h + 0.08, "wood_dark")
     s.box(-0.4, 0, 0, H, wall_h, wall_h + 0.08, "wood_dark")
-    window_left(s, 7.0, 9.0, 0.0, 1.3, 2.5, frame="wood_dark", sill=False)
     s.occluder(-0.4, -0.4, W, 0.1, wall_h)
     s.occluder(-0.4, 0, 0.1, H, wall_h)
 
     import random
-    rnd = random.Random(7)
-    cols = ["goods_red", "goods_yellow", "goods_green", "goods_orange", "goods_blue", "goods_pink", "goods_white"]
+    rnd = random.Random(11)
+    boxes = ["goods_red", "goods_yellow", "goods_blue", "goods_orange", "goods_green"]
+    cans = ["goods_red", "goods_green", "goods_orange", "goods_blue"]
+    jars = ["goods_red", "goods_orange", "goods_yellow"]
+    bottles = ["bottle_green", "bottle_clear", "bottle_brown"]
 
-    def shelf(x0, y0, x1, y1, h, face):
-        s.box(x0, y0, x1, y1, 0, 0.12, "wood_dark")
-        s.box(x0, y0, x1, y1, h - 0.05, h, "wood")
-        levels = [0.12 + i * (h - 0.2) / 3 for i in range(3)]
-        for lz in levels:
-            s.box(x0, y0, x1, y1, lz, lz + 0.04, "wood")
-            if face == "left":
-                x = x0 + 0.08
-                while x < x1 - 0.25:
-                    w = rnd.uniform(0.14, 0.28)
-                    s.box(x, y1 - 0.4, x + w, y1 - 0.05, lz + 0.04, lz + 0.04 + rnd.uniform(0.2, (h - 0.2) / 3 - 0.06),
-                          rnd.choice(cols))
-                    x += w + 0.04
-        if face == "left":
-            s.box(x0, y0, x0 + 0.06, y1, 0, h, "wood_dark")
-            s.box(x1 - 0.06, y0, x1, y1, 0, h, "wood_dark")
-            s.box(x0, y0, x1, y0 + 0.06, 0, h, "wood_dark")
-        s.set_solid(x0, y0, x1 - 0.001, y1 - 0.001)
-        s.occluder(x0, y0, x1, y1, h)
+    # wall shelving along the back wall
+    gondola(s, 0.3, 0.05, 6.6, 0.95, 2.0,
+            [("can", cans), ("jar", jars), ("cereal", boxes), ("bottle", bottles)], rnd)
+    # two aisles
+    gondola(s, 2.6, 2.8, 7.6, 3.9, 1.5, [("cereal", boxes), ("can", cans), ("jar", jars)], rnd)
+    gondola(s, 2.6, 5.1, 7.6, 6.2, 1.5, [("bottle", bottles), ("cereal", boxes), ("can", cans)], rnd)
 
-    shelf(0.6, 0.1, 6.2, 1.1, 2.1, "left")                  # wall shelf
-    shelf(2.0, 3.4, 7.0, 4.5, 1.5, "left")                  # aisle shelf
-    shelf(2.0, 5.4, 6.0, 6.5, 1.3, "left")                  # second aisle
-    # fridge with lit glass doors
-    s.box(9.4, 0.1, 11.9, 1.4, 0, 2.1, "fridge_white")
-    s.box(9.55, 1.38, 11.75, 1.45, 0.15, 1.95, "fridge_glass")
-    for k in range(1, 3):
-        s.box(9.55 + k * 0.73, 1.38, 9.6 + k * 0.73, 1.5, 0.15, 1.95, "fridge_white")
-    s.set_solid(9.4, 0.1, 11.899, 1.399)
-    s.occluder(9.4, 0.1, 11.9, 1.4, 2.1)
-    # counter with cash register
-    s.box(8.4, 5.4, 11.0, 6.5, 0, 1.0, "wood")
-    s.box(8.35, 5.35, 11.05, 6.55, 1.0, 1.06, "wood_dark")
-    s.box(9.2, 5.7, 10.0, 6.2, 1.06, 1.3, "metal_dark")
-    s.box(9.3, 5.75, 9.9, 6.15, 1.3, 1.36, "screen")
-    s.set_solid(8.4, 5.4, 10.999, 6.499)
-    s.occluder(8.4, 5.4, 11.0, 6.5, 1.4)
-    # plant
-    s.box(0.5, 7.0, 1.3, 7.8, 0, 0.5, "pot")
+    # dairy fridge: open, lit front with milk cartons and bottles on shelves
+    fx0, fx1, fy1, fh = 7.1, 11.8, 1.3, 2.2
+    s.box(fx0, 0.05, fx1, fy1, 0, 0.25, "fridge_white")
+    s.box(fx0, 0.05, fx1, 0.4, 0.25, fh, "fridge_light")
+    s.box(fx0, 0.05, fx1, fy1, fh - 0.25, fh, "fridge_white")
+    s.box(fx0, 0.05, fx0 + 0.12, fy1, 0, fh, "fridge_white")
+    s.box(fx1 - 0.12, 0.05, fx1, fy1, 0, fh, "fridge_white")
+    for lz, kind in ((0.25, "milk"), (0.85, "milk"), (1.4, "bottle")):
+        s.box(fx0, 0.05, fx1, fy1 - 0.1, lz, lz + 0.03, "metal_light")
+        product_row(s, kind, ["goods_blue", "goods_red", "goods_green"] if kind == "milk" else bottles,
+                    fx0 + 0.15, fx1 - 0.15, fy1 - 0.2, lz + 0.03, rnd)
+    for k in range(1, 4):
+        xk = fx0 + k * (fx1 - fx0) / 4
+        s.box(xk - 0.03, fy1 - 0.08, xk + 0.03, fy1, 0.25, fh - 0.25, "metal_light")   # door frames
+    s.box(fx0 + 1.0, fy1 - 0.05, fx1 - 1.0, fy1 + 0.02, fh + 0.05, fh + 0.4, "sign_blue")
+    s.text("DAIRY", (fx0 + fx1) / 2, fy1 + 0.03, fh + 0.22, 0.24, "sign_text", face="left")
+    s.set_solid(fx0, 0.05, fx1 - 0.001, fy1 - 0.001)
+    s.occluder(fx0, 0.05, fx1, fy1, fh + 0.45)
+
+    # fresh fruit & vegetables along the left wall (facing +x)
+    fruit = [("apple_red", 0.075), ("orange_fruit", 0.08), ("banana_yellow", 0.07), ("lettuce_green", 0.1)]
+    for i, (mat, r) in enumerate(fruit):
+        y0 = 1.9 + i * 1.25
+        y1 = y0 + 1.1
+        s.box(0.3, y0, 1.7, y1, 0, 0.55, "crate")
+        s.box(0.3, y0, 0.9, y1, 0.55, 0.85, "crate")
+        for (bx0, bx1, bz) in ((0.95, 1.65, 0.55), (0.35, 0.85, 0.85)):
+            yy = y0 + 0.12
+            row = 0
+            while yy < y1 - 0.12:
+                xx = bx0 + (0.08 if row % 2 else 0.0)
+                while xx < bx1 - 0.05:
+                    s.sphere(xx + r * M * 0.5, yy, bz + r * 0.8, r, mat)
+                    xx += r * M * 1.6
+                yy += r * M * 1.4
+                row += 1
+        s.box(1.68, y0 + 0.3, 1.72, y1 - 0.3, 0.3, 0.45, "price_yellow")
+    s.box(0.0, 2.6, 0.06, 6.2, 2.0, 2.45, "sign_green")
+    s.text("FRESH FRUIT", 0.07, 4.4, 2.2, 0.24, "sign_text", face="right")
+    s.set_solid(0.3, 1.9, 1.699, 6.899)
+    s.occluder(0.3, 1.9, 1.7, 6.9, 1.0)
+
+    # checkout with conveyor belt, register and baskets
+    s.box(8.6, 5.3, 11.4, 6.3, 0, 0.9, "wood")
+    s.box(8.55, 5.25, 11.45, 6.35, 0.9, 0.95, "wood_dark")
+    s.box(8.7, 5.45, 10.3, 6.15, 0.95, 0.98, "belt_dark")
+    s.box(10.5, 5.5, 11.2, 6.1, 0.95, 1.2, "metal_dark")
+    s.box(10.6, 5.6, 11.1, 6.0, 1.2, 1.26, "screen")
+    s.set_solid(8.6, 5.3, 11.399, 6.299)
+    s.occluder(8.6, 5.3, 11.4, 6.3, 1.3)
+    for k in range(4):
+        z = k * 0.12
+        s.box(8.0, 7.3, 8.9, 8.0, z, z + 0.1, "basket_red")
+    s.box(8.05, 7.35, 8.85, 7.95, 0.46, 0.47, "basket_red")
+    s.set_solid(8.0, 7.3, 8.899, 7.999)
+    s.occluder(8.0, 7.3, 8.9, 8.0, 0.6)
+
+    # plant by the door
+    s.box(10.6, 7.6, 11.4, 8.4, 0, 0.5, "pot")
     for (dx, dy, dz, r) in ((0, 0, 0.9, 0.35), (-0.15, 0.1, 0.75, 0.3), (0.15, -0.1, 0.8, 0.28), (0.05, 0.05, 1.15, 0.25)):
-        s.sphere(0.9 + dx / CELL_M, 7.4 + dy / CELL_M, dz, r, "leaves_light")
-    s.set_solid(0.5, 7.0, 1.299, 7.799)
-    s.occluder(0.4, 6.9, 1.4, 7.9, 1.4)
-    # crates
-    s.box(10.5, 7.2, 11.6, 8.2, 0, 0.55, "crate")
-    s.box(10.7, 7.4, 11.4, 8.0, 0.55, 1.0, "crate")
-    s.set_solid(10.5, 7.2, 11.599, 8.199)
-    s.occluder(10.5, 7.2, 11.6, 8.2, 1.0)
-    # warm lights
-    s.point_light(4, 3, 2.8, 120)
-    s.point_light(9, 5, 2.8, 100)
-    s.point_light(3, 7, 2.6, 60)
+        s.sphere(11.0 + dx / CELL_M, 8.0 + dy / CELL_M, dz, r, "leaves_light")
+    s.set_solid(10.6, 7.6, 11.399, 8.399)
+    s.occluder(10.5, 7.5, 11.5, 8.5, 1.4)
+
+    # bright shop lights
+    s.point_light(4, 2, 2.8, 140, colour=(1.0, 0.92, 0.78))
+    s.point_light(4, 5, 2.8, 140, colour=(1.0, 0.92, 0.78))
+    s.point_light(9.5, 4, 2.8, 120, colour=(1.0, 0.92, 0.78))
+    s.point_light(1.5, 7.5, 2.6, 60)
     # exit
     s.warp(5, H - 0.6, 7, H, "city_centre", 13.0, 9.0, "down")
     return s

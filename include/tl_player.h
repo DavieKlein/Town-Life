@@ -1,6 +1,7 @@
 #ifndef TL_PLAYER_H
 #define TL_PLAYER_H
 
+#include "bn_fixed.h"
 #include "bn_sprite_ptr.h"
 
 #include "tl_world.h"
@@ -22,42 +23,51 @@ namespace tl
         // Positions the sprite for a camera whose top-left corner is (cam_x, cam_y) in image pixels.
         void update_sprite(int cam_x, int cam_y);
 
-        // Point the camera should follow (image pixels): roughly the middle of the body.
-        [[nodiscard]] int focus_x() const
-        {
-            return _map->to_image_x(_x, _y);
-        }
-
-        [[nodiscard]] int focus_y() const
-        {
-            return _map->to_image_y(_x, _y) - 22;
-        }
-
         [[nodiscard]] int x() const
         {
-            return _x;
+            return _x.floor_integer();
         }
 
         [[nodiscard]] int y() const
         {
-            return _y;
+            return _y.floor_integer();
         }
 
-        [[nodiscard]] direction facing() const
+        // Point the camera should follow (image pixels): roughly the middle of the body.
+        [[nodiscard]] int focus_x() const
         {
-            return _direction;
+            return image_x();
+        }
+
+        [[nodiscard]] int focus_y() const
+        {
+            return image_y() - 22;
+        }
+
+        // Feet position in image pixels, computed from the sub-pixel world position (no jitter).
+        [[nodiscard]] int image_x() const
+        {
+            return _map->origin_x + (_x - _y).round_integer();
+        }
+
+        [[nodiscard]] int image_y() const
+        {
+            return _map->origin_y + ((_x + _y) / 2).round_integer();
         }
 
     private:
         bn::sprite_ptr _shadow;
         bn::sprite_ptr _sprite;
         const map_info* _map = nullptr;
-        int _x = 0;
-        int _y = 0;
-        direction _direction = direction::down;
-        int _anim_counter = 0;
+        bn::fixed _x;
+        bn::fixed _y;
+        bn::fixed _vx;              // world units per frame
+        bn::fixed _vy;
+        int _facing = 0;            // 0..7: s, sw, w, nw, n, ne, e, se (clockwise screen directions)
+        bn::fixed _anim_distance;   // screen pixels walked, drives the walk cycle
+        int _anim_frame = 0;
 
-        void _update_graphics(bool moving);
+        void _update_graphics();
     };
 }
 

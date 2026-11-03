@@ -150,9 +150,12 @@ History: top-down maps at commit `5af63a1`; first hand-painted isometric prototy
 - Street corner (28x26 cells): Corner Market (brick, green/white awning, sign, shop windows with
   goods, door into the interior), brick apartments, glass office, two townhouses, crossing roads
   with zebra crossings and lane markings, curbs, lamps, trees, planters, hydrant, bench, grass.
-- Corner Market interior (12x9 cells): wooden floor, wall shelf, two aisle shelves full of goods,
-  lit fridge, counter with register, crates, plant, warm lights, door mat (exit).
-- Player: 3D character (idle + 4-frame walk in 4 isometric facings) with a blended shadow.
+- Corner Market interior (12x9 cells), a small supermarket: open shelving (`gondola()`) with
+  yellow price strips and groceries (`product()`: milk cartons with a printed band, cereal boxes,
+  cans with labels, bottles, jars — sizes exaggerated so they read at GBA resolution), fruit &
+  vegetable crates with a "FRESH FRUIT" sign, lit "DAIRY" fridge with milk and bottles, checkout
+  with conveyor belt and register, basket stack, plant, door mat (exit).
+- Player: 3D character (idle + 4-frame walk in 8 facings) with a blended shadow.
 - HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
   The four need bars are static mock-ups.
 - Start position: on the sidewalk in front of the Corner Market door.
@@ -222,8 +225,9 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   each 8x8 tile uses the palette that fits best; tiles are deduplicated incl. flips (tile 0 = empty).
   Prints unique tile counts and the worst 31x21 window. Bank budget: floor 7 + objects 7 + HUD 1 ≤ 16.
 - **blender_character.py**: character from primitives (hips/knees/shoulders as pivots), idle +
-  4 walk frames × 4 facings, rendered 4x and downscaled; build_assets adds a 1 px dark outline and
-  quantizes to one 15-colour palette. Frame 32x64, feet at (16, 58).
+  4 walk frames × 8 facings (clockwise screen order s, sw, w, nw, n, ne, e, se), rendered 4x and
+  downscaled; build_assets adds a 1 px dark outline and quantizes to one 15-colour palette.
+  Frame 32x64, feet at (16, 58); sheet = 40 frames.
 
 ### Engine
 
@@ -241,8 +245,11 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   occluder = world footprint + screen bbox; the player is behind it when overlapping and not past
   its far edge (`x >= x1 || y >= y1` means in front). Limitation: one priority for the whole layer.
 - **Collision**: per cell (`solid[]`), hitbox = square of radius 4 units around the feet.
-- **D-pad**: up = up-right (−y), right = down-right (+x), down = down-left (+y), left = up-left (−x);
-  two directions together walk straight across the screen. B = run.
+- **Movement** (`tl_player`): sub-pixel position (`bn::fixed`) with smooth acceleration and
+  braking. D-pad up/down/left/right walk straight across the screen; diagonals follow the
+  isometric streets (up+right = −y, down+right = +x, ...). Speeds are equal on screen (walk 1.25,
+  run 2.25 px/frame with B). 8 facings; the walk animation advances per 6 screen pixels moved.
+  The GBA has no analog stick, so a joystick is not possible in the game itself.
 - **Warps**: trigger rect (feet point), target position + facing. Map change: fade out → free the
   layers → wait one frame (Butano frees VRAM in `core::update`) → create new layers → fade in.
 
@@ -257,7 +264,7 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
 
 ### Controls (current)
 
-- D-pad: walk (isometric directions, see above) · hold B: run
+- D-pad: walk (straight on screen; diagonals follow the streets) · hold B: run
 
 ---
 
