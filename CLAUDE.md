@@ -530,6 +530,16 @@ Update the checkboxes at the end of each session.
   in the 8x8 font and an "A" button. It must also offer **choice options**. Mock-up scripts are in
   /tmp/claude-0/s34 (scratch, may be gone): `portrait.py` renders the head-and-shoulders portrait
   in Blender, 4x, rim light, 15 colours.
+- **Relationship meter in conversations (owner request):** during a conversation, show a
+  vertical friendship meter for that NPC next to the portrait, with its number. The bar is red at
+  the bottom and green at the top.
+  - It moves up or down live depending on the player's answers and small talk.
+  - Small talk is a choice menu of topics (e.g. weather, work, music, sports, gossip, compliment,
+    joke, complain). Each NPC has likes and dislikes and a mood, and repeating a topic gives less.
+  - It feeds the existing friendship system (0-100 per NPC; 70+ gives City Coins) and reputation
+    with the NPC's type.
+  - Use our own layout: dialogue variant 2 plus the meter on the right edge of the box. Do not
+    copy any existing game's screen.
 - **Player:** variant V2 chosen by the owner (head 1.28x, hands 1.38x, cream collar and cuffs, belt, red
   sneakers with white soles, eyes). Note that the head and palm scales must be set on the Idle/Walk
   keyframes, and the FBX's "Eyes" material is actually the shoes.
