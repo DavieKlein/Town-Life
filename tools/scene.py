@@ -523,6 +523,10 @@ def city_centre():
     ivy(s, 0.3, 1.6, AV0 - 4.0 + 0.6, 2.6)
     for x in (0.8, 6.0, 20.6):
         weeds(s, x, AV0 - 3.0, 3)
+    for (x, kind) in ((5.4, "flowers"), (16.6, "bush"), (21.6, "flowers")):
+        potted_plant(s, x, AV0 - 3.4, kind)
+    conifer(s, 23.6, AV0 - 3.0, 3.0)
+    shrub(s, 24.4, AV0 - 2.2, 0.4, "leaves_light")
 
     # ---- north-east block: Corner Market, a slim house and the VaultTech tower ----
     corner_market_building(s, CS1 + 5, AV0 - 4)
@@ -560,6 +564,12 @@ def city_centre():
         tree(s, x, AV0 - 1.4, 0.95)
     hydrant(s, CS1 + 1.2, AV0 - 1.0)
     bus_stop(s, 40.0, 44.0, AV1 + 3.2)
+    for x in (5.5, 20.5, 57.0, 63.5):
+        street_tree(s, x, AV1 + 2.4)
+    for x in (4.0, 18.0, 42.0, 64.0):
+        street_tree(s, x, RIVER - 2.0)
+    for x in (47.5, 48.4):
+        potted_plant(s, x, AV1 + 3.4, "bush")
 
     # ---- south-west block: City Park (the bench where you will sleep) ----
     P0, P1 = AV1 + 4, RIVER - 4
@@ -579,6 +589,16 @@ def city_centre():
         tree(s, x, y, sc)
     for (x, y) in ((6.0, 43.5), (13.5, 36.8)):
         planter(s, x, y)
+    flower_bed(s, 2.0, 38.0, 5.0, 38.9)
+    flower_bed(s, 12.4, 42.4, 14.0, 43.2)
+    flower_bed(s, 16.4, 37.6, 18.4, 38.5)
+    hedge(s, 1.4, 9.6, P1 - 0.5)
+    hedge(s, 12.4, 14.0, P1 - 0.5)
+    for (x, y, r, m) in ((1.8, 35.0, 0.45, "leaves"), (8.6, 35.2, 0.4, "leaves_light"), (16.2, 35.0, 0.45, "leaves"),
+                         (21.2, 46.6, 0.45, "leaves_light"), (12.8, 45.6, 0.4, "leaves")):
+        shrub(s, x, y, r, m)
+    conifer(s, 1.8, 46.4, 3.2)
+    conifer(s, 21.4, 35.2, 3.6)
 
     # ---- south-east block: fountain square ----
     s.box(CS1 + 4, AV1 + 4, W, RIVER - 4, -0.1, 0.01, "plaza_stone", layer="floor")
@@ -589,6 +609,12 @@ def city_centre():
         tree(s, x, y, 1.0)
     for (x, y) in ((44, 41), (62, 41)):
         lamp_post(s, x, y)
+    for (x, y) in ((46.3, 38.0), (59.7, 38.0), (46.3, 45.0), (59.7, 45.0)):
+        potted_plant(s, x, y, "flowers")
+    for (x0, y0) in ((49.6, 35.6), (54.6, 35.6), (49.6, 46.6), (54.6, 46.6)):
+        flower_bed(s, x0, y0, x0 + 1.8, y0 + 0.8)
+    for (x, y) in ((38.6, 47.0), (67.4, 47.0)):
+        conifer(s, x, y, 3.0)
 
     # ---- riverside: embankment, railing, water and the closed bridge to the Docks ----
     for (x0, x1) in ((0, CS0), (CS1, W)):
@@ -664,6 +690,7 @@ def shrub(s, x, y, r=0.45, mat="leaves"):
     for _ in range(4):
         s.sphere(x + rnd.uniform(-r, r) * 0.5, y + rnd.uniform(-r, r) * 0.5, r * 0.8 + rnd.uniform(0, 0.15),
                  r * rnd.uniform(0.6, 0.9), mat)
+    s.set_solid(x - r * 0.6, y - r * 0.6, x + r * 0.6, y + r * 0.6)
 
 
 def produce_display(s, x0, x1, y):
@@ -689,6 +716,32 @@ def a_frame_sign(s, x, y):
     for i, w in enumerate((0.4, 0.3, 0.36)):
         s.box(x - w / 2, y - 0.01, x + w / 2, y + 0.005, 0.66 - i * 0.17, 0.69 - i * 0.17, "chalk")
     s.set_solid(x - 0.3, y - 0.2, x + 0.3, y + 0.1)
+
+
+def flower_bed(s, x0, y0, x1, y1, rnd=None):
+    """Low stone-edged bed full of flowers and small leafy plants."""
+    rnd = rnd or random.Random(int(x0 * 37 + y0 * 11))
+    s.box(x0, y0, x1, y1, 0, 0.18, "stone")
+    s.box(x0 + 0.1, y0 + 0.1, x1 - 0.1, y1 - 0.1, 0.18, 0.2, "soil")
+    n = int((x1 - x0) * (y1 - y0) * 9) + 4
+    for _ in range(n):
+        x = rnd.uniform(x0 + 0.2, x1 - 0.2)
+        y = rnd.uniform(y0 + 0.2, y1 - 0.2)
+        s.sphere(x, y, 0.27, rnd.uniform(0.08, 0.12), "leaves_light" if rnd.random() < 0.4 else "leaves")
+        s.sphere(x + rnd.uniform(-0.08, 0.08), y + rnd.uniform(-0.08, 0.08), 0.36, 0.065, rnd.choice(FLOWERS))
+    s.set_solid(x0, y0, x1, y1)
+
+
+def hedge(s, x0, x1, y, h=0.8):
+    """Clipped hedge along x."""
+    s.box(x0, y - 0.3, x1, y + 0.3, 0, h - 0.15, "leaves")
+    rnd = random.Random(int(x0 * 7 + y * 3))
+    x = x0 + 0.2
+    while x < x1 - 0.1:
+        s.sphere(x, y + rnd.uniform(-0.1, 0.1), h - 0.15, 0.24, "leaves" if rnd.random() < 0.6 else "leaves_light")
+        x += 0.35
+    s.set_solid(x0, y - 0.3, x1, y + 0.3)
+    s.occluder(x0, y - 0.4, x1, y + 0.4, h)
 
 
 def street_tree(s, x, y):
@@ -737,8 +790,8 @@ def corner_market_building(s, x0, fy):
     s.box(x1 - 2.3, ridge_y - 1.3, x1 - 1.3, ridge_y - 0.3, ridge_z + 1.0, ridge_z + 1.12, "stone")
     # shop front details
     produce_display(s, x0 + 0.7, x0 + 3.5, fy)
-    potted_plant(s, x0 + 3.85, fy + 0.45, "bay")
-    potted_plant(s, x0 + 6.15, fy + 0.45, "bay")
+    potted_plant(s, x0 + 3.75, fy + 0.45, "bay")
+    potted_plant(s, x0 + 6.25, fy + 0.45, "bay")
     a_frame_sign(s, x0 + 7.4, fy + 1.6)
     s.set_solid(x0, y0, x1 - 0.001, fy - 0.001)
     s.set_solid(x0 + 4, fy - 1, x0 + 5.999, fy - 0.001, False)                  # door cells walkable

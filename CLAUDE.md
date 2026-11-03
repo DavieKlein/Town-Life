@@ -195,7 +195,8 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
 
 - City Centre (72x60 cells = 54x45 m, image 2144x1272 px): main avenue along x (y 22..30) and a
   cross street along y (x 26..34) with curbs, lane markings, zebra crossings and manholes.
-  North-west: downtown apartment building (MegaKit). North-east: Corner Market (door → interior),
+  North-west: downtown apartment building (MegaKit). North-east: Corner Market (door → interior; two
+  storeys with flower boxes, slate roof and chimney, produce crates, bay trees and a chalkboard sign),
   purple slim house (Quaternius) and Victor Vault's golden **VaultTech tower** (34 m, gold fins,
   "VAULTTECH" sign) on a gold-checkered plaza with planters and bollards. South-west: **City Park**
   (grass, paths, trees, benches — the bench where the player will sleep — pond). South-east:
@@ -337,6 +338,12 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   `parking_meter`, `fence_wood`, `chain_link`, `poster`, `weeds`, `ivy`. `s.tube(pts, r, mat)` is a
   smooth round tube along points (curved lamp arms). Lamp helpers add their light pool spot to
   `s.lamps`.
+  - `s.poly(pts, mat)` is a flat polygon, e.g. a gable end. `s.cyl(..., r2=)` makes a cone.
+  - "Lived-in" detail helpers, inspired by the owner's building packs (approved): `flower_box`,
+    `potted_plant` (bay / bush / flowers), `conifer`, `shrub`, `flower_bed`, `hedge`,
+    `produce_display`, `a_frame_sign`, `street_tree`.
+  - Keep door cells and the paths around interactables walkable: `set_solid` rounds to whole
+    cells.
   **Style pass** (`stylize()` in blender_render.py, always on): Freestyle outlines (silhouette,
   border, crease; only on the layer being rendered, via the `tl_visible` collection) and
   `add_grime()` which multiplies every material's base colour with an ambient-occlusion term
@@ -511,6 +518,10 @@ Update the checkboxes at the end of each session.
 - [ ] Polish + owner approval
 
 ## Next session: start here
+
+**Street details across the City Centre (owner approved the before/after proposal):** the
+Corner Market got an upper storey and roof, and there are more plants, flowers, trees and hedges
+everywhere. The same style is planned for Old Block.
 
 **Graphics upgrade (owner approved everything except cloud shadows, which looked odd):**
 day/night lighting, night lamp pools and lit windows, water palette cycling, per-pixel depth

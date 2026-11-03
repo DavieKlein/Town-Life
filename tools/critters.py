@@ -20,7 +20,7 @@ SPAWNS = {
         ("pigeon", 8.5, 32.0), ("pigeon", 9.3, 32.6),
         ("pigeon", 60.0, 16.6), ("pigeon", 61.0, 16.0),
         # squirrels in City Park, each next to a tree it flees up into
-        ("squirrel", 6.0, 37.5, 3.5, 36.5), ("squirrel", 17.5, 38.0, 19.5, 36.5),
+        ("squirrel", 6.0, 37.5, 3.5, 36.5), ("squirrel", 17.2, 36.9, 19.5, 36.5),
         ("squirrel", 6.5, 45.0, 4.0, 45.5),
     ],
 }
