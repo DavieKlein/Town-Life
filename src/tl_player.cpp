@@ -196,9 +196,8 @@ namespace tl
     {
         if(_activity == activity::sitting || _activity == activity::sleeping)
         {
-            // stand in front of the bench, facing away from it
-            _x = _seat_x;
-            _y = _seat_y + 14;
+            // stand up where the player was before sitting down (always a free spot; the cell in
+            // front of a bench can be solid, which used to trap the player)
             _facing = 1;
             _rest_sprite.reset();
             _sprite.set_visible(true);
