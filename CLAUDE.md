@@ -169,6 +169,11 @@ drive.google.com, drive.usercontent.google.com and docs.google.com in the allowe
 - Scale issue: at 128 px a lot is only 4 cells, so houses look doll-sized next to the 46 px
   player. 256 px exports would match. Waiting for the owner's choice.
 
+**Do NOT use the Drive folder "Homemade inspired by URBZ".** Its files are ripped sprites from
+The Urbz / The Sims Bustin' Out: the images carry "Ripped by SuperFlorian12" (The Spriters
+Resource) and use the original character and object names. They are not usable as assets or as a
+base, and must not be copied.
+
 The SBS packs (Screaming Brain Studios: iso floor tiles, wall textures) still need a licence check.
 
 Formats in Drive: FBX/OBJ/Blend per model (MegaKit: FBX + glTF). Blender needs `python3-numpy`
