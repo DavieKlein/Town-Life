@@ -234,6 +234,15 @@ MATERIALS = {
     "leaves_light": dict(kind="noise", c="#3a7a36", c2="#62983e", scale=7, rough=0.9),
     "trunk": dict(c="#6a4428"),
     "pot": dict(c="#b0603c"),
+    "terracotta": dict(kind="noise", c="#b8643c", c2="#9a5030", scale=30),
+    "slate": dict(kind="brick", c="#4a5260", c2="#3e4654", mortar="#2c323c", bw=0.35, bh=0.12),
+    "flower_red": dict(kind="noise", c="#d8303c", c2="#b81c2c", scale=40),
+    "flower_pink": dict(kind="noise", c="#e86aa8", c2="#c84a88", scale=40),
+    "flower_yellow": dict(kind="noise", c="#f0c830", c2="#d8a018", scale=40),
+    "flower_white": dict(kind="noise", c="#f4f0e8", c2="#d8d4cc", scale=40),
+    "leaves_dark": dict(kind="noise", c="#1c4628", c2="#2e5e34", scale=6, rough=0.9),
+    "chalkboard": dict(c="#26302c", rough=0.9),
+    "chalk": dict(c="#e8e8e0"),
     "red_paint": dict(c="#c02828", rough=0.4),
     "wood": dict(kind="noise", c="#a8703c", c2="#946030", scale=6),
     "wood_dark": dict(c="#5c3a20"),
@@ -334,7 +343,7 @@ def add_wedge(bm, p):
 
 def add_cyl(bm, p):
     r = p["r"]
-    res = bmesh.ops.create_cone(bm, cap_ends=True, segments=p.get("verts", 16), radius1=r, radius2=r,
+    res = bmesh.ops.create_cone(bm, cap_ends=True, segments=p.get("verts", 16), radius1=r, radius2=p.get("r2", r),
                                 depth=p["z1"] - p["z0"])
     x, y, _ = bl(p["x"], p["y"])
     bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, (p["z0"] + p["z1"]) / 2)))
@@ -346,6 +355,12 @@ def add_sphere(bm, p):
         v.co.z *= p.get("sz", 1.0)
     x, y, _ = bl(p["x"], p["y"])
     bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, p["z"])))
+
+
+def add_poly(bm, p):
+    """One flat polygon through points (x, y in cells, z in metres), e.g. a gable end."""
+    vs = [bm.verts.new(bl(x, y, z)) for (x, y, z) in p["pts"]]
+    bm.faces.new(vs)
 
 
 def add_tube(bm, p):
@@ -525,6 +540,8 @@ def build(scene_obj, layer_visible):
             elif t == "sphere":
                 add_sphere(bm, p)
                 smooth = True
+            elif t == "poly":
+                add_poly(bm, p)
             elif t == "tube":
                 add_tube(bm, p)
                 smooth = True

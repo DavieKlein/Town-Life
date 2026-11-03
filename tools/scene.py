@@ -14,6 +14,8 @@ A scene holds:
 * solid cells, warps and occluders for the game engine.
 """
 
+import random
+
 CELL_M = 0.75          # metres per cell
 PX_PER_M_Z = 19.6 / CELL_M   # vertical screen pixels per metre of height
 
@@ -81,8 +83,14 @@ class Scene:
         self.prims.append(dict(type="box", x0=x0, y0=y0, x1=x1, y1=y1, z0=z0, z1=z1, mat=mat,
                                layer=layer, bevel=bevel))
 
-    def cyl(self, x, y, z0, z1, r, mat, layer="objects", verts=16):
-        self.prims.append(dict(type="cyl", x=x, y=y, z0=z0, z1=z1, r=r, mat=mat, layer=layer, verts=verts))
+    def cyl(self, x, y, z0, z1, r, mat, layer="objects", verts=16, r2=None):
+        """Cylinder (or cone: r2 = top radius)."""
+        self.prims.append(dict(type="cyl", x=x, y=y, z0=z0, z1=z1, r=r, mat=mat, layer=layer, verts=verts,
+                               r2=r if r2 is None else r2))
+
+    def poly(self, pts, mat, layer="objects"):
+        """Flat polygon through points (x, y in cells, z in metres)."""
+        self.prims.append(dict(type="poly", pts=[list(q) for q in pts], mat=mat, layer=layer))
 
     def tube(self, pts, r, mat, layer="objects"):
         """Smooth round tube through points (x, y in cells, z in metres)."""
@@ -540,6 +548,12 @@ def city_centre():
     for x in (CS1 + 16.6, CS1 + 18.0):
         weeds(s, x, AV0 - 3.6, 3)
     ivy(s, CS1 + 15.6, CS1 + 16.6, AV0 - 4 + 0.05, 2.2)
+    potted_plant(s, CS1 + 16.2, AV0 - 3.5, "flowers")
+    potted_plant(s, CS1 + 18.9, AV0 - 3.5, "bush")
+    shrub(s, CS1 + 19.6, AV0 - 3.6, 0.4, "leaves_light")
+    conifer(s, CS1 + 3.9, AV0 - 3.3, 3.4)
+    shrub(s, CS1 + 4.3, AV0 - 2.6, 0.4)
+    street_tree(s, CS1 + 2.4, AV0 - 1.2)
     poster(s, CS1 + 5.2, CS1 + 6.2, AV0 - 4 + 0.08, 0.6, 1.8, "poster_yellow")
     for x in (8.0, 19.0):
         s.kit("Sidewalk_Planter", x, AV0 - 1.4, solid=True, occlude=False)
@@ -600,6 +614,90 @@ def city_centre():
     return s
 
 
+# ---- small "lived-in" details (inspired by the owner's own building packs) -----------------------
+FLOWERS = ("flower_red", "flower_pink", "flower_yellow", "flower_white")
+
+
+def flower_box(s, x0, x1, y_face, z, rnd=None):
+    """Window box with flowers and trailing leaves under a window on a +y facing wall."""
+    rnd = rnd or random.Random(int(x0 * 100 + z * 10))
+    s.box(x0, y_face, x1, y_face + 0.3, z - 0.22, z, "terracotta")
+    n = max(3, int((x1 - x0) * 5))
+    for i in range(n):
+        x = x0 + 0.1 + (x1 - x0 - 0.2) * i / (n - 1)
+        s.sphere(x, y_face + 0.15 + rnd.uniform(-0.05, 0.05), z + 0.08, 0.1, "leaves_light")
+        s.sphere(x + rnd.uniform(-0.05, 0.05), y_face + 0.2, z + 0.16 + rnd.uniform(0, 0.08), 0.07,
+                 rnd.choice(FLOWERS))
+    for i in range(n // 2):
+        x = x0 + 0.15 + (x1 - x0 - 0.3) * rnd.random()
+        s.sphere(x, y_face + 0.32, z - 0.25 - rnd.uniform(0, 0.15), 0.07, "leaves")
+
+
+def potted_plant(s, x, y, kind="bay"):
+    """Terracotta pot with a ball-shaped bay tree, a bush or flowers."""
+    s.cyl(x, y, 0, 0.45, 0.22, "terracotta", r2=0.26)
+    if kind == "bay":
+        s.cyl(x, y, 0.4, 1.0, 0.025, "trunk")
+        s.sphere(x, y, 1.2, 0.32, "leaves")
+    elif kind == "bush":
+        s.sphere(x, y, 0.65, 0.3, "leaves_light")
+        s.sphere(x + 0.1, y + 0.1, 0.78, 0.2, "leaves")
+    else:
+        s.sphere(x, y, 0.55, 0.22, "leaves_light")
+        rnd = random.Random(int(x * 31 + y * 7))
+        for _ in range(6):
+            s.sphere(x + rnd.uniform(-0.18, 0.18), y + rnd.uniform(-0.18, 0.18), 0.66 + rnd.uniform(0, 0.08),
+                     0.07, rnd.choice(FLOWERS))
+    s.set_solid(x - 0.25, y - 0.25, x + 0.25, y + 0.25)
+
+
+def conifer(s, x, y, h=3.2):
+    s.cyl(x, y, 0, 0.5, 0.08, "trunk")
+    for i, (z0, r) in enumerate(((0.3, 0.75), (1.1, 0.6), (1.8, 0.45), (2.4, 0.3))):
+        s.cyl(x, y, z0 * h / 3.2, (z0 + 1.0) * h / 3.2, r, "leaves_dark", verts=10, r2=0.05)
+    s.set_solid(x - 0.3, y - 0.3, x + 0.3, y + 0.3)
+    s.occluder(x - 0.8, y - 0.8, x + 0.8, y + 0.8, h)
+
+
+def shrub(s, x, y, r=0.45, mat="leaves"):
+    rnd = random.Random(int(x * 13 + y * 17))
+    for _ in range(4):
+        s.sphere(x + rnd.uniform(-r, r) * 0.5, y + rnd.uniform(-r, r) * 0.5, r * 0.8 + rnd.uniform(0, 0.15),
+                 r * rnd.uniform(0.6, 0.9), mat)
+
+
+def produce_display(s, x0, x1, y):
+    """Fruit and vegetable crates on a low stand in front of a shop window (facade at y)."""
+    s.box(x0, y + 0.1, x1, y + 0.9, 0, 0.5, "wood_dark")
+    fruit = ("apple_red", "orange_fruit", "lettuce_green", "banana_yellow", "apple_red")
+    n = int((x1 - x0) / 0.8)
+    for i in range(n):
+        cx0 = x0 + 0.05 + i * (x1 - x0) / n
+        cx1 = cx0 + (x1 - x0) / n - 0.1
+        s.box(cx0, y + 0.15, cx1, y + 0.85, 0.5, 0.72, "crate")
+        rnd = random.Random(i + int(x0 * 10))
+        for _ in range(7):
+            s.sphere(rnd.uniform(cx0 + 0.12, cx1 - 0.12), rnd.uniform(y + 0.3, y + 0.7), 0.74, 0.08,
+                     fruit[i % len(fruit)])
+    s.set_solid(x0, y, x1, y + 0.9)
+
+
+def a_frame_sign(s, x, y):
+    """Chalkboard sidewalk sign."""
+    s.box(x - 0.35, y - 0.12, x + 0.35, y - 0.04, 0, 0.95, "wood")
+    s.box(x - 0.29, y - 0.04, x + 0.29, y - 0.01, 0.1, 0.88, "chalkboard")
+    for i, w in enumerate((0.4, 0.3, 0.36)):
+        s.box(x - w / 2, y - 0.01, x + w / 2, y + 0.005, 0.66 - i * 0.17, 0.69 - i * 0.17, "chalk")
+    s.set_solid(x - 0.3, y - 0.2, x + 0.3, y + 0.1)
+
+
+def street_tree(s, x, y):
+    """Small sidewalk tree in an iron grate."""
+    s.box(x - 0.6, y - 0.6, x + 0.6, y + 0.6, 0, 0.03, "metal_dark", layer="floor")
+    s.box(x - 0.45, y - 0.45, x + 0.45, y + 0.45, 0.0, 0.035, "soil", layer="floor")
+    tree(s, x, y, 0.8)
+
+
 def corner_market_building(s, x0, fy):
     """Corner Market: 10 cells wide, 8 deep, facade at y = fy facing +y. Door warps inside."""
     x1 = x0 + 10
@@ -622,10 +720,29 @@ def corner_market_building(s, x0, fy):
     s.box(x0 + 0.7, fy - 0.05, x1 - 0.7, fy + 0.15, 3.83, 3.9, "brass")
     s.text("CORNER MARKET", x0 + 5.0, fy + 0.13, 3.27, 0.42, "sign_text", face="left")
     s.box(x0, fy - 0.1, x1, fy + 0.1, cm_h - 0.25, cm_h, "stone")                # cornice
-    flat_roof(s, x0, y0, x1, fy, cm_h)
+    # upper storey (flat above the shop) with flower boxes, slate roof and a chimney
+    up_h = cm_h + 2.8
+    s.box(x0, y0, x1, fy - 0.02, cm_h, up_h, "brick_red")
+    for wx in (x0 + 1.0, x0 + 4.0, x0 + 7.0):
+        window_left(s, wx, wx + 2.0, fy - 0.02, cm_h + 0.8, cm_h + 2.3)
+        flower_box(s, wx - 0.05, wx + 2.05, fy - 0.02, cm_h + 0.72)
+    s.box(x0, fy - 0.1, x1, fy + 0.08, up_h - 0.18, up_h, "stone")
+    ridge_y = (y0 + fy) / 2
+    ridge_z = up_h + 2.3
+    s.wedge(x0 - 0.1, ridge_y, x1 + 0.1, fy + 0.45, ridge_z, up_h - 0.2, "y", "slate")
+    s.wedge(x0 - 0.1, ridge_y, x1 + 0.1, y0 - 0.45, ridge_z, up_h - 0.2, "y", "slate")
+    s.poly([(x1, y0, up_h), (x1, fy, up_h), (x1, ridge_y, ridge_z)], "brick_red")
+    s.poly([(x0, y0, up_h), (x0, ridge_y, ridge_z), (x0, fy, up_h)], "brick_red")
+    s.box(x1 - 2.2, ridge_y - 1.2, x1 - 1.4, ridge_y - 0.4, up_h + 1.0, ridge_z + 1.0, "brick_brown")
+    s.box(x1 - 2.3, ridge_y - 1.3, x1 - 1.3, ridge_y - 0.3, ridge_z + 1.0, ridge_z + 1.12, "stone")
+    # shop front details
+    produce_display(s, x0 + 0.7, x0 + 3.5, fy)
+    potted_plant(s, x0 + 3.85, fy + 0.45, "bay")
+    potted_plant(s, x0 + 6.15, fy + 0.45, "bay")
+    a_frame_sign(s, x0 + 7.4, fy + 1.6)
     s.set_solid(x0, y0, x1 - 0.001, fy - 0.001)
     s.set_solid(x0 + 4, fy - 1, x0 + 5.999, fy - 0.001, False)                  # door cells walkable
-    s.occluder(x0, y0, x1, fy, cm_h + 0.4)
+    s.occluder(x0, y0, x1, fy, cm_h + 5.6)
     s.warp(x0 + 4, fy - 1, x0 + 6, fy, "corner_market", 6.0, 7.6, "up")
 
 
