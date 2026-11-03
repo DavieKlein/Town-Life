@@ -12,6 +12,7 @@
 #include "tl_player.h"
 #include "tl_critters.h"
 #include "tl_streamed_bg.h"
+#include "tl_lighting.h"
 
 namespace tl
 {
@@ -45,6 +46,11 @@ namespace tl
         needs _needs;
         bn::vector<bn::sprite_ptr, needs::count> _bar_sprites;
         bn::vector<bn::sprite_ptr, 4> _zzz_sprites;
+        bn::vector<bn::sprite_ptr, 6> _pool_sprites;
+        light_params _light;
+        int _light_minutes = -1;
+        int _water_phase = 0;
+        bool _lamps_on = false;
         const interactable* _menu_target = nullptr;
         const interactable* _rest_target = nullptr;
         const map_info* _map = nullptr;
@@ -65,6 +71,8 @@ namespace tl
         void _open_interaction_menu();
         void _handle_menu_choice(int choice);
         void _update_zzz();
+        void _update_lighting(bool force);
+        void _update_lamps();
         static void _set_fade(int counter);
     };
 }

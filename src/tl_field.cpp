@@ -7,7 +7,9 @@
 
 #include "bn_keypad.h"
 #include "bn_regular_bg_items_hud.h"
+#include "bn_blending.h"
 #include "bn_sprite_items_need_bar.h"
+#include "bn_sprite_items_light_pool.h"
 #include "common_variable_8x8_sprite_font.h"
 
 namespace tl
@@ -32,10 +34,17 @@ namespace tl
             return ((ax - bx) * (ax - bx)) + ((ay - by) * (ay - by));
         }
 
-        // Bg priorities: HUD 0, (player when in front: 2), objects 2, (player when behind: 3), floor 3.
+        // Bg priorities: HUD 0, front layer 1 (map pixels in front of the player), player sprite 2,
+        // objects 2, shadow + light pools 3, floor 3.
         constexpr int floor_priority = 3;
         constexpr int objects_priority = 2;
+        constexpr int front_priority = 1;
         constexpr int hud_priority = 0;
+
+        constexpr int lighting_frames = 5;     // palettes are re-lit (and water cycled) this often
+
+        BN_DATA_EWRAM_BSS bn::color lit_floor[16 * 16];
+        BN_DATA_EWRAM_BSS bn::color lit_objects[16 * 16];
 
         // Visible play area is the screen minus the 32 px HUD bar at the bottom.
         constexpr int hud_height = 32;
@@ -85,9 +94,12 @@ namespace tl
         _floor_bg.reset();
         _objects_bg.reset();
         _floor_bg.emplace(0, _map->floor, _map->image_width, _map->image_height, floor_priority);
-        _objects_bg.emplace(1, _map->objects, _map->image_width, _map->image_height, objects_priority);
+        _objects_bg.emplace(1, _map->objects, _map->image_width, _map->image_height, objects_priority,
+                            front_priority);
         _player.place(*_map, x, y, facing);
         _critters.load(*_map);
+        _pool_sprites.clear();
+        _update_lighting(true);
         _update_camera();
     }
 
@@ -119,6 +131,93 @@ namespace tl
         _objects_bg->set_view(_cam_x, _cam_y);
         _player.update_sprite(_cam_x, _cam_y);
         _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
+
+        int x0, y0, x1, y1, depth;
+        _player.mask_area(x0, y0, x1, y1, depth);
+        _objects_bg->update_front(x0, y0, x1, y1, depth);
+        _update_lamps();
+    }
+
+    void field::_update_lighting(bool force)
+    {
+        ++_water_phase;
+
+        if(! force && (_water_phase % lighting_frames) != 0)
+        {
+            return;
+        }
+
+        if(force || _light_minutes != _minutes)
+        {
+            _light_minutes = _minutes;
+            _light = lighting_at(_minutes, _map->outdoor);
+            _player.set_lighting(_light);
+            _critters.set_lighting(_light);
+
+            bool lamps_on = _map->outdoor && _light.night >= 128;
+
+            if(force || lamps_on != _lamps_on)
+            {
+                _lamps_on = lamps_on;
+
+                // Day: the player's shadow darkens the ground (50 % alpha). Night: semi-transparent
+                // sprites add light (top weight 0.5, bottom 1): pools glow, shadows vanish.
+                if(lamps_on)
+                {
+                    bn::blending::set_transparency_top_weight(0.55);
+                    bn::blending::set_transparency_bottom_weight(1);
+                }
+                else
+                {
+                    bn::blending::set_transparency_alpha(0.5);
+                    _pool_sprites.clear();
+                }
+            }
+        }
+
+        light_layer(_map->floor, lit_floor, _light, _water_phase);
+        light_layer(_map->objects, lit_objects, _light, _water_phase);
+        _floor_bg->set_palette_colours(lit_floor);
+        _objects_bg->set_palette_colours(lit_objects);
+    }
+
+    void field::_update_lamps()
+    {
+        if(! _lamps_on)
+        {
+            return;
+        }
+
+        int used = 0;
+
+        for(int index = 0; index < _map->lamps_count && used < _pool_sprites.max_size(); ++index)
+        {
+            const lamp& l = _map->lamps[index];
+            int sx = _map->to_image_x(l.x, l.y) - _cam_x;
+            int sy = _map->to_image_y(l.x, l.y) - _cam_y;
+
+            if(sx < -40 || sx > 280 || sy < -24 || sy > 128 + 24)
+            {
+                continue;
+            }
+
+            if(used == _pool_sprites.size())
+            {
+                bn::sprite_ptr pool = bn::sprite_items::light_pool.create_sprite(0, 0);
+                pool.set_bg_priority(3);
+                pool.set_blending_enabled(true);
+                pool.set_z_order(2);
+                _pool_sprites.push_back(bn::move(pool));
+            }
+
+            _pool_sprites[used].set_position(sx - 120, sy - 80);
+            ++used;
+        }
+
+        while(_pool_sprites.size() > used)
+        {
+            _pool_sprites.pop_back();
+        }
     }
 
     void field::_redraw_hud_text()
@@ -306,6 +405,7 @@ namespace tl
 
                 _update_camera();
                 _update_clock();
+                _update_lighting(false);
                 break;
             }
 
@@ -335,6 +435,7 @@ namespace tl
             _update_zzz();
             _update_camera();
             _update_clock();
+            _update_lighting(false);
             _pending_warp = _map->warp_at(_player.x(), _player.y());
 
             if(_pending_warp)

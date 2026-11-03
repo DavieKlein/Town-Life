@@ -24,8 +24,12 @@ namespace tl
         static constexpr int hash_bits = 11;
         static constexpr int hash_size = 1 << hash_bits;   // > 3x cache_slots: short probe sequences
 
+        static constexpr int mask_slots = 40;       // per frame, double buffered (front layer only)
+
         // storage_index: 0 or 1 (each streamed_bg alive at the same time needs its own storage).
-        streamed_bg(int storage_index, const layer_data& data, int image_width, int image_height, int priority);
+        // front_priority >= 0 also creates the "front layer" used for per-pixel depth (objects only).
+        streamed_bg(int storage_index, const layer_data& data, int image_width, int image_height, int priority,
+                    int front_priority = -1);
 
         ~streamed_bg();
 
@@ -35,6 +39,14 @@ namespace tl
         // Shows the image area whose top-left corner is (cam_x, cam_y) at the top-left of the screen.
         void set_view(int cam_x, int cam_y);
 
+        // Front layer: redraws, above the sprites, the pixels of this layer inside the image rectangle
+        // [x0, x1) x [y0, y1) whose iso depth is greater than the given depth (i.e. in front of it).
+        // Call after set_view().
+        void update_front(int x0, int y0, int x1, int y1, int depth);
+        void clear_front();
+
+        // Replaces the colours of the layer's palette (banks * 16 colours), e.g. for day/night lighting.
+        void set_palette_colours(const bn::color* colours);
         struct storage;
 
     private:
@@ -46,7 +58,13 @@ namespace tl
         bn::optional<bn::bg_palette_ptr> _palette;
         bn::optional<bn::regular_bg_map_ptr> _map;
         bn::optional<bn::regular_bg_ptr> _bg;
+        bn::optional<bn::regular_bg_map_ptr> _front_map;
+        bn::optional<bn::regular_bg_ptr> _front_bg;
         uint16_t* _map_vram = nullptr;
+        uint16_t* _front_vram = nullptr;
+        uint16_t _front_written[160];
+        int _front_written_count = 0;
+        int _front_parity = 0;
         int _palette_bank = 0;
         int _window_x = 0;
         int _window_y = 0;

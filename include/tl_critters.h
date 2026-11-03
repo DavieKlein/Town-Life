@@ -7,6 +7,7 @@
 #include "bn_sprite_ptr.h"
 
 #include "tl_world.h"
+#include "tl_lighting.h"
 
 namespace tl
 {
@@ -23,6 +24,9 @@ namespace tl
 
         // player_x / player_y in world units; camera top-left in image pixels.
         void update(int player_x, int player_y, int cam_x, int cam_y);
+
+        // Applies day/night lighting to the animal sprite palettes.
+        void set_lighting(const light_params& params);
 
     private:
         enum class state : uint8_t

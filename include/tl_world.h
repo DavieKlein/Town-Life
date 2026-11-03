@@ -100,6 +100,25 @@ namespace tl
         const uint32_t* cells;      // per 8x8 cell: bits 0-15 tile, bit 16 hflip, bit 17 vflip, bits 20-23 bank
         const bn::color* palette;   // 16 colours per bank
         int banks;
+        // objects layer only (else nullptr): per cell u32 = min iso depth (x + y, world units) in the
+        // low 16 bits; the high 16 bits are 0xFFFF when the whole cell has that depth, else the index of
+        // a 64-byte block in depth_pixels (per pixel depth - min, 255 = no pixel).
+        const uint32_t* depth;
+        const uint8_t* depth_pixels;
+        // special palette entries (see tools/build_assets.py): water (palette cycling) in the banks of
+        // water_banks (bit mask), window glass (2 entries, lit at night), lamp glass (bright at night).
+        int water_banks;
+        int water_first;
+        int water_count;
+        int glass_first;    // 0 = none
+        int lamp_index;     // 0 = none
+    };
+
+    // A street lamp: centre of its light pool on the ground at night (world units).
+    struct lamp
+    {
+        int x;
+        int y;
     };
 
     struct map_info
@@ -123,6 +142,9 @@ namespace tl
         int critters_count;
         const interactable* interactables;
         int interactables_count;
+        const lamp* lamps;
+        int lamps_count;
+        bool outdoor;   // day/night lighting applies
 
         [[nodiscard]] constexpr int to_image_x(int x, int y) const
         {

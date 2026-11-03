@@ -348,6 +348,33 @@ def add_sphere(bm, p):
     bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, p["z"])))
 
 
+def add_tube(bm, p):
+    """Smooth round tube along a polyline (Catmull-Rom), e.g. the curved arm of a street lamp."""
+    pts = [Vector(bl(x, y, z)) for (x, y, z) in p["pts"]]
+    ext = [pts[0] * 2 - pts[1]] + pts + [pts[-1] * 2 - pts[-2]]
+    path = []
+    for i in range(1, len(ext) - 2):
+        p0, p1, p2, p3 = ext[i - 1], ext[i], ext[i + 1], ext[i + 2]
+        for k in range(6):
+            t = k / 6
+            path.append(0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t +
+                               (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t))
+    path.append(pts[-1])
+    r, n = p["r"], 10
+    rings = []
+    for i, c in enumerate(path):
+        d = (path[min(i + 1, len(path) - 1)] - path[max(i - 1, 0)]).normalized()
+        a = d.cross(Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))).normalized()
+        b = d.cross(a).normalized()
+        rings.append([bm.verts.new(c + (a * math.cos(2 * math.pi * j / n) + b * math.sin(2 * math.pi * j / n)) * r)
+                      for j in range(n)])
+    for r0, r1 in zip(rings, rings[1:]):
+        for j in range(n):
+            bm.faces.new((r0[j], r0[(j + 1) % n], r1[(j + 1) % n], r1[j]))
+    bm.faces.new(rings[0][::-1])
+    bm.faces.new(rings[-1])
+
+
 MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                          "art_source", "quaternius_buildings")
 
@@ -497,6 +524,9 @@ def build(scene_obj, layer_visible):
                 smooth = True
             elif t == "sphere":
                 add_sphere(bm, p)
+                smooth = True
+            elif t == "tube":
+                add_tube(bm, p)
                 smooth = True
         me = bpy.data.meshes.new(f"{layer}_{mname}")
         bm.to_mesh(me)
@@ -652,6 +682,64 @@ def stylize(layer_visible):
     style.alpha = 0.85
 
 
+# Material classes for the ID pass (special palette entries in the game): 1 window glass (lit at
+# night), 2 water (ripple palette cycling), 3 lamp glass (bright at night).
+def material_class(name):
+    n = name.lower()
+    if "water" in n:
+        return 2
+    if "lamp_glass" in n:
+        return 3
+    if "glass" in n and "fridge" not in n:
+        return 1
+    return 0
+
+
+def id_materials():
+    """Replace every material with a flat emission that encodes, per pixel, the iso depth of the
+    surface (world x + y in engine units, 16 per cell) in R (low byte) and G (high byte) and the
+    material class in B (class * 40). Rendered with 1 sample, no filter, Raw view."""
+    for m in list(bpy.data.materials):
+        cls = material_class(m.name)
+        m.use_nodes = True
+        nt = m.node_tree
+        nt.nodes.clear()
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(geo.outputs["Position"], sep.inputs[0])
+
+        def op(kind, a, b=None, value=None):
+            n = nt.nodes.new("ShaderNodeMath")
+            n.operation = kind
+            for i, v in enumerate((a, b)):
+                if v is None:
+                    continue
+                if isinstance(v, (int, float)):
+                    n.inputs[i].default_value = v
+                else:
+                    nt.links.new(v, n.inputs[i])
+            if value is not None:
+                n.inputs[1].default_value = value
+            return n.outputs[0]
+
+        d = op("SUBTRACT", sep.outputs["X"], sep.outputs["Y"])          # engine x + y = (bx - by) / CELL_M * 16
+        d = op("MULTIPLY", d, 16.0 / CELL_M)
+        d = op("MAXIMUM", d, 0.0)
+        d = op("FLOOR", op("ADD", d, 0.5))
+        low = op("DIVIDE", op("MODULO", d, 256.0), 255.0)
+        high = op("DIVIDE", op("FLOOR", op("DIVIDE", d, 256.0)), 255.0)
+        comb = nt.nodes.new("ShaderNodeCombineColor")
+        nt.links.new(low, comb.inputs[0])
+        nt.links.new(high, comb.inputs[1])
+        comb.inputs[2].default_value = cls * 40 / 255.0
+        em = nt.nodes.new("ShaderNodeEmission")
+        em.inputs["Strength"].default_value = 1.0
+        nt.links.new(comb.outputs[0], em.inputs["Color"])
+        out = nt.nodes.new("ShaderNodeOutputMaterial")
+        nt.links.new(em.outputs[0], out.inputs["Surface"])
+        m.blend_method = "OPAQUE"
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:]
     ident, layer, out = argv[0], argv[1], argv[2]
@@ -672,9 +760,23 @@ def main():
     sc.render.image_settings.file_format = "PNG"
     sc.render.image_settings.color_mode = "RGBA"
     sc.render.filepath = out
+    id_pass = len(argv) > 6 and argv[6] == "id"
     build(s, layer)
     setup_camera_and_lights(s, scale)
-    stylize(layer)
+    if id_pass:
+        id_materials()
+        for o in sc.objects:
+            if o.type == "LIGHT":
+                o.hide_render = True
+        sc.cycles.samples = 1
+        sc.cycles.max_bounces = 0
+        sc.render.filter_size = 0.01
+        sc.render.dither_intensity = 0.0
+        sc.view_settings.view_transform = "Raw"
+        sc.view_settings.look = "None"
+        sc.world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.0
+    else:
+        stylize(layer)
     if len(argv) > 5 and argv[5]:
         # optional crop for quick tests: x0,y0,x1,y1 in image pixels (top-left origin)
         x0, y0, x1, y1 = (float(v) for v in argv[5].split(","))

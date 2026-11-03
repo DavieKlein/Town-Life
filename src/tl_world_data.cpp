@@ -5,10 +5,14 @@
 
 extern "C" const uint32_t city_centre_floor_tiles_bin[];
 extern "C" const uint32_t city_centre_floor_cells_bin[];
+extern "C" const uint32_t city_centre_objects_depth_bin[];
+extern "C" const uint8_t city_centre_objects_depthpx_bin[];
 extern "C" const uint32_t city_centre_objects_tiles_bin[];
 extern "C" const uint32_t city_centre_objects_cells_bin[];
 extern "C" const uint32_t corner_market_floor_tiles_bin[];
 extern "C" const uint32_t corner_market_floor_cells_bin[];
+extern "C" const uint32_t corner_market_objects_depth_bin[];
+extern "C" const uint8_t corner_market_objects_depthpx_bin[];
 extern "C" const uint32_t corner_market_objects_tiles_bin[];
 extern "C" const uint32_t corner_market_objects_cells_bin[];
 
@@ -16,25 +20,26 @@ namespace tl
 {
 namespace
 {
-    constexpr int city_centre_floor_tiles_count = 13933;
+    constexpr int city_centre_floor_tiles_count = 12926;
     constexpr bn::color city_centre_floor_palette[] = {
-        bn::color(0, 0, 0), bn::color(8, 11, 17), bn::color(25, 24, 23), bn::color(7, 15, 24), bn::color(18, 19, 19), bn::color(6, 12, 20), bn::color(22, 22, 21), bn::color(9, 8, 12), bn::color(6, 14, 22), bn::color(15, 16, 16), bn::color(5, 13, 22), bn::color(15, 20, 12), bn::color(12, 13, 14), bn::color(8, 15, 23), bn::color(8, 14, 21), bn::color(27, 26, 24),
-        bn::color(0, 0, 0), bn::color(8, 6, 6), bn::color(0, 0, 0), bn::color(28, 27, 25), bn::color(25, 24, 22), bn::color(30, 29, 26), bn::color(19, 11, 9), bn::color(12, 7, 7), bn::color(15, 10, 8), bn::color(15, 13, 10), bn::color(9, 8, 7), bn::color(6, 4, 5), bn::color(18, 16, 15), bn::color(26, 21, 10), bn::color(10, 7, 7), bn::color(22, 21, 19),
-        bn::color(0, 0, 0), bn::color(7, 16, 6), bn::color(12, 24, 9), bn::color(6, 14, 5), bn::color(14, 26, 10), bn::color(13, 25, 9), bn::color(27, 23, 16), bn::color(0, 0, 0), bn::color(11, 22, 8), bn::color(13, 12, 10), bn::color(5, 12, 5), bn::color(18, 17, 13), bn::color(19, 12, 10), bn::color(14, 27, 10), bn::color(10, 19, 7), bn::color(3, 8, 2),
-        bn::color(0, 0, 0), bn::color(11, 11, 13), bn::color(31, 30, 27), bn::color(16, 16, 16), bn::color(9, 13, 19), bn::color(27, 23, 11), bn::color(25, 25, 23), bn::color(28, 28, 25), bn::color(22, 22, 21), bn::color(13, 12, 14), bn::color(31, 31, 31), bn::color(27, 26, 24), bn::color(19, 19, 19), bn::color(31, 31, 28), bn::color(29, 24, 13), bn::color(30, 29, 26),
-        bn::color(0, 0, 0), bn::color(10, 10, 12), bn::color(0, 0, 0), bn::color(14, 9, 8), bn::color(11, 11, 13), bn::color(30, 30, 30), bn::color(6, 6, 8), bn::color(30, 24, 6), bn::color(6, 15, 6), bn::color(19, 19, 18), bn::color(14, 14, 14), bn::color(8, 8, 10), bn::color(9, 9, 11), bn::color(10, 10, 12), bn::color(11, 8, 7), bn::color(11, 12, 14),
-        bn::color(0, 0, 0), bn::color(14, 13, 13), bn::color(29, 24, 16), bn::color(18, 18, 16), bn::color(23, 23, 21), bn::color(20, 19, 18), bn::color(0, 0, 0), bn::color(22, 21, 20), bn::color(25, 24, 23), bn::color(9, 9, 11), bn::color(8, 14, 22), bn::color(13, 25, 9), bn::color(31, 30, 27), bn::color(11, 11, 12), bn::color(5, 5, 5), bn::color(16, 16, 15),
-        bn::color(0, 0, 0), bn::color(22, 12, 10), bn::color(16, 11, 9), bn::color(17, 14, 9), bn::color(20, 12, 10), bn::color(12, 8, 8), bn::color(11, 11, 13), bn::color(30, 29, 27), bn::color(16, 10, 8), bn::color(20, 11, 9), bn::color(31, 26, 6), bn::color(17, 15, 14), bn::color(1, 0, 1), bn::color(22, 22, 21), bn::color(18, 11, 9), bn::color(10, 10, 12),
+        bn::color(0, 0, 0), bn::color(16, 10, 9), bn::color(23, 22, 21), bn::color(23, 12, 10), bn::color(18, 14, 9), bn::color(1, 1, 1), bn::color(19, 10, 9), bn::color(31, 30, 27), bn::color(26, 25, 24), bn::color(14, 9, 8), bn::color(16, 14, 10), bn::color(21, 11, 9), bn::color(17, 12, 10), bn::color(19, 19, 18), bn::color(10, 9, 10), bn::color(19, 12, 10),
+        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(2, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1), bn::color(1, 1, 1),
+        bn::color(0, 0, 0), bn::color(8, 5, 6), bn::color(0, 0, 0), bn::color(21, 20, 19), bn::color(11, 7, 7), bn::color(14, 14, 13), bn::color(9, 9, 10), bn::color(6, 6, 7), bn::color(5, 4, 4), bn::color(18, 17, 16), bn::color(12, 12, 12), bn::color(15, 10, 7), bn::color(10, 6, 6), bn::color(2, 1, 1), bn::color(8, 8, 7), bn::color(9, 6, 6),
+        bn::color(0, 0, 0), bn::color(9, 9, 11), bn::color(29, 24, 16), bn::color(18, 18, 17), bn::color(31, 31, 31), bn::color(23, 23, 21), bn::color(1, 1, 1), bn::color(13, 25, 9), bn::color(25, 24, 23), bn::color(22, 21, 20), bn::color(17, 16, 16), bn::color(14, 14, 14), bn::color(20, 20, 18), bn::color(11, 11, 13), bn::color(29, 28, 26), bn::color(15, 18, 13),
+        bn::color(0, 0, 0), bn::color(17, 10, 8), bn::color(0, 0, 0), bn::color(29, 28, 25), bn::color(10, 7, 7), bn::color(9, 8, 7), bn::color(12, 7, 7), bn::color(27, 22, 11), bn::color(20, 18, 16), bn::color(20, 11, 9), bn::color(3, 2, 3), bn::color(6, 5, 6), bn::color(26, 25, 22), bn::color(6, 6, 8), bn::color(14, 9, 8), bn::color(16, 14, 9),
+        bn::color(0, 0, 0), bn::color(14, 26, 10), bn::color(6, 15, 6), bn::color(17, 15, 12), bn::color(28, 23, 16), bn::color(12, 24, 9), bn::color(7, 16, 6), bn::color(0, 1, 0), bn::color(10, 19, 7), bn::color(5, 12, 5), bn::color(15, 18, 12), bn::color(14, 23, 10), bn::color(12, 11, 10), bn::color(13, 25, 9), bn::color(11, 22, 8), bn::color(22, 19, 15),
+        bn::color(0, 0, 0), bn::color(30, 29, 26), bn::color(21, 17, 9), bn::color(11, 11, 13), bn::color(30, 25, 11), bn::color(25, 25, 23), bn::color(27, 27, 24), bn::color(20, 20, 20), bn::color(16, 16, 15), bn::color(31, 31, 28), bn::color(15, 12, 10), bn::color(13, 25, 10), bn::color(5, 13, 22), bn::color(7, 14, 23), bn::color(9, 16, 25), bn::color(12, 19, 27),
+        bn::color(0, 0, 0), bn::color(9, 9, 11), bn::color(28, 28, 25), bn::color(11, 12, 14), bn::color(18, 18, 18), bn::color(1, 0, 1), bn::color(10, 10, 12), bn::color(11, 11, 13), bn::color(8, 8, 11), bn::color(6, 6, 8), bn::color(13, 14, 15), bn::color(24, 23, 22), bn::color(5, 13, 22), bn::color(7, 14, 23), bn::color(9, 16, 25), bn::color(12, 19, 27),
     };
-    constexpr int city_centre_objects_tiles_count = 7953;
+    constexpr int city_centre_objects_tiles_count = 8218;
     constexpr bn::color city_centre_objects_palette[] = {
-        bn::color(0, 0, 0), bn::color(7, 7, 9), bn::color(9, 9, 11), bn::color(24, 23, 17), bn::color(0, 1, 1), bn::color(4, 4, 4), bn::color(8, 12, 18), bn::color(9, 15, 22), bn::color(10, 6, 3), bn::color(8, 16, 7), bn::color(13, 13, 13), bn::color(7, 13, 6), bn::color(5, 5, 7), bn::color(19, 18, 15), bn::color(5, 10, 5), bn::color(13, 7, 1),
-        bn::color(0, 0, 0), bn::color(13, 21, 29), bn::color(25, 20, 5), bn::color(13, 13, 14), bn::color(11, 17, 26), bn::color(29, 24, 7), bn::color(18, 14, 7), bn::color(18, 12, 3), bn::color(21, 17, 6), bn::color(31, 31, 26), bn::color(20, 14, 3), bn::color(10, 10, 12), bn::color(10, 15, 21), bn::color(31, 29, 11), bn::color(13, 12, 5), bn::color(11, 15, 21),
-        bn::color(0, 0, 0), bn::color(17, 12, 4), bn::color(31, 26, 20), bn::color(12, 10, 9), bn::color(2, 2, 2), bn::color(15, 9, 2), bn::color(28, 7, 7), bn::color(18, 17, 14), bn::color(17, 13, 11), bn::color(15, 14, 13), bn::color(22, 20, 17), bn::color(30, 22, 16), bn::color(15, 11, 10), bn::color(30, 15, 9), bn::color(23, 14, 7), bn::color(10, 8, 8),
-        bn::color(0, 0, 0), bn::color(17, 15, 12), bn::color(12, 22, 9), bn::color(7, 13, 7), bn::color(10, 19, 8), bn::color(7, 22, 12), bn::color(7, 16, 8), bn::color(24, 13, 9), bn::color(14, 12, 11), bn::color(27, 19, 15), bn::color(9, 17, 8), bn::color(24, 23, 18), bn::color(7, 9, 9), bn::color(30, 30, 27), bn::color(20, 19, 16), bn::color(11, 20, 9),
-        bn::color(0, 0, 0), bn::color(12, 20, 29), bn::color(18, 14, 7), bn::color(9, 15, 22), bn::color(12, 10, 6), bn::color(20, 16, 7), bn::color(16, 12, 6), bn::color(9, 8, 7), bn::color(29, 28, 26), bn::color(16, 13, 21), bn::color(10, 17, 25), bn::color(23, 19, 6), bn::color(9, 11, 16), bn::color(8, 6, 4), bn::color(12, 8, 2), bn::color(15, 11, 4),
-        bn::color(0, 0, 0), bn::color(24, 23, 18), bn::color(7, 23, 12), bn::color(11, 10, 13), bn::color(18, 16, 14), bn::color(31, 19, 5), bn::color(30, 29, 26), bn::color(25, 25, 23), bn::color(22, 21, 22), bn::color(19, 18, 17), bn::color(15, 15, 16), bn::color(31, 31, 31), bn::color(9, 8, 10), bn::color(14, 13, 12), bn::color(22, 21, 16), bn::color(28, 27, 24),
-        bn::color(0, 0, 0), bn::color(17, 17, 19), bn::color(7, 6, 7), bn::color(18, 17, 13), bn::color(13, 20, 29), bn::color(16, 13, 11), bn::color(31, 29, 17), bn::color(23, 19, 30), bn::color(10, 14, 19), bn::color(12, 11, 11), bn::color(17, 16, 12), bn::color(23, 23, 25), bn::color(18, 15, 26), bn::color(24, 23, 16), bn::color(24, 15, 7), bn::color(16, 14, 22),
+        bn::color(0, 0, 0), bn::color(8, 15, 8), bn::color(24, 19, 6), bn::color(18, 17, 13), bn::color(14, 10, 3), bn::color(20, 16, 6), bn::color(11, 21, 9), bn::color(17, 14, 7), bn::color(17, 17, 19), bn::color(10, 10, 8), bn::color(9, 18, 8), bn::color(18, 16, 12), bn::color(15, 12, 5), bn::color(10, 15, 22), bn::color(12, 20, 29), bn::color(30, 30, 29),
+        bn::color(0, 0, 0), bn::color(23, 22, 20), bn::color(15, 14, 14), bn::color(31, 31, 29), bn::color(31, 24, 18), bn::color(31, 19, 5), bn::color(19, 18, 17), bn::color(25, 13, 9), bn::color(11, 10, 11), bn::color(30, 29, 25), bn::color(28, 19, 16), bn::color(26, 26, 23), bn::color(29, 7, 7), bn::color(10, 15, 22), bn::color(12, 20, 29), bn::color(30, 30, 29),
+        bn::color(0, 0, 0), bn::color(23, 19, 30), bn::color(16, 13, 21), bn::color(14, 6, 6), bn::color(15, 10, 9), bn::color(11, 10, 17), bn::color(26, 25, 28), bn::color(31, 30, 31), bn::color(6, 6, 10), bn::color(10, 9, 15), bn::color(8, 7, 11), bn::color(7, 16, 10), bn::color(17, 15, 24), bn::color(10, 15, 22), bn::color(12, 20, 29), bn::color(30, 30, 29),
+        bn::color(0, 0, 0), bn::color(22, 20, 16), bn::color(12, 9, 8), bn::color(18, 14, 6), bn::color(10, 8, 6), bn::color(16, 14, 12), bn::color(18, 17, 14), bn::color(31, 28, 10), bn::color(28, 23, 7), bn::color(14, 12, 10), bn::color(24, 23, 17), bn::color(30, 28, 21), bn::color(22, 18, 6), bn::color(10, 15, 22), bn::color(12, 20, 29), bn::color(30, 30, 29),
+        bn::color(0, 0, 0), bn::color(13, 12, 13), bn::color(31, 31, 31), bn::color(7, 6, 9), bn::color(7, 23, 12), bn::color(15, 15, 16), bn::color(21, 18, 27), bn::color(10, 10, 12), bn::color(3, 2, 3), bn::color(22, 22, 21), bn::color(26, 26, 26), bn::color(6, 16, 9), bn::color(18, 18, 18), bn::color(10, 15, 22), bn::color(12, 20, 29), bn::color(30, 30, 29),
+        bn::color(0, 0, 0), bn::color(24, 15, 7), bn::color(12, 9, 8), bn::color(13, 10, 9), bn::color(8, 16, 7), bn::color(7, 6, 5), bn::color(22, 6, 6), bn::color(17, 13, 11), bn::color(25, 21, 15), bn::color(17, 12, 4), bn::color(9, 8, 8), bn::color(16, 11, 9), bn::color(6, 13, 6), bn::color(10, 15, 22), bn::color(12, 20, 29), bn::color(30, 30, 29),
+        bn::color(0, 0, 0), bn::color(14, 12, 11), bn::color(11, 6, 2), bn::color(14, 8, 2), bn::color(23, 22, 20), bn::color(1, 1, 1), bn::color(5, 5, 5), bn::color(8, 7, 8), bn::color(30, 29, 24), bn::color(6, 12, 6), bn::color(5, 12, 20), bn::color(7, 13, 21), bn::color(9, 15, 23), bn::color(10, 15, 22), bn::color(12, 20, 29), bn::color(30, 30, 29),
     };
     constexpr uint8_t city_centre_solid[] = {
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -186,15 +191,28 @@ namespace
         { interactable_kind::bench, 923, 720, 0 },
         { interactable_kind::fountain, 848, 656, 35 },
     };
-    constexpr int corner_market_floor_tiles_count = 428;
+    constexpr lamp city_centre_lamps[] = {
+        { 48, 360 },
+        { 48, 471 },
+        { 240, 360 },
+        { 240, 471 },
+        { 816, 360 },
+        { 816, 471 },
+        { 1056, 360 },
+        { 1056, 471 },
+        { 704, 656 },
+        { 992, 656 },
+    };
+    constexpr int corner_market_floor_tiles_count = 431;
     constexpr bn::color corner_market_floor_palette[] = {
-        bn::color(0, 0, 0), bn::color(21, 11, 4), bn::color(21, 5, 4), bn::color(13, 8, 7), bn::color(10, 7, 10), bn::color(18, 9, 3), bn::color(11, 8, 9), bn::color(20, 12, 6), bn::color(19, 10, 4), bn::color(15, 9, 4), bn::color(23, 13, 4), bn::color(16, 6, 8), bn::color(22, 13, 7), bn::color(20, 5, 5), bn::color(15, 9, 8), bn::color(17, 10, 5),
-        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(11, 6, 2), bn::color(3, 1, 0), bn::color(2, 0, 0), bn::color(1, 0, 0), bn::color(4, 1, 0), bn::color(9, 5, 1), bn::color(2, 0, 0), bn::color(9, 4, 1), bn::color(2, 0, 0), bn::color(8, 4, 1), bn::color(3, 0, 0), bn::color(3, 1, 0), bn::color(1, 0, 0), bn::color(11, 6, 3),
-        bn::color(0, 0, 0), bn::color(19, 10, 4), bn::color(0, 0, 0), bn::color(16, 9, 4), bn::color(8, 4, 2), bn::color(21, 12, 4), bn::color(23, 13, 6), bn::color(21, 12, 6), bn::color(18, 10, 5), bn::color(20, 11, 4), bn::color(20, 11, 6), bn::color(13, 6, 2), bn::color(15, 8, 3), bn::color(22, 12, 5), bn::color(17, 9, 3), bn::color(23, 15, 10),
-        bn::color(0, 0, 0), bn::color(18, 10, 3), bn::color(0, 0, 0), bn::color(20, 11, 4), bn::color(13, 7, 2), bn::color(17, 10, 5), bn::color(16, 9, 3), bn::color(17, 9, 3), bn::color(4, 1, 0), bn::color(18, 9, 3), bn::color(21, 12, 4), bn::color(20, 11, 4), bn::color(10, 5, 2), bn::color(15, 8, 3), bn::color(19, 10, 4), bn::color(15, 9, 5),
-        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(12, 6, 2), bn::color(17, 9, 3), bn::color(13, 7, 2), bn::color(20, 11, 4), bn::color(5, 2, 0), bn::color(2, 0, 0), bn::color(15, 8, 3), bn::color(11, 5, 1), bn::color(16, 8, 3), bn::color(18, 10, 3), bn::color(18, 9, 3), bn::color(8, 4, 1), bn::color(11, 7, 8), bn::color(19, 11, 4),
-        bn::color(0, 0, 0), bn::color(21, 13, 7), bn::color(11, 7, 9), bn::color(21, 12, 5), bn::color(25, 18, 13), bn::color(23, 16, 11), bn::color(15, 9, 8), bn::color(21, 5, 5), bn::color(23, 14, 7), bn::color(18, 10, 5), bn::color(20, 11, 5), bn::color(22, 13, 6), bn::color(25, 15, 6), bn::color(22, 13, 6), bn::color(23, 14, 6), bn::color(26, 20, 15),
-        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(11, 5, 1), bn::color(6, 2, 0), bn::color(4, 1, 0), bn::color(17, 9, 3), bn::color(9, 4, 0), bn::color(12, 6, 1), bn::color(9, 4, 0), bn::color(2, 0, 0), bn::color(5, 2, 0), bn::color(11, 5, 1), bn::color(10, 5, 1), bn::color(7, 3, 0), bn::color(14, 8, 3), bn::color(13, 6, 1),
+        bn::color(0, 0, 0), bn::color(18, 10, 4), bn::color(23, 13, 5), bn::color(12, 7, 9), bn::color(17, 9, 3), bn::color(21, 11, 4), bn::color(24, 14, 6), bn::color(22, 12, 4), bn::color(15, 9, 7), bn::color(20, 5, 5), bn::color(20, 11, 4), bn::color(21, 12, 5), bn::color(22, 13, 5), bn::color(19, 10, 4), bn::color(20, 11, 5), bn::color(24, 17, 12),
+        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(11, 6, 2), bn::color(9, 5, 1), bn::color(1, 0, 0), bn::color(3, 0, 0), bn::color(4, 1, 0), bn::color(2, 0, 0), bn::color(3, 0, 0), bn::color(10, 6, 2), bn::color(5, 2, 0), bn::color(8, 4, 1), bn::color(1, 0, 0), bn::color(2, 0, 0), bn::color(4, 1, 0), bn::color(11, 6, 3),
+        bn::color(0, 0, 0), bn::color(18, 11, 5), bn::color(12, 8, 9), bn::color(21, 5, 4), bn::color(20, 12, 6), bn::color(15, 9, 8), bn::color(17, 6, 7), bn::color(22, 5, 4), bn::color(24, 14, 6), bn::color(22, 13, 7), bn::color(10, 7, 10), bn::color(13, 8, 7), bn::color(21, 12, 6), bn::color(11, 7, 9), bn::color(15, 9, 4), bn::color(17, 10, 5),
+        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(21, 13, 6), bn::color(15, 8, 3), bn::color(17, 10, 5), bn::color(15, 9, 4), bn::color(20, 12, 6), bn::color(9, 5, 2), bn::color(2, 1, 0), bn::color(16, 9, 4), bn::color(5, 2, 0), bn::color(18, 11, 5), bn::color(11, 6, 2), bn::color(8, 4, 2), bn::color(13, 6, 2), bn::color(14, 8, 3),
+        bn::color(0, 0, 0), bn::color(15, 8, 2), bn::color(11, 5, 1), bn::color(18, 10, 4), bn::color(0, 0, 0), bn::color(17, 9, 3), bn::color(5, 2, 0), bn::color(13, 6, 2), bn::color(14, 7, 2), bn::color(20, 11, 4), bn::color(18, 10, 3), bn::color(17, 9, 3), bn::color(1, 0, 0), bn::color(19, 11, 4), bn::color(16, 8, 3), bn::color(16, 9, 3),
+        bn::color(0, 0, 0), bn::color(23, 13, 6), bn::color(11, 8, 10), bn::color(25, 19, 14), bn::color(26, 20, 15), bn::color(16, 10, 7), bn::color(20, 12, 6), bn::color(23, 16, 11), bn::color(19, 11, 6), bn::color(22, 13, 6), bn::color(20, 14, 11), bn::color(25, 15, 7), bn::color(22, 14, 8), bn::color(24, 14, 6), bn::color(21, 12, 6), bn::color(24, 17, 13),
+        bn::color(0, 0, 0), bn::color(12, 6, 1), bn::color(0, 0, 0), bn::color(6, 2, 0), bn::color(9, 4, 1), bn::color(18, 9, 3), bn::color(11, 5, 1), bn::color(16, 7, 2), bn::color(13, 6, 2), bn::color(8, 3, 0), bn::color(3, 0, 0), bn::color(15, 8, 2), bn::color(2, 0, 0), bn::color(5, 2, 0), bn::color(14, 7, 2), bn::color(16, 9, 3),
+        bn::color(0, 0, 0), bn::color(18, 10, 3), bn::color(0, 0, 0), bn::color(21, 11, 4), bn::color(10, 5, 1), bn::color(19, 10, 3), bn::color(7, 3, 0), bn::color(14, 7, 2), bn::color(17, 9, 3), bn::color(15, 8, 3), bn::color(12, 6, 2), bn::color(3, 1, 0), bn::color(22, 12, 4), bn::color(20, 11, 4), bn::color(12, 7, 8), bn::color(16, 9, 3),
     };
     constexpr int corner_market_objects_tiles_count = 753;
     constexpr bn::color corner_market_objects_palette[] = {
@@ -238,8 +256,8 @@ namespace
 namespace
 {
     constexpr map_info maps[] = {
-        { "City Centre", { city_centre_floor_tiles_bin, city_centre_floor_tiles_count, city_centre_floor_cells_bin, city_centre_floor_palette, int(sizeof(city_centre_floor_palette) / sizeof(bn::color)) / 16 }, { city_centre_objects_tiles_bin, city_centre_objects_tiles_count, city_centre_objects_cells_bin, city_centre_objects_palette, int(sizeof(city_centre_objects_palette) / sizeof(bn::color)) / 16 }, 72, 60, 976, 200, 2144, 1272, 16, 0, 2128, 1264, city_centre_solid, city_centre_warps, int(sizeof(city_centre_warps) / sizeof(warp)), city_centre_occluders, int(sizeof(city_centre_occluders) / sizeof(occluder)), city_centre_critters, int(sizeof(city_centre_critters) / sizeof(critter_spawn)), city_centre_interactables, int(sizeof(city_centre_interactables) / sizeof(interactable)) },
-        { "Corner Market", { corner_market_floor_tiles_bin, corner_market_floor_tiles_count, corner_market_floor_cells_bin, corner_market_floor_palette, int(sizeof(corner_market_floor_palette) / sizeof(bn::color)) / 16 }, { corner_market_objects_tiles_bin, corner_market_objects_tiles_count, corner_market_objects_cells_bin, corner_market_objects_palette, int(sizeof(corner_market_objects_palette) / sizeof(bn::color)) / 16 }, 12, 9, 168, 104, 384, 296, 24, 0, 360, 280, corner_market_solid, corner_market_warps, int(sizeof(corner_market_warps) / sizeof(warp)), corner_market_occluders, int(sizeof(corner_market_occluders) / sizeof(occluder)), nullptr, 0, nullptr, 0 },
+        { "City Centre", { city_centre_floor_tiles_bin, city_centre_floor_tiles_count, city_centre_floor_cells_bin, city_centre_floor_palette, int(sizeof(city_centre_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 192, 12, 4, 0, 0 }, { city_centre_objects_tiles_bin, city_centre_objects_tiles_count, city_centre_objects_cells_bin, city_centre_objects_palette, int(sizeof(city_centre_objects_palette) / sizeof(bn::color)) / 16, city_centre_objects_depth_bin, city_centre_objects_depthpx_bin, 64, 10, 3, 13, 15 }, 72, 60, 976, 200, 2144, 1272, 16, 0, 2128, 1264, city_centre_solid, city_centre_warps, int(sizeof(city_centre_warps) / sizeof(warp)), city_centre_occluders, int(sizeof(city_centre_occluders) / sizeof(occluder)), city_centre_critters, int(sizeof(city_centre_critters) / sizeof(critter_spawn)), city_centre_interactables, int(sizeof(city_centre_interactables) / sizeof(interactable)), city_centre_lamps, int(sizeof(city_centre_lamps) / sizeof(lamp)), true },
+        { "Corner Market", { corner_market_floor_tiles_bin, corner_market_floor_tiles_count, corner_market_floor_cells_bin, corner_market_floor_palette, int(sizeof(corner_market_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 0, 0, 0, 0, 0 }, { corner_market_objects_tiles_bin, corner_market_objects_tiles_count, corner_market_objects_cells_bin, corner_market_objects_palette, int(sizeof(corner_market_objects_palette) / sizeof(bn::color)) / 16, corner_market_objects_depth_bin, corner_market_objects_depthpx_bin, 0, 0, 0, 0, 0 }, 12, 9, 168, 104, 384, 296, 24, 0, 360, 280, corner_market_solid, corner_market_warps, int(sizeof(corner_market_warps) / sizeof(warp)), corner_market_occluders, int(sizeof(corner_market_occluders) / sizeof(occluder)), nullptr, 0, nullptr, 0, nullptr, 0, false },
     };
 }
 

@@ -216,6 +216,28 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
   later. Spawn points live in `tools/critters.py` (NOT in scene.py, so moving animals never
   triggers a map re-render); build_assets renders the frames (cached), writes
   `graphics/pigeon|squirrel.bmp` and the spawn table (`critter_spawn`, `map_info::critters`).
+- **Day/night lighting** (`tl_lighting`): the time of day sets a palette transform (saturation,
+  multiply, offset; keyframes for night, dawn, day, golden hour and dusk) applied to the map layer
+  palettes and the player and animal sprite palettes. It applies only to outdoor maps
+  (`map_info::outdoor` = `Scene.sun`).
+  - Special palette entries per layer (`layer_data`): window glass (objects entries 13-14) blends to
+    warm lit colours at night; lamp glass (15) glows. Water uses floor banks 5-6, entries 12-15,
+    and objects bank 6, entries 10-12 (the fountain). It has a fixed ripple pattern whose colours
+    rotate (palette cycling).
+  - At night, `light_pool` sprites (64x32, priority 3, semi-transparent) lie under every lamp in
+    `Scene.lamps`. Blending is top 0.55 / bottom 1, so it is additive and the player's shadow
+    vanishes. By day the blending is 50 % alpha for the shadow.
+- **Per-pixel depth (front layer)**: the objects `streamed_bg` owns a second 32x32 map at
+  priority 1 that shares its tiles and palettes. Each frame it redraws only the objects pixels
+  around the player whose iso depth (x + y of the surface, world units) is greater than the
+  player's.
+  - Uniform cells copy the main map entry. Mixed cells get a masked tile built into one of
+    2x40 extra VRAM slots.
+  - Depth comes from the ID pass (`blender_render.py ... id`: emission material encoding the depth
+    in R/G and the material class in B, 1 sample, Raw view). `build_depth` writes
+    `data/<map>_objects_depth.bin` and `_depthpx.bin`.
+  - The player is always priority 2 and the shadow priority 3. Occluders are now only used for
+    the critters.
 - Start position: on the sidewalk in front of the Corner Market door (cell 44, 19).
 
 ### Folder structure
@@ -298,7 +320,9 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   smears) and the missing normal/ORM maps, and makes glass a glossy blue.
   City helpers: `corner_market_building(s, x0, facade_y)`, `vaulttech_tower`, `fountain`,
   `barrier(..., closed_sign)`, `cone`, `bus_stop`, `lamp_curved`, `newspaper_box`, `trash_can`,
-  `parking_meter`, `fence_wood`, `chain_link`, `poster`, `weeds`, `ivy`.
+  `parking_meter`, `fence_wood`, `chain_link`, `poster`, `weeds`, `ivy`. `s.tube(pts, r, mat)` is a
+  smooth round tube along points (curved lamp arms). Lamp helpers add their light pool spot to
+  `s.lamps`.
   **Style pass** (`stylize()` in blender_render.py, always on): Freestyle outlines (silhouette,
   border, crease; only on the layer being rendered, via the `tl_visible` collection) and
   `add_grime()` which multiplies every material's base colour with an ambient-occlusion term
@@ -312,9 +336,9 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   `ortho_scale = img_w * cos45 * CELL_M / 16` makes 1 cell = a 32x16 px diamond, exactly the
   engine projection. Floor pass: objects invisible to the camera but casting shadows. Objects pass:
   transparent background. Rendered at 2x and box-downscaled.
-- **build_assets.py**: per layer, k-means picks 7 palettes of 15 colours (floor) / 7 (objects);
+- **build_assets.py**: per layer, k-means picks 8 palettes of 15 colours (floor) / 7 (objects), minus reserved special entries (see Day/night lighting);
   each 8x8 tile uses the palette that fits best; tiles are deduplicated incl. flips (tile 0 = empty).
-  Prints unique tile counts and the worst 31x21 window. Bank budget: floor 7 + objects 7 + HUD 1 ≤ 16.
+  Prints unique tile counts and the worst 31x21 window. Bank budget: floor 8 + objects 7 + HUD 1 = 16 (full). The ID pass (1x, 1 sample) gives material classes and per-pixel depth; tiles with special pixels may only use banks that reserve those entries.
   Work is done in chunks of tiles so big maps fit in memory. City Centre: ~15.6k floor + ~9.9k
   object tiles (~0.8 MB of tile data), full-quality build ~20 min.
 - **blender_actor.py**: imports a rigged Quaternius character FBX, recolours its materials
@@ -436,6 +460,7 @@ Update the checkboxes at the end of each session.
 - [ ] Verify SRAM saves work in Lemuroid
 
 1.7 Polish — TODO
+- [x] Day/night lighting, lamp light pools, lit windows, water palette cycling, per-pixel depth
 - [ ] Better pixel art for this district (original designs), warm/cold palette per area
 - [ ] Objects drawn over the player (tree tops, roofs) via a second bg layer
 - [ ] Music + sound effects for this district (maxmod, `audio/`)
@@ -473,23 +498,10 @@ Update the checkboxes at the end of each session.
 
 ## Next session: start here
 
-**Graphics upgrade proposal (sent to the owner, awaiting approval):** "Urbz essence, modern
-fidelity". Mock-ups were made from real emulator screenshots with GBA-legal operations only.
-1. Light and atmosphere:
-   - Cloud shadows on the free BG3, alpha-blended with the same EVA/EVB as the player shadow.
-   - Day/night cycle by palette transforms driven by the clock.
-   - Night lights: lamp pools as additive blending on BG3, and lit windows via reserved palette
-     entries.
-   - Blending is one global setting, so clouds (day) and lights (night) take turns.
-2. Life: water and fountain ripples by palette cycling (4 reserved entries), flickering signs.
-3. Depth:
-   - Bake per-tile depth from Blender. The player sprite always draws over the map, and only the
-     object tiles that are really in front are redrawn over it as small mask sprites (objects
-     palettes copied into sprite palettes).
-   - This replaces the whole-layer priority switch; an always-on-top layer for canopies and
-     awnings is included.
-4. Render fidelity: bevelled edges, the owner's own texture/graphics packs (to be uploaded to
-   Drive; no Remote Control folder is connected), glossy water with reflections, denser props.
+**Graphics upgrade (owner approved everything except cloud shadows, which looked odd):**
+day/night lighting, night lamp pools and lit windows, water palette cycling, per-pixel depth
+(front layer). Still to do: render-fidelity upgrades with the owner's own packs once they are in
+Drive. No Remote Control folder is connected.
 
 **New (owner, latest):** the owner added more packs to the Drive folder in the agreed
 **isometric urban** style: commercial and residential buildings plus texture packs. List the

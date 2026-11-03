@@ -1,6 +1,7 @@
 #include "tl_critters.h"
 
 #include "bn_math.h"
+#include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_items_pigeon.h"
 #include "bn_sprite_items_squirrel.h"
 
@@ -69,6 +70,30 @@ namespace tl
             c.timer = _random_int(90);
             c.flip = _random_int(2) == 0;
             _critters.push_back(bn::move(c));
+        }
+    }
+
+    void critters::set_lighting(const light_params& params)
+    {
+        bn::color pigeon_colours[16];
+        bn::color squirrel_colours[16];
+        light_colours(bn::sprite_items::pigeon.palette_item().colors_ref().data(), pigeon_colours, 16, params);
+        light_colours(bn::sprite_items::squirrel.palette_item().colors_ref().data(), squirrel_colours, 16, params);
+        bool pigeon_done = false;
+        bool squirrel_done = false;
+
+        for(critter& c : _critters)
+        {
+            bool pigeon = c.spawn->kind == critter_kind::pigeon;
+
+            if(pigeon ? pigeon_done : squirrel_done)
+            {
+                continue;
+            }
+
+            bn::sprite_palette_ptr palette = c.sprite.palette();
+            palette.set_colors(bn::span<const bn::color>(pigeon ? pigeon_colours : squirrel_colours, 16));
+            (pigeon ? pigeon_done : squirrel_done) = true;
         }
     }
 

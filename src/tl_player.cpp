@@ -3,6 +3,7 @@
 #include "bn_math.h"
 #include "bn_keypad.h"
 #include "bn_blending.h"
+#include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_items_player.h"
 #include "bn_sprite_items_shadow.h"
 #include "bn_sprite_items_player_rest.h"
@@ -19,8 +20,6 @@ namespace tl
         constexpr int frames_per_facing = 9;
         constexpr int walk_frames = 8;
         constexpr int feet_offset_y = 54 - 32;  // feet relative to the sprite centre
-        constexpr int sprite_half_width = 10;   // body size used for the depth test
-        constexpr int sprite_height = 50;
 
         constexpr bn::fixed walk_speed = 1.25;  // screen pixels per frame
         constexpr bn::fixed run_speed = 2.25;
@@ -172,6 +171,8 @@ namespace tl
         _vx = 0;
         _vy = 0;
         _rest_sprite = bn::sprite_items::player_rest.create_sprite(0, 0);
+        _rest_sprite->set_bg_priority(2);
+        _apply_lighting();
         _sprite.set_visible(false);
         _shadow.set_visible(false);
     }
@@ -190,6 +191,7 @@ namespace tl
         _vy = 0;
         _facing = facing_towards(target_x - x(), target_y - y());
         _sprite.set_palette(bn::sprite_items::player_wash.palette_item());
+        _apply_lighting();
     }
 
     void player::_stand_up()
@@ -212,6 +214,8 @@ namespace tl
         _activity = activity::walking;
         _anim_frame = 0;
         _update_graphics();
+
+        _apply_lighting();
     }
 
     void player::_update_activity()
@@ -352,10 +356,56 @@ namespace tl
         _sprite.set_position(screen_x, screen_y - feet_offset_y);
         _shadow.set_position(screen_x, screen_y - 1);
 
-        // Behind a building/tree: draw below the objects layer (priority 2), otherwise above it.
-        int priority = _map->player_hidden(x(), y(), sprite_half_width, sprite_height) ? 3 : 2;
-        _sprite.set_bg_priority(priority);
-        _shadow.set_bg_priority(priority);
+        // Always above the objects layer; the front layer redraws the map pixels that are in front.
+        // The shadow lies on the ground, below the objects layer.
+        _sprite.set_bg_priority(2);
+        _shadow.set_bg_priority(3);
+    }
+
+    void player::mask_area(int& x0, int& y0, int& x1, int& y1, int& depth) const
+    {
+        if(_rest_sprite)
+        {
+            int sx = _map->to_image_x(_seat_x, _seat_y);
+            int sy = _map->to_image_y(_seat_x, _seat_y);
+            x0 = sx - 32;
+            x1 = sx + 32;
+            y0 = sy - rest_origin_y - 32;
+            y1 = sy - rest_origin_y + 32;
+            depth = _seat_x + _seat_y + 12;     // a bit in front of the seat: the bench stays behind
+            return;
+        }
+
+        int ix = image_x();
+        int iy = image_y();
+        x0 = ix - 16;
+        x1 = ix + 16;
+        y0 = iy - 54;
+        y1 = iy + 10;
+        depth = x() + y();
+    }
+
+    void player::set_lighting(const light_params& params)
+    {
+        _light = params;
+        _apply_lighting();
+    }
+
+    void player::_apply_lighting()
+    {
+        bn::color colours[16];
+        const bn::sprite_palette_item& item = _activity == activity::washing ?
+                bn::sprite_items::player_wash.palette_item() : bn::sprite_items::player.palette_item();
+        light_colours(item.colors_ref().data(), colours, 16, _light);
+        bn::sprite_palette_ptr palette = _sprite.palette();
+        palette.set_colors(bn::span<const bn::color>(colours, 16));
+
+        if(_rest_sprite)
+        {
+            light_colours(bn::sprite_items::player_rest.palette_item().colors_ref().data(), colours, 16, _light);
+            bn::sprite_palette_ptr rest_palette = _rest_sprite->palette();
+            rest_palette.set_colors(bn::span<const bn::color>(colours, 16));
+        }
     }
 
     void player::_update_graphics()

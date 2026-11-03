@@ -4,6 +4,7 @@
 #include "bn_size.h"
 #include "bn_color.h"
 #include "bn_memory.h"
+#include "bn_span.h"
 #include "bn_bg_palette_item.h"
 
 namespace tl
@@ -99,7 +100,7 @@ namespace tl
     }
 
     streamed_bg::streamed_bg(int storage_index, const layer_data& data, int image_width, int image_height,
-                             int priority) :
+                             int priority, int front_priority) :
         _storage(*reinterpret_cast<storage*>(storage_memory[storage_index])),
         _data(data),
         _columns(image_width / 8),
@@ -118,7 +119,9 @@ namespace tl
             _storage.references[slot] = 0;
         }
 
-        _tiles = bn::regular_bg_tiles_ptr::allocate(cache_slots, bn::bpp_mode::BPP_4, false);
+        bool front = front_priority >= 0 && data.depth;
+        _tiles = bn::regular_bg_tiles_ptr::allocate(cache_slots + (front ? mask_slots * 2 : 0), bn::bpp_mode::BPP_4,
+                                                    false);
         bn::bg_palette_item palette_item(bn::span<const bn::color>(data.palette, data.banks * 16),
                                          bn::bpp_mode::BPP_4);
         _palette = bn::bg_palette_ptr::create(palette_item);
@@ -132,6 +135,146 @@ namespace tl
 
         _bg = bn::regular_bg_ptr::create(*_map);
         _bg->set_priority(priority);
+
+        if(front)
+        {
+            _front_map = bn::regular_bg_map_ptr::allocate(bn::size(hw_map_size, hw_map_size), *_tiles, *_palette);
+            _front_vram = _front_map->vram()->data();
+            bn::memory::clear(hw_map_size * hw_map_size, _front_vram[0]);
+            _front_bg = bn::regular_bg_ptr::create(*_front_map);
+            _front_bg->set_priority(front_priority);
+        }
+    }
+
+    void streamed_bg::set_palette_colours(const bn::color* colours)
+    {
+        _palette->set_colors(bn::span<const bn::color>(colours, _data.banks * 16));
+    }
+
+    void streamed_bg::clear_front()
+    {
+        if(! _front_vram)
+        {
+            return;
+        }
+
+        for(int index = 0; index < _front_written_count; ++index)
+        {
+            _front_vram[_front_written[index]] = 0;
+        }
+
+        _front_written_count = 0;
+    }
+
+    void streamed_bg::update_front(int x0, int y0, int x1, int y1, int depth)
+    {
+        if(! _front_vram)
+        {
+            return;
+        }
+
+        clear_front();
+
+        int cx0 = x0 < 0 ? 0 : x0 >> 3;
+        int cy0 = y0 < 0 ? 0 : y0 >> 3;
+        int cx1 = (x1 + 7) >> 3;
+        int cy1 = (y1 + 7) >> 3;
+        cx1 = cx1 > _columns ? _columns : cx1;
+        cy1 = cy1 > _rows ? _rows : cy1;
+
+        // only cells inside the streamed window have their tiles in VRAM
+        cx0 = cx0 < _window_x ? _window_x : cx0;
+        cy0 = cy0 < _window_y ? _window_y : cy0;
+        cx1 = cx1 > _window_x + window_columns ? _window_x + window_columns : cx1;
+        cy1 = cy1 > _window_y + window_rows ? _window_y + window_rows : cy1;
+
+        _front_parity ^= 1;
+        int mask_base = cache_slots + (_front_parity * mask_slots);
+        int mask_used = 0;
+        bn::tile* tiles_vram = _tiles->vram()->data();
+
+        for(int cy = cy0; cy < cy1; ++cy)
+        {
+            for(int cx = cx0; cx < cx1; ++cx)
+            {
+                int cell_index = (cy * _columns) + cx;
+                uint32_t cell = _data.cells[cell_index];
+                int tile_id = int(cell & 0xFFFF);
+
+                if(! tile_id)
+                {
+                    continue;
+                }
+
+                uint32_t info = _data.depth[cell_index];
+                int base = int(info & 0xFFFF);
+                int block = int(info >> 16);
+                int map_index = ((cy & (hw_map_size - 1)) * hw_map_size) + (cx & (hw_map_size - 1));
+
+                if(block == 0xFFFF)
+                {
+                    if(base > depth && _front_written_count < 160)
+                    {
+                        _front_vram[map_index] = _map_vram[map_index];
+                        _front_written[_front_written_count++] = uint16_t(map_index);
+                    }
+
+                    continue;
+                }
+
+                if(base + 254 <= depth || mask_used == mask_slots || _front_written_count == 160)
+                {
+                    continue;
+                }
+
+                // Mixed depths in this cell: build a tile with only the pixels in front.
+                const uint8_t* offsets = _data.depth_pixels + (block * 64);
+                const uint32_t* source = _data.tiles + (tile_id * 8);
+                bool hflip = (cell >> 16) & 1;
+                bool vflip = (cell >> 17) & 1;
+                int threshold = depth - base;     // pixel in front if offset > threshold
+                uint32_t rows[8];
+                uint32_t any = 0;
+
+                for(int row = 0; row < 8; ++row)
+                {
+                    uint32_t word = source[vflip ? 7 - row : row];
+                    const uint8_t* row_offsets = offsets + (row * 8);
+                    uint32_t out = 0;
+
+                    for(int col = 0; col < 8; ++col)
+                    {
+                        int offset = row_offsets[col];
+
+                        if(offset != 255 && offset > threshold)
+                        {
+                            int source_col = hflip ? 7 - col : col;
+                            out |= ((word >> (source_col * 4)) & 0xF) << (col * 4);
+                        }
+                    }
+
+                    rows[row] = out;
+                    any |= out;
+                }
+
+                if(! any)
+                {
+                    continue;
+                }
+
+                int slot = mask_base + mask_used;
+                ++mask_used;
+
+                for(int row = 0; row < 8; ++row)
+                {
+                    tiles_vram[slot].data[row] = rows[row];
+                }
+
+                int bank = _palette_bank + int((cell >> 20) & 0xF);
+                _front_vram[map_index] = uint16_t(slot | (bank << 12));
+                _front_written[_front_written_count++] = uint16_t(map_index);
+            }
+        }
     }
 
     streamed_bg::~streamed_bg() = default;
@@ -277,5 +420,10 @@ namespace tl
 
         // Hardware map wraps every 256 px. Butano places the centre of a 256x256 BG at the screen centre.
         _bg->set_position(8 - (cam_x & 255), 48 - (cam_y & 255));
+
+        if(_front_bg)
+        {
+            _front_bg->set_position(8 - (cam_x & 255), 48 - (cam_y & 255));
+        }
     }
 }

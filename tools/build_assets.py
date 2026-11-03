@@ -33,7 +33,7 @@ import critters              # noqa: E402
 import interactions          # noqa: E402
 
 CACHE = os.path.join(ROOT, "art_cache")
-FLOOR_BANKS = 7
+FLOOR_BANKS = 8
 OBJECT_BANKS = 7
 RENDER_SCALE = 2
 RENDER_SAMPLES = 96
@@ -73,6 +73,28 @@ def render(s, layer, force, fast):
         a = np.concatenate([rgb, a[..., 3:4]], axis=2)
         img = Image.fromarray(np.clip(a * 255 + 0.5, 0, 255).astype(np.uint8), "RGBA")
     return grade(img)
+
+
+def render_id(s, layer, force, fast):
+    """ID pass (1x, 1 sample): per pixel iso depth (engine x + y) and material class, see
+    blender_render.id_materials. Returns (depth uint16 array, class uint8 array, valid mask)."""
+    os.makedirs(CACHE, exist_ok=True)
+    out = os.path.join(CACHE, f"{s.ident}_{layer}_id_{scene_hash(s, layer + 'id', 1, 1)}.png")
+    if force or not os.path.exists(out):
+        print(f"rendering {s.ident} {layer} id pass...", flush=True)
+        cmd = ["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_render.py"), "--",
+               s.ident, layer, out, "1", "1", "", "id"]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if not os.path.exists(out):
+            print(r.stdout[-3000:], r.stderr[-3000:])
+            raise RuntimeError("id render failed")
+    a = np.asarray(Image.open(out).convert("RGBA")).astype(np.int32)
+    valid = a[..., 3] >= 128
+    depth = (a[..., 0] + a[..., 1] * 256).astype(np.int32)
+    cls = np.clip(np.round(a[..., 2] / 40.0), 0, 3).astype(np.uint8)
+    cls[~valid] = 0
+    depth[~valid] = -1
+    return depth, cls, valid
 
 
 def grade(img):
@@ -126,54 +148,148 @@ def kmeans(points, k, weights=None, iters=12, seed=1):
     return centers
 
 
-def convert_layer(img, banks, transparent):
-    """img: RGBA PIL image (dims multiple of 8). Returns (palettes[banks][16] rgb, cells, tiles)."""
+# Special palette entries (same positions in every map; the game animates / relights them):
+#   class 1 window glass -> 2 entries (dark, bright), lit at night
+#   class 2 water        -> N entries with a ripple pattern, cycled (palette cycling)
+#   class 3 lamp glass   -> 1 entry, bright at night
+FLOOR_WATER_BANKS = (6, 7)          # floor banks that hold water (entries 12..15)
+FLOOR_WATER_FIRST = 12
+FLOOR_WATER_COUNT = 4
+OBJ_GLASS_FIRST = 13                # objects: glass 13, 14 and lamp 15 in every bank
+OBJ_LAMP_INDEX = 15
+OBJ_WATER_BANKS = (6,)              # objects banks with water (fountain), entries 10..12
+OBJ_WATER_FIRST = 10
+OBJ_WATER_COUNT = 3
+WATER_TINTS = np.array([[-16, -12, -6], [0, 0, 0], [14, 16, 20], [34, 38, 36]], dtype=np.float64)
+
+
+def special_layout(layer, present, banks):
+    """Per bank: dict class -> list of palette entries (1..15). present: set of classes in the layer."""
+    layout = [dict() for _ in range(banks)]
+    info = dict(water_banks=0, water_first=0, water_count=0, glass_first=0, lamp_index=0)
+    if layer == "floor":
+        if 2 in present:
+            for b in FLOOR_WATER_BANKS:
+                layout[b][2] = list(range(FLOOR_WATER_FIRST, FLOOR_WATER_FIRST + FLOOR_WATER_COUNT))
+                info["water_banks"] |= 1 << b
+            info.update(water_first=FLOOR_WATER_FIRST, water_count=FLOOR_WATER_COUNT)
+    else:
+        if present & {1, 3}:
+            for b in range(banks):
+                layout[b][1] = [OBJ_GLASS_FIRST, OBJ_GLASS_FIRST + 1]
+                layout[b][3] = [OBJ_LAMP_INDEX]
+            info.update(glass_first=OBJ_GLASS_FIRST, lamp_index=OBJ_LAMP_INDEX)
+        if 2 in present:
+            for b in OBJ_WATER_BANKS:
+                layout[b][2] = list(range(OBJ_WATER_FIRST, OBJ_WATER_FIRST + OBJ_WATER_COUNT))
+                info["water_banks"] |= 1 << b
+            info.update(water_first=OBJ_WATER_FIRST, water_count=OBJ_WATER_COUNT)
+    return layout, info
+
+
+def water_pattern(x, y, n):
+    """Diagonal ripple bands, periodic every 16x8 pixels (2 tiles) so water tiles deduplicate."""
+    wobble = np.round(np.sin(x * (2 * np.pi / 16)) * 2).astype(np.int64)
+    band = (x + 2 * y + wobble) // 4
+    return band % n
+
+
+def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
+    """img: RGBA PIL image (dims multiple of 8); cls_img: per pixel material class (or None).
+    Returns (palettes[banks][16] rgb, cells, tiles, info)."""
     a = np.asarray(img).astype(np.float64)
     h, w = a.shape[0], a.shape[1]
     th, tw = h // 8, w // 8
     rgb = a[..., :3]
     opaque = a[..., 3] >= 128 if transparent else a[..., 3] >= 8
-    tiles_rgb = rgb.reshape(th, 8, tw, 8, 3).transpose(0, 2, 1, 3, 4).reshape(th * tw, 64, 3) * WEIGHT
-    tiles_op = opaque.reshape(th, 8, tw, 8).transpose(0, 2, 1, 3).reshape(th * tw, 64)
+    if cls_img is None:
+        cls_img = np.zeros((h, w), dtype=np.uint8)
+    cls_img = np.where(opaque, cls_img, 0).astype(np.uint8)
+    present = set(int(c) for c in np.unique(cls_img)) - {0}
+    layout, info = special_layout(layer, present, banks)
+    # classes without reserved entries in this layer are treated as normal colours
+    reserved = set(c for lay in layout for c in lay)
+    cls_img = np.where(np.isin(cls_img, list(reserved)), cls_img, 0).astype(np.uint8) if reserved else \
+        np.zeros_like(cls_img)
+
+    def tiled(arr, extra=()):
+        return arr.reshape((th, 8, tw, 8) + extra).transpose((0, 2, 1, 3) + tuple(range(4, 4 + len(extra)))) \
+            .reshape((th * tw, 64) + extra)
+
+    tiles_rgb = tiled(rgb, (3,)) * WEIGHT
+    tiles_op = tiled(opaque)
+    tiles_cls = tiled(cls_img)
+    tiles_norm = tiles_op & (tiles_cls == 0)
+    yy, xx = np.mgrid[0:h, 0:w]
+    tiles_x = tiled(xx)
+    tiles_y = tiled(yy)
     used = np.where(tiles_op.any(1))[0]
 
-    # initial bank assignment: k-means on tile mean colour + spread
+    normal_count = [15 - sum(len(v) for v in layout[b].values()) for b in range(banks)]
+    needs = [frozenset(int(c) for c in np.unique(tiles_cls[t][tiles_op[t]]) if c) for t in used]
+    allowed = np.ones((len(used), banks), dtype=bool)
+    for i, nd in enumerate(needs):
+        if nd:
+            for b in range(banks):
+                allowed[i, b] = nd <= set(layout[b])
+
+    # special colours (shared by all banks)
+    special_cols = {}
+    if 1 in reserved:
+        px = rgb[cls_img == 1] * WEIGHT
+        cols = kmeans(px, 2, iters=10) if len(px) > 2 else np.array([[60, 80, 120], [150, 180, 210]]) * WEIGHT
+        if len(cols) < 2:
+            cols = np.concatenate([cols, cols])
+        cols = cols[np.argsort((cols / WEIGHT).sum(1))]
+        special_cols[1] = to5(cols / WEIGHT) * WEIGHT
+    if 3 in reserved:
+        px = rgb[cls_img == 3]
+        special_cols[3] = to5(px.mean(0)[None] if len(px) else np.array([[255, 240, 200]])) * WEIGHT
+    if 2 in reserved:
+        n = info["water_count"]
+        base = rgb[cls_img == 2].mean(0)
+        special_cols[2] = to5(np.clip(base[None] + WATER_TINTS[:n], 0, 255)) * WEIGHT
+
+    # initial bank assignment: k-means on tile mean colour + spread (normal pixels)
     feats = []
     wts = []
     for t in used:
-        px = tiles_rgb[t][tiles_op[t]]
+        sel = tiles_norm[t] if tiles_norm[t].any() else tiles_op[t]
+        px = tiles_rgb[t][sel]
         feats.append(np.concatenate([px.mean(0), px.std(0) * 0.5]))
         wts.append(len(px))
     feats = np.array(feats)
     wts = np.array(wts, dtype=np.float64)
     centers = kmeans(feats, banks, wts, iters=15)
-    assign = ((feats[:, None, :] - centers[None]) ** 2).sum(2).argmin(1)
+    dist = ((feats[:, None, :] - centers[None]) ** 2).sum(2)
+    dist[~allowed] = np.inf
+    assign = dist.argmin(1)
 
     palettes = None
     for it in range(4):
         palettes = []
         for b in range(banks):
+            k = normal_count[b]
             idx = used[assign == b]
-            if len(idx) == 0:
-                palettes.append(np.zeros((15, 3)))
+            px = np.concatenate([tiles_rgb[t][tiles_norm[t]] for t in idx]) if len(idx) else np.zeros((0, 3))
+            if len(px) == 0:
+                palettes.append(np.zeros((k, 3)))
                 continue
-            px = np.concatenate([tiles_rgb[t][tiles_op[t]] for t in idx])
             if len(px) > 40000:
                 px = px[np.random.default_rng(it).choice(len(px), 40000, replace=False)]
-            cols = kmeans(px, 15, iters=10, seed=b + it)
-            if len(cols) < 15:
-                cols = np.concatenate([cols, np.repeat(cols[-1:], 15 - len(cols), 0)])
+            cols = kmeans(px, k, iters=10, seed=b + it)
+            if len(cols) < k:
+                cols = np.concatenate([cols, np.repeat(cols[-1:], k - len(cols), 0)])
             palettes.append(to5(cols / WEIGHT) * WEIGHT)
-        palettes = np.array(palettes)                     # banks x 15 x 3 (weighted space)
-        # reassign tiles to the best bank
         errs = np.zeros((len(used), banks))
         for c0 in range(0, len(used), 2048):
             chunk = used[c0:c0 + 2048]
             trgb = tiles_rgb[chunk]
-            top = tiles_op[chunk]
+            top = tiles_norm[chunk]
             for b in range(banks):
                 d = ((trgb[:, :, None, :] - palettes[b][None, None]) ** 2).sum(3).min(2)
                 errs[c0:c0 + len(chunk), b] = (d * top).sum(1)
+        errs[~allowed] = np.inf
         new_assign = errs.argmin(1)
         if (new_assign == assign).all() and it > 0:
             break
@@ -188,13 +304,30 @@ def convert_layer(img, banks, transparent):
             chunk = sel[c0:c0 + 4096]
             d = ((tiles_rgb[chunk][:, :, None, :] - palettes[b][None, None]) ** 2).sum(3)
             idx = (d.argmin(2) + 1).astype(np.uint8)
+            tc = tiles_cls[chunk]
+            for c, entries in layout[b].items():
+                m = tc == c
+                if not m.any():
+                    continue
+                if c == 2:
+                    pat = water_pattern(tiles_x[chunk], tiles_y[chunk], len(entries))
+                    idx[m] = (entries[0] + pat[m]).astype(np.uint8)
+                else:
+                    sc_ = special_cols[c]
+                    dd = ((tiles_rgb[chunk][:, :, None, :] - sc_[None, None]) ** 2).sum(3).argmin(2)
+                    idx[m] = np.array(entries, dtype=np.uint8)[dd[m]]
             idx[~tiles_op[chunk]] = 0
             tile_idx[chunk] = idx
             tile_bank[chunk] = b
 
     pal_rgb = []
     for b in range(banks):
-        cols = [(0, 0, 0)] + [tuple(int(v) for v in c) for c in to5(palettes[b] / WEIGHT)]
+        cols = [(0, 0, 0)] * 16
+        for i, c in enumerate(to5(palettes[b] / WEIGHT)):
+            cols[1 + i] = tuple(int(v) for v in c)
+        for c, entries in layout[b].items():
+            for i, e in enumerate(entries):
+                cols[e] = tuple(int(v) for v in to5(special_cols[c][i % len(special_cols[c])] / WEIGHT))
         pal_rgb.append(cols)
 
     # deduplicate tiles (tile 0 = empty)
@@ -218,7 +351,51 @@ def convert_layer(img, banks, transparent):
             tiles.append(d.tobytes())
         tid, flip = found
         cells[t] = tid | ((flip & 1) << 16) | ((flip >> 1) << 17) | (int(tile_bank[t]) << 20)
-    return pal_rgb, cells.reshape(th, tw), tiles
+    info["drawn"] = (tile_idx > 0).reshape(th, tw, 8, 8).transpose(0, 2, 1, 3).reshape(h, w)
+    return pal_rgb, cells.reshape(th, tw), tiles, info
+
+
+def build_depth(name, depth, drawn, cells):
+    """Per objects cell: u32 = min depth | (0xFFFF << 16) if the cell is (nearly) one depth, else
+    min depth | (block << 16) with a 64-byte block of per-pixel offsets (255 = no pixel)."""
+    d = depth.astype(np.int64).copy()
+    known = d >= 0
+    for _ in range(3):                       # outline pixels: take the closest neighbour's depth
+        if known.all():
+            break
+        nb = np.full(d.shape, -1, dtype=np.int64)
+        for sy, sx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            nb = np.maximum(nb, np.roll(np.roll(np.where(known, d, -1), sy, 0), sx, 1))
+        fill = ~known & (nb >= 0)
+        d[fill] = nb[fill]
+        known = d >= 0
+    d[~known] = 0
+    th, tw = cells.shape
+    out = np.zeros(th * tw, dtype=np.uint32)
+    blocks = []
+    dt = d.reshape(th, 8, tw, 8).transpose(0, 2, 1, 3).reshape(th * tw, 64)
+    dr = drawn.reshape(th, 8, tw, 8).transpose(0, 2, 1, 3).reshape(th * tw, 64)
+    flat = cells.flatten()
+    for t in range(th * tw):
+        if not (flat[t] & 0xFFFF):
+            continue
+        px = dt[t][dr[t]]
+        if len(px) == 0:
+            continue
+        lo, hi = int(px.min()), int(px.max())
+        if hi - lo <= 2:
+            out[t] = lo | (0xFFFF << 16)
+        else:
+            assert len(blocks) < 0xFFFF
+            blk = np.where(dr[t], np.clip(dt[t] - lo, 0, 254), 255).astype(np.uint8)
+            out[t] = lo | (len(blocks) << 16)
+            blocks.append(blk.tobytes())
+    out.astype("<u4").tofile(os.path.join(ROOT, "data", f"{name}_depth.bin"))
+    with open(os.path.join(ROOT, "data", f"{name}_depthpx.bin"), "wb") as f:
+        f.write(b"".join(blocks) if blocks else bytes(64))
+    EXTERNS.append(f'extern "C" const uint32_t {name}_depth_bin[];')
+    EXTERNS.append(f'extern "C" const uint8_t {name}_depthpx_bin[];')
+    print(f"{name}: depth blocks {len(blocks)}")
 
 
 def layer_preview(pal, cells, tiles):
@@ -319,9 +496,16 @@ def main():
     for s in scenes:
         assert s.img_w % 8 == 0 and s.img_h % 8 == 0
         layers = {}
+        infos = {}
         for layer, banks, transparent in (("floor", FLOOR_BANKS, False), ("objects", OBJECT_BANKS, True)):
             img = render(s, layer, force, fast)
-            pal, cells, tiles = convert_layer(img, banks, transparent)
+            depth, cls, _ = render_id(s, layer, force, fast)
+            if depth.shape != (s.img_h, s.img_w):
+                raise RuntimeError("id pass size mismatch")
+            pal, cells, tiles, info = convert_layer(img, banks, transparent, cls, layer)
+            infos[layer] = info
+            if layer == "objects":
+                build_depth(f"{s.ident}_{layer}", depth, info["drawn"], cells)
             th, tw = cells.shape
             # worst case unique tiles visible in one 31x21 window (must fit the VRAM cache)
             ids = (cells & 0xFFFF).astype(np.int64)
@@ -385,19 +569,29 @@ def main():
             out.append("    };")
         interact_entry = (f"{s.ident}_interactables, int(sizeof({s.ident}_interactables) / sizeof(interactable))"
                           if things else "nullptr, 0")
+        if s.lamps:
+            out.append(f"    constexpr lamp {s.ident}_lamps[] = {{")
+            for (lx, ly) in s.lamps:
+                out.append(f"        {{ {int(lx * 16)}, {int(ly * 16)} }},")
+            out.append("    };")
+        lamp_entry = (f"{s.ident}_lamps, int(sizeof({s.ident}_lamps) / sizeof(lamp))" if s.lamps else "nullptr, 0")
         xs = [s.proj(x, y)[0] for (x, y) in ((0, 0), (s.w, 0), (0, s.h), (s.w, s.h))]
         ys = [s.proj(x, y)[1] for (x, y) in ((0, 0), (s.w, 0), (0, s.h), (s.w, s.h))]
         view = (max(0, int(min(xs))), 0, min(s.img_w, int(max(xs))), min(s.img_h, int(max(ys)) + 8))
 
         def layer_entry(layer):
             n = f"{s.ident}_{layer}"
+            i = infos[layer]
+            depth = f"{n}_depth_bin, {n}_depthpx_bin" if layer == "objects" else "nullptr, nullptr"
             return (f"{{ {n}_tiles_bin, {n}_tiles_count, {n}_cells_bin, {n}_palette, "
-                    f"int(sizeof({n}_palette) / sizeof(bn::color)) / 16 }}")
+                    f"int(sizeof({n}_palette) / sizeof(bn::color)) / 16, {depth}, "
+                    f"{i['water_banks']}, {i['water_first']}, {i['water_count']}, {i['glass_first']}, "
+                    f"{i['lamp_index']} }}")
         table.append(f'        {{ "{s.name}", {layer_entry("floor")}, {layer_entry("objects")}, {s.w}, {s.h}, '
                      f"{s.origin_x}, {s.origin_y}, {s.img_w}, {s.img_h}, {view[0]}, {view[1]}, {view[2]}, {view[3]}, "
                      f"{s.ident}_solid, {s.ident}_warps, int(sizeof({s.ident}_warps) / sizeof(warp)), "
                      f"{s.ident}_occluders, int(sizeof({s.ident}_occluders) / sizeof(occluder)), "
-                     f"{critter_entry}, {interact_entry} }},")
+                     f"{critter_entry}, {interact_entry}, {lamp_entry}, {'true' if s.sun else 'false'} }},")
 
     out += ["}", "", "namespace", "{", "    constexpr map_info maps[] = {"] + table + ["    };", "}", "",
             "static_assert(sizeof(maps) / sizeof(map_info) == maps_count);", "",
@@ -467,6 +661,10 @@ def write_sprite_sheet(name, frames, w, h):
 
 
 def build_ui_sprites():
+    pixels, pal = hud_sprites.build_light_pool()
+    pal = pal + [(0, 0, 0)] * (16 - len(pal))
+    write_bmp(os.path.join(ROOT, "graphics", "light_pool.bmp"), pixels, 64, 32, 4, pal)
+    write_text(os.path.join(ROOT, "graphics", "light_pool.json"), '{\n    "type": "sprite",\n    "height": 32\n}\n')
     pixels, pal = hud_sprites.build_need_bar()
     pal = pal + [(0, 0, 0)] * (16 - len(pal))
     write_bmp(os.path.join(ROOT, "graphics", "need_bar.bmp"), pixels, 32, len(pixels), 4, pal)

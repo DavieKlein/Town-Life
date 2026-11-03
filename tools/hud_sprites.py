@@ -317,3 +317,21 @@ def build_menu_panel():
     # two 32x16 frames (left half, right half) stacked vertically
     highlight = [row[:32] for row in full] + [row[32:] for row in full]
     return left, right, highlight, pal
+
+
+def build_light_pool():
+    """Night light pool under a street lamp: 64x32 iso ellipse, 4 warm levels with checker dithering.
+    The game draws it with additive-style blending (top weight ~0.5, bottom weight 1)."""
+    pal = [(255, 0, 255), (56, 40, 16), (104, 80, 32), (160, 124, 56), (216, 172, 88)]
+    w, h = 64, 32
+    pixels = []
+    for y in range(h):
+        row = []
+        for x in range(w):
+            dx = (x + 0.5 - w / 2) / (w / 2)
+            dy = (y + 0.5 - h / 2) / (h / 2)
+            v = max(0.0, 1.0 - (dx * dx + dy * dy)) ** 0.8
+            level = v * 4 + (0.5 if (x + y) % 2 else 0.0)
+            row.append(min(4, int(level)))
+        pixels.append(row)
+    return pixels, pal

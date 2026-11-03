@@ -73,6 +73,7 @@ class Scene:
         self.warps = []
         self.occluders = []
         self.lights = []
+        self.lamps = []      # night light pools on the ground: (x, y) in cells
         self.sun = True
 
     # -- primitives -----------------------------------------------------------------
@@ -82,6 +83,10 @@ class Scene:
 
     def cyl(self, x, y, z0, z1, r, mat, layer="objects", verts=16):
         self.prims.append(dict(type="cyl", x=x, y=y, z0=z0, z1=z1, r=r, mat=mat, layer=layer, verts=verts))
+
+    def tube(self, pts, r, mat, layer="objects"):
+        """Smooth round tube through points (x, y in cells, z in metres)."""
+        self.prims.append(dict(type="tube", pts=[list(q) for q in pts], r=r, mat=mat, layer=layer))
 
     def sphere(self, x, y, z, r, mat, layer="objects", sz=1.0):
         self.prims.append(dict(type="sphere", x=x, y=y, z=z, r=r, mat=mat, layer=layer, sz=sz))
@@ -226,6 +231,7 @@ def lamp_post(s, x, y):
     s.box(x - 0.28, y - 0.28, x + 0.28, y + 0.28, 3.95, 4.05, "metal_dark")
     s.set_solid(x - 0.2, y - 0.2, x + 0.2, y + 0.2)
     s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 4.1)
+    s.lamps.append((x, y))
 
 
 def planter(s, x, y):
@@ -347,12 +353,13 @@ def lamp_curved(s, x, y, arm="y"):
     d = 1 if arm == "y" else -1
     s.cyl(x, y, 0, 0.3, 0.12, "metal_dark")
     s.cyl(x, y, 0, 4.2, 0.07, "metal_grey")
-    for i, (dy, dz) in enumerate(((0.15, 4.25), (0.4, 4.4), (0.7, 4.5), (1.0, 4.52))):
-        s.sphere(x, y + d * dy / CELL_M, dz, 0.075, "metal_grey")
+    s.tube([(x, y, 4.0), (x, y, 4.2), (x, y + d * 0.2 / CELL_M, 4.42), (x, y + d * 0.55 / CELL_M, 4.55),
+            (x, y + d * 1.0 / CELL_M, 4.52)], 0.06, "metal_grey")
     s.box(x - 0.25, y + d * 1.0 / CELL_M - 0.3, x + 0.25, y + d * 1.0 / CELL_M + 0.3, 4.38, 4.5, "metal_grey")
     s.box(x - 0.2, y + d * 1.0 / CELL_M - 0.25, x + 0.2, y + d * 1.0 / CELL_M + 0.25, 4.34, 4.39, "lamp_glass")
     s.set_solid(x - 0.2, y - 0.2, x + 0.2, y + 0.2)
     s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 4.6)
+    s.lamps.append((x, y + d * 1.0 / CELL_M))
 
 
 def newspaper_box(s, x, y, colour="sign_blue"):

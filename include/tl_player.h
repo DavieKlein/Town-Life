@@ -6,6 +6,7 @@
 #include "bn_sprite_ptr.h"
 
 #include "tl_world.h"
+#include "tl_lighting.h"
 
 namespace tl
 {
@@ -43,6 +44,13 @@ namespace tl
         {
             return _facing;
         }
+
+        // Applies day/night lighting to the player's sprite palettes.
+        void set_lighting(const light_params& params);
+
+        // Image rectangle covered by the player's sprites and the iso depth to test the map against
+        // (for the front layer: map pixels in front of the player are drawn over it).
+        void mask_area(int& x0, int& y0, int& x1, int& y1, int& depth) const;
 
         // Places the player on a map at world position (x, y) = the feet.
         void place(const map_info& map, int x, int y, direction facing);
@@ -91,6 +99,7 @@ namespace tl
         bn::optional<bn::sprite_ptr> _rest_sprite;     // 64x64 sitting / sleeping sprite
         activity _activity = activity::walking;
         int _activity_timer = 0;
+        light_params _light;
         int _seat_x = 0;
         int _seat_y = 0;
         bool _washing_finished = false;
@@ -104,6 +113,7 @@ namespace tl
         int _anim_frame = 0;
 
         void _update_graphics();
+        void _apply_lighting();
         void _stand_up();
         void _update_activity();
     };
