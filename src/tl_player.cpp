@@ -238,6 +238,7 @@ namespace tl
     void player::sit_on(int seat_x, int seat_y, bool mirrored)
     {
         _seat_mirrored = mirrored;
+        _rest_lift = 0;
         _activity = activity::sitting;
         _seat_x = seat_x;
         _seat_y = seat_y;
@@ -252,9 +253,10 @@ namespace tl
         _shadow.set_visible(false);
     }
 
-    void player::sleep_on(int seat_x, int seat_y)
+    void player::sleep_on(int seat_x, int seat_y, int lift)
     {
         sit_on(seat_x, seat_y);
+        _rest_lift = lift;
         _activity = activity::sleeping;
     }
 
@@ -497,7 +499,7 @@ namespace tl
         {
             int seat_image_x = _map->to_image_x(_seat_x, _seat_y);
             int seat_image_y = _map->to_image_y(_seat_x, _seat_y);
-            _rest_sprite->set_position(seat_image_x - cam_x - 120 + (_seat_mirrored ? rest_mirror_shift : 0), seat_image_y - cam_y - 80 - rest_origin_y);
+            _rest_sprite->set_position(seat_image_x - cam_x - 120 + (_seat_mirrored ? rest_mirror_shift : 0), seat_image_y - cam_y - 80 - rest_origin_y - _rest_lift);
             _rest_sprite->set_bg_priority(2);       // on top of the bench
             return;
         }

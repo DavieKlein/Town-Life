@@ -1652,7 +1652,8 @@ def market_v2():
         s.point_light(lx, ly, 2.9, 130, colour=(1.0, 0.9, 0.72))
     s.point_light(13.5, 2.5, 2.6, 110, colour=(1.0, 0.92, 0.78))
     s.point_light(9.5, 5.5, 1.8, 40, colour=(0.85, 0.95, 1.0))
-    stairs_flight(s)                                    # s52 (approved): stairs up to the player's future room (no warp yet)
+    stairs_flight(s)                                    # s52 (approved): stairs up to the player's room
+    s.warp(SX0, 3.5, SX1, S_BOT, "player_room", 5.2, 3.0, "down")      # the foot of the stairs leads up to the room
     s.point_light(15.6, 1.6, 2.9, 230, colour=(1.0, 0.82, 0.55))
     s.point_light(14.6, 3.4, 1.6, 90, colour=(1.0, 0.85, 0.6))
     s.warp(6.5, 17.1, 9.5, H, "city_centre", 44.0, 19.0, "down")
@@ -2300,4 +2301,178 @@ def deposit_machine(s, ox, oy, face="x", ka=1.6, kz=1.15, kr=1.35):
     s.point_light(*o.pt(0.7, 1.7), 1.5, 60, colour=(0.8, 1.0, 0.9))
 
 
-SCENES = [city_centre, market_v2, diner, community_centre, vaulttech_lobby, public_toilet]
+
+# ---------------------------------------------------------------------------------------------
+# The player's room above the Corner Market (s55 variant B2, owner-approved s56) - furniture from tools/furniture.py
+# ---------------------------------------------------------------------------------------------
+RW, RH = 8, 7                  # cells (last row / column = cutaway stubs, solid)
+
+# (catalog id, x, y, rot) - interactions.py derives the interaction points from this list (furniture.use_point)
+ROOM_FURNITURE = [
+    ("window_seat", 0.75, 0.05, 0),
+    ("bed_cosy", 4.70, 0.07, 0),
+    ("bedside_lamp", 4.3, 0.05, 0),
+    ("wardrobe_oak", 0.0, 1.3, 90),
+    ("desk_laptop", 0.1, 3.3, 90),
+    ("chair_wood", 1.55, 4.15, 90),
+    ("wall_shelf_radio", 0.0, 5.5, 90),
+    ("plant_flowers", 0.55, 6.6, 0),
+    ("rug_terracotta", 1.7, 1.9, 0),
+]
+
+def room_shell(ident, name, paper, wains, wh, origin_y, gable=False, hole=(5.1, 6.3, 3.5, 6.0)):
+    s = Scene(ident, name, RW, RH, origin_x=RH * 16 + 24, origin_y=origin_y, img_w=(RW + RH) * 16 + 48,
+              img_h=origin_y + (RW + RH) * 8 + 36)
+    s.sun = False
+    hx0, hx1, hy0, hy1 = hole
+    # floor with the stairwell hole
+    cutaway_floor(s, 0, 0, RW, hy0, "floor_wood2")
+    cutaway_floor(s, 0, hy0, hx0, RH, "floor_wood2")
+    cutaway_floor(s, hx1, hy0, RW, RH, "floor_wood2")
+    cutaway_floor(s, hx0, hy1, hx1, RH, "floor_wood2")
+    s.box(hx0, hy0, hx1, hy1, -0.42, -0.4, "metal_dark", layer="floor")
+    # walls
+    wall_x(s, 0.0, RH - 0.4, 0.0, wh, paper=paper, wains=wains, wain_h=0.95, cap=not gable)
+    wall_y(s, -0.4, RW, 0.0, wh, paper=paper, wains=wains, wain_h=0.95)
+    wall_stub_y(s, 0, RW, RH, mat=paper)
+    wall_stub_x(s, 0, RH, RW, mat=paper)
+    s.set_solid(RW - 1, 0, RW, RH)
+    s.set_solid(0, RH - 1, RW, RH)
+    s.occluder(-0.4, -0.4, RW, 0.1, wh)
+    s.occluder(-0.4, 0, 0.1, RH, wh)
+    return s
+
+
+def stairwell(s, hole=(5.1, 6.3, 3.5, 6.0)):
+    """Steps going down (towards +y), balustrade on three sides, open at the top (north). Warp on the top steps."""
+    hx0, hx1, hy0, hy1 = hole
+    nst = 4
+    sd = (hy1 - hy0 - 0.5) / nst
+    for i in range(nst):
+        ya = hy0 + 0.5 + i * sd
+        z = -0.14 * (i + 1)
+        s.box(hx0 + 0.02, ya, hx1 - 0.02, ya + sd, z - 0.05, z, "wood", layer="floor")
+        s.box(hx0 + 0.02, ya, hx1 - 0.02, ya + sd, -0.4, z - 0.05, "wood_dark", layer="floor")
+    s.box(hx0 + 0.02, hy0, hx1 - 0.02, hy0 + 0.5, -0.07, 0.0, "wood", layer="floor")           # top sill
+    zr = 0.95
+    posts = ((hx0 - 0.04, hy0 + 0.25), (hx0 - 0.04, (hy0 + hy1) / 2), (hx0 - 0.04, hy1 - 0.1),
+             (hx1 - 0.03, hy0 + 0.25), (hx1 - 0.03, (hy0 + hy1) / 2), (hx1 - 0.03, hy1 - 0.1))
+    for (px, py) in posts:
+        s.box(px, py - 0.04, px + 0.07, py + 0.04, 0, zr, "wood_dark")
+    for k in (0, 3):                                  # taller newels at the entrance
+        px = (hx0 - 0.04) if k == 0 else (hx1 - 0.03)
+        s.box(px - 0.01, hy0 + 0.2, px + 0.08, hy0 + 0.3, zr, zr + 0.1, "wood")
+    s.tube([(hx0, hy0 + 0.25, zr), (hx0, hy1 - 0.1, zr)], 0.03, "wood")
+    s.tube([(hx1, hy0 + 0.25, zr), (hx1, hy1 - 0.1, zr)], 0.03, "wood")
+    s.tube([(hx0, hy1 - 0.1, zr), (hx1, hy1 - 0.1, zr)], 0.03, "wood")
+    for yy in (hy0 + 1.0, hy0 + 1.7, hy0 + 2.2):     # balusters
+        for xx in (hx0 + 0.03, hx1 - 0.03):
+            s.box(xx - 0.015, yy - 0.015, xx + 0.015, yy + 0.015, 0, zr, "wood_dark")
+    s.set_solid(hx0 - 0.1, hy0 + 0.55, hx1 + 0.05, RH)
+    s.warp(hx0 + 0.15, hy0 + 0.1, hx1 - 0.15, hy0 + 0.6, "market_stairs", 14.3, 3.75, "right") if False else None
+    s.warp(hx0 + 0.1, hy0 + 0.05, hx1 - 0.1, hy0 + 0.55, "corner_market", 14.3, 3.75, "right")
+
+
+def window_street(s, wx0, wx1, wz0, wz1, curtain=True):
+    """Window in the back wall (y = 0) with a painted street view (houses + the golden VaultTech tower) behind the glass."""
+    paper = "wp_peach"
+    # frame, sill and mullions
+    s.box(wx0 - 0.06, -0.12, wx1 + 0.06, 0.06, wz0 - 0.08, wz0, "trim_white")
+    s.box(wx0 - 0.06, -0.12, wx1 + 0.06, 0.06, wz1, wz1 + 0.08, "trim_white")
+    s.box(wx0 - 0.08, -0.12, wx0, 0.06, wz0 - 0.08, wz1 + 0.08, "trim_white")
+    s.box(wx1, -0.12, wx1 + 0.08, 0.06, wz0 - 0.08, wz1 + 0.08, "trim_white")
+    nmull = max(1, int((wx1 - wx0) / 1.1))
+    for k in range(1, nmull + 1):
+        mx = wx0 + k * (wx1 - wx0) / (nmull + 1)
+        s.box(mx - 0.025, -0.12, mx + 0.025, 0.04, wz0, wz1, "trim_white")
+    s.box(wx0, -0.12, wx1, 0.04, (wz0 + wz1) / 2 - 0.02, (wz0 + wz1) / 2 + 0.02, "trim_white")
+    s.box(wx0 - 0.2, 0.0, wx1 + 0.2, 0.2, wz0 - 0.14, wz0 - 0.08, "trim_white")
+    by = -0.32
+    s.box(wx0 - 0.3, by - 0.06, wx1 + 0.5, by, wz0 - 0.4, wz1 + 0.1, "wp_blue")
+    s.box(wx0 - 0.3, by, wx1 + 0.5, by + 0.02, wz0 - 0.4, wz0 + 0.12, "concrete")
+
+    def house(x0, x1, h, mat, roof="slate"):
+        s.box(x0, by, x1, by + 0.07, wz0 - 0.4, wz0 + h, mat)
+        s.box(x0 - 0.02, by, x1 + 0.02, by + 0.08, wz0 + h, wz0 + h + 0.05, roof)
+        for k in range(int((x1 - x0) / 0.22)):
+            for r in range(int(h / 0.3)):
+                s.box(x0 + 0.06 + k * 0.22, by + 0.07, x0 + 0.15 + k * 0.22, by + 0.09, wz0 + 0.1 + r * 0.3,
+                      wz0 + 0.22 + r * 0.3, "lamp_glass" if (k + r) % 3 == 0 else "glass")
+    wd = wx1 - wx0
+    house(wx0 - 0.1, wx0 + 0.5, 0.75, "brick_red")
+    house(wx0 + 0.55, wx0 + 1.1, 1.0, "plaster_cream")
+    house(wx0 + 1.15, wx0 + 1.6, 0.6, "brick_brown")
+    if wd > 2.4:
+        house(wx0 + 1.65, wx0 + 2.2, 0.9, "plaster_purple")
+        house(wx0 + 2.25, wx0 + 2.8, 0.7, "brick_red")
+    s.box(wx1 - 0.55, by, wx1 - 0.3, by + 0.09, wz0 - 0.4, wz1 + 0.3, "gold_bright")                # VaultTech tower
+    s.box(wx1 - 0.48, by, wx1 - 0.44, by + 0.1, wz0 - 0.4, wz1 + 0.3, "gold_dark")
+    s.sphere(wx1 - 0.9, by + 0.12, wz0 + 0.1, 0.2, "leaves_light", sz=1.0)
+    if curtain:
+        for cx0, cx1 in ((wx0 - 0.45, wx0 + 0.08), (wx1 - 0.08, wx1 + 0.45)):
+            s.box(cx0, 0.02, cx1, 0.17, wz0 - 0.25, wz1 + 0.25, "curtain_red")
+        s.box(wx0 - 0.55, 0.0, wx1 + 0.55, 0.12, wz1 + 0.25, wz1 + 0.3, "brass")
+
+
+def string_lights(s, pts, z0=2.45):
+    """Fairy lights: a sagging wire with warm bulbs along a wall (pts = list of (x, y) at the wall face)."""
+    rnd = random.Random(5)
+    segs = []
+    for (a, b) in zip(pts, pts[1:]):
+        n = 5
+        for i in range(n + 1):
+            t = i / n
+            sag = 0.22 * math.sin(math.pi * t)
+            segs.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, z0 - sag))
+    s.tube(segs, 0.012, "cord_black")
+    for i, p in enumerate(segs):
+        if i % 2 == 1:
+            col = ("lamp_glass", "flower_red", "flower_yellow", "lamp_glass", "flower_pink")[i % 5]
+            s.sphere(p[0], p[1], p[2] - 0.05, 0.045, col)
+
+
+def apron_hook_x(s, y, z):
+    """The green Corner Market apron on a wall hook (west wall)."""
+    s.box(0.0, y - 0.04, 0.12, y + 0.04, z + 0.62, z + 0.66, "wood_dark")
+    s.box(0.04, y - 0.15, 0.1, y + 0.15, z + 0.0, z + 0.64, "awning_green")
+    s.box(0.1, y - 0.1, 0.12, y + 0.1, z + 0.12, z + 0.3, "wood_green")               # pocket
+    s.box(0.1, y - 0.2, 0.12, y - 0.1, z + 0.3, z + 0.34, "awning_green")              # strap
+    s.box(0.1, y + 0.02, 0.125, y + 0.12, z + 0.45, z + 0.52, "paper_cream")          # name tag
+
+
+def player_room():
+    """The player's room above the Corner Market (variant B2, owner-approved s55): butter-yellow walls, big street window with a
+    window seat, bed, wardrobe, desk, rug, radio shelf. ALL furniture comes from the catalog (tools/furniture.py)."""
+    import furniture
+    WH = 2.8
+    s = room_shell("player_room", "Your room", "wp_cream", "wood_red", WH, 84, hole=(4.6, 5.8, 3.5, 6.0))
+    wx0, wx1, wz0, wz1 = 0.9, 4.2, 0.9, 2.35
+    s.box(wx0 - 0.15, -0.4, wx1 + 0.15, 0.0, 0.0, wz0 - 0.1, "wp_cream")
+    s.box(wx0 - 0.15, -0.4, wx1 + 0.15, 0.0, wz1 + 0.1, WH, "wp_cream")
+    s.box(wx0 - 0.15, -0.4, wx0, 0.0, wz0 - 0.1, wz1 + 0.1, "wp_cream")
+    s.box(wx1, -0.4, wx1 + 0.15, 0.0, wz0 - 0.1, wz1 + 0.1, "wp_cream")
+    window_street(s, wx0, wx1, wz0, wz1)
+    for fid, x, y, rot in ROOM_FURNITURE:
+        furniture.place(s, fid, x, y, rot)
+    apron_hook_x(s, 5.4, 1.35)
+    wall_clock_x(s, 0.0, 0.6, 2.15, 0.2)
+    picture_x(s, 3.45, 4.55, 0.0, 1.5, 2.25, "picture_sea")
+    picture_y(s, 5.3, 6.2, 0.0, 1.9, 2.5, "picture_sea")
+    string_lights(s, [(0.9, 0.12), (4.2, 0.12), (7.8, 0.12)], z0=2.62)
+    # floor: red sneakers by the bed, the backpack by the desk
+    sx, sy = 6.5, 2.35
+    for k in (0, 1):
+        s.box(sx + k * 0.24, sy, sx + 0.2 + k * 0.24, sy + 0.36, 0, 0.1, "red_paint")
+        s.box(sx + k * 0.24, sy, sx + 0.2 + k * 0.24, sy + 0.36, 0, 0.03, "paper_cream")
+    bx, by = 2.3, 5.5
+    s.box(bx, by, bx + 0.45, by + 0.3, 0, 0.5, "wood_blue")
+    s.box(bx + 0.04, by + 0.3, bx + 0.41, by + 0.36, 0.05, 0.3, "wood_dark")
+    s.set_solid(bx, by, bx + 0.449, by + 0.37)
+    s.point_light(2.5, 0.5, 2.2, 190, colour=(1.0, 0.92, 0.75))
+    s.point_light(5.5, 3.5, 2.4, 110, colour=(1.0, 0.85, 0.62))
+    s.point_light(1.5, 5.0, 2.2, 50, colour=(1.0, 0.82, 0.55))
+    stairwell(s, hole=(4.6, 5.8, 3.5, 6.0))
+    return s
+
+
+SCENES = [city_centre, market_v2, diner, community_centre, vaulttech_lobby, public_toilet, player_room]

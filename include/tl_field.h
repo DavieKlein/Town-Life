@@ -137,8 +137,22 @@ namespace tl
             log,
             confirm_save,
             saved,
-            confirm_quit
+            confirm_quit,
+            sleep_save      // "Slept well. Save game?" after a night in the bed
         };
+
+        // Sleeping in the player's bed (see tl_field.cpp): a night's sleep or a one-hour nap.
+        enum class sleep_kind
+        {
+            none,
+            bench,
+            night,
+            nap
+        };
+
+        sleep_kind _sleep = sleep_kind::none;
+        int _sleep_minutes = 0;
+        bool _save_after_sleep = false;
 
         pause_screen _pause;
         log_screen _log;
@@ -195,6 +209,9 @@ namespace tl
         void _handle_accident();
         void _show_info(const char* title, const char* line_a, const char* line_b, const char* line_c);
         void _update_zzz();
+        void _finish_sleep();
+        void _show_notes();
+        void _show_window();
         void _update_lighting(bool force);
         void _update_lamps();
         static void _set_fade(int counter);

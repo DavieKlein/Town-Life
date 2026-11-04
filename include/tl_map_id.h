@@ -12,9 +12,10 @@ namespace tl
         community_centre,
         vaulttech_lobby,
         public_toilet,
+        player_room,
     };
 
-    constexpr int maps_count = 6;
+    constexpr int maps_count = 7;
 }
 
 #endif

@@ -193,6 +193,42 @@ def build_meter():
     write_item("ui_meter", frames, 32, METER_PAL)
 
 
+TALL_H = 76            # inner height of the tall meter (dialogue layout 2) = 30 + 32 + 14 rows in its three pieces
+
+
+def build_meter_tall():
+    """Tall friendship meter for the choice layout: three stacked pieces (16x32 top, 16x32 middle, 16x16 bottom). Piece frames
+    n = filled pixel rows of that piece (bottom-up). Same look as ui_meter, colours graded over the whole height."""
+    specs = (("top", 32, 30, 46), ("mid", 32, 32, 14), ("bot", 16, 14, 0))     # name, height, inner rows, rows below this piece
+    for name, ph, inner, below in specs:
+        frames = Image.new("P", (16, ph * (inner + 1)), TRANSP)
+        for n in range(inner + 1):
+            f = Image.new("P", (16, ph), TRANSP)
+            d = ImageDraw.Draw(f)
+            top, bot = (0 if name == "top" else -2), (ph - 1 if name == "bot" else ph + 1)
+            d.rounded_rectangle((3, top, 12, bot), radius=2, fill=1)
+            d.rounded_rectangle((4, top + 1, 11, bot - 1), radius=1, fill=2)
+            d.rectangle((5, max(top + 2, 0), 10, min(bot - 2, ph - 1)), fill=3)
+            if name != "top":
+                d.rectangle((3, 0, 12, 1), fill=1); d.rectangle((4, 0, 11, 1), fill=2); d.rectangle((5, 0, 10, 1), fill=3)
+            if name != "bot":
+                d.rectangle((3, ph - 2, 12, ph - 1), fill=1); d.rectangle((4, ph - 2, 11, ph - 1), fill=2); d.rectangle((5, ph - 2, 10, ph - 1), fill=3)
+            ybase = ph - 1 if name != "bot" else ph - 3
+            for r in range(n):
+                g = (below + r) / TALL_H
+                colour = 4 if g < 0.22 else 5 if g < 0.4 else 6 if g < 0.58 else 7 if g < 0.78 else 8
+                y = ybase - r
+                d.line((5, y, 10, y), fill=colour)
+                if r % 3 == 1:
+                    f.putpixel((5, y), 10)
+            tick = round(TALL_H * 0.7)
+            if below <= tick < below + inner:
+                y = ybase - (tick - below)
+                f.putpixel((4, y), 9); f.putpixel((11, y), 9)
+            frames.paste(f, (0, ph * n))
+        write_item("ui_mt_" + name, frames, ph, METER_PAL)
+
+
 # ------------------------------------------------------------------------------------------------ fonts
 def build_font(size, baseline):
     """Glyph cells 16 x 16: pixel (2 + ink x), baseline row `baseline`; 2 bits per pixel (0 none, 1 fill, 2 outline)."""
@@ -255,6 +291,7 @@ def main():
     build_tag()
     build_key()
     build_meter()
+    build_meter_tall()
     write_font_cpp()
     print("ui assets written")
 

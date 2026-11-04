@@ -95,7 +95,10 @@ namespace tl
         seat,           // chair / sofa / booth bench: sit facing +y (screen down-left)
         seat_x,         // same, facing +x (screen down-right, the sit sprite mirrored)
         deposit,        // RETURN & EARN machine
-        stairs          // stairs to the room above the Corner Market (not built yet: info only)
+        bed,            // the player's bed: Sleep / Take a nap
+        desk,           // Read / Check notes (shows the current objective)
+        window,         // look outside (info text)
+        wardrobe        // info text
     };
 
     struct interactable

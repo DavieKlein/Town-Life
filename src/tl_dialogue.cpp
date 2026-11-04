@@ -3,15 +3,9 @@
 #include "bn_keypad.h"
 #include "bn_sprite_items_ui_tag.h"
 #include "bn_sprite_items_ui_meter.h"
-#include "bn_sprite_items_portrait_mia.h"
-#include "bn_sprite_items_portrait_rosa.h"
-#include "bn_sprite_items_portrait_dex.h"
-#include "bn_sprite_items_portrait_pimm.h"
-#include "bn_sprite_items_portrait_lou.h"
-#include "bn_sprite_items_portrait_dex_vault.h"
-#include "bn_sprite_items_portrait_victor.h"
-#include "bn_sprite_items_portrait_robot.h"
-#include "bn_sprite_items_portrait_player.h"
+#include "bn_sprite_items_ui_mt_top.h"
+#include "bn_sprite_items_ui_mt_mid.h"
+#include "bn_sprite_items_ui_mt_bot.h"
 
 #include "tl_story_ids.h"
 
@@ -19,45 +13,29 @@ namespace tl
 {
     namespace
     {
-        constexpr int box_y = 120;
-        constexpr int box_h = 40;
-        constexpr int line_baseline = 132;
-        constexpr int line_pitch = 10;
-        constexpr int tag_y = 110;                  // top of the 16 px tag sprites (the tag itself is rows 2..13)
+        // system pages (old 40 px box)
+        constexpr int sys_box_y = 120;
+        constexpr int sys_box_h = 40;
+        constexpr int sys_baseline = 132;
+        // layout 1
+        constexpr int box1_y = 106;
+        constexpr int box1_h = 50;
+        constexpr int baseline1 = 119;
+        constexpr int tag1_x = 118;
         constexpr int meter_x = 222;
-        constexpr int meter_y = 86;
+        constexpr int meter_y = 114;
         constexpr int meter_frames = 28;            // fill frames (ui_meter has meter_frames + 1)
-        constexpr int choice_x = 76;
-        constexpr int choice_w = 140;
-        constexpr int choice_bottom = 109;
-        constexpr int choice_pitch = 14;
-
-        [[nodiscard]] const bn::sprite_item* portrait_item(int speaker)
-        {
-            switch(speaker)
-            {
-            case int(npc_id::mia):
-                return &bn::sprite_items::portrait_mia;
-            case int(npc_id::rosa):
-                return &bn::sprite_items::portrait_rosa;
-            case int(npc_id::dex):
-                return &bn::sprite_items::portrait_dex;
-            case int(npc_id::pimm):
-                return &bn::sprite_items::portrait_pimm;
-            case int(npc_id::lou):
-                return &bn::sprite_items::portrait_lou;
-            case int(npc_id::dex_vault):
-                return &bn::sprite_items::portrait_dex_vault;
-            case int(npc_id::victor):
-                return &bn::sprite_items::portrait_victor;
-            case int(npc_id::robot):
-                return &bn::sprite_items::portrait_robot;
-            case speaker_player:
-                return &bn::sprite_items::portrait_player;
-            default:
-                return nullptr;
-            }
-        }
+        constexpr int line_pitch = 10;
+        // layout 2
+        constexpr int box_bottom = 156;
+        constexpr int rows_x = 7;
+        constexpr int rows_w = 122;
+        constexpr int row_pitch = 14;
+        constexpr int tall_x = 132;
+        constexpr int tall_y = 64;
+        constexpr int tall_frames = 76;
+        constexpr int small_x = 142;
+        constexpr int small_y = 60;
 
         [[nodiscard]] int met_flag(int npc)
         {
@@ -81,36 +59,28 @@ namespace tl
         }
     }
 
+    }
+
     // ---------------------------------------------------------------------------------------------------------
 
-    void dialogue_box::open(int speaker, bool show_meter, int friendship)
+    void dialogue_box::open(int speaker, bool show_meter, int friendship, int partner)
     {
         close();
         _open = true;
-        _panel.open(0, box_y, 240, box_h, false);
         _with_meter = show_meter;
+        _partner = partner;
         _speaker = -1;
         _blink = 0;
-
-        if(show_meter)
-        {
-            _meter_value = friendship;
-            _meter_target = friendship;
-            _meter_frame = -1;
-            _meter = bn::sprite_items::ui_meter.create_sprite(meter_x + 8 - 120, meter_y + 16 - 80, 0);
-            _meter->set_bg_priority(0);
-            _meter->set_z_order(8);
-            _draw_meter();
-        }
-
-        set_speaker(speaker);
+        _meter_value = friendship;
+        _meter_target = friendship;
+        _meter_frame = -1;
+        set_speaker(speaker, 0);
     }
 
     void dialogue_box::close()
     {
         _open = false;
         _panel.close();
-        _choice_panel.close();
         _choice_bar.clear();
         _choice_labels.clear();
 
@@ -119,19 +89,28 @@ namespace tl
             l.clear();
         }
 
+        for(ui::label& l : _question)
+        {
+            l.clear();
+        }
+
         _tag_label.clear();
         _meter_label.clear();
         _delta_label.clear();
         _tag_sprites.clear();
-        _portrait.reset();
+        _pic.clear();
+        _tall.clear();
         _meter.reset();
         _a_icon.reset();
         _text.clear();
+        _last_page.clear();
         _line_count = 0;
         _shown = 0;
         _total = 0;
         _speaker = -1;
         _with_meter = false;
+        _choosing = false;
+        _layout = layout::none;
         _options = nullptr;
         _options_count = 0;
 
@@ -139,59 +118,221 @@ namespace tl
         {
             d = -1;
         }
+
+        for(int& f : _tall_frames)
+        {
+            f = -1;
+        }
     }
 
-    void dialogue_box::set_speaker(int speaker)
+    void dialogue_box::_build_tag(int x, int y)
     {
-        if(speaker == _speaker)
+        bn::string<16> name;
+
+        if(_speaker == speaker_player)
         {
+            name = story().name();
+        }
+        else if(_speaker >= 0 && _speaker < npc_count)
+        {
+            name = npc_infos[_speaker].name;
+        }
+
+        _tag_sprites.clear();
+        _tag_label.clear();
+        int width = ui::text_width(ui::font9, name) + 18;
+        int pieces = (width + 15) / 16;
+        pieces = pieces < 2 ? 2 : pieces;
+        _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, x, y, 0, false, 5));
+
+        for(int index = 1; index < pieces - 1; ++index)
+        {
+            _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, x + (index * 16), y, 1, false, 5));
+        }
+
+        _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, x + ((pieces - 1) * 16), y, 0, true, 5));
+        _tag_label.set_centre(ui::font9, x + (pieces * 8), y + 11, name, ui::role::name_tag);
+    }
+
+    void dialogue_box::_build_portrait(int speaker, bool small)
+    {
+        _pic.clear();
+        const portrait_set* set = portrait_for(speaker);
+
+        if(! set)
+        {
+            return;
+        }
+
+        if(! small)
+        {
+            // 128 px portrait standing at the bottom left (14 px cut off at the screen edge), quarters TL TR BL BR
+            static constexpr int qx[4] = { -14, 50, -14, 50 };
+            static constexpr int qy[4] = { 30, 30, 94, 94 };
+
+            for(int i = 0; i < 4; ++i)
+            {
+                bn::sprite_ptr p = set->big[i]->create_sprite(qx[i] + 32 - 120, qy[i] + 32 - 80, _expr);
+                p.set_bg_priority(0);
+                p.set_z_order(10);
+                _pic.push_back(p);
+            }
+        }
+        else
+        {
+            // 96 px portrait, mirrored: piece widths 64, 32, 64, 32 (heights 64, 64, 32, 32); the flip swaps the columns
+            static constexpr int pw[4] = { 64, 32, 64, 32 };
+            static constexpr int ph[4] = { 64, 64, 32, 32 };
+            static constexpr int ox[4] = { 32, 0, 32, 0 };
+            static constexpr int oy[4] = { 0, 0, 64, 64 };
+
+            for(int i = 0; i < 4; ++i)
+            {
+                bn::sprite_ptr p = set->small[i]->create_sprite(small_x + ox[i] + pw[i] / 2 - 120, small_y + oy[i] + ph[i] / 2 - 80, _expr);
+                p.set_horizontal_flip(true);
+                p.set_bg_priority(0);
+                p.set_z_order(10);
+                _pic.push_back(p);
+            }
+        }
+    }
+
+    void dialogue_box::_build_meter(bool tall)
+    {
+        _meter.reset();
+        _tall.clear();
+        _meter_frame = -1;
+        _meter_label.clear();
+
+        for(int& f : _tall_frames)
+        {
+            f = -1;
+        }
+
+        if(! _with_meter)
+        {
+            return;
+        }
+
+        if(! tall)
+        {
+            _meter = bn::sprite_items::ui_meter.create_sprite(meter_x + 8 - 120, meter_y + 16 - 80, 0);
+            _meter->set_bg_priority(0);
+            _meter->set_z_order(8);
+        }
+        else
+        {
+            bn::sprite_ptr a = bn::sprite_items::ui_mt_top.create_sprite(tall_x + 8 - 120, tall_y + 16 - 80, 0);
+            bn::sprite_ptr b = bn::sprite_items::ui_mt_mid.create_sprite(tall_x + 8 - 120, tall_y + 32 + 16 - 80, 0);
+            bn::sprite_ptr c = bn::sprite_items::ui_mt_bot.create_sprite(tall_x + 8 - 120, tall_y + 64 + 8 - 80, 0);
+            a.set_bg_priority(0); b.set_bg_priority(0); c.set_bg_priority(0);
+            a.set_z_order(8); b.set_z_order(8); c.set_z_order(8);
+            _tall.push_back(a);
+            _tall.push_back(b);
+            _tall.push_back(c);
+        }
+
+        _draw_meter();
+    }
+
+    void dialogue_box::_build_layout(layout l, int speaker, int rows_height)
+    {
+        _panel.close();
+        _a_icon.reset();
+        _tag_sprites.clear();
+        _tag_label.clear();
+        _delta_label.clear();
+
+        for(ui::label& line : _lines)
+        {
+            line.clear();
+        }
+
+        for(ui::label& line : _question)
+        {
+            line.clear();
+        }
+
+        _layout = l;
+
+        for(int& d : _drawn)
+        {
+            d = -1;
+        }
+
+        if(l == layout::plain)
+        {
+            _panel.open(0, sys_box_y, 240, sys_box_h, false);
+            _pic.clear();
+            _build_meter(false);
+
+            if(speaker != speaker_system)
+            {
+                _build_tag(plain_text_x, sys_box_y - 10);
+            }
+        }
+        else if(l == layout::one)
+        {
+            _panel.open(0, box1_y, 240, box1_h, false);
+            _build_portrait(speaker, false);
+            _build_meter(false);
+            _build_tag(tag1_x, box1_y - 10);
+        }
+        else
+        {
+            int bh = rows_height;
+            int by = box_bottom - bh;
+            _panel.open(0, by, 240, bh, false);
+            _build_portrait(_partner >= 0 ? _partner : speaker, true);
+            _build_meter(true);
+            _build_tag(8, by - 10);
+        }
+    }
+
+    void dialogue_box::set_speaker(int speaker, int expr)
+    {
+        layout wanted = layout::plain;
+
+        if(speaker != speaker_system && portrait_for(speaker))
+        {
+            wanted = layout::one;
+        }
+
+        if(speaker == _speaker && wanted == _layout)
+        {
+            set_expression(expr);
             return;
         }
 
         _speaker = speaker;
-        _text_x = speaker == speaker_system ? system_text_x : text_x;
-        _text_w = speaker == speaker_system ? system_text_width : text_width;
-        _portrait.reset();
-        _tag_sprites.clear();
-        _tag_label.clear();
-        const bn::sprite_item* item = portrait_item(speaker);
+        _expr = expr;
+        _choosing = false;
+        _choice_bar.clear();
+        _choice_labels.clear();
+        _text_x = wanted == layout::one ? text_x : plain_text_x;
+        _text_w = wanted == layout::one ? text_width : plain_text_width;
+        _max_lines = wanted == layout::one ? 4 : 3;
+        _build_layout(wanted, speaker);
+    }
 
-        if(item)
-        {
-            _portrait = item->create_sprite(5 + 32 - 120, 96 + 32 - 80);
-            _portrait->set_bg_priority(0);
-            _portrait->set_z_order(10);
-        }
-
-        if(speaker == speaker_system)
+    void dialogue_box::set_expression(int expr)
+    {
+        if(expr == _expr)
         {
             return;
         }
 
-        bn::string<16> name;
+        _expr = expr;
+        const portrait_set* set = portrait_for(_layout == layout::two && _partner >= 0 ? _partner : _speaker);
 
-        if(speaker == speaker_player)
+        if(set && ! _pic.empty())
         {
-            name = story().name();
+            for(int i = 0; i < _pic.size(); ++i)
+            {
+                const bn::sprite_item* item = _layout == layout::two ? set->small[i] : set->big[i];
+                _pic[i].set_tiles(item->tiles_item(), _expr);
+            }
         }
-        else if(speaker >= 0 && speaker < npc_count)
-        {
-            name = npc_infos[speaker].name;
-        }
-
-        int width = ui::text_width(ui::font9, name) + 18;
-        int pieces = (width + 15) / 16;
-        pieces = pieces < 2 ? 2 : pieces;
-        int tag_x = text_x;
-        _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, tag_x, tag_y, 0, false, 5));
-
-        for(int index = 1; index < pieces - 1; ++index)
-        {
-            _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, tag_x + (index * 16), tag_y, 1, false, 5));
-        }
-
-        _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, tag_x + ((pieces - 1) * 16), tag_y, 0, true, 5));
-        _tag_label.set_centre(ui::font9, tag_x + (pieces * 8), tag_y + 11, name, ui::role::name_tag);
     }
 
     void dialogue_box::say(const char* text)
@@ -234,6 +375,7 @@ namespace tl
         _line_count = 0;
         _total = 0;
         _shown = 0;
+        _last_page.clear();
 
         for(int& d : _drawn)
         {
@@ -245,7 +387,7 @@ namespace tl
             line.clear();
         }
 
-        while(_line_count < 3 && _pos < length)
+        while(_line_count < _max_lines && _pos < length)
         {
             bn::string<64>& line = _line_text[_line_count];
 
@@ -303,6 +445,13 @@ namespace tl
             }
 
             _total += line.size();
+
+            if(! _last_page.empty() && ! _last_page.full())
+            {
+                _last_page.push_back(' ');
+            }
+
+            _last_page.append(line.c_str());
             ++_line_count;
         }
 
@@ -313,8 +462,9 @@ namespace tl
     void dialogue_box::_draw_lines(bool force)
     {
         int remaining = _shown;
+        int baseline = _layout == layout::one ? baseline1 : sys_baseline;
 
-        for(int index = 0; index < 3; ++index)
+        for(int index = 0; index < _max_lines; ++index)
         {
             int length = index < _line_count ? _line_text[index].size() : 0;
             int count = remaining < length ? remaining : length;
@@ -337,7 +487,7 @@ namespace tl
                     }
                     else
                     {
-                        _lines[index].set(ui::font9, _text_x, line_baseline + (index * line_pitch),
+                        _lines[index].set(ui::font9, _text_x, baseline + (index * line_pitch),
                                           bn::string_view(_line_text[index].data(), count), ui::role::text);
                     }
                 }
@@ -377,7 +527,7 @@ namespace tl
 
         if(! _a_icon)
         {
-            _a_icon = ui::make_button(0, 220, 144);
+            _a_icon = _layout == layout::one ? ui::make_button(0, 226, 146) : ui::make_button(0, 220, 144);
             _blink = 0;
         }
 
@@ -406,15 +556,71 @@ namespace tl
         _options_count = count;
         _selected = 0;
         _a_icon.reset();
-        int height = 10 + (count * choice_pitch);
 
-        if(height < 38)
+        // the last page becomes the question (wrapped to the rows' width, at most three lines)
+        bn::string<64> q[3];
+        int qn = 0;
         {
-            height = 38;
+            int pos = 0;
+            int length = _last_page.size();
+
+            while(pos < length && qn < 3)
+            {
+                bn::string<64>& line = q[qn];
+
+                while(pos < length)
+                {
+                    int end = pos;
+
+                    while(end < length && _last_page[end] != ' ')
+                    {
+                        ++end;
+                    }
+
+                    bn::string<64> candidate = line;
+
+                    if(! candidate.empty())
+                    {
+                        candidate.push_back(' ');
+                    }
+
+                    for(int k = pos; k < end && ! candidate.full(); ++k)
+                    {
+                        candidate.push_back(_last_page[k]);
+                    }
+
+                    if(line.empty() || ui::text_width(ui::font9, candidate) <= rows_w - 6)
+                    {
+                        line = candidate;
+                        pos = end;
+
+                        while(pos < length && _last_page[pos] == ' ')
+                        {
+                            ++pos;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                ++qn;
+            }
         }
 
-        int top = choice_bottom - height;
-        _choice_panel.open(choice_x, top, choice_w, height, false);
+        int bh = 9 + (10 * qn) + (row_pitch * count) + 5;
+        bh = (bh >= 65 && bh <= 71) ? 72 : bh;
+        int by = box_bottom - bh;
+        _rows_top = by + 9 + (10 * qn);
+        _choosing = true;
+        _build_layout(layout::two, _speaker, bh);
+
+        for(int i = 0; i < qn; ++i)
+        {
+            _question[i].set(ui::font9, 9, by + 13 + (i * 10), q[i], ui::role::text);
+        }
+
         _choice_labels.clear();
 
         for(int index = 0; index < count; ++index)
@@ -427,22 +633,18 @@ namespace tl
 
     void dialogue_box::_draw_choices()
     {
-        int height = 10 + (_options_count * choice_pitch);
-        height = height < 38 ? 38 : height;
-        int top = choice_bottom - height + 5;
-
         for(int index = 0; index < _options_count; ++index)
         {
-            _choice_labels[index].set(ui::font9, choice_x + 17, top + (index * choice_pitch) + 10, _options[index],
+            _choice_labels[index].set(ui::font9, rows_x + 12, _rows_top + (index * row_pitch) + 10, _options[index],
                                       index == _selected ? ui::role::selected : ui::role::text);
         }
 
-        _choice_bar.set(choice_x + 5, top + (_selected * choice_pitch), choice_w - 10);
+        _choice_bar.set(rows_x, _rows_top + (_selected * row_pitch), rows_w);
     }
 
     int dialogue_box::update_choice()
     {
-        if(! _choice_panel.is_open())
+        if(! _choosing)
         {
             return -1;
         }
@@ -461,7 +663,7 @@ namespace tl
         if(bn::keypad::a_pressed())
         {
             int chosen = _selected;
-            _choice_panel.close();
+            _choosing = false;
             _choice_bar.clear();
             _choice_labels.clear();
             return chosen;
@@ -487,28 +689,69 @@ namespace tl
             bn::string<8> text;
             text.append(delta > 0 ? "+" : "-");
             text.append(bn::to_string<4>(delta > 0 ? delta : -delta));
-            _delta_label.set_right(ui::font9, meter_x - 3, meter_y - 3, text, ui::role::name_tag);
+
+            if(_layout == layout::two)
+            {
+                _delta_label.set_right(ui::font9, tall_x - 3, tall_y - 4, text, ui::role::name_tag);
+            }
+            else
+            {
+                _delta_label.set_right(ui::font9, meter_x - 3, meter_y - 2, text, ui::role::name_tag);
+            }
+
             _delta_timer = 100;
         }
     }
 
     void dialogue_box::_draw_meter()
     {
-        if(! _meter)
+        if(! _meter && _tall.empty())
         {
             return;
         }
 
-        int frame = ((_meter_value * meter_frames) + 50) / 100;
-
-        if(frame != _meter_frame)
-        {
-            _meter_frame = frame;
-            _meter->set_tiles(bn::sprite_items::ui_meter.tiles_item(), frame);
-        }
-
         bn::string<8> number = bn::to_string<8>(_meter_value);
-        _meter_label.set_centre(ui::font9, meter_x + 8, meter_y - 3, number, ui::role::hud_clock);
+
+        if(_meter)
+        {
+            int frame = ((_meter_value * meter_frames) + 50) / 100;
+
+            if(frame != _meter_frame)
+            {
+                _meter_frame = frame;
+                _meter->set_tiles(bn::sprite_items::ui_meter.tiles_item(), frame);
+            }
+
+            _meter_label.set_centre(ui::font9, meter_x + 8, meter_y - 2, number, ui::role::hud_clock);
+        }
+        else
+        {
+            int n = ((_meter_value * tall_frames) + 50) / 100;
+            int top = n > 46 ? n - 46 : 0;
+            int mid = n > 14 ? (n - 14 > 32 ? 32 : n - 14) : 0;
+            int bot = n > 14 ? 14 : n;
+            top = top > 30 ? 30 : top;
+
+            if(_tall_frames[0] != top)
+            {
+                _tall_frames[0] = top;
+                _tall[0].set_tiles(bn::sprite_items::ui_mt_top.tiles_item(), top);
+            }
+
+            if(_tall_frames[1] != mid)
+            {
+                _tall_frames[1] = mid;
+                _tall[1].set_tiles(bn::sprite_items::ui_mt_mid.tiles_item(), mid);
+            }
+
+            if(_tall_frames[2] != bot)
+            {
+                _tall_frames[2] = bot;
+                _tall[2].set_tiles(bn::sprite_items::ui_mt_bot.tiles_item(), bot);
+            }
+
+            _meter_label.set_centre(ui::font9, tall_x + 8, tall_y - 2, number, ui::role::hud_clock);
+        }
     }
 
     void dialogue_box::update_meter()
@@ -546,7 +789,7 @@ namespace tl
         _npc = -1;
         _node = -1;
         _phase = phase::tail;
-        _box.open(speaker_system, false, 0);
+        _box.open(speaker_system, false, 0, -1);
         _box.say(text);
         _step = step::page;
     }
@@ -557,7 +800,7 @@ namespace tl
         _small_talk = false;
         _npc = npc;
         bool meter = npc >= 0 && npc < npc_count && npc_infos[npc].talks;
-        _box.open(speaker_system, meter, meter ? story().friendship(npc) : 0);
+        _box.open(speaker_system, meter, meter ? story().friendship(npc) : 0, npc);
         _phase = phase::script;
         _after_script_talk = false;
         _show_node(node);
@@ -575,7 +818,7 @@ namespace tl
         _used_mask = 0;
         _pending_leave = 0;
         _first_today = story().first_talk_today(npc, day);
-        _box.open(npc, true, story().friendship(npc));
+        _box.open(npc, true, story().friendship(npc), npc);
         story().note_talk(npc, day);
         int flag = met_flag(npc);
         bool intro = dialogue_intro_nodes[npc] >= 0 && flag >= 0 && ! story().flag(flag);
@@ -622,7 +865,23 @@ namespace tl
     {
         const dlg_node& n = dialogue_nodes()[node];
         _node = node;
-        _box.set_speaker(_resolve_speaker(n.speaker));
+        int expr = n.expr;
+
+        // pages without an explicit expression: the NPC's mood in the greeting, the topic's result in the answer
+        if(expr == 0 && n.speaker == speaker_npc)
+        {
+            if(_phase == phase::greeting)
+            {
+                npc_mood m = story().mood(_npc, _day, _minutes);
+                expr = m == npc_mood::good ? expr_happy : (m == npc_mood::grumpy ? expr_angry : 0);
+            }
+            else if(_phase == phase::answer && _answer_expr >= 0)
+            {
+                expr = _answer_expr;
+            }
+        }
+
+        _box.set_speaker(_resolve_speaker(n.speaker), expr);
         _apply_effects(n);
 
         if(node == dlg::hint_talk)
@@ -868,6 +1127,7 @@ namespace tl
             s.note_gain(_npc, _day, delta);
         }
 
+        _answer_expr = kind == 'D' ? (delta <= -6 ? int(expr_angry) : int(expr_sad)) : (delta >= 4 ? int(expr_happy) : 0);
         s.note_topic(_npc, _topic, _day);
         ++_topics_done;
         s.add_friendship(_npc, delta);

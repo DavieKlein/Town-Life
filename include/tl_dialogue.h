@@ -10,25 +10,30 @@
 
 #include "tl_ui.h"
 #include "tl_story.h"
+#include "tl_portrait.h"
 
 namespace tl
 {
-    // The dialogue box (approved design "variant 2", Paper by day / Night at night): a 40 px box at the bottom of the screen,
-    // the speaker's 64x64 portrait standing on it at the left, a name tag above the box, three lines of text typed out one
-    // character at a time (A completes the page, then goes on; B does the same), a blinking A button when the page is
-    // complete, an optional choice list above the box and the vertical friendship meter (red at the bottom, green at the
-    // top, with its number) at the right edge. Long texts are word-wrapped and split into pages of three lines.
+    // The dialogue box (owner-approved s55 layouts, Paper by day / Night at night):
+    //  layout 1 (normal talk): the speaker's 128 px portrait stands at the bottom left in front of a 50 px box, the gold name tag and
+    //    four lines of text (typed out; A completes the page, then goes on) to its right, the friendship meter at the right edge,
+    //    a blinking A button when the page is complete.
+    //  layout 2 (choices): the NPC's 96 px portrait, mirrored, at the lower right, a tall meter, the last page as the question and
+    //    the options as highlight rows on the left.
+    //  system pages (no portrait): the old 40 px box with three lines.
+    // Portraits have five expressions (expression enum in tl_portrait.h) chosen per page.
     class dialogue_box
     {
 
     public:
-        static constexpr int text_x = 76;           // with a portrait
-        static constexpr int text_width = 140;      // pixels per line
-        static constexpr int system_text_x = 14;    // system pages (no portrait)
-        static constexpr int system_text_width = 196;
+        // text areas per layout
+        static constexpr int text_x = 116;          // layout 1
+        static constexpr int text_width = 104;
+        static constexpr int plain_text_x = 14;     // no portrait (system pages, speakers without one)
+        static constexpr int plain_text_width = 196;
 
-        // speaker: npc_id, speaker_player or speaker_system (no portrait, no name tag).
-        void open(int speaker, bool show_meter, int friendship);
+        // speaker: npc_id, speaker_player or speaker_system (no portrait, no name tag). partner = the NPC shown in the choice layout.
+        void open(int speaker, bool show_meter, int friendship, int partner = -1);
         void close();
 
         [[nodiscard]] bool is_open() const
@@ -36,8 +41,11 @@ namespace tl
             return _open;
         }
 
-        // Changes the speaker (portrait, name tag).
-        void set_speaker(int speaker);
+        // Changes the speaker (portrait, expression, name tag); returns to layout 1 from the choice layout.
+        void set_speaker(int speaker, int expr = 0);
+
+        // Changes only the expression of the current portrait.
+        void set_expression(int expr);
 
         // Shows a text (the {NAME} placeholder is replaced) and types it out.
         void say(const char* text);
@@ -45,13 +53,13 @@ namespace tl
         // Returns true when the player has gone past the last page of the text.
         [[nodiscard]] bool update_text();
 
-        // Choices (2-4 options, the strings must stay valid while shown). update_choice() returns the index or -1.
+        // Choices (2-4 options, the strings must stay valid while shown): switches to layout 2. update_choice() returns the index or -1.
         void choose(const bn::string_view* options, int count);
         [[nodiscard]] int update_choice();
 
         [[nodiscard]] bool choosing() const
         {
-            return _choice_panel.is_open();
+            return _choosing;
         }
 
         // The meter moves to the new friendship value (about 3 frames per point) and shows the change next to it.
@@ -64,47 +72,67 @@ namespace tl
         }
 
     private:
+        enum class layout : uint8_t
+        {
+            none,
+            plain,
+            one,
+            two
+        };
+
         ui::panel _panel;
-        ui::label _lines[3];
+        ui::label _lines[4];
+        ui::label _question[3];
         ui::label _tag_label;
         ui::label _meter_label;
         ui::label _delta_label;
         bn::vector<bn::sprite_ptr, 8> _tag_sprites;
-        bn::optional<bn::sprite_ptr> _portrait;
+        bn::vector<bn::sprite_ptr, 4> _pic;
+        bn::vector<bn::sprite_ptr, 3> _tall;
         bn::optional<bn::sprite_ptr> _meter;
         bn::optional<bn::sprite_ptr> _a_icon;
-        bn::string<64> _line_text[3];
+        bn::string<64> _line_text[4];
         bn::string<224> _text;
+        bn::string<224> _last_page;
+        layout _layout = layout::none;
+        int _max_lines = 3;
         int _line_count = 0;
         int _pos = 0;
         int _shown = 0;
         int _total = 0;
-        int _drawn[3] = { -1, -1, -1 };
+        int _drawn[4] = { -1, -1, -1, -1 };
         int _blink = 0;
         int _speaker = -1;
-        int _text_x = text_x;
-        int _text_w = text_width;
+        int _partner = -1;
+        int _expr = 0;
+        int _text_x = plain_text_x;
+        int _text_w = plain_text_width;
         bool _open = false;
         bool _with_meter = false;
+        bool _choosing = false;
         int _meter_value = 0;           // number shown
         int _meter_target = 0;
         int _meter_frame = -1;
         int _meter_delay = 0;
         int _delta_timer = 0;
+        int _tall_frames[3] = { -1, -1, -1 };
 
         // choices
-        ui::panel _choice_panel;
         ui::bar _choice_bar;
         bn::vector<ui::label, 4> _choice_labels;
         const bn::string_view* _options = nullptr;
         int _options_count = 0;
         int _selected = 0;
+        int _rows_top = 0;
 
         bool _next_page();
         void _draw_lines(bool force);
         void _draw_choices();
         void _draw_meter();
-        void _build_tag();
+        void _build_tag(int x, int y);
+        void _build_layout(layout l, int speaker, int partner_height = 0);
+        void _build_portrait(int speaker, bool small);
+        void _build_meter(bool tall);
     };
 
     // Plays dialogue nodes and runs small talk with an NPC on a dialogue_box, applying the story effects.
@@ -188,6 +216,7 @@ namespace tl
         bool _first_today = false;
         bool _after_script_talk = false;
         int _coin_node = -1;
+        int _answer_expr = -1;      // expression of the NPC's answer page (set from the topic result)
 
         void _show_node(int node);
         void _apply_effects(const dlg_node& node);

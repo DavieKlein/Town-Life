@@ -91,6 +91,7 @@ namespace tl
         static constexpr bn::string_view overwrite_lines[] = { "Overwrite saved game?" };
         static constexpr bn::string_view quit_lines[] = { "Go back to the title?", "Unsaved progress will", "be lost." };
         static constexpr bn::string_view saved_lines[] = { "Your progress is saved." };
+        static constexpr bn::string_view slept_lines[] = { "Save game?" };
         static constexpr bn::string_view yes_no[] = { "Yes", "No" };
         static constexpr bn::string_view ok[] = { "OK" };
 
@@ -107,6 +108,11 @@ namespace tl
         case 1:
             _dialog.open("Game saved", saved_lines, 1, ok, 1);
             _pause_mode = pause_mode::saved;
+            break;
+
+        case 3:
+            _dialog.open("Slept well.", slept_lines, 1, yes_no, 2);
+            _pause_mode = pause_mode::sleep_save;
             break;
 
         default:
@@ -185,10 +191,39 @@ namespace tl
             }
             break;
 
+        case pause_mode::sleep_save:
+            {
+                int choice = _dialog.update();
+
+                if(choice == dialog::open_still)
+                {
+                    break;
+                }
+
+                if(choice == 0)
+                {
+                    _save_after_sleep = true;
+                    _save_game();
+                }
+                else
+                {
+                    _close_pause();
+                }
+            }
+            break;
+
         case pause_mode::saved:
             if(_dialog.update() != dialog::open_still)
             {
-                _open_pause();
+                if(_save_after_sleep)
+                {
+                    _save_after_sleep = false;
+                    _close_pause();
+                }
+                else
+                {
+                    _open_pause();
+                }
             }
             break;
 

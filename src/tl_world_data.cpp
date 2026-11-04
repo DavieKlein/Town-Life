@@ -39,6 +39,12 @@ extern "C" const uint32_t public_toilet_objects_depth_bin[];
 extern "C" const uint8_t public_toilet_objects_depthpx_bin[];
 extern "C" const uint32_t public_toilet_objects_tiles_bin[];
 extern "C" const uint32_t public_toilet_objects_cells_bin[];
+extern "C" const uint32_t player_room_floor_tiles_bin[];
+extern "C" const uint32_t player_room_floor_cells_bin[];
+extern "C" const uint32_t player_room_objects_depth_bin[];
+extern "C" const uint8_t player_room_objects_depthpx_bin[];
+extern "C" const uint32_t player_room_objects_tiles_bin[];
+extern "C" const uint32_t player_room_objects_cells_bin[];
 
 namespace tl
 {
@@ -530,6 +536,7 @@ namespace
         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     };
     constexpr warp corner_market_warps[] = {
+        { 240, 56, 20, 8, map_id::player_room, 83, 48, direction::down },
         { 104, 273, 48, 14, map_id::city_centre, 704, 304, direction::down },
     };
     constexpr occluder corner_market_occluders[] = {
@@ -556,7 +563,6 @@ namespace
         { interactable_kind::shop_market, 195, 240, 0, 0 },
         { interactable_kind::shop_market, 222, 240, 0, 0 },
         { interactable_kind::shop_market, 243, 240, 0, 0 },
-        { interactable_kind::stairs, 249, 60, 0, 0 },
     };
     constexpr int diner_floor_tiles_count = 493;
     constexpr bn::color diner_floor_palette[] = {
@@ -947,6 +953,77 @@ namespace
         { interactable_kind::sink, 8, 56, 0, 0 },
         { interactable_kind::bin, 12, 16, 0, 0 },
     };
+    constexpr int player_room_floor_tiles_count = 256;
+    constexpr bn::color player_room_floor_palette[] = {
+        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(18, 7, 1), bn::color(29, 13, 3), bn::color(4, 1, 0), bn::color(22, 10, 2), bn::color(31, 15, 3), bn::color(26, 12, 2), bn::color(15, 6, 1), bn::color(9, 5, 9), bn::color(31, 17, 4), bn::color(20, 9, 1), bn::color(24, 11, 2), bn::color(9, 2, 0), bn::color(13, 4, 0), bn::color(5, 2, 4),
+        bn::color(0, 0, 0), bn::color(7, 3, 1), bn::color(0, 0, 0), bn::color(8, 6, 12), bn::color(6, 1, 0), bn::color(18, 7, 1), bn::color(11, 3, 0), bn::color(8, 5, 9), bn::color(9, 2, 0), bn::color(9, 4, 1), bn::color(15, 5, 0), bn::color(7, 4, 4), bn::color(4, 0, 0), bn::color(22, 10, 1), bn::color(8, 5, 4), bn::color(9, 5, 2),
+        bn::color(0, 0, 0), bn::color(26, 13, 5), bn::color(31, 17, 6), bn::color(31, 31, 24), bn::color(12, 8, 10), bn::color(23, 8, 4), bn::color(15, 5, 5), bn::color(26, 10, 4), bn::color(29, 11, 5), bn::color(31, 21, 9), bn::color(31, 28, 18), bn::color(27, 16, 9), bn::color(31, 14, 3), bn::color(19, 11, 9), bn::color(29, 23, 16), bn::color(8, 3, 6),
+        bn::color(0, 0, 0), bn::color(31, 21, 13), bn::color(9, 6, 5), bn::color(24, 14, 8), bn::color(31, 26, 19), bn::color(0, 0, 0), bn::color(27, 16, 8), bn::color(26, 19, 14), bn::color(19, 9, 1), bn::color(31, 23, 16), bn::color(31, 18, 8), bn::color(17, 11, 8), bn::color(28, 22, 16), bn::color(31, 24, 17), bn::color(23, 17, 12), bn::color(29, 19, 12),
+        bn::color(0, 0, 0), bn::color(9, 5, 2), bn::color(0, 0, 0), bn::color(19, 13, 9), bn::color(14, 10, 6), bn::color(7, 3, 1), bn::color(31, 25, 19), bn::color(5, 0, 0), bn::color(18, 11, 6), bn::color(10, 7, 11), bn::color(28, 14, 5), bn::color(9, 6, 10), bn::color(30, 18, 8), bn::color(24, 17, 11), bn::color(9, 5, 4), bn::color(21, 14, 9),
+        bn::color(0, 0, 0), bn::color(22, 9, 1), bn::color(19, 12, 7), bn::color(31, 30, 20), bn::color(28, 16, 8), bn::color(22, 11, 3), bn::color(31, 14, 2), bn::color(16, 8, 5), bn::color(28, 12, 1), bn::color(1, 0, 1), bn::color(8, 4, 7), bn::color(25, 11, 1), bn::color(16, 6, 0), bn::color(19, 8, 1), bn::color(28, 23, 17), bn::color(24, 14, 6),
+        bn::color(0, 0, 0), bn::color(31, 22, 14), bn::color(31, 31, 22), bn::color(21, 14, 11), bn::color(31, 27, 19), bn::color(26, 16, 9), bn::color(31, 24, 17), bn::color(28, 18, 11), bn::color(26, 18, 13), bn::color(31, 20, 11), bn::color(31, 24, 14), bn::color(29, 21, 14), bn::color(31, 23, 11), bn::color(31, 18, 9), bn::color(31, 28, 20), bn::color(31, 25, 17),
+        bn::color(0, 0, 0), bn::color(27, 16, 8), bn::color(29, 11, 5), bn::color(31, 31, 24), bn::color(19, 8, 2), bn::color(21, 12, 6), bn::color(31, 13, 4), bn::color(2, 1, 0), bn::color(31, 17, 6), bn::color(31, 19, 8), bn::color(28, 14, 5), bn::color(24, 13, 6), bn::color(26, 11, 4), bn::color(23, 11, 3), bn::color(12, 5, 2), bn::color(31, 30, 22),
+    };
+    constexpr int player_room_objects_tiles_count = 490;
+    constexpr bn::color player_room_objects_palette[] = {
+        bn::color(0, 0, 0), bn::color(7, 2, 0), bn::color(30, 27, 20), bn::color(23, 11, 2), bn::color(3, 2, 7), bn::color(15, 6, 1), bn::color(6, 13, 2), bn::color(27, 17, 7), bn::color(19, 8, 1), bn::color(13, 14, 15), bn::color(16, 0, 0), bn::color(11, 4, 1), bn::color(11, 21, 3), bn::color(8, 10, 15), bn::color(19, 23, 26), bn::color(28, 28, 27),
+        bn::color(0, 0, 0), bn::color(8, 3, 4), bn::color(31, 16, 4), bn::color(12, 5, 2), bn::color(31, 11, 5), bn::color(22, 11, 2), bn::color(27, 14, 3), bn::color(2, 1, 7), bn::color(31, 30, 18), bn::color(31, 19, 4), bn::color(31, 22, 9), bn::color(17, 8, 2), bn::color(30, 8, 3), bn::color(8, 10, 15), bn::color(19, 23, 26), bn::color(28, 28, 27),
+        bn::color(0, 0, 0), bn::color(21, 18, 10), bn::color(0, 0, 5), bn::color(31, 31, 24), bn::color(26, 23, 18), bn::color(7, 5, 7), bn::color(21, 2, 0), bn::color(18, 16, 13), bn::color(4, 2, 6), bn::color(29, 26, 19), bn::color(22, 21, 19), bn::color(14, 11, 9), bn::color(26, 21, 11), bn::color(8, 10, 15), bn::color(19, 23, 26), bn::color(28, 28, 27),
+        bn::color(0, 0, 0), bn::color(20, 4, 2), bn::color(31, 31, 31), bn::color(1, 0, 4), bn::color(25, 23, 19), bn::color(18, 16, 13), bn::color(31, 30, 16), bn::color(26, 21, 12), bn::color(30, 26, 17), bn::color(12, 2, 1), bn::color(8, 6, 8), bn::color(13, 10, 10), bn::color(31, 30, 22), bn::color(8, 10, 15), bn::color(19, 23, 26), bn::color(28, 28, 27),
+        bn::color(0, 0, 0), bn::color(31, 31, 25), bn::color(1, 0, 2), bn::color(30, 17, 3), bn::color(20, 12, 4), bn::color(13, 9, 7), bn::color(6, 1, 2), bn::color(23, 20, 18), bn::color(8, 4, 5), bn::color(31, 31, 31), bn::color(31, 25, 10), bn::color(3, 1, 7), bn::color(31, 31, 19), bn::color(8, 10, 15), bn::color(19, 23, 26), bn::color(28, 28, 27),
+        bn::color(0, 0, 0), bn::color(31, 31, 25), bn::color(20, 1, 0), bn::color(2, 1, 6), bn::color(31, 28, 16), bn::color(31, 25, 13), bn::color(16, 11, 9), bn::color(31, 31, 18), bn::color(20, 16, 12), bn::color(11, 5, 3), bn::color(30, 22, 10), bn::color(25, 23, 21), bn::color(26, 4, 1), bn::color(8, 10, 15), bn::color(19, 23, 26), bn::color(28, 28, 27),
+        bn::color(0, 0, 0), bn::color(10, 1, 2), bn::color(31, 31, 4), bn::color(10, 16, 19), bn::color(22, 18, 9), bn::color(8, 8, 10), bn::color(26, 24, 20), bn::color(18, 11, 6), bn::color(2, 1, 6), bn::color(31, 30, 24), bn::color(17, 1, 0), bn::color(31, 21, 1), bn::color(13, 29, 22), bn::color(8, 10, 15), bn::color(19, 23, 26), bn::color(28, 28, 27),
+    };
+    constexpr uint8_t player_room_solid[] = {
+        0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,
+        1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,
+        0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,
+        0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    };
+    constexpr warp player_room_warps[] = {
+        { 75, 56, 16, 8, map_id::corner_market, 228, 60, direction::right },
+    };
+    constexpr occluder player_room_occluders[] = {
+        { -6, -6, 128, 1, 128, 4, 270, 148 },
+        { -6, 0, 1, 112, 17, 7, 137, 140 },
+        { 12, 0, 69, 12, 135, 74, 204, 125 },
+        { 75, 1, 124, 25, 186, 88, 259, 158 },
+        { 0, 20, 15, 48, 88, 34, 130, 115 },
+        { 1, 52, 13, 80, 57, 85, 96, 130 },
+        { 20, 62, 29, 70, 85, 99, 103, 133 },
+    };
+
+    constexpr interactable player_room_interactables[] = {
+        { interactable_kind::bed, 100, 13, 19, 3 },
+        { interactable_kind::wardrobe, 8, 34, 20, 1 },
+        { interactable_kind::desk, 8, 66, 20, 1 },
+        { interactable_kind::bookshelf, 2, 99, 20, 1 },
+        { interactable_kind::window, 40, 7, 9, 0 },
+    };
 }
 
 namespace
@@ -958,6 +1035,7 @@ namespace
         { "Community centre", { community_centre_floor_tiles_bin, community_centre_floor_tiles_count, community_centre_floor_cells_bin, community_centre_floor_palette, int(sizeof(community_centre_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 0, 0, 0, 0, 0 }, { community_centre_objects_tiles_bin, community_centre_objects_tiles_count, community_centre_objects_cells_bin, community_centre_objects_palette, int(sizeof(community_centre_objects_palette) / sizeof(bn::color)) / 16, community_centre_objects_depth_bin, community_centre_objects_depthpx_bin, 0, 0, 0, 0, 0 }, 18, 14, 248, 64, 560, 360, 24, 0, 536, 328, community_centre_solid, community_centre_warps, int(sizeof(community_centre_warps) / sizeof(warp)), community_centre_occluders, int(sizeof(community_centre_occluders) / sizeof(occluder)), nullptr, 0, community_centre_interactables, int(sizeof(community_centre_interactables) / sizeof(interactable)), nullptr, 0, nullptr, 0, false },
         { "VaultTech lobby", { vaulttech_lobby_floor_tiles_bin, vaulttech_lobby_floor_tiles_count, vaulttech_lobby_floor_cells_bin, vaulttech_lobby_floor_palette, int(sizeof(vaulttech_lobby_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 0, 0, 0, 0, 0 }, { vaulttech_lobby_objects_tiles_bin, vaulttech_lobby_objects_tiles_count, vaulttech_lobby_objects_cells_bin, vaulttech_lobby_objects_palette, int(sizeof(vaulttech_lobby_objects_palette) / sizeof(bn::color)) / 16, vaulttech_lobby_objects_depth_bin, vaulttech_lobby_objects_depthpx_bin, 0, 0, 0, 13, 15 }, 18, 16, 280, 116, 592, 424, 24, 0, 568, 396, vaulttech_lobby_solid, vaulttech_lobby_warps, int(sizeof(vaulttech_lobby_warps) / sizeof(warp)), vaulttech_lobby_occluders, int(sizeof(vaulttech_lobby_occluders) / sizeof(occluder)), nullptr, 0, vaulttech_lobby_interactables, int(sizeof(vaulttech_lobby_interactables) / sizeof(interactable)), nullptr, 0, nullptr, 0, false },
         { "Public toilet", { public_toilet_floor_tiles_bin, public_toilet_floor_tiles_count, public_toilet_floor_cells_bin, public_toilet_floor_palette, int(sizeof(public_toilet_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 0, 0, 0, 0, 0 }, { public_toilet_objects_tiles_bin, public_toilet_objects_tiles_count, public_toilet_objects_cells_bin, public_toilet_objects_palette, int(sizeof(public_toilet_objects_palette) / sizeof(bn::color)) / 16, public_toilet_objects_depth_bin, public_toilet_objects_depthpx_bin, 0, 0, 0, 0, 0 }, 6, 6, 120, 64, 240, 200, 24, 0, 216, 168, public_toilet_solid, public_toilet_warps, int(sizeof(public_toilet_warps) / sizeof(warp)), public_toilet_occluders, int(sizeof(public_toilet_occluders) / sizeof(occluder)), nullptr, 0, public_toilet_interactables, int(sizeof(public_toilet_interactables) / sizeof(interactable)), nullptr, 0, nullptr, 0, false },
+        { "Your room", { player_room_floor_tiles_bin, player_room_floor_tiles_count, player_room_floor_cells_bin, player_room_floor_palette, int(sizeof(player_room_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 0, 0, 0, 0, 0 }, { player_room_objects_tiles_bin, player_room_objects_tiles_count, player_room_objects_cells_bin, player_room_objects_palette, int(sizeof(player_room_objects_palette) / sizeof(bn::color)) / 16, player_room_objects_depth_bin, player_room_objects_depthpx_bin, 0, 0, 0, 13, 15 }, 8, 7, 136, 84, 288, 240, 24, 0, 264, 212, player_room_solid, player_room_warps, int(sizeof(player_room_warps) / sizeof(warp)), player_room_occluders, int(sizeof(player_room_occluders) / sizeof(occluder)), nullptr, 0, player_room_interactables, int(sizeof(player_room_interactables) / sizeof(interactable)), nullptr, 0, nullptr, 0, false },
     };
 }
 

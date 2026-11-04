@@ -18,13 +18,31 @@ how fast Fun fills); the 4th element (radius) is 0 for everything but the founta
   ("bookshelf", x, y)             Read a book (30 game minutes).
   ("noticeboard", x, y)           info: no jobs posted yet.
   ("reception", x, y)             info: VaultTech access denied.
-  ("stairs", x, y)                foot of the Corner Market storeroom stairs: "Your room is upstairs. (Coming soon)".
+  ("bed", x, y, reach)            the player's bed (room above the Corner Market): Sleep (a night, Energy +1/min, clock 8x, ends with
+                                   "Slept well. Save game?") / Take a nap (1 h, Energy +20). 4th element = extra reach in cells.
+  ("desk", x, y, reach)           Read (like a bookshelf, quality 1) / Check notes (current objective).
+  ("window", x, y, reach)         look outside: flavour text by time of day.
+  ("wardrobe", x, y, reach)       info text.
+  The room's entries are generated from the furniture catalog (tools/furniture.py, scene.ROOM_FURNITURE + use_point()).
   ("seat", x, y, reach)           indoor chair / sofa / booth bench; you sit facing +y (screen down-left).
   ("seat_x", x, y, reach)         same but facing +x (screen down-right: the sit sprite is mirrored).
                                    (x, y) = where the player's seat is drawn (centre of the seat); `reach` = extra
                                    reach in cells on top of 1.75, because the player usually stands beside the
                                    (solid) furniture. Standing up returns to the spot where he sat down.
 """
+
+def _room_things():
+    import furniture
+    from scene import ROOM_FURNITURE
+    out = []
+    for fid, x, y, rot in ROOM_FURNITURE:
+        f = furniture.FURNITURE[fid]
+        if f.get("kind") and "use" in f:
+            ux, uy, reach = furniture.use_point(fid, x, y, rot)
+            out.append((f["kind"], round(ux, 2), round(uy, 2), reach, f["quality"]))
+    out.append(("window", 2.55, 0.45, 0.6))         # the big window above the window seat
+    return out
+
 
 INTERACTABLES = {
     "city_centre": [
@@ -39,7 +57,7 @@ INTERACTABLES = {
     ],
     "corner_market": [
         ("shop_market", 12.2, 15.0), ("shop_market", 13.9, 15.0), ("shop_market", 15.2, 15.0),
-        ("stairs", 15.6, 3.75),         # foot of the storeroom stairs (room upstairs not approved yet: info only)
+        # (the foot of the storeroom stairs is a warp up to "player_room")
     ],
     "diner": [
         ("shop_diner", 4.6, 4.5), ("shop_diner", 6.4, 4.5), ("shop_diner", 8.2, 4.5),
@@ -61,4 +79,5 @@ INTERACTABLES = {
     "public_toilet": [
         ("toilet", 2.9, 1.5, 0, 1), ("sink", 0.5, 3.5), ("bin", 0.75, 1.0),
     ],
+    "player_room": _room_things(),
 }

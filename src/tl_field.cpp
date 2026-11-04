@@ -19,7 +19,10 @@ namespace tl
     {
         constexpr int fade_frames = 12;
         constexpr int frames_per_game_minute = 60;     // 1 real second = 1 game minute
-        constexpr int frames_per_game_minute_asleep = 4;   // time flies while sleeping
+        constexpr int frames_per_game_minute_asleep = 4;   // time flies while sleeping on a bench
+        constexpr int frames_per_game_minute_bed = 8;      // in the bed the clock runs 8x
+        constexpr int nap_minutes = 60;
+        constexpr int bed_lift = 14;                       // the lying figure is raised onto the mattress (pixels)
         constexpr int bar_levels = 16;                 // frames in need_bar.bmp
         constexpr int interact_reach = 26;             // world units from a bench seat
         constexpr int fountain_reach = 32;             // world units beyond the fountain radius
@@ -52,6 +55,8 @@ namespace tl
         constexpr bn::string_view sink_options[] = { "Wash hands" };
         constexpr bn::string_view book_options[] = { "Read a book" };
         constexpr bn::string_view seat_options[] = { "Sit down" };
+        constexpr bn::string_view bed_options[] = { "Sleep", "Take a nap", "Leave" };
+        constexpr bn::string_view desk_options[] = { "Read", "Check notes" };
 
         // Activities (frames at 60 per second).
         constexpr int wash_hands_frames = 120;
@@ -68,7 +73,9 @@ namespace tl
         // Effects per game minute while resting.
         constexpr bn::fixed sit_fun = 0.35;
         constexpr bn::fixed sit_energy = 0.15;
-        constexpr bn::fixed sleep_energy = 0.5;
+        constexpr bn::fixed sleep_energy = 0.5;             // on a bench
+        constexpr bn::fixed bed_energy = 1.0;               // a night in the bed
+        constexpr bn::fixed nap_energy = bn::fixed(20) / 60;    // a nap: +20 Energy over its hour
         constexpr bn::fixed wash_face_hygiene = 35;
         constexpr bn::fixed wash_hands_hygiene = 15;
 
@@ -344,8 +351,12 @@ namespace tl
     void field::_update_clock()
     {
         player::activity act = _player.current_activity();
-        int frames_per_minute = act == player::activity::sleeping ? frames_per_game_minute_asleep :
-                                                                    frames_per_game_minute;
+        int frames_per_minute = frames_per_game_minute;
+
+        if(act == player::activity::sleeping)
+        {
+            frames_per_minute = _sleep == sleep_kind::bench ? frames_per_game_minute_asleep : frames_per_game_minute_bed;
+        }
 
         if(++_minute_frames >= frames_per_minute)
         {
@@ -359,8 +370,17 @@ namespace tl
             }
             else if(act == player::activity::sleeping)
             {
-                _needs.add(needs::energy, sleep_energy - needs::decay[needs::energy]);
+                bn::fixed gain = _sleep == sleep_kind::night ? bed_energy :
+                                 (_sleep == sleep_kind::nap ? nap_energy : sleep_energy);
+                _needs.add(needs::energy, gain - needs::decay[needs::energy]);
                 _needs.add(needs::hunger, -needs::decay[needs::hunger] / 2);    // hunger slows down asleep
+                ++_sleep_minutes;
+
+                if((_sleep == sleep_kind::night && _needs.values[needs::energy] >= 100) ||
+                   (_sleep == sleep_kind::nap && _sleep_minutes >= nap_minutes))
+                {
+                    _player.wake();         // rested: _finish_sleep() runs on the next update
+                }
             }
 
             _redraw_hud_text();
@@ -465,7 +485,9 @@ namespace tl
             {
                 reach = it.radius + fountain_reach;
             }
-            else if(it.kind == interactable_kind::seat || it.kind == interactable_kind::seat_x)
+            else if(it.kind == interactable_kind::seat || it.kind == interactable_kind::seat_x ||
+                    it.kind == interactable_kind::bed || it.kind == interactable_kind::desk ||
+                    it.kind == interactable_kind::window || it.kind == interactable_kind::wardrobe)
             {
                 reach = fixture_reach + it.radius;      // radius = extra reach (the player stands beside the seat)
             }
@@ -568,8 +590,20 @@ namespace tl
 
             case interactable_kind::bookshelf:
             case interactable_kind::noticeboard:
-            case interactable_kind::stairs:
+            case interactable_kind::window:
                 height = 46;
+                break;
+
+            case interactable_kind::bed:
+                height = 36;
+                break;
+
+            case interactable_kind::desk:
+                height = 34;
+                break;
+
+            case interactable_kind::wardrobe:
+                height = 66;
                 break;
 
             case interactable_kind::bin:
@@ -703,10 +737,24 @@ namespace tl
             _show_info("VaultTech", "Access denied.", "Have a nice day.", "");
             break;
 
-        case interactable_kind::stairs:
+        case interactable_kind::bed:
+            _menu.open("Bed", bed_options, 3);
+            break;
+
+        case interactable_kind::desk:
+            _menu.open("Desk", desk_options, 2);
+            break;
+
+        case interactable_kind::window:
             _menu_mode = menu_mode::none;
             _menu_target = nullptr;
-            _show_info("Stairs", "Your room is upstairs.", "(Coming soon)", "");
+            _show_window();
+            break;
+
+        case interactable_kind::wardrobe:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            _show_info("Wardrobe", "Work shirts, jeans...", "and a green apron.", "");
             break;
 
         default:
@@ -1045,6 +1093,8 @@ namespace tl
             }
             else
             {
+                _sleep = sleep_kind::bench;
+                _sleep_minutes = 0;
                 _player.sleep_on(target->x, target->y);
             }
             break;
@@ -1053,6 +1103,38 @@ namespace tl
         case interactable_kind::seat_x:
             _rest_target = target;
             _player.sit_on(target->x, target->y, target->kind == interactable_kind::seat_x);
+            break;
+
+        case interactable_kind::bed:
+            if(choice > 1)
+            {
+                break;
+            }
+
+            if(_needs.values[needs::energy] >= 90)
+            {
+                _show_info("Bed", "You're not tired.", "", "");
+                break;
+            }
+
+            _rest_target = target;
+            _sleep = choice == 0 ? sleep_kind::night : sleep_kind::nap;
+            _sleep_minutes = 0;
+            _player.sleep_on(target->x, target->y, bed_lift);
+            break;
+
+        case interactable_kind::desk:
+            if(choice == 0)
+            {
+                _begin_activity(read_frames);
+                _act.gain[needs::fun] = read_fun[0];
+                _act.extra_minutes = read_minutes;
+                _player.start_action(player::action_kind::read, target->x, target->y, _act.frames);
+            }
+            else
+            {
+                _show_notes();
+            }
             break;
 
         case interactable_kind::fountain:
@@ -1102,6 +1184,103 @@ namespace tl
 
         default:
             break;
+        }
+    }
+
+    // The player got up (rested, or woke himself with B / D-pad): after a good night, offer to save.
+    void field::_finish_sleep()
+    {
+        sleep_kind kind = _sleep;
+        int minutes = _sleep_minutes;
+        _sleep = sleep_kind::none;
+        _sleep_minutes = 0;
+
+        if(kind == sleep_kind::night && minutes >= 60)
+        {
+            ui::set_night(is_night(_minutes));
+            _open_dialog(3);
+        }
+        else if(kind == sleep_kind::nap && minutes >= nap_minutes)
+        {
+            _show_info("Bed", "You feel refreshed.", "", "");
+        }
+    }
+
+    // "Check notes" on the desk: the current objective, word-wrapped into three short lines.
+    void field::_show_notes()
+    {
+        _sync_objective();
+        bn::string<24>* lines[3] = { &_info_line_a, &_info_line_b, &_info_line_c };
+
+        for(bn::string<24>* line : lines)
+        {
+            line->clear();
+        }
+
+        int index = 0;
+        const char* text = _objective.c_str();
+        int length = int(_objective.size());
+        int pos = 0;
+
+        while(pos < length && index < 3)
+        {
+            int end = pos + 22;
+
+            if(end >= length)
+            {
+                end = length;
+            }
+            else
+            {
+                while(end > pos && text[end] != ' ')
+                {
+                    --end;
+                }
+
+                if(end == pos)
+                {
+                    end = pos + 22;
+                }
+            }
+
+            for(int k = pos; k < end; ++k)
+            {
+                lines[index]->push_back(text[k]);
+            }
+
+            pos = end;
+
+            while(pos < length && text[pos] == ' ')
+            {
+                ++pos;
+            }
+
+            ++index;
+        }
+
+        _show_info("Notes", _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
+    }
+
+    // Looking out of the window: depends on the time of day (later also on the story).
+    void field::_show_window()
+    {
+        int hour = (_minutes / 60) % 24;
+
+        if(hour >= 6 && hour < 11)
+        {
+            _show_info("Window", "Mia is opening the", "shutters down below.", "A new day.");
+        }
+        else if(hour >= 11 && hour < 18)
+        {
+            _show_info("Window", "People hurry along the", "avenue. The VaultTech", "tower glints.");
+        }
+        else if(hour >= 18 && hour < 22)
+        {
+            _show_info("Window", "The lamps come on", "along the avenue.", "Home, sweet home.");
+        }
+        else
+        {
+            _show_info("Window", "The city sleeps. Only", "the golden tower is", "still lit.");
         }
     }
 
@@ -1376,6 +1555,11 @@ namespace tl
             }
 #endif
             _player.update();
+
+            if(_sleep != sleep_kind::none && _player.current_activity() != player::activity::sleeping)
+            {
+                _finish_sleep();
+            }
 
             _update_activity();
 

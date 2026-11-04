@@ -37,7 +37,13 @@ namespace tl
 
         // Interactions (positions in world units).
         void sit_on(int seat_x, int seat_y, bool mirrored = false);   // mirrored: faces +x instead of +y
-        void sleep_on(int seat_x, int seat_y);
+        void sleep_on(int seat_x, int seat_y, int lift = 0);   // lift: pixels the lying figure is raised (bed mattress)
+
+        // Gets up from a bench / bed / seat (e.g. when the sleep is over).
+        void wake()
+        {
+            _stand_up();
+        }
         void sit_for(int seat_x, int seat_y, int frames);     // sits on a toilet, stands up after `frames`
 
         // Plays an animation for `frames` frames, turned towards (target_x, target_y) (or keeping the facing
@@ -150,6 +156,7 @@ namespace tl
         light_params _light;
         int _seat_x = 0;
         int _seat_y = 0;
+        int _rest_lift = 0;
         bool _seat_mirrored = false;
         bool _action_finished = false;
         const map_info* _map = nullptr;

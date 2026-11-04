@@ -59,6 +59,7 @@ namespace tl
         int16_t next;               // next page, -1 = end
         uint8_t choices_count;
         uint16_t choices_first;
+        uint8_t expr;               // portrait expression: 0 neutral, 1 happy, 2 angry, 3 sad, 4 surprised
     };
 
     const dlg_node* dialogue_nodes();

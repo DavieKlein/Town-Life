@@ -481,6 +481,10 @@ MATERIALS = {
     "rug_red": dict(c="#a83a34", rough=0.95),
     "rug_cream": dict(c="#ecdcb4", rough=0.95),
     "rug_navy": dict(c="#34487a", rough=0.95),
+    "duvet_blue": dict(c="#5a86ae", rough=0.95),  # s57-materials
+    "blanket_mustard": dict(c="#dcaa3c", rough=0.95),  # s57-materials
+    "pillow_white": dict(c="#f4eee0", rough=0.95),  # s57-materials
+    "rug_terra": dict(c="#8a4a3a", rough=0.95),  # s57-materials
     "rug_green": dict(c="#4e8a5a", rough=0.95),
     "rug_gold": dict(c="#d8a84a", rough=0.95),
     "rug_teal": dict(c="#4a9a96", rough=0.95),

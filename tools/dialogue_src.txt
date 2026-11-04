@@ -6,6 +6,7 @@
 #                                                                   gossip compliment joke complain)
 #                               bye_<npc>                           farewell
 #                               intro_<npc>                         first conversation ever (scripted, may have choices)
+# SPEAKER[:expression]| text  (expression: neutral happy angry sad surprised; default neutral, or by mood / topic result in small talk)
 # SPEAKER| text               one page (speaker: MIA ROSA DEX PIMM LOU HALLORAN DEXV VICTOR VALET PLAYER SYSTEM NPC;
 #                               NPC = whoever you are talking to, PLAYER = {NAME}, SYSTEM = no portrait). The text is
 #                               word-wrapped to 3 lines by the game and split into more pages if it is longer. {NAME} = the
@@ -20,15 +21,15 @@ node hint_talk
 SYSTEM| A = talk. Pick a topic. People like different things! The bar shows how they feel about you.
 
 node bye_mia
-MIA| Later, {NAME}! Don't be a stranger.
+MIA:happy| Later, {NAME}! Don't be a stranger.
 node bye_rosa
 ROSA| Off you go. Eat something.
 node bye_dex
-DEX| Catch you later, buddy. Winners keep moving.
+DEX:happy| Catch you later, buddy. Winners keep moving.
 node bye_pimm
 PIMM| Good day to you. Mind the pigeons.
 node bye_lou
-LOU| Come back hungry, hah!
+LOU:happy| Come back hungry, hah!
 node bye_halloran
 HALLORAN| Don't be late.
 
@@ -57,13 +58,13 @@ DEX| Buddy! Perfect timing. I'm on a roll today.
 node greet_dex_neutral
 DEX| Oh. It's you, buddy. What's up?
 node greet_dex_grumpy
-DEX| Not now. Bert has the numbers again.
+DEX:angry| Not now. Bert has the numbers again.
 node greet_pimm_good
 PIMM| Ah, {NAME}! A fine day for a chat.
 node greet_pimm_neutral
 PIMM| Good day... {NAME}, is it? Names, I'm afraid. Bridges, never.
 node greet_pimm_grumpy
-PIMM| Hmm? Oh. Hello. No rye loaf today, I suppose.
+PIMM:sad| Hmm? Oh. Hello. No rye loaf today, I suppose.
 node greet_lou_good
 LOU| Hah! Hello, hello, {NAME}! Hungry?
 node greet_lou_neutral
@@ -79,20 +80,20 @@ HALLORAN| Make it short.
 
 # ---------------------------------------------------------------------------------------------------- first meetings
 node intro_mia
-MIA| {NAME}! Finally someone with a pulse. It's dead around here today.
+MIA:happy| {NAME}! Finally someone with a pulse. It's dead around here today.
 MIA| By the way, Lou could use a pair of hands at the diner. Interested?
 ? Maybe. Tell me more. -> intro_mia_more | friend mia +2, flag lou_tip
 ? I'm fine, thanks. -> intro_mia_no
 ? Is it paid? -> intro_mia_pay | friend mia +1, flag lou_tip
 node intro_mia_more
-MIA| Dishes, mostly. Big Lou shouts, but he feeds you. Ask him yourself.
+MIA:happy| Dishes, mostly. Big Lou shouts, but he feeds you. Ask him yourself.
 ! friend mia +1
 goto hint_talk
 node intro_mia_no
 MIA| Suit yourself. The offer stays. Lou never fills a job.
 goto hint_talk
 node intro_mia_pay
-MIA| Ha! Yes. Not much, but it's honest money. And a staff meal.
+MIA:happy| Ha! Yes. Not much, but it's honest money. And a staff meal.
 goto hint_talk
 
 node intro_pimm
@@ -102,40 +103,40 @@ PIMM| You have the look of someone who reads signs. Do you like bridges?
 ? They are all right. -> intro_pimm_ok | friend pimm +1, flag met_pimm
 ? Not really. -> intro_pimm_no | flag met_pimm
 node intro_pimm_love
-PIMM| Splendid! A rare young person. Each one has a personality, you know.
+PIMM:happy| Splendid! A rare young person. Each one has a personality, you know.
 goto hint_talk
 node intro_pimm_ok
 PIMM| Honest. A bridge respects honesty. It holds, or it doesn't.
 goto hint_talk
 node intro_pimm_no
-PIMM| Hm. Then you have not crossed the right one yet.
+PIMM:sad| Hm. Then you have not crossed the right one yet.
 goto hint_talk
 
 node intro_lou
-LOU| HAH! A new face! Welcome to Lou's Diner! Best pancakes in town!
-LOU| Also the only pancakes in town. But still the best!
+LOU:happy| HAH! A new face! Welcome to Lou's Diner! Best pancakes in town!
+LOU:happy| Also the only pancakes in town. But still the best!
 ? Smells great! -> intro_lou_nice | friend lou +3
 ? Got any work? -> intro_lou_work | friend lou +1, flag lou_asked
 ? Just looking. -> intro_lou_look
 node intro_lou_nice
-LOU| It's the grease! Fifty years old! Hah! Sit, eat, talk.
+LOU:happy| It's the grease! Fifty years old! Hah! Sit, eat, talk.
 goto hint_talk
 node intro_lou_work
-LOU| Work? You? Come back when you smell less like a bench, hah!
-LOU| Wash up, then we talk. Plates are life!
+LOU:surprised| Work? You? Come back when you smell less like a bench, hah!
+LOU:surprised| Wash up, then we talk. Plates are life!
 goto hint_talk
 node intro_lou_look
 LOU| Look all you like. Looking is free. Pancakes are not.
 goto hint_talk
 
 node intro_rosa
-ROSA| Hmph. You are standing in my light. {NAME}, isn't it?
+ROSA:angry| Hmph. You are standing in my light. {NAME}, isn't it?
 ROSA| Good. Stand somewhere useful. Forty years I say that to everyone.
 goto hint_talk
 
 node intro_dex
-DEX| {NAME}! Buddy! Dex Corbin, future manager. Remember the name.
-DEX| I did five shelves before breakfast. Not that I'm counting.
+DEX:happy| {NAME}! Buddy! Dex Corbin, future manager. Remember the name.
+DEX:happy| I did five shelves before breakfast. Not that I'm counting.
 goto hint_talk
 
 node intro_halloran
@@ -153,11 +154,11 @@ ROSA| Puccini on the radio. Every morning. It keeps my heart young.
 node talk_rosa_sports
 ROSA| Men running after a ball. I would rather bake.
 node talk_rosa_gossip
-ROSA| I never gossip. ...Is it about Dex?
+ROSA:surprised| I never gossip. ...Is it about Dex?
 node talk_rosa_compliment
 ROSA| Hmph. Thank you. Flattery works. A little.
 node talk_rosa_joke
-ROSA| Ha. Don't quit your day job. ...Sorry. Too soon.
+ROSA:happy| Ha. Don't quit your day job. ...Sorry. Too soon.
 node talk_rosa_complain
 ROSA| Complaining never stacked a shelf. Pick up a crate.
 # Mia
@@ -166,28 +167,28 @@ MIA| It's weather. Wet or dry, I serve the same coffee.
 node talk_mia_work
 MIA| Please. I just clocked out. Ask me on Monday.
 node talk_mia_music
-MIA| Oh yes! I dance in the kitchen. Do NOT tell Lou.
+MIA:happy| Oh yes! I dance in the kitchen. Do NOT tell Lou.
 node talk_mia_sports
 MIA| Ball goes in the net. Everyone shouts. I get it.
 node talk_mia_gossip
-MIA| Sit down. You will not believe what Ines said...
+MIA:surprised| Sit down. You will not believe what Ines said...
 node talk_mia_compliment
 MIA| Is this a line? It sounds like a line.
 node talk_mia_joke
-MIA| Ha! I'm stealing that. Lou will pay me in pancakes.
+MIA:happy| Ha! I'm stealing that. Lou will pay me in pancakes.
 node talk_mia_complain
 MIA| Ha! Same. Life is hard. We do it anyway.
 # Dex
 node talk_dex_weather
 DEX| Weather doesn't matter when you're winning. Fact.
 node talk_dex_work
-DEX| Efficiency up 40 %! Do you know what that does for a career?
+DEX:happy| Efficiency up 40 %! Do you know what that does for a career?
 node talk_dex_music
 DEX| Noise. Pure noise. I run on silence and spreadsheets.
 node talk_dex_sports
 DEX| Sports! Winners and losers! Clear scores. I love it.
 node talk_dex_gossip
-DEX| I don't gossip. I network. ...What did you hear?
+DEX:surprised| I don't gossip. I network. ...What did you hear?
 node talk_dex_compliment
 DEX| Finally someone with taste. Keep talking.
 node talk_dex_joke
@@ -208,7 +209,7 @@ PIMM| I prefer facts, my dear. Facts are sturdy.
 node talk_pimm_compliment
 PIMM| How kind. I shall try to deserve it.
 node talk_pimm_joke
-PIMM| Ha! Very good. I will tell the pigeons.
+PIMM:happy| Ha! Very good. I will tell the pigeons.
 node talk_pimm_complain
 PIMM| Complaining is rust on a bridge. It eats everything.
 # Big Lou
@@ -219,13 +220,13 @@ LOU| The grill never sleeps. Neither do I! Hah!
 node talk_lou_music
 LOU| Radio on all day. I sing when nobody listens. Don't tell.
 node talk_lou_sports
-LOU| The game last night! Did you see that goal? Fantastic!
+LOU:surprised| The game last night! Did you see that goal? Fantastic!
 node talk_lou_gossip
 LOU| You didn't hear it from me, but... pull up a stool.
 node talk_lou_compliment
 LOU| Ha ha, thank you! The pancakes say thanks too.
 node talk_lou_joke
-LOU| Why is the grill happy? It's on fire. Hah!
+LOU:happy| Why is the grill happy? It's on fire. Hah!
 node talk_lou_complain
 LOU| Complaints go in the grease bin. Eat a pancake instead.
 # Foreman Halloran (Docks, after M16)
