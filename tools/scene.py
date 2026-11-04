@@ -1389,6 +1389,47 @@ def crate_of(s, x0, y0, x1, y1, fruit_prop, h_item, rnd, z_base=0.0, hgt=0.3, ti
                        z=z_base + hgt + layer * h_item * 0.62, solid=False, occlude=False, colours=colours)
 
 
+# --- Corner Market storeroom stairs (s52, owner-approved) ---
+SX0, SX1 = 15.0, 16.25         # stair flight x range (cells)
+S_BOT, S_TOP = 4.0, 0.9        # foot (y) and landing (y)
+S_N, S_RISE = 14, 0.2
+
+
+def stairs_flight(s):
+    """Straight wooden flight rising towards -y against the east side of the storeroom; closed +x side, open -x side with
+    a handrail (the two lowest steps stay open so you can step on from the west)."""
+    dy = (S_BOT - S_TOP) / S_N
+    x0, x1 = SX0, SX1
+    for i in range(S_N):
+        ya, yb = S_BOT - (i + 1) * dy, S_BOT - i * dy
+        z1 = (i + 1) * S_RISE
+        s.box(x0, ya, x1, yb, 0, z1 - 0.05, "wood_dark")                   # riser block
+        s.box(x0 - 0.03, ya - 0.02, x1 + 0.02, yb, z1 - 0.05, z1, "wood")   # tread with nosing
+        s.box(x0 - 0.03, yb - 0.02, x1 + 0.02, yb, z1 - S_RISE, z1 - S_RISE + 0.02, "wood_dark") if False else None
+    zl = S_N * S_RISE
+    s.box(x0, 0.0, x1, S_TOP, zl - 0.14, zl, "wood")                       # landing
+    s.box(x0, 0.0, x1, S_TOP, 0, zl - 0.14, "wood_dark")
+    s.set_solid(x0 - 0.05, 0.0, x1 + 0.1, 3.45)
+    s.occluder(x0 - 0.05, 0.0, x1 + 0.1, 3.5, zl + 0.5)
+    # handrail on the open side (starts at step 3)
+    k0 = 3
+    yk0 = S_BOT - (k0 + 0.5) * dy
+    zk0 = (k0 + 1) * S_RISE
+
+    def post(y, z):
+        s.box(x0 - 0.06, y - 0.035, x0 + 0.02, y + 0.035, z, z + 0.95, "wood_dark")
+    post(yk0, zk0)
+    post(S_BOT - (8 + 0.5) * dy, 9 * S_RISE)
+    post(S_BOT - (13 + 0.5) * dy, 14 * S_RISE)
+    s.tube([(x0 - 0.02, yk0, zk0 + 0.95), (x0 - 0.02, S_TOP, zl + 0.95)], 0.03, "wood")
+    s.tube([(x0 - 0.02, S_TOP, zl + 0.95), (x0 - 0.02, 0.15, zl + 0.95)], 0.03, "wood")
+    s.sphere(x0 - 0.02, yk0, zk0 + 1.0, 0.065, "wood")
+    s.box(x0 - 0.06, 0.1, x0 + 0.02, 0.22, zl, zl + 0.95, "wood_dark")
+    # plaque "PRIVATE" over the landing + a warm light
+    s.box(14.75, 0.0, 16.4, 0.07, 3.0, 3.25, "wood_dark")
+    s.text("PRIVATE", 15.57, 0.08, 3.05, 0.15, "sign_text", face="left")
+
+
 def market_v2():
     W, H = 17, 18
     s = Scene("corner_market", "Corner Market", W, H, origin_x=H * 16 + 24, origin_y=64,
@@ -1597,12 +1638,11 @@ def market_v2():
     s.sphere(11.75, 3.7, 0.08, 0.18, "mop", sz=0.7)
     s.set_solid(11.2, 3.5, 11.999, 3.999)
     # staff table with chairs, mug and radio
-    s.prop("house/Table_RoundSmall", 15.0, 1.3, h=0.62, solid=True)
-    s.box(14.7, 1.15, 15.0, 1.45, 0.62, 0.72, "goods_white")
-    s.box(15.1, 1.0, 15.5, 1.25, 0.62, 0.75, "metal_dark")
+    s.prop("house/Table_RoundSmall", 13.4, 2.4, h=0.62, solid=True)
+    s.box(13.1, 2.25, 13.4, 2.55, 0.62, 0.72, "goods_white")
+    s.box(13.5, 2.1, 13.9, 2.35, 0.62, 0.75, "metal_dark")
     # storeroom wall decor
     window_y(s, 12.6, 14.0, 0.0, 1.35, 2.3)
-    s.box(14.6, 0.0, 15.7, 0.05, 1.5, 2.2, "poster_red")
     s.box(11.0, 2.0, 11.06, 3.2, 1.5, 2.2, "sign_blue")
     s.text("STAFF ONLY", 11.07, 2.6, 1.85, 0.17, "sign_text", face="right")
     wall_clock_x(s, 11.0, 4.0, 2.4, 0.22)
@@ -1612,6 +1652,9 @@ def market_v2():
         s.point_light(lx, ly, 2.9, 130, colour=(1.0, 0.9, 0.72))
     s.point_light(13.5, 2.5, 2.6, 110, colour=(1.0, 0.92, 0.78))
     s.point_light(9.5, 5.5, 1.8, 40, colour=(0.85, 0.95, 1.0))
+    stairs_flight(s)                                    # s52 (approved): stairs up to the player's future room (no warp yet)
+    s.point_light(15.6, 1.6, 2.9, 230, colour=(1.0, 0.82, 0.55))
+    s.point_light(14.6, 3.4, 1.6, 90, colour=(1.0, 0.85, 0.6))
     s.warp(6.5, 17.1, 9.5, H, "city_centre", 44.0, 19.0, "down")
     return s
 

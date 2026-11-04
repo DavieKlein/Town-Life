@@ -17,6 +17,7 @@ Requirements: Blender (apt-get install blender), numpy, Pillow.
 """
 
 import hashlib
+import json
 import os
 import subprocess
 import sys
@@ -34,6 +35,8 @@ import critters, npcs, cast, story_data        # noqa: E402
 import interactions          # noqa: E402
 import deposit               # noqa: E402
 import pickups               # noqa: E402
+import face_pass             # noqa: E402
+import face_cfg              # noqa: E402
 
 CACHE = os.path.join(ROOT, "art_cache")
 FLOOR_BANKS = 8
@@ -765,6 +768,30 @@ def write_sprite_sheet(name, frames, w, h):
                f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
 
 
+def write_face_sheet(name, frames, stems, facings, w, h, anchors, who, skin_hex):
+    """Like write_sprite_sheet, but with the face pixel pass (tools/face_pass.py): 11 free colours + 3 reserved (eye white,
+    mouth, blush) + outline, faces painted from the Blender-projected anchors. facings[i] = facing name of frame i (None = no face)."""
+    pal, idxs = face_pass.quantize_sheet(frames, face_pass.reserved_colours(who, skin_hex))
+    ctx = face_pass.make_ctx(pal, who, skin_hex)
+    pixels = []
+    for stem, facing, idx in zip(stems, facings, idxs):
+        if facing is not None:
+            face_pass.paint_face(idx, anchors[stem], ctx, facing)
+        pixels.extend(idx.tolist())
+    palette = [(255, 0, 255)] + [tuple(int(v) for v in c) for c in pal[1:16]]
+    write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), pixels, w, h * len(frames), 4, palette)
+    write_text(os.path.join(ROOT, "graphics", name + ".json"),
+               f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
+
+
+FACE_TOOLS = ("face_kit.py", "face_cfg.py", "player_look.py")
+
+
+def tools_hash(h, files):
+    for f in files:
+        h.update(open(os.path.join(TOOLS, f), "rb").read())
+
+
 def build_ui_sprites():
     pixels, pal = hud_sprites.build_light_pool()
     pal = pal + [(0, 0, 0)] * (16 - len(pal))
@@ -802,7 +829,7 @@ def build_player_actions(force, fast):
     colours = json.dumps(PLAYER_COLOURS)
     fbx = os.path.join(ROOT, "art_source", "quaternius_characters", PLAYER_MODEL + ".fbx")
     h = hashlib.sha1()
-    for f in ("scene.py", "blender_render.py", "blender_actor.py"):
+    for f in ("scene.py", "blender_render.py", "blender_actor.py") + FACE_TOOLS:
         h.update(open(os.path.join(TOOLS, f), "rb").read())
     h.update(f"actions{ss}{samples}{colours}{PLAYER_MODEL}".encode())
     out_dir = os.path.join(CACHE, "player_actions_" + h.hexdigest()[:12])
@@ -817,7 +844,9 @@ def build_player_actions(force, fast):
             raise RuntimeError("player action render failed")
     frames = [sprite_frame(os.path.join(out_dir, f"sit_{i}.png"), ss, 64, 64) for i in range(4)]
     frames.append(sprite_frame(os.path.join(out_dir, "lie_0.png"), ss, 64, 64))
-    write_sprite_sheet("player_rest", frames, 64, 64)
+    anchors = json.load(open(os.path.join(out_dir, "anchors.json")))
+    write_face_sheet("player_rest", frames, [f"sit_{i}" for i in range(4)] + ["lie_0"], ["sw"] * 4 + [None], 64, 64,
+                     anchors, "player", PLAYER_COLOURS["Skin"])
 
 
 ACT_SHEETS = ("eat", "drink", "read", "search", "wash", "pickup")
@@ -830,7 +859,7 @@ def build_player_acts(force, fast):
     colours = json.dumps(PLAYER_COLOURS)
     fbx = os.path.join(ROOT, "art_source", "quaternius_characters", PLAYER_MODEL + ".fbx")
     h = hashlib.sha1()
-    h.update(open(os.path.join(TOOLS, "blender_acts.py"), "rb").read())
+    tools_hash(h, ("blender_acts.py",) + FACE_TOOLS)
     h.update(f"acts{ss}{samples}{colours}{PLAYER_MODEL}".encode())
     out_dir = os.path.join(CACHE, "player_acts_" + h.hexdigest()[:12])
     last = os.path.join(out_dir, "pickup_se_3.png")
@@ -842,10 +871,12 @@ def build_player_acts(force, fast):
         if not os.path.exists(last):
             print(r.stdout[-3000:], r.stderr[-3000:])
             raise RuntimeError("player activity render failed")
+    anchors = json.load(open(os.path.join(out_dir, "anchors.json")))
     for act in ACT_SHEETS:
-        frames = [sprite_frame(os.path.join(out_dir, f"{act}_{f}_{i}.png"), ss, 64, 64)
-                  for f in FACINGS for i in range(4)]
-        write_sprite_sheet("player_" + act, frames, 64, 64)
+        stems = [f"{act}_{f}_{i}" for f in FACINGS for i in range(4)]
+        frames = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, 64, 64) for s in stems]
+        write_face_sheet("player_" + act, frames, stems, [f for f in FACINGS for i in range(4)], 64, 64,
+                         anchors, "player", PLAYER_COLOURS["Skin"])
 
 
 def build_critters(force, fast):
@@ -899,20 +930,29 @@ def build_cast(force, fast):
     for name in cast.ORDER:
         look = cast.CHARS[name]
         h = hashlib.sha1()
-        h.update(open(os.path.join(TOOLS, "blender_cast.py"), "rb").read())
+        tools_hash(h, ("blender_cast.py",) + FACE_TOOLS)
         h.update(f"cast{name}{ss}{samples}{sorted(look.items())}".encode())
         out_dir = os.path.join(CACHE, f"cast_{name}_" + h.hexdigest()[:12])
         last = os.path.join(out_dir, "portrait.png")
-        if force or not os.path.exists(last):
+        has_face = name in face_cfg.FACE and name not in cast.PORTRAIT_ONLY
+        sprites_done = os.path.join(out_dir, "anchors.json" if has_face else "se_0.png")
+        if force or not os.path.exists(last) or (name not in cast.PORTRAIT_ONLY and not os.path.exists(sprites_done)):
             print(f"rendering cast member {name}...", flush=True)
-            r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_cast.py"),
-                                "--", name, out_dir, str(ss), str(samples), "both"], capture_output=True, text=True)
-            if not os.path.exists(last):
+            # portraits keep the unchanged look; sprites get the modelled face (separate runs, see blender_cast.py)
+            for md in (["portrait"] if name in cast.PORTRAIT_ONLY else ["portrait", "sprites"]):
+                r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_cast.py"),
+                                    "--", name, out_dir, str(ss), str(samples), md], capture_output=True, text=True)
+            if not os.path.exists(last) or (name not in cast.PORTRAIT_ONLY and not os.path.exists(sprites_done)):
                 print(r.stdout[-3000:], r.stderr[-3000:])
                 raise RuntimeError("cast render failed")
         if name not in cast.PORTRAIT_ONLY:
-            frames = [sprite_frame(os.path.join(out_dir, f"{f}_0.png"), ss, FRAME_W, FRAME_H) for f in FACINGS]
-            write_sprite_sheet("npc_" + name, frames, FRAME_W, FRAME_H)
+            stems = [f"{f}_0" for f in FACINGS]
+            frames = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, FRAME_W, FRAME_H) for s in stems]
+            if has_face:
+                anchors = json.load(open(sprites_done))
+                write_face_sheet("npc_" + name, frames, stems, FACINGS, FRAME_W, FRAME_H, anchors, name, cast.CHARS[name]["colours"]["Skin"])
+            else:
+                write_sprite_sheet("npc_" + name, frames, FRAME_W, FRAME_H)
         write_sprite_sheet("portrait_" + name, [sprite_frame(last, 4, 64, 64)], 64, 64)
     write_cast_header()
 
@@ -925,7 +965,7 @@ FRAMES_PER_FACING = 9                                     # idle + 8 walk frames
 FRAME_W, FRAME_H = 32, 64
 PLAYER_MODEL = "Male_LongSleeve"
 # Our own protagonist outfit (material name -> sRGB): blue top, khaki trousers, brown hair.
-PLAYER_COLOURS = {"Shirt": "#2f5aa8", "Pants": "#c8a46a", "Hair": "#5a3420", "Skin": "#f0c09a",
+PLAYER_COLOURS = {"Shirt": "#2c5fb8", "Pants": "#a98655", "Hair": "#4a2a18", "Skin": "#f0c09a",
                   "Shoes": "#3a2a22", "Socks": "#f2efe6"}
 
 
@@ -935,7 +975,7 @@ def build_player(force, fast):
     colours = json.dumps(PLAYER_COLOURS)
     fbx = os.path.join(ROOT, "art_source", "quaternius_characters", PLAYER_MODEL + ".fbx")
     h = hashlib.sha1()
-    for f in ("scene.py", "blender_render.py", "blender_actor.py"):
+    for f in ("scene.py", "blender_render.py", "blender_actor.py") + FACE_TOOLS:
         h.update(open(os.path.join(TOOLS, f), "rb").read())
     h.update(f"{ss}{samples}{colours}{PLAYER_MODEL}".encode())
     out_dir = os.path.join(CACHE, "player_" + h.hexdigest()[:12])
@@ -948,44 +988,11 @@ def build_player(force, fast):
             print(r.stdout[-3000:], r.stderr[-3000:])
             raise RuntimeError("character render failed")
 
-    frames = []
-    for facing in FACINGS:
-        for i in range(FRAMES_PER_FACING):
-            img = np.asarray(Image.open(os.path.join(out_dir, f"{facing}_{i}.png")).convert("RGBA")).astype(np.float64)
-            img /= 255.0
-            img[..., :3] *= img[..., 3:4]
-            img = img.reshape(FRAME_H, ss, FRAME_W, ss, 4).mean(axis=(1, 3))
-            rgb = np.where(img[..., 3:4] > 0, img[..., :3] / np.maximum(img[..., 3:4], 1e-6), 0) * 255
-            alpha = img[..., 3] >= 0.45
-            frames.append((rgb, alpha))
-
-    # dark outline around the silhouette (helps readability on busy backgrounds)
-    outline_rgb = np.array([40.0, 30.0, 40.0])
-    for rgb, alpha in frames:
-        grown = alpha.copy()
-        grown[1:, :] |= alpha[:-1, :]
-        grown[:-1, :] |= alpha[1:, :]
-        grown[:, 1:] |= alpha[:, :-1]
-        grown[:, :-1] |= alpha[:, 1:]
-        edge = grown & ~alpha
-        rgb[edge] = outline_rgb
-        alpha |= edge
-
-    px = np.concatenate([rgb[alpha] for rgb, alpha in frames]) * WEIGHT
-    cols = kmeans(px, 14, iters=15)
-    cols = to5(cols / WEIGHT)
-    cols = np.concatenate([cols, [outline_rgb]])
-    palette = [(255, 0, 255)] + [tuple(int(v) for v in c) for c in to5(cols)]
-    palette += [(0, 0, 0)] * (16 - len(palette))
-    cw = cols * WEIGHT
-    pixels = []
-    for rgb, alpha in frames:
-        d = ((rgb[..., None, :] * WEIGHT - cw[None, None]) ** 2).sum(3)
-        idx = d.argmin(2) + 1
-        idx[~alpha] = 0
-        pixels.extend(idx.astype(np.uint8).tolist())
-    write_bmp(os.path.join(ROOT, "graphics", "player.bmp"), pixels, FRAME_W, FRAME_H * len(frames), 4, palette)
-    write_text(os.path.join(ROOT, "graphics", "player.json"), '{\n    "type": "sprite",\n    "height": 64\n}\n')
+    stems = [f"{f}_{i}" for f in FACINGS for i in range(FRAMES_PER_FACING)]
+    frames = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, FRAME_W, FRAME_H) for s in stems]
+    anchors = json.load(open(os.path.join(out_dir, "anchors.json")))
+    write_face_sheet("player", frames, stems, [s.split("_")[0] for s in stems], FRAME_W, FRAME_H, anchors, "player",
+                     PLAYER_COLOURS["Skin"])
 
     # soft shadow under the feet (drawn with alpha blending)
     shadow = []

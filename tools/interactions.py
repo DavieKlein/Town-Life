@@ -18,6 +18,7 @@ how fast Fun fills); the 4th element (radius) is 0 for everything but the founta
   ("bookshelf", x, y)             Read a book (30 game minutes).
   ("noticeboard", x, y)           info: no jobs posted yet.
   ("reception", x, y)             info: VaultTech access denied.
+  ("stairs", x, y)                foot of the Corner Market storeroom stairs: "Your room is upstairs. (Coming soon)".
   ("seat", x, y, reach)           indoor chair / sofa / booth bench; you sit facing +y (screen down-left).
   ("seat_x", x, y, reach)         same but facing +x (screen down-right: the sit sprite is mirrored).
                                    (x, y) = where the player's seat is drawn (centre of the seat); `reach` = extra
@@ -38,6 +39,7 @@ INTERACTABLES = {
     ],
     "corner_market": [
         ("shop_market", 12.2, 15.0), ("shop_market", 13.9, 15.0), ("shop_market", 15.2, 15.0),
+        ("stairs", 15.6, 3.75),         # foot of the storeroom stairs (room upstairs not approved yet: info only)
     ],
     "diner": [
         ("shop_diner", 4.6, 4.5), ("shop_diner", 6.4, 4.5), ("shop_diner", 8.2, 4.5),

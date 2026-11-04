@@ -568,6 +568,7 @@ namespace tl
 
             case interactable_kind::bookshelf:
             case interactable_kind::noticeboard:
+            case interactable_kind::stairs:
                 height = 46;
                 break;
 
@@ -700,6 +701,12 @@ namespace tl
             _menu_mode = menu_mode::none;
             _menu_target = nullptr;
             _show_info("VaultTech", "Access denied.", "Have a nice day.", "");
+            break;
+
+        case interactable_kind::stairs:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            _show_info("Stairs", "Your room is upstairs.", "(Coming soon)", "");
             break;
 
         default:

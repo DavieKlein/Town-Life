@@ -11,6 +11,7 @@ from mathutils import Vector
 TOOLS = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, TOOLS)
 from blender_render import rgb
 import cast as cdef
+import face_kit
 CELL_M = 0.75
 FW_, FH_, FX, FY = 32, 64, 16, 54
 FACINGS = {"s": 45, "sw": 0, "w": -45, "nw": -90, "n": -135, "ne": 180, "e": 135, "se": 90}
@@ -114,8 +115,22 @@ else:
     root = bpy.data.objects.new("root", None); sc.collection.objects.link(root)
     arm.parent = root; root.parent = body
     root.scale = (s, s, s); root.location = (0, 0, -min(zs) * s)
-    for p in C["props"]:
-        prim(p[0], p[1], p[2], p[3], body, rot=(p[4] if len(p) > 4 else (0, 0, 0)))
+    FACE = None
+    props = [(prim(p[0], p[1], p[2], p[3], body, rot=(p[4] if len(p) > 4 else (0, 0, 0))), p) for p in C["props"]]
+    if mode == "sprites":
+        # sprites get the s54 face (option B): player-V2 head / hand proportions, modelled face glued to the head bone.
+        # (portraits keep the unchanged look until a new portrait proposal is approved)
+        bpy.context.view_layer.update()
+        FACE = face_kit.Face(sc, arm, name, C["colours"]["Skin"], meshes[0])
+        for o, p in props:                       # head props (caps, hats, glasses, buns) follow the scaled head bone
+            if p[1][2] > 1.55:
+                face_kit.parent_bone(arm, o, "Head")
+                if p[3] in ("#0c0c10", "#2a2a30") and cdef.CHARS[name].get("model") != "ROBOT" and name in ("rosa", "victor"):
+                    FACE.glasses.append(o)
+        face_kit.apply_proportions()
+        FACE.build()
+        FACE.make_anchors()
+        arm.data.pose_position = "POSE"
 
 # lighting like the actors
 world = bpy.data.worlds.new("world"); sc.world = world; world.use_nodes = True
@@ -133,18 +148,25 @@ def setup_cam_sprite(co=None):
     co.location = target - fwd * 40
     return co
 
+FACE = globals().get("FACE")
 if mode in ("sprites", "both"):
     world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.6, 0.66, 0.8, 1)
     world.node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
     sun = bpy.data.lights.new("sun", "SUN"); sun.energy = 3.5; sun.angle = math.radians(10)
     so = bpy.data.objects.new("sun", sun); sc.collection.objects.link(so)
     so.rotation_euler = Vector((-0.25, 0.7, -0.65)).normalized().to_track_quat("-Z", "Y").to_euler()
-    setup_cam_sprite()
+    cam_o = setup_cam_sprite()
+    camfwd = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)), math.cos(math.radians(45)) * math.sin(math.radians(60)), -0.5))
+    anchors = {}
     for fname, angle in FACINGS.items():
         pivot.rotation_euler = (0, 0, math.radians(angle))
         sc.frame_set(1)
         sc.render.filepath = os.path.join(out_dir, f"{fname}_0.png")
         bpy.ops.render.render(write_still=True)
+        if FACE is not None:
+            anchors[f"{fname}_0"] = FACE.project(cam_o, camfwd, FW_, FH_)
+    if FACE is not None:
+        json.dump(anchors, open(os.path.join(out_dir, "anchors.json"), "w"))
     # remove sprite sun for portrait
     bpy.data.objects.remove(so)
 

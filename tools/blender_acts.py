@@ -21,6 +21,8 @@ from mathutils import Matrix, Vector
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scene as scn  # noqa: E402
 from blender_render import rgb  # noqa: E402
+import face_kit  # noqa: E402
+import player_look  # noqa: E402
 
 CELL_M = scn.CELL_M
 FRAME_W, FRAME_H = 64, 64      # wide frames: bending / reaching poses stick out sideways
@@ -121,6 +123,7 @@ class Rig:
             r = Matrix.Rotation(math.radians(deg), 4, AXES[axis]) @ r
         obj.matrix_world = self.arm.matrix_world @ Matrix.Translation(p) @ r @ Matrix.Scale(self.k * scale, 4)
         obj.hide_render = False
+        obj.hide_viewport = False
 
 
 def hand_centre(rig, side):
@@ -266,6 +269,18 @@ def main():
     root.location = (0, 0, -min(zs) * s)
     bpy.context.view_layer.update()
 
+    # player V2 look + modelled face (same as blender_actor.py)
+    face_kit.apply_proportions()
+    player_look.apply(arm)
+    face = face_kit.Face(sc, arm, "player", colours["Skin"], next(m for m in meshes if m.name == "BaseHuman"))
+    face.build()
+    face.make_anchors()
+    arm.data.pose_position = "POSE"
+    bpy.context.view_layer.update()
+    anchors = {}
+    camfwd = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)),
+                     math.cos(math.radians(45)) * math.sin(math.radians(60)), -0.5))
+
     setup_camera(FRAME_W, FRAME_H, FEET_X, FEET_Y)
     world = bpy.data.worlds.new("world")
     sc.world = world
@@ -282,6 +297,7 @@ def main():
     # freeze the idle pose; from now on the pose is set by hand
     arm.animation_data.action = idle
     sc.frame_set(1)
+    face_kit.player_pose_tweaks(arm)
     bpy.context.view_layer.update()
     arm.animation_data.action = None
     rig = Rig(arm)
@@ -309,6 +325,7 @@ def main():
             for i in range(4):
                 for p in props:
                     p.hide_render = True
+                    p.hide_viewport = True
                 ops = {"eat": eat_pose, "drink": drink_pose, "read": read_pose, "search": search_pose, "wash": wash_pose, "pickup": pickup_pose}[act](i)
                 rig.pose(ops)
                 k = rig.k
@@ -354,6 +371,9 @@ def main():
                         ang = [0, -30, -75, 0][i]
                         rig.place(flip, base + Vector((0.01, -0.012, 0.06)) * k, [("Y", ang), ("X", -62)])
                 shot(f"{act}_{fname}_{i}.png")
+                anchors[f"{act}_{fname}_{i}"] = face.project(sc.camera, camfwd, FRAME_W, FRAME_H)
+    with open(os.path.join(out_dir, "anchors.json"), "w") as f:
+        json.dump(anchors, f)
 
 
 main()

@@ -21,6 +21,8 @@ from mathutils import Vector
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scene as scn  # noqa: E402
 from blender_render import rgb  # noqa: E402
+import face_kit  # noqa: E402
+import player_look  # noqa: E402
 
 CELL_M = scn.CELL_M
 FRAME_W, FRAME_H = 32, 64
@@ -58,6 +60,20 @@ def setup_camera(fw, fh, fx, fy, co=None):
 
 
 SS_CURRENT = [4]
+FACE = [None]          # face_kit.Face of the player (V2 look + modelled face), set in main()
+ANCHORS = {}           # frame stem -> projected face anchors (written to anchors.json)
+CAMFWD = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)),
+                 math.cos(math.radians(45)) * math.sin(math.radians(60)), -0.5))
+
+
+def tweak(arm):
+    """Player V2 shoulders: re-applied after every frame_set (the actions key the torso scale)."""
+    face_kit.player_pose_tweaks(arm)
+    bpy.context.view_layer.update()
+
+
+def record(stem, co, fw, fh):
+    ANCHORS[stem] = FACE[0].project(co, CAMFWD, fw, fh)
 
 
 def find_action(suffix):
@@ -123,6 +139,16 @@ def main():
     s = HEIGHT_M / height
     root.scale = (s, s, s)
     root.location = (0, 0, -min(zs) * s)
+    bpy.context.view_layer.update()
+
+    # player V2 look: proportions on the keyframes, outfit details, modelled face (anchors for the pixel pass)
+    face_kit.apply_proportions()
+    player_look.apply(arm)
+    FACE[0] = face_kit.Face(sc, arm, "player", colours["Skin"], next(m for m in meshes if m.name == "BaseHuman"))
+    FACE[0].build()
+    FACE[0].make_anchors()
+    arm.data.pose_position = "POSE"
+    bpy.context.view_layer.update()
 
     co = setup_camera(FRAME_W, FRAME_H, FEET_X, FEET_Y)
 
@@ -140,14 +166,18 @@ def main():
 
     if mode == "actions":
         render_actions(sc, arm, meshes, root, co, out_dir, model_yaw)
+        save_anchors(out_dir)
         return
 
     if mode == "idle":
         for name, angle in FACINGS.items():
             root.rotation_euler = (0, 0, math.radians(angle + model_yaw))
             sc.frame_set(1)
+            tweak(arm)
             sc.render.filepath = os.path.join(out_dir, f"{name}_0.png")
             bpy.ops.render.render(write_still=True)
+            record(f"{name}_0", co, FRAME_W, FRAME_H)
+        save_anchors(out_dir)
         return
 
     w0, w1 = int(walk.frame_range[0]), int(walk.frame_range[1])
@@ -156,13 +186,23 @@ def main():
         root.rotation_euler = (0, 0, math.radians(angle + model_yaw))
         arm.animation_data.action = idle
         sc.frame_set(1)
+        tweak(arm)
         sc.render.filepath = os.path.join(out_dir, f"{name}_0.png")
         bpy.ops.render.render(write_still=True)
+        record(f"{name}_0", co, FRAME_W, FRAME_H)
         arm.animation_data.action = walk
         for i in range(WALK_FRAMES):
             sc.frame_set(w0 + round(i * cycle / WALK_FRAMES))
+            tweak(arm)
             sc.render.filepath = os.path.join(out_dir, f"{name}_{i + 1}.png")
             bpy.ops.render.render(write_still=True)
+            record(f"{name}_{i + 1}", co, FRAME_W, FRAME_H)
+    save_anchors(out_dir)
+
+
+def save_anchors(out_dir):
+    with open(os.path.join(out_dir, "anchors.json"), "w") as f:
+        json.dump(ANCHORS, f)
 
 
 # Interaction poses (approved by the owner): sitting on a bench, sleeping on the side, washing.
@@ -187,7 +227,9 @@ def render_actions(sc, arm, meshes, root, co, out_dir, model_yaw):
     root.rotation_euler = (0, 0, math.radians(model_yaw))
     for i, f in enumerate(SIT_FRAMES):
         sc.frame_set(f0 + f)
+        tweak(arm)
         shot(f"sit_{i}.png")
+        record(f"sit_{i}", co, ACTION_FRAME, ACTION_FRAME)
 
     # sleeping on the side: 40 % sitting blended into idle, laid on its side along the bench (x)
     arm.animation_data.action = None
@@ -198,6 +240,7 @@ def render_actions(sc, arm, meshes, root, co, out_dir, model_yaw):
     s2 = t2.strips.new("sit", 1, sit)
     s2.influence = 0.4
     sc.frame_set(60)
+    tweak(arm)
     root.rotation_euler = (0, math.radians(-90), 0)
     bpy.context.view_layer.update()
     deps = bpy.context.evaluated_depsgraph_get()
@@ -225,6 +268,8 @@ def render_actions(sc, arm, meshes, root, co, out_dir, model_yaw):
         root.rotation_euler = (0, 0, math.radians(angle + model_yaw))
         for i in range(WASH_FRAMES):
             sc.frame_set(c0 + round(i * (c1 - c0) / WASH_FRAMES))
+            tweak(arm)
             shot(f"wash_{name}_{i}.png")
+            record(f"wash_{name}_{i}", co, FRAME_W, FRAME_H)
 
 main()
