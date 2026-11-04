@@ -1,0 +1,22 @@
+--- ../../s52/tools/scene.py	2026-11-04 15:24:44.228615657 +0000
++++ scene.py	2026-11-04 16:02:42.572760859 +0000
+@@ -158,11 +158,11 @@
+     def sphere(self, x, y, z, r, mat, layer="objects", sz=1.0):
+         self.prims.append(dict(type="sphere", x=x, y=y, z=z, r=r, mat=mat, layer=layer, sz=sz))
+ 
+-    def text(self, s, x, y, z, size, mat, face="left", layer="objects", extrude=0.01):
++    def text(self, s, x, y, z, size, mat, face="left", layer="objects", extrude=0.01, bold=False):
+         """Text on a face. face 'left' = facing +y (down-left), 'right' = facing +x (down-right).
+         (x, y, z) = centre of the text baseline area."""
+         self.prims.append(dict(type="text", s=s, x=x, y=y, z=z, size=size, mat=mat, face=face,
+-                               layer=layer, extrude=extrude))
++                               layer=layer, extrude=extrude, bold=bold))
+ 
+     def wedge(self, x0, y0, x1, y1, z_top, z_bottom, depth_axis, mat, layer="objects"):
+         """Awning: a slanted slab sticking out of a wall. depth_axis 'y' = sticks out towards +y."""
+@@ -2260,4 +2260,4 @@
+ SCENES = [city_centre, market_v2, diner, community_centre, vaulttech_lobby, public_toilet]
+ 
+ 
+-import rooms52  # noqa  (s52 proposal scenes)
++import rooms55  # noqa  (s55 proposal scenes)

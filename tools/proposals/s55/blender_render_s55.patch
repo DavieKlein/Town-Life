@@ -1,0 +1,31 @@
+--- ../../s52/tools/blender_render.py	2026-11-04 15:21:45.360716754 +0000
++++ blender_render.py	2026-11-04 16:26:35.937951654 +0000
+@@ -481,6 +481,14 @@
+     "rug_red": dict(c="#a83a34", rough=0.95),
+     "rug_cream": dict(c="#ecdcb4", rough=0.95),
+     "rug_navy": dict(c="#34487a", rough=0.95),
++    "duvet_blue": dict(c="#5a86ae", rough=0.95),
++    "blanket_mustard": dict(c="#dcaa3c", rough=0.95),
++    "pillow_white": dict(c="#f4eee0", rough=0.95),
++    "rug_terra": dict(c="#8a4a3a", rough=0.95),
++    "sign_red": dict(c="#d41c1c", rough=0.45, emit=0.25, emit_c="#ff2020"),
++    "sign_white": dict(c="#ffffff", emit=1.3, emit_c="#ffffff"),
++    "shutter_grey": dict(c="#c6ccd4", rough=0.35, metal=0.5),
++    "hazard_black": dict(c="#1c1c20", rough=0.5),
+     "rug_green": dict(c="#4e8a5a", rough=0.95),
+     "rug_gold": dict(c="#d8a84a", rough=0.95),
+     "rug_teal": dict(c="#4a9a96", rough=0.95),
+@@ -918,6 +926,13 @@
+             continue
+         cu = bpy.data.curves.new("txt", type="FONT")
+         cu.body = p["s"]
++        if p.get("bold"):
++            try:
++                cu.font = bpy.data.fonts.load("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
++                cu.offset = 0.01
++                cu.space_character = 1.3
++            except Exception:
++                pass
+         cu.size = p["size"]
+         cu.align_x = "CENTER"
+         cu.align_y = "CENTER"
