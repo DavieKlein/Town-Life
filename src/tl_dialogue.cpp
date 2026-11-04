@@ -59,8 +59,6 @@ namespace tl
         }
     }
 
-    }
-
     // ---------------------------------------------------------------------------------------------------------
 
     void dialogue_box::open(int speaker, bool show_meter, int friendship, int partner)
@@ -614,6 +612,12 @@ namespace tl
         int by = box_bottom - bh;
         _rows_top = by + 9 + (10 * qn);
         _choosing = true;
+
+        if(_speaker == speaker_system && _partner >= 0)
+        {
+            _speaker = _partner;        // the name tag of the person you are talking to
+        }
+
         _build_layout(layout::two, _speaker, bh);
 
         for(int i = 0; i < qn; ++i)

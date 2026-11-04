@@ -1653,7 +1653,7 @@ def market_v2():
     s.point_light(13.5, 2.5, 2.6, 110, colour=(1.0, 0.92, 0.78))
     s.point_light(9.5, 5.5, 1.8, 40, colour=(0.85, 0.95, 1.0))
     stairs_flight(s)                                    # s52 (approved): stairs up to the player's room
-    s.warp(SX0, 3.5, SX1, S_BOT, "player_room", 5.2, 3.0, "down")      # the foot of the stairs leads up to the room
+    s.warp(14.25, 3.5, SX1, S_BOT, "player_room", 5.2, 3.0, "down")      # the foot of the stairs leads up to the room
     s.point_light(15.6, 1.6, 2.9, 230, colour=(1.0, 0.82, 0.55))
     s.point_light(14.6, 3.4, 1.6, 90, colour=(1.0, 0.85, 0.6))
     s.warp(6.5, 17.1, 9.5, H, "city_centre", 44.0, 19.0, "down")
@@ -2370,7 +2370,7 @@ def stairwell(s, hole=(5.1, 6.3, 3.5, 6.0)):
             s.box(xx - 0.015, yy - 0.015, xx + 0.015, yy + 0.015, 0, zr, "wood_dark")
     s.set_solid(hx0 - 0.1, hy0 + 0.55, hx1 + 0.05, RH)
     s.warp(hx0 + 0.15, hy0 + 0.1, hx1 - 0.15, hy0 + 0.6, "market_stairs", 14.3, 3.75, "right") if False else None
-    s.warp(hx0 + 0.1, hy0 + 0.05, hx1 - 0.1, hy0 + 0.55, "corner_market", 14.3, 3.75, "right")
+    s.warp(hx0 + 0.1, hy0 + 0.05, hx1 - 0.1, hy0 + 0.55, "corner_market", 13.6, 3.75, "right")
 
 
 def window_street(s, wx0, wx1, wz0, wz1, curtain=True):

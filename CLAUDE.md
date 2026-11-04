@@ -116,6 +116,14 @@ Mentors (one per type) and other named characters are still to be designed; keep
   permanent perks (higher pay, slower need decay, faster walking, ...).
 - **Housing ladder:** park bench → rented room → studio → apartment → house in your chosen
   type's style.
+- **Furniture rule (owner):** all furniture in rooms where you live (also temporarily) must later be buyable in a furniture store
+  or online; some furniture in commercial buildings is for sale too. So furniture is never drawn ad hoc: it is a named piece of the
+  **furniture catalog** (`tools/furniture.py`, `FURNITURE`: id, display name, placeholder price, category, footprint, interaction kind,
+  quality 1-3, `use` point, builder). Scenes call `furniture.place(s, id, x, y, rot)` (rot 0 = back against the -y wall, 90 = west wall,
+  180, 270 = east wall; chairs/plants are placed by their centre). `Local` rotates the piece's local drawing; `use_point()` gives the
+  interaction point so `tools/interactions.py` derives the interactables from the placement list (`scene.ROOM_FURNITURE`). No shop yet.
+  The diner / library chairs, sofa, toilet, sink and pedal bin are catalog entries too, but the existing scenes keep their inline calls
+  with identical parameters (switching would change float rounding and force a re-render); use `place()` for all new furniture.
 - **Income ladder:** odd jobs → steady job → promotion → own business (passive daily income) →
   investing.
 - **Vehicles as rewards:** bike → scooter → car (faster movement around town).
@@ -532,12 +540,26 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   The cast.py player entry (portrait only) still has the old colours.
 - Proposal scripts: `tools/proposals/s54/`.
 
+### The player's room above the Corner Market (s55 variant B2, approved; built s57)
+
+Scene `player_room` (8x7 cells, indoor, `scene.player_room()`, furniture only from the catalog): butter-yellow walls, big street window
+with a window seat, bed, bedside lamp, wardrobe, desk + chair, wall shelf with radio, rug, plant, backpack, sneakers. The storeroom stairs
+foot in `corner_market` is a warp (x 14.25-16.25, y 3.5-4.0, the foot corridor is only one hitbox high: walk down+right) to the room
+(arrive 5.2, 3.0); the stairwell's top steps warp back down to (13.6, 3.75) (must stay OUTSIDE the stair warp rect).
+Interactions (kinds `bed`, `desk`, `window`, `wardrobe` + the shelf as `bookshelf` q1; the 4th tuple element is extra reach in cells):
+- **bed**: Sleep (lying pose = `player_rest` frame 4 raised 10 px onto the mattress, clock 8x, Energy +1.0/min, wakes at Energy 100 or
+  with D-pad/B; after >= 30 min asleep a "Slept well. Save game?" Yes/No dialog uses the pause-menu save flow, `pause_mode::sleep_save`),
+  Take a nap (1 h, Energy +20, "You feel refreshed."), Leave; "You're not tired." at Energy >= 90.
+- **desk**: Read (bookshelf q1, +30 min) / Check notes (current objective, word-wrapped info). **window**: flavour text by time of day
+  (story flags can refine it later). **wardrobe**: "Work shirts, jeans... and a green apron."
+Render cache note: `scene_hash` ignores `blender_render.py` lines marked `# s57-materials` and the `furniture` attribute, so adding the
+room's materials did not re-render the city.
+
 ### Corner Market storeroom stairs (s52, approved)
 
 14-step wooden flight with handrail and PRIVATE plaque along the east wall of the storeroom (x 15.0-16.25, y 4.0 up to 0.9; `stairs_flight`
 in scene.py, applied inside `market_v2`; staff table moved to (13.4, 2.4), red poster removed). The flight is solid; the foot (15.0-16.25 x
-3.5-4.0) is walkable and has an interactable `stairs` at (15.6, 3.75): A shows "Your room is upstairs. (Coming soon)". There is no warp
-yet because the room above (`room_attic` / `room_plain`, proposals/s52/rooms52.py) and the VaultMart gate are not approved.
+3.5-4.0) is walkable and is the warp up to the room. The room above is built (see above). The VaultMart staff gate (proposals/s55 `market_gate_a/b`) is NOT in the game yet: the owner has not chosen A or B.
 
 ### UI style system (tl_ui, tools/ui_assets.py)
 
@@ -611,14 +633,35 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
 
 ---
 
+## Dialogue portraits and layouts (s57, owner-approved s55)
+
+- **Painter**: `tools/portraits/` (own parametric 2D painter, no Blender): `pt.py` toolkit, `chars.py` face model + 5 expressions (neutral,
+  happy, angry, sad, surprised) + character table `CH`, `parts_<char>.py` (hair, clothes, accessories), `robot.py` (Valet: screen face),
+  `portraits.py` (render + ONE shared 15-colour palette per character, cached in `art_cache/portraits_<hash>.pkl`; run alone:
+  `python3 tools/portraits/portraits.py OUTDIR [chars]` writes a contact sheet). Characters: player (V2 colours), mia, rosa, dex,
+  dex_vault, pimm, lou, victor, robot. New speakers need an entry in `chars.CH` and a `parts_<id>.py`.
+- **Assets** (`build_assets.build_portraits`): per character `graphics/pt_<id>_a..d` (128 px as four 64x64 quarters TL TR BL BR) and
+  `pq_<id>_a..d` (96 px pieces 64x64 / 32x64 / 64x32 / 32x32), each with 5 frames = expressions; generated table
+  `src/tl_portrait_data.cpp` (`portrait_for(speaker)`, header `include/tl_portrait.h`, `expression` enum). The old 64 px Blender portraits
+  are gone (`build_cast` only renders sprites; the player is no longer a cast render).
+- **Layout 1** (normal talk): panel 240x50 at y 106, the 128 px portrait stands at the bottom left (x -14, y 30) in front of the box,
+  gold tag at (118, 96), four text lines (x 116, 104 px wide, baseline 119 + 10 n), small meter at (222, 114), A icon (226, 146).
+  **Layout 2** (choices, `dialogue_box::choose`): the last page becomes the question (up to 3 lines), options as highlight rows (x 7, w 122,
+  pitch 14), the 96 px NPC portrait mirrored at (142, 60), the tall 76 px meter (`ui_mt_top/mid/bot`, three stacked sprites) at (132, 64);
+  the box grows with the content (bottom fixed at 156). System pages and speakers without a portrait (Halloran) keep the 40 px box.
+  Expressions swap by `set_tiles(frame)`; sprites: 4 portrait + meter, one portrait palette.
+- **Expressions in dialogue**: `SPEAKER:expression| text` in `tools/dialogue_src.txt` (default neutral; `dlg_node::expr`). Pages without one
+  use the NPC's mood in greetings (good = happy, grumpy = angry) and the topic result in small-talk answers (liked = happy, disliked = sad /
+  angry).
+
 ## Story systems (dialogue, missions, cast) - built in session s53
 
-- **Dialogue box** (`tl_dialogue.h/.cpp`, class `dialogue_box`): approved "variant 2" in the Paper/Night style: 40 px box at the
+- **Dialogue box** (`tl_dialogue.h/.cpp`, class `dialogue_box`): SUPERSEDED by the layouts in "Dialogue portraits and layouts" above (old text: 40 px box at the
   bottom (covers the HUD while open; HUD text is freed and the need bars hidden), the speaker's 64x64 portrait standing on it at
   the left, gold name tag (`ui_tag` pieces), text typed out (A completes the page, then next; B same), word-wrapped to 3 lines
   (140 px, 196 px for system pages without portrait) and split into pages, blinking A button, choices (2-4) in a panel above the
   box, vertical friendship meter (`ui_meter`, red bottom to green top, gold tick at 70, number + "+6"/"-4" delta) at the right
-  edge, animating about 3 frames per point. The clock is frozen during conversations.
+  edge, animating about 3 frames per point). The clock is frozen during conversations.
 - **`conversation`** (same files): plays dialogue nodes (pages, choices, effects) and runs **small talk**: greeting by mood, 3 random
   topics out of 8 (+ Bye; first talk of a day always offers a liked topic), player opener, NPC answer, friendship per
   docs/story_chapter1.md 4.5 (like +6, neutral +2, dislike -4, mood x1.5/x0.5, repeat falloff over 3 days, daily cap +12, +1 for
@@ -638,7 +681,7 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
   `field::_handle_story_events` checks the mission after conversations, every game minute and on map entry and shows a system page.
   Pause screen: "Monday, day 1" header, objective from the mission, new option **Mission log** (`log_screen`: current + finished list).
 - **Cast NPCs**: looks and PLACEMENTS in `tools/cast.py` (Mia, Rosa, Dex, Dex VaultMart, Pimm, Lou, Victor, Valet + player portrait), rendered by
-  `tools/blender_cast.py` via `build_assets.build_cast` into `graphics/npc_<id>.bmp` (8 facings 32x64) and `graphics/portrait_<id>.bmp` (64x64, 15
+  `tools/blender_cast.py` via `build_assets.build_cast` into `graphics/npc_<id>.bmp` (8 facings 32x64); portraits now come from tools/portraits (old: `portrait_<id>.bmp` 64x64, 15
   colours), plus generated `include/tl_cast_data.h` (npc_id enum, `npc_placements` by map/day/time). Placed now: Mia (market checkout Day 1
   7:00-14:30; diner 7-15 from Day 2; fountain bench 12:00-12:30), Lou (diner 6-22), Pimm (library 10-15:30, park pond 16-18). Rosa/Dex/Victor/Valet
   only in later story scenes. `tl_npcs` rebuilds the present set each game minute, NPCs block the player (`player::set_blockers`), are lit like
@@ -806,7 +849,7 @@ lamps, a café table, a mailbox, etc. It was reverted from main until the owner 
   library with a job notice board (NW building), VaultTech lobby.
 - Pending proposals: finer collision (4 sub-cells per cell), water in the fountain basin, and a
   more natural water texture.
-- **Dialogue box:** variant 2. A 40 px box at the bottom with the speaker's 64x64 portrait
+- **Dialogue box (superseded by layouts 1/2, see "Dialogue portraits and layouts"):** variant 2. A 40 px box at the bottom with the speaker's 64x64 portrait
   standing on it at the left, overlapping the view. The name tag is gold, there are 3 text lines
   in the 8x8 font and an "A" button. It must also offer **choice options**. Mock-up scripts are in
   /tmp/claude-0/s34 (scratch, may be gone): `portrait.py` renders the head-and-shoulders portrait

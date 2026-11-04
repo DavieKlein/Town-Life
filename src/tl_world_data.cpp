@@ -536,7 +536,7 @@ namespace
         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     };
     constexpr warp corner_market_warps[] = {
-        { 240, 56, 20, 8, map_id::player_room, 83, 48, direction::down },
+        { 228, 56, 32, 8, map_id::player_room, 83, 48, direction::down },
         { 104, 273, 48, 14, map_id::city_centre, 704, 304, direction::down },
     };
     constexpr occluder corner_market_occluders[] = {
@@ -1005,7 +1005,7 @@ namespace
         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     };
     constexpr warp player_room_warps[] = {
-        { 75, 56, 16, 8, map_id::corner_market, 228, 60, direction::right },
+        { 75, 56, 16, 8, map_id::corner_market, 217, 60, direction::right },
     };
     constexpr occluder player_room_occluders[] = {
         { -6, -6, 128, 1, 128, 4, 270, 148 },
