@@ -155,8 +155,13 @@ class Scene:
         """Smooth round tube through points (x, y in cells, z in metres)."""
         self.prims.append(dict(type="tube", pts=[list(q) for q in pts], r=r, mat=mat, layer=layer))
 
-    def sphere(self, x, y, z, r, mat, layer="objects", sz=1.0):
-        self.prims.append(dict(type="sphere", x=x, y=y, z=z, r=r, mat=mat, layer=layer, sz=sz))
+    def sphere(self, x, y, z, r, mat, layer="objects", sz=1.0, sx=1.0, sy=1.0):
+        d = dict(type="sphere", x=x, y=y, z=z, r=r, mat=mat, layer=layer, sz=sz)
+        if sx != 1.0:
+            d["sx"] = sx            # stretch along x / y (only stored when used, so old scenes keep their cache key)
+        if sy != 1.0:
+            d["sy"] = sy
+        self.prims.append(d)
 
     def text(self, s, x, y, z, size, mat, face="left", layer="objects", extrude=0.01):
         """Text on a face. face 'left' = facing +y (down-left), 'right' = facing +x (down-right).

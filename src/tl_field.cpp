@@ -22,7 +22,7 @@ namespace tl
         constexpr int frames_per_game_minute_asleep = 4;   // time flies while sleeping on a bench
         constexpr int frames_per_game_minute_bed = 8;      // in the bed the clock runs 8x
         constexpr int nap_minutes = 60;
-        constexpr int bed_lift = 10;                       // the lying figure is raised onto the mattress (pixels)
+        constexpr int bed_lift = 14;                       // the lying figure is raised onto the mattress (pixels)
         constexpr int bar_levels = 16;                 // frames in need_bar.bmp
         constexpr int interact_reach = 26;             // world units from a bench seat
         constexpr int fountain_reach = 32;             // world units beyond the fountain radius

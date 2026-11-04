@@ -635,6 +635,8 @@ def add_sphere(bm, p):
     res = bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=10, radius=p["r"])
     for v in res["verts"]:
         v.co.z *= p.get("sz", 1.0)
+        v.co.x *= p.get("sx", 1.0)  # s57-materials
+        v.co.y *= p.get("sy", 1.0)  # s57-materials
     x, y, _ = bl(p["x"], p["y"])
     bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, p["z"])))
 

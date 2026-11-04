@@ -36,6 +36,7 @@ namespace tl
         // seat point is at (32, 44). player_wash.bmp: 64x64, 8 facings x 4 frames, feet at (32, 54).
         constexpr int rest_origin_y = 44 - 32;
         constexpr int sleep_frame = 4;
+        constexpr int bed_frame = 5;               // on the back in the player's bed (head towards -x, on the pillow)
         constexpr int rest_mirror_shift = 6;       // the seated figure is ~3 px right of the frame centre: mirroring moves it
 
         constexpr int act_frames_per_facing = 4;
@@ -384,7 +385,7 @@ namespace tl
             return;
         }
 
-        int frame = _activity == activity::sleeping ? sleep_frame : (_activity_timer / 20) % 4;
+        int frame = _activity == activity::sleeping ? (_rest_lift > 0 ? bed_frame : sleep_frame) : (_activity_timer / 20) % 4;
         _rest_sprite->set_tiles(bn::sprite_items::player_rest.tiles_item(), frame);
     }
 
@@ -524,9 +525,11 @@ namespace tl
             int sy = _map->to_image_y(_seat_x, _seat_y);
             x0 = sx - 32;
             x1 = sx + 32;
-            y0 = sy - rest_origin_y - 32;
-            y1 = sy - rest_origin_y + 32;
-            depth = _seat_x + _seat_y + 12;     // a bit in front of the seat: the bench stays behind
+            y0 = sy - rest_origin_y - 32 - _rest_lift;
+            y1 = sy - rest_origin_y + 32 - _rest_lift;
+            // a bit in front of the seat: the bench stays behind. In bed (_rest_lift > 0) the sleeper is pulled back to just in front
+            // of the pillow, so the duvet and footboard draw over his body and only head and shoulders show.
+            depth = _rest_lift > 0 ? _seat_x + _seat_y - 17 : _seat_x + _seat_y + 12;
             return;
         }
 

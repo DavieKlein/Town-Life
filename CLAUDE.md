@@ -833,6 +833,11 @@ blender_render.py code is in commit `c3aaccc` (WIP). It adds projecting shop sig
 lamps, a café table, a mailbox, etc. It was reverted from main until the owner wants details.
 
 **Owner decisions (latest):**
+- **VaultTech staff gate = variant B** (roll-down shutter with a big red STAFF ONLY sign), proposal `tools/proposals/s55` (gate B). To be built
+  together with the prologue / firing scene (not before).
+- **Player bed (s58):** the bed has ONE soft puffy pillow (flattened sphere, `s.sphere(..., sx, sy, sz)`) centred at the head end. The sleeper uses
+  `player_rest` frame 5 (`bed_0`, lying on the back, head towards -x, from `blender_actor.py`), lifted `bed_lift` 14 px onto the mattress; the
+  front-layer mask depth is pulled back (`seat sum - 17`) so the duvet draws over the body and only head and shoulders show. Frame 4 stays for the bench.
 - **Corner Market v2 interior: APPROVED.** It is bigger and L-shaped, with 2-cell aisles, wall
   shelves, 2 gondolas, a freezer, a fridge, crates, a checkout and a storeroom. The proposal
   scene code is in /tmp/claude-0/s36/tools (scratch). Still to add: Mia at the checkout and buying

@@ -846,8 +846,9 @@ def build_player_actions(force, fast):
             raise RuntimeError("player action render failed")
     frames = [sprite_frame(os.path.join(out_dir, f"sit_{i}.png"), ss, 64, 64) for i in range(4)]
     frames.append(sprite_frame(os.path.join(out_dir, "lie_0.png"), ss, 64, 64))
+    frames.append(sprite_frame(os.path.join(out_dir, "bed_0.png"), ss, 64, 64))     # on the back in the player's bed
     anchors = json.load(open(os.path.join(out_dir, "anchors.json")))
-    write_face_sheet("player_rest", frames, [f"sit_{i}" for i in range(4)] + ["lie_0"], ["sw"] * 4 + [None], 64, 64,
+    write_face_sheet("player_rest", frames, [f"sit_{i}" for i in range(4)] + ["lie_0", "bed_0"], ["sw"] * 4 + [None, None], 64, 64,
                      anchors, "player", PLAYER_COLOURS["Skin"])
 
 

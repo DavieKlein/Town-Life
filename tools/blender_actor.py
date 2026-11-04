@@ -259,6 +259,27 @@ def render_actions(sc, arm, meshes, root, co, out_dir, model_yaw):
     ad.nla_tracks.remove(t1)
     root.location = base_loc
 
+    # lying on the back in the player's bed: head towards -x (the pillow), face up, legs straight (the duvet covers them).
+    # Centred on the origin, feet of the figure on the floor (the game lifts the sprite onto the mattress).
+    arm.animation_data.action = find_action("_Idle")
+    sc.frame_set(1)
+    tweak(arm)
+    root.rotation_euler = (math.radians(-90), 0, math.radians(90 + model_yaw))
+    bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get()
+    pts = []
+    for o in meshes:
+        ev = o.evaluated_get(deps)
+        me = ev.to_mesh()
+        pts += [ev.matrix_world @ v.co for v in me.vertices]
+        ev.to_mesh_clear()
+    cx = (min(p.x for p in pts) + max(p.x for p in pts)) / 2
+    cy = (min(p.y for p in pts) + max(p.y for p in pts)) / 2
+    mz = min(p.z for p in pts)
+    root.location = (root.location.x - cx, root.location.y - cy, root.location.z - mz)
+    shot("bed_0.png")
+    root.location = base_loc
+
     # washing (hands rubbing in front of the chest), 8 facings, normal 32x64 frames
     setup_camera(FRAME_W, FRAME_H, FEET_X, FEET_Y, co=co)
     clap = find_action("_Clapping")
