@@ -10,6 +10,7 @@
 #include "tl_title.h"
 #include "tl_story.h"
 #include "tl_name_entry.h"
+#include "tl_minigame.h"
 
 #ifdef TL_DEBUG_CPU
 #include "bn_core.h"
@@ -20,6 +21,24 @@
 int main()
 {
     bn::core::init();
+
+#ifdef TL_DEBUG_MINIGAME
+    // Debug build only: starts a minigame straight away (1 = STOCK IT!, 2 = PLATE RUSH) with a bot (TL_DEBUG_BOT) for headless tests.
+    {
+        tl::minigame_request request;
+        request.kind = TL_DEBUG_MINIGAME == 1 ? tl::minigame_kind::stock_it : tl::minigame_kind::plate_rush;
+        request.start_minutes = TL_DEBUG_MINIGAME == 1 ? 7 * 60 + 30 : 11 * 60;
+#ifdef TL_DEBUG_BOT
+        request.bot = TL_DEBUG_BOT;
+#endif
+        tl::run_minigame(request);
+
+        while(true)
+        {
+            bn::core::update();
+        }
+    }
+#endif
 
     // Title screen first; "Quit to title" in the pause menu soft-resets back to here.
     bool continue_game = tl::run_title();

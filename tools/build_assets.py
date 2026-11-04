@@ -35,6 +35,7 @@ import critters, npcs, cast, story_data        # noqa: E402
 import interactions          # noqa: E402
 import deposit               # noqa: E402
 import pickups               # noqa: E402
+import minigame_art          # noqa: E402
 import face_pass             # noqa: E402
 import face_cfg              # noqa: E402
 
@@ -804,6 +805,7 @@ def build_ui_sprites():
     write_bmp(os.path.join(ROOT, "graphics", "need_bar.bmp"), pixels, 32, len(pixels), 4, pal)
     write_text(os.path.join(ROOT, "graphics", "need_bar.json"), '{\n    "type": "sprite",\n    "height": 8\n}\n')
     ui_assets.main()           # panels, highlight bars, icons, fonts (tools/ui_assets.py)
+    minigame_art.build()       # STOCK IT! / PLATE RUSH backgrounds and sprites (needs the portraits: run after build_portraits)
     # can & bottle pickups (16x16, 6 items x 2 twinkle frames) and their spawn spots
     frames, pal = pickups.frames_list()
     pal = pal + [(0, 0, 0)] * (16 - len(pal))
