@@ -12,6 +12,8 @@
 #include "bn_sprite_items_light_pool.h"
 
 #include "tl_deposit_spots.h"
+#include "tl_story_ids.h"
+#include "tl_cutscene_ids.h"
 
 namespace tl
 {
@@ -47,6 +49,10 @@ namespace tl
         constexpr bn::string_view market_labels[] = { "Bread $2", "Apple $1", "Ready meal $5", "Soda $1" };
         constexpr shop_item market_items[] = {
             { 2, 1, 15, 3, 0, 0 }, { 1, 1, 6, 1, 0, 0 }, { 5, 2, 35, 8, 0, 0 }, { 1, 1, 4, 3, 4, -8 } };
+        // VaultMart (cold Corner Market from Day 1 evening): about 50 % dearer (docs/story_chapter1.md 4.2), plus the grey nutrient loaf
+        constexpr bn::string_view cold_labels[] = { "Bread $3", "Apple $2", "Ready meal $7", "Soda $2", "Nutrient loaf $2" };
+        constexpr shop_item cold_items[] = {
+            { 3, 1, 15, 3, 0, 0 }, { 2, 1, 6, 1, 0, 0 }, { 7, 2, 35, 8, 0, 0 }, { 2, 1, 4, 3, 4, -8 }, { 2, 1, 12, 2, -3, 0 } };
         constexpr bn::string_view diner_labels[] = { "Coffee $2", "Pancakes $4", "Burger $6" };
         constexpr shop_item diner_items[] = {
             { 2, 2, 0, 15, 5, -10 }, { 4, 2, 25, 8, 0, 0 }, { 6, 3, 40, 12, 0, 0 } };
@@ -73,7 +79,7 @@ namespace tl
         // Effects per game minute while resting.
         constexpr bn::fixed sit_fun = 0.35;
         constexpr bn::fixed sit_energy = 0.15;
-        constexpr bn::fixed sleep_energy = 0.5;             // on a bench
+        constexpr bn::fixed sleep_energy = 0.3;             // on a bench (docs/story_chapter1.md 4.6: slower, a stiff back)
         constexpr bn::fixed bed_energy = 1.0;               // a night in the bed
         constexpr bn::fixed nap_energy = bn::fixed(20) / 60;    // a nap: +20 Energy over its hour
         constexpr bn::fixed wash_face_hygiene = 35;
@@ -149,6 +155,7 @@ namespace tl
         _floor_bg.emplace(0, _map->floor, _map->image_width, _map->image_height, floor_priority);
         _objects_bg.emplace(1, _map->objects, _map->image_width, _map->image_height, objects_priority,
                             front_priority);
+        _pan_mode = 0;
         _player.place(*_map, x, y, facing);
         _critters.load(*_map);
         _map_id = id;
@@ -157,8 +164,31 @@ namespace tl
         _story_check_due = true;
         _deposit.load(*_map);
         _pool_sprites.clear();
+        _map_story_state();             // staff gate, cold VaultMart palette (story flags)
         _update_lighting(true);
         _update_camera();
+    }
+
+    int field::_npc_index(npc_id who) const
+    {
+        for(int index = 0; index < _npcs.count(); ++index)
+        {
+            if(_npcs.id_of(index) == who)
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    void field::begin_black()
+    {
+        _state = state::playing;
+        _fade_counter = fade_frames;
+        _fade_target = fade_frames;
+        _set_fade(fade_frames);
+        _set_hud_hidden(true);
     }
 
     void field::_update_camera()
@@ -170,8 +200,9 @@ namespace tl
         int max_x = _map->view_x1 - view_width;
         int min_y = _map->view_y0;
         int max_y = _map->view_y1 - view_height;
-        int target_x = _player.focus_x() - (view_width / 2);
-        int target_y = _player.focus_y() - (view_height / 2);
+        _update_focus();
+        int target_x = _focus_x - (view_width / 2);
+        int target_y = _focus_y - (view_height / 2);
         _cam_x = min_x <= max_x ? clamp(target_x, min_x, max_x) : (min_x + max_x) / 2;
         _cam_y = min_y <= max_y ? clamp(target_y, min_y, max_y) : (min_y + max_y) / 2;
 
@@ -187,6 +218,7 @@ namespace tl
 
         _floor_bg->set_view(_cam_x, _cam_y);
         _objects_bg->set_view(_cam_x, _cam_y);
+        _update_gate_sprites();
         _player.update_sprite(_cam_x, _cam_y);
         _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
         _npcs.update(_cam_x, _cam_y);
@@ -210,7 +242,7 @@ namespace tl
         if(force || _light_minutes != _minutes)
         {
             _light_minutes = _minutes;
-            _light = lighting_at(_minutes, _map->outdoor);
+            _light = _cold ? cold_lighting() : lighting_at(_minutes, _map->outdoor);
             _player.set_lighting(_light);
             _npcs.set_lighting(_light);
             _critters.set_lighting(_light);
@@ -284,6 +316,11 @@ namespace tl
 
     void field::_redraw_hud_text()
     {
+        if(_hud_hidden)
+        {
+            return;         // the HUD text stays away while a dialogue / cutscene covers it
+        }
+
         ui::set_night(is_night(_minutes));
         int hours = (_minutes / 60) % 24;
         int minutes = _minutes % 60;
@@ -375,6 +412,18 @@ namespace tl
                 _needs.add(needs::energy, gain - needs::decay[needs::energy]);
                 _needs.add(needs::hunger, -needs::decay[needs::hunger] / 2);    // hunger slows down asleep
                 ++_sleep_minutes;
+
+                if(_sleep == sleep_kind::bench)
+                {
+                    _needs.add(needs::hygiene, -0.03);          // a night outdoors
+                    _needs.add(needs::fun, _sleep_minutes == 300 ? -10 : 0);        // "stiff back" after five hours
+
+                    // the sleeper wakes at Energy 100 or at 7:30, but never before four hours
+                    if(_sleep_minutes >= 240 && (_needs.values[needs::energy] >= 100 || _minutes == 7 * 60 + 30))
+                    {
+                        _player.wake();
+                    }
+                }
 
                 if((_sleep == sleep_kind::night && _needs.values[needs::energy] >= 100) ||
                    (_sleep == sleep_kind::nap && _sleep_minutes >= nap_minutes))
@@ -480,6 +529,13 @@ namespace tl
         {
             const interactable& it = _map->interactables[index];
             int reach = interact_reach;
+
+            if((it.kind == interactable_kind::gate && ! story().flag(story_flag::vault_scene)) ||
+               (it.kind == interactable_kind::crate && ! (story().flag(story_flag::pimm_scene) && ! story().flag(story_flag::has_rye) &&
+                                                          ! story().flag(story_flag::rye_delivered))))
+            {
+                continue;
+            }
 
             if(it.kind == interactable_kind::fountain)
             {
@@ -697,7 +753,16 @@ namespace tl
 
         case interactable_kind::shop_market:
         case interactable_kind::shop_diner:
-            _open_shop(*best);
+            if(best->kind == interactable_kind::shop_market && story().flag(story_flag::corner_market_cold))
+            {
+                // the robot voice of the self-checkout (HOOK VAULTMART_SWAP: the real VaultMart counter is pending)
+                _shop_return = best;
+                _show_info("VaultMart", "Welcome to VaultMart.", "Have a nice day.", "Next customer.");
+            }
+            else
+            {
+                _open_shop(*best);
+            }
             break;
 
         case interactable_kind::seat:
@@ -757,6 +822,20 @@ namespace tl
             _show_info("Wardrobe", "Work shirts, jeans...", "and a green apron.", "");
             break;
 
+        case interactable_kind::gate:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            _show_info("VaultTech", "STAFF ONLY.", "VaultMart property.", "");
+            break;
+
+        case interactable_kind::crate:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            story().set_flag(story_flag::has_rye, 1);
+            _sync_objective();
+            _show_info("Storeroom", "You carry the rye loaf.", "Take it to Mr. Pimm.", "");
+            break;
+
         default:
             _menu_mode = menu_mode::none;
             _menu_target = nullptr;
@@ -769,27 +848,47 @@ namespace tl
         _menu_target = &target;
         _menu_mode = menu_mode::shop;
 
-        // The shop menu also offers a chat with the person behind the counter (if somebody is in reach).
+        // The shop menu also offers a chat with the person behind the counter (if somebody is in reach), and at the diner the job.
         static bn::string_view options[5];
+        static bn::string_view voucher_label = "Coffee (voucher)";
+        static bn::string_view shift_label = "Work a shift";
         bool market = target.kind == interactable_kind::shop_market;
-        int count = market ? 4 : 3;
+        bool cold = market && story().flag(story_flag::corner_market_cold);
+        int count = market ? (cold ? 5 : 4) : 3;
 
         for(int index = 0; index < count; ++index)
         {
-            options[index] = market ? market_labels[index] : diner_labels[index];
+            options[index] = market ? (cold ? cold_labels[index] : market_labels[index]) : diner_labels[index];
+        }
+
+        if(! market && story().flag(story_flag::has_coffee_voucher) && ! story().flag(story_flag::voucher_used))
+        {
+            options[0] = voucher_label;
+        }
+
+        _shop_has_shift = ! market && story().flag(story_flag::diner_job);
+
+        if(_shop_has_shift)
+        {
+            options[count++] = shift_label;
         }
 
         int d2 = 0;
         _shop_npc = _npcs.find(_player.x(), _player.y(), 48, d2);
 
-        if(_shop_npc >= 0)
+        if(_shop_npc >= 0 && count < 5)
         {
             _talk_label = "Talk to ";
             _talk_label.append(npc_infos[int(_npcs.id_of(_shop_npc))].name);
             options[count++] = _talk_label;
         }
+        else
+        {
+            _shop_npc = -1;
+        }
 
-        _menu.open(market ? "Corner Market" : "Diner", options, count);
+        _shop_items = market ? (cold ? 5 : 4) : 3;
+        _menu.open(market ? (cold ? "VaultMart" : "Corner Market") : "Diner", options, count);
     }
 
     void field::_show_info(const char* title, const char* line_a, const char* line_b, const char* line_c)
@@ -809,7 +908,14 @@ namespace tl
     void field::_buy(const interactable& target, int choice)
     {
         bool market = target.kind == interactable_kind::shop_market;
-        const shop_item& item = market ? market_items[choice] : diner_items[choice];
+        bool cold = market && story().flag(story_flag::corner_market_cold);
+        shop_item item = market ? (cold ? cold_items[choice] : market_items[choice]) : diner_items[choice];
+        bool voucher = ! market && choice == 0 && story().flag(story_flag::has_coffee_voucher) && ! story().flag(story_flag::voucher_used);
+
+        if(voucher)
+        {
+            item.price = 0;
+        }
 
         if(_money < item.price)
         {
@@ -820,6 +926,13 @@ namespace tl
 
         // Pay, then eat right away: the needs fill gradually during the eating animation.
         _money -= item.price;
+
+        if(voucher)
+        {
+            story().set_flag(story_flag::voucher_used, 1);
+        }
+
+        _note_evening(true, false);
         _redraw_hud_text();
         int frames = 100 + (5 * (item.hunger + item.energy)) + (20 * item.quality);
         _begin_activity(frames > 360 ? 360 : frames);
@@ -871,14 +984,18 @@ namespace tl
         _begin_activity(search_frames);
         int roll = _rng.get_unbiased_int(100);
 
-        if(roll < 35)
+        if(roll < 30)
         {
-            _act.gain[needs::hunger] = 12;
-            _act.gain[needs::hygiene] = -12;
-            _info_line_a = "You found half a";
-            _info_line_b = "sandwich.";
+            // food scraps (docs/story_chapter1.md 4.7): half a sandwich 60 %, a stale roll 25 %, a bruised apple 15 %
+            int kind = _rng.get_unbiased_int(100);
+            int hunger = kind < 60 ? 12 : (kind < 85 ? 8 : 5);
+            _act.gain[needs::hunger] = hunger;
+            _act.gain[needs::hygiene] = -hunger;
+            _info_line_a = kind < 60 ? "You found half a" : (kind < 85 ? "You found a stale" : "You found a");
+            _info_line_b = kind < 60 ? "sandwich." : (kind < 85 ? "roll." : "bruised apple.");
+            _note_evening(true, false);
         }
-        else if(roll < 55)
+        else if(roll < 50)
         {
             int amount = 1 + _rng.get_unbiased_int(3);
             _act.money = amount;
@@ -887,6 +1004,13 @@ namespace tl
             _info_line_a.append(bn::to_string<4>(amount));
             _info_line_a.append('!');
             _info_line_b = "";
+        }
+        else if(roll < 55)
+        {
+            _act.money = 5;
+            _act.gain[needs::hygiene] = -5;
+            _info_line_a = "A lost coin purse!";
+            _info_line_b = "$5 inside.";
         }
         else
         {
@@ -1059,7 +1183,13 @@ namespace tl
 
         if(mode == menu_mode::shop)
         {
-            int items = target->kind == interactable_kind::shop_market ? 4 : 3;
+            int items = _shop_items;
+
+            if(_shop_has_shift && choice == items)
+            {
+                _try_start_shift();
+                return;
+            }
 
             if(choice >= items)
             {
@@ -1095,6 +1225,7 @@ namespace tl
             {
                 _sleep = sleep_kind::bench;
                 _sleep_minutes = 0;
+                story().set_flag(story_flag::slept_on_bench, 1);
                 _player.sleep_on(target->x, target->y);
             }
             break;
@@ -1142,6 +1273,7 @@ namespace tl
 
             if(choice == 0)
             {
+                _note_evening(false, true);
                 _begin_activity(wash_face_frames);
                 _act.gain[needs::hygiene] = wash_face_hygiene;
                 _player.start_action(player::action_kind::wash, target->x, target->y, _act.frames);
@@ -1166,6 +1298,7 @@ namespace tl
 
             if(choice == 0)
             {
+                _note_evening(false, true);
                 _begin_activity(wash_hands_frames);
                 _act.gain[needs::hygiene] = wash_hands_hygiene;
                 _player.start_action(player::action_kind::wash, target->x, target->y, _act.frames);
@@ -1215,6 +1348,10 @@ namespace tl
         else if(kind == sleep_kind::nap && minutes >= nap_minutes)
         {
             _show_info("Bed", "You feel refreshed.", "", "");
+        }
+        else if(kind == sleep_kind::bench && minutes >= 30 && ! story().flag(story_flag::read_newspaper))
+        {
+            story().set_flag(story_flag::news_due, 1);      // the newspaper scene (cutscenes_src.txt: news_day2)
         }
     }
 
@@ -1357,7 +1494,27 @@ namespace tl
         _npcs.face_towards(npc_index, _player.x(), _player.y());
         _set_hud_hidden(true);
         ui::set_night(is_night(_minutes));
-        _conversation.start_talk(npc, _day, _minutes);
+        story().set_flag(story_flag::hyg_ok, _needs.values[needs::hygiene] >= 40 ? 1 : 0);   // Lou: "you smell like a bench"
+
+        if(! npc_infos[npc].talks)
+        {
+            // cast members without small talk only bark one line
+            int node = npc == int(npc_id::dex_vault) ? dlg::bark_dex_vault :
+                    (npc == int(npc_id::victor) ? dlg::bark_victor : dlg::bark_robot);
+            _conversation.start_script(node, -1);
+        }
+        else if(npc == int(npc_id::pimm) && story().flag(story_flag::has_rye) && ! story().flag(story_flag::rye_delivered))
+        {
+            _conversation.start_script(dlg::pro_pimm_deliver, npc);
+        }
+        else if(npc == int(npc_id::pimm) && story().flag(story_flag::pimm_scene) && ! story().flag(story_flag::rye_delivered))
+        {
+            _conversation.start_script(dlg::pro_pimm_wait, npc);
+        }
+        else
+        {
+            _conversation.start_talk(npc, _day, _minutes);
+        }
     }
 
     void field::_end_conversation()
@@ -1367,7 +1524,15 @@ namespace tl
         _set_hud_hidden(false);
         _money += story().take_money();
         _redraw_hud_text();
+        _npcs.refresh(_day, _minutes);
+        _player.set_blockers(_npcs.blockers(), _npcs.count());
         _handle_story_events(npc);
+
+        if(story().flag(story_flag::lou_shift_go))
+        {
+            story().set_flag(story_flag::lou_shift_go, 0);
+            _try_start_shift();
+        }
     }
 
     void field::_sync_objective()
@@ -1375,6 +1540,7 @@ namespace tl
         if(! _objective_override)
         {
             _objective = story().objective();
+            _sync_objective_dynamic();
         }
     }
 
@@ -1488,7 +1654,11 @@ namespace tl
 
                 if(_conversation.update())
                 {
-                    if(_conversation.is_message())
+                    if(_script.active)
+                    {
+                        _script_dialogue_done();
+                    }
+                    else if(_conversation.is_message())
                     {
                         _set_hud_hidden(false);
                     }
@@ -1498,6 +1668,12 @@ namespace tl
                     }
                 }
 
+                break;
+            }
+
+            if(_script.active)
+            {
+                _update_script();
                 break;
             }
 
@@ -1515,6 +1691,45 @@ namespace tl
                 _update_clock();
                 _update_lighting(false);
                 break;
+            }
+
+            if(_can_pause())
+            {
+                // cutscene triggers first, so a scene is not interrupted by "Mission complete" pages (they follow it)
+                _check_triggers();
+
+                if(_script.active)
+                {
+                    break;
+                }
+
+                if(_minigame_pending)
+                {
+                    break;
+                }
+
+                if(const char* text = take_pending_message())
+                {
+                    _set_hud_hidden(true);
+                    ui::set_night(is_night(_minutes));
+                    _conversation.start_message(text);
+                    break;
+                }
+
+                if(_hint_cooldown > 0)
+                {
+                    --_hint_cooldown;
+                }
+                else
+                {
+                    _check_need_hints();
+
+                    if(_conversation.active())
+                    {
+                        _hint_cooldown = 120;
+                        break;
+                    }
+                }
             }
 
             if(_story_check_due && _can_pause())
@@ -1603,6 +1818,23 @@ namespace tl
             }
 
             _pending_warp = _map->warp_at(_player.x(), _player.y());
+
+            if(_pending_warp && _pending_warp->target == map_id::player_room && story().flag(story_flag::vault_scene))
+            {
+                // the room above the shop is VaultTech property now (the shutter gate is down)
+                _pending_warp = nullptr;
+
+                if(_gate_cooldown <= 0)
+                {
+                    _gate_cooldown = 150;
+                    _show_info("VaultTech", "STAFF ONLY.", "VaultMart property.", "");
+                }
+            }
+
+            if(_gate_cooldown > 0)
+            {
+                --_gate_cooldown;
+            }
 
             if(_pending_warp)
             {

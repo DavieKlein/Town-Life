@@ -21,6 +21,8 @@
 #include "tl_deposit.h"
 #include "tl_story.h"
 #include "tl_dialogue.h"
+#include "tl_minigame.h"
+#include "tl_cutscene.h"
 
 namespace tl
 {
@@ -42,6 +44,26 @@ namespace tl
         }
 
         void update();
+
+        // ---- hand-off to main.cpp: minigames run outside the field (it is destroyed first and rebuilt from this snapshot)
+        void snapshot(save_data& out) const
+        {
+            _fill_save(out);
+        }
+
+        // True when a minigame should start now (not while a message or menu is still open).
+        [[nodiscard]] bool minigame_pending() const
+        {
+            return _minigame_pending && ! _conversation.active() && ! _menu.is_open();
+        }
+
+        [[nodiscard]] const minigame_request& minigame() const
+        {
+            return _minigame_req;
+        }
+
+        // New game: the screen stays black until the first cutscene fades in.
+        void begin_black();
 
     private:
         enum class state
@@ -167,6 +189,82 @@ namespace tl
         bool _story_check_due = true;
         bool _hud_hidden = false;
 
+        // ---- cutscenes (tl_field_script.cpp)
+        struct script_state
+        {
+            enum class wait_kind
+            {
+                none,
+                frames,
+                fade,
+                moves,
+                card,
+                load,
+                action,
+                dialogue,
+                hook
+            };
+
+            bool active = false;
+            int id = -1;
+            int pc = 0;
+            int end = 0;
+            wait_kind wait = wait_kind::none;
+            int counter = 0;
+            int fade_slow = 1;
+            int fade_tick = 0;
+            int hook_stage = 0;
+            int flash = 0;
+            bool walking = false;
+            int walk_x = 0;
+            int walk_y = 0;
+            int walk_frames = 0;
+            bool walk_run = false;
+            map_id warp_map = map_id::city_centre;
+            int warp_x = 0;
+            int warp_y = 0;
+            direction warp_facing = direction::down;
+        };
+
+        script_state _script;
+        bool _minigame_pending = false;
+        minigame_request _minigame_req;
+        int _focus_x = 0;               // camera focus (image pixels); follows the player unless a script pans
+        int _focus_y = 0;
+        int _pan_mode = 0;              // 0 follow, 1 looking at (_pan_x, _pan_y), 2 returning to the player
+        int _pan_x = 0;
+        int _pan_y = 0;
+        int _fade_target = 0;
+        int _letter = 0;                // letterbox bars (pixels)
+        int _letter_target = 0;
+        ui::label _card_label[1];
+        bn::vector<bn::sprite_ptr, 4> _gate;        // VaultTech staff gate at the foot of the stairs (after the firing)
+        bool _cold = false;                         // cold VaultMart palette (Corner Market interior after the firing)
+        int _gate_cooldown = 0;
+        bool _shop_has_shift = false;
+        int _shop_items = 4;
+        int _hint_cooldown = 0;
+
+        [[nodiscard]] bool _cond_ok(const cs_cond& cond) const;
+        void _check_triggers();
+        void _start_script(int id);
+        void _end_script();
+        void _update_script();
+        [[nodiscard]] bool _run_step(const cs_step& step);
+        void _script_arrived_check();
+        void _script_dialogue_done();
+        void _set_letterbox(int target);
+        void _update_letterbox();
+        void _update_focus();
+        void _map_story_state();
+        void _update_gate_sprites();
+        void _sync_objective_dynamic();
+        void _note_evening(bool ate, bool washed);
+        void _check_need_hints();
+        void _try_start_shift();
+        [[nodiscard]] const interactable* _find_kind(interactable_kind kind) const;
+        [[nodiscard]] int _npc_index(npc_id who) const;
+
         [[nodiscard]] bool _can_pause() const;
         void _open_pause();
         void _close_pause();
@@ -216,6 +314,12 @@ namespace tl
         void _update_lamps();
         static void _set_fade(int counter);
     };
+
+    // Applies a finished minigame to the snapshot the field is rebuilt from: money, needs, the clock, story flags (tl_field_script.cpp).
+    void apply_minigame_result(save_data& snapshot, const minigame_request& request, const minigame_result& result);
+
+    // A system message the finished minigame wants shown (e.g. "Shift done! Wage $17..."), or nullptr; cleared by taking it.
+    const char* take_pending_message();
 }
 
 #endif

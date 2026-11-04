@@ -209,8 +209,26 @@ namespace tl
         _update_graphics();
     }
 
+    void player::set_visible(bool visible)
+    {
+        _sprite.set_visible(visible);
+        _shadow.set_visible(visible);
+    }
+
     bool player::_blocked(int nx, int ny) const
     {
+        if(_rect[2] > _rect[0] && nx + hitbox_radius > _rect[0] && nx - hitbox_radius < _rect[2] &&
+           ny + hitbox_radius > _rect[1] && ny - hitbox_radius < _rect[3])
+        {
+            bool inside = x() + hitbox_radius > _rect[0] && x() - hitbox_radius < _rect[2] &&
+                    y() + hitbox_radius > _rect[1] && y() - hitbox_radius < _rect[3];
+
+            if(! inside)
+            {
+                return true;
+            }
+        }
+
         // NPCs are solid discs of radius 7 (plus the hitbox); moving away from one is always allowed
         constexpr int radius = 7 + hitbox_radius;
 
@@ -362,7 +380,7 @@ namespace tl
                 _action_finished = true;
                 _stand_up();
             }
-            else if(bn::keypad::b_pressed())
+            else if(bn::keypad::b_pressed() && _script_facing == -2)
             {
                 _stand_up();        // interrupted: the field keeps the part of the gains done so far
             }
@@ -378,8 +396,8 @@ namespace tl
         }
 
         // sitting / sleeping: any direction or B gets up again
-        if(bn::keypad::b_pressed() || bn::keypad::left_pressed() || bn::keypad::right_pressed() ||
-           bn::keypad::up_pressed() || bn::keypad::down_pressed())
+        if(_script_facing == -2 && (bn::keypad::b_pressed() || bn::keypad::left_pressed() || bn::keypad::right_pressed() ||
+           bn::keypad::up_pressed() || bn::keypad::down_pressed()))
         {
             _stand_up();
             return;
@@ -399,7 +417,7 @@ namespace tl
             return;
         }
 
-        int facing = input_facing();
+        int facing = _script_facing == -2 ? input_facing() : _script_facing;
         bn::fixed target_vx;
         bn::fixed target_vy;
 
@@ -408,7 +426,7 @@ namespace tl
             _facing = facing;
 
             // Hold B to run.
-            bn::fixed speed = bn::keypad::b_held() ? run_speed : walk_speed;
+            bn::fixed speed = (_script_facing == -2 ? bn::keypad::b_held() : _script_run) ? run_speed : walk_speed;
             target_vx = directions[facing].x * speed;
             target_vy = directions[facing].y * speed;
             _vx += (target_vx - _vx) * acceleration;

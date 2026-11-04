@@ -25,6 +25,9 @@ namespace tl
 
     [[nodiscard]] light_params lighting_at(int minutes, bool outdoor);
 
+    // The cold grey-blue look of VaultTech places (HOOK VAULTMART_SWAP: used for the Corner Market interior after the firing).
+    [[nodiscard]] light_params cold_lighting();
+
     // True when the lamps are on (outdoor night from about 19:40 to 6:15); the UI switches to its Night style then.
     [[nodiscard]] bool is_night(int minutes);
 

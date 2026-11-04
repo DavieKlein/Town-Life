@@ -24,6 +24,8 @@ how fast Fun fills); the 4th element (radius) is 0 for everything but the founta
   ("window", x, y, reach)         look outside: flavour text by time of day.
   ("wardrobe", x, y, reach)       info text.
   The room's entries are generated from the furniture catalog (tools/furniture.py, scene.ROOM_FURNITURE + use_point()).
+  ("crate", x, y)                 storeroom crate: "Take the rye loaf" while Mr. Pimm waits (story).
+  ("gate", x, y)                  VaultTech staff gate in front of the stairs (only usable after the firing): info text.
   ("seat", x, y, reach)           indoor chair / sofa / booth bench; you sit facing +y (screen down-left).
   ("seat_x", x, y, reach)         same but facing +x (screen down-right: the sit sprite is mirrored).
                                    (x, y) = where the player's seat is drawn (centre of the seat); `reach` = extra
@@ -57,6 +59,8 @@ INTERACTABLES = {
     ],
     "corner_market": [
         ("shop_market", 12.2, 15.0), ("shop_market", 13.9, 15.0), ("shop_market", 15.2, 15.0),
+        ("crate", 12.6, 3.1),               # the rye loaf crate in the storeroom (Day 1, Pimm's errand)
+        ("gate", 15.6, 4.7),                # the VaultTech shutter at the stairs foot (after the firing)
         # (the foot of the storeroom stairs is a warp up to "player_room")
     ],
     "diner": [

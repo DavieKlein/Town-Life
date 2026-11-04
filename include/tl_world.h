@@ -98,7 +98,9 @@ namespace tl
         bed,            // the player's bed: Sleep / Take a nap
         desk,           // Read / Check notes (shows the current objective)
         window,         // look outside (info text)
-        wardrobe        // info text
+        wardrobe,       // info text
+        gate,           // VaultTech staff gate at the foot of the storeroom stairs (after the firing)
+        crate           // storeroom crate with Mr. Pimm's rye loaf (Day 1)
     };
 
     struct interactable

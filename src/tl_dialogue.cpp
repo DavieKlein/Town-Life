@@ -949,6 +949,10 @@ namespace tl
                 _box.choose(_topic_views, n.choices_count);
                 _step = step::choice;
             }
+            else if(n.cond_flag >= 0 && ((story().flag(n.cond_flag) != 0) != (n.cond_negated != 0)))
+            {
+                _show_node(n.cond_next);
+            }
             else if(n.next >= 0 && ! (n.next == dlg::hint_talk && story().flag(story_flag::hint_talk_seen)))
             {
                 _show_node(n.next);

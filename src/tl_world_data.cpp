@@ -563,6 +563,8 @@ namespace
         { interactable_kind::shop_market, 195, 240, 0, 0 },
         { interactable_kind::shop_market, 222, 240, 0, 0 },
         { interactable_kind::shop_market, 243, 240, 0, 0 },
+        { interactable_kind::crate, 201, 49, 0, 0 },
+        { interactable_kind::gate, 249, 75, 0, 0 },
     };
     constexpr int diner_floor_tiles_count = 493;
     constexpr bn::color diner_floor_palette[] = {

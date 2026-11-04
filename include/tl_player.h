@@ -66,6 +66,24 @@ namespace tl
             _blockers_count = count;
         }
 
+        // Cutscenes: -2 = the d-pad moves the player (normal), -1 = stand still, 0..7 = walk in that facing by himself.
+        void set_script_input(int facing, bool run = false)
+        {
+            _script_facing = facing;
+            _script_run = run;
+        }
+
+        // A solid rectangle (world units) the player cannot walk into (the shutter gate); off when x1 <= x0.
+        void set_blocked_rect(int x0, int y0, int x1, int y1)
+        {
+            _rect[0] = x0;
+            _rect[1] = y0;
+            _rect[2] = x1;
+            _rect[3] = y1;
+        }
+
+        void set_visible(bool visible);
+
         // Slides the player (if free) to `distance` units from a point, on the line through the player.
         void approach(int target_x, int target_y, int distance);
 
@@ -162,6 +180,9 @@ namespace tl
         const map_info* _map = nullptr;
         const blocker* _blockers = nullptr;
         int _blockers_count = 0;
+        int _script_facing = -2;
+        bool _script_run = false;
+        int _rect[4] = { 0, 0, 0, 0 };
         bn::fixed _x;
         bn::fixed _y;
         bn::fixed _vx;              // world units per frame

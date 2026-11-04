@@ -485,6 +485,10 @@ MATERIALS = {
     "blanket_mustard": dict(c="#dcaa3c", rough=0.95),  # s57-materials
     "pillow_white": dict(c="#f4eee0", rough=0.95),  # s57-materials
     "rug_terra": dict(c="#8a4a3a", rough=0.95),  # s57-materials
+    "sign_red": dict(c="#d41c1c", rough=0.45, emit=0.25, emit_c="#ff2020"),  # s57-materials
+    "sign_white": dict(c="#ffffff", emit=1.3, emit_c="#ffffff"),  # s57-materials
+    "shutter_grey": dict(c="#c6ccd4", rough=0.35, metal=0.5),  # s57-materials
+    "hazard_black": dict(c="#1c1c20", rough=0.5),  # s57-materials
     "rug_green": dict(c="#4e8a5a", rough=0.95),
     "rug_gold": dict(c="#d8a84a", rough=0.95),
     "rug_teal": dict(c="#4a9a96", rough=0.95),
@@ -928,6 +932,13 @@ def build(scene_obj, layer_visible):
             continue
         cu = bpy.data.curves.new("txt", type="FONT")
         cu.body = p["s"]
+        if p.get("bold"):  # s57-materials
+            try:  # s57-materials
+                cu.font = bpy.data.fonts.load("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")  # s57-materials
+                cu.offset = 0.01  # s57-materials
+                cu.space_character = 1.3  # s57-materials
+            except Exception:  # s57-materials
+                pass  # s57-materials
         cu.size = p["size"]
         cu.align_x = "CENTER"
         cu.align_y = "CENTER"
@@ -1196,7 +1207,7 @@ def main():
     ident, layer, out = argv[0], argv[1], argv[2]
     scale = int(argv[3]) if len(argv) > 3 else 2
     samples = int(argv[4]) if len(argv) > 4 else 64
-    s = next(f() for f in scn.SCENES if f().ident == ident)
+    s = next(f() for f in scn.SCENES + scn.OVERLAY_SCENES if f().ident == ident)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene

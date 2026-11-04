@@ -127,9 +127,25 @@ LOU:surprised| Wash up, then we talk. Plates are life!
 goto hint_talk
 node ask_lou_work
 PLAYER| Do you still need a hand, Lou?
-LOU:happy| Hah! Come by tomorrow at eleven. I'll show you the sink.
-! flag asked_lou_job, friend lou +1
-LOU| Bring clean hands. Plates are life!
+ifnot hyg_ok -> lou_wash_first
+LOU:happy| Mia said you'd come. She talks about you. Mostly good things.
+LOU| I need a dish washer. Four hours, lunch shift. Sixteen dollars.
+LOU| Deal?
+? Deal. -> lou_deal | flag diner_job, flag asked_lou_job, friend lou +10, friend mia +5
+? Can I eat on shift? -> lou_deal_meal | flag diner_job, flag asked_lou_job, friend lou +10, friend mia +5
+? Is there more money? -> lou_deal_tip | flag diner_job, flag asked_lou_job, friend lou +10, friend mia +5
+node lou_wash_first
+LOU:surprised| Whoa, friend. You smell like a bench. Wash up first. Then we talk.
+node lou_deal_meal
+LOU:happy| Staff meal is free. Eat as much as you can carry.
+goto lou_deal
+node lou_deal_tip
+LOU| Plates don't clean themselves. I add tips when you're fast. Up to three dollars.
+goto lou_deal
+node lou_deal
+LOU:happy| Apron's on the hook. Wash, rinse, repeat! Welcome to Lou's!
+SYSTEM| Lunch shift 11:00 to 15:00, $16 plus tips. Ask at the counter any day: "Work a shift".
+! flag lou_shift_go
 
 node intro_lou_look
 LOU| Look all you like. Looking is free. Pancakes are not.
@@ -260,3 +276,151 @@ node coins_again
 SYSTEM| A good friend looks out for you. Reward: 1 City Coin.
 node mission_done
 SYSTEM| Mission complete!
+
+
+# ---------------------------------------------------------------------------------------------------- prologue and Day 1 (docs/story_chapter1.md section 2)
+node pro_wake1
+PLAYER| Ugh... 7 o'clock. Already?
+PLAYER| Five more minutes. No. Rosa's rule: "Late is rude."
+node pro_wake2
+SYSTEM| Walk with the D-pad. Hold B to run. Press A near things. Downstairs, the shop is waiting.
+
+node pro_briefing
+ROSA| Good morning, {NAME}! Forty years I open this shop on the dot. Don't make me start without you.
+! flag met_rosa, flag met_mia, flag met_dex
+ROSA| Today the shelves need stocking. Milk, cans and cereal. Each thing on its own shelf.
+DEX| Three shelves? Pfft. I did five before breakfast.
+MIA:happy| You did zero. You ate three donuts.
+DEX:happy| Donuts are fuel, Mia. Fuel for greatness.
+MIA| Don't worry, {NAME}. She is always watching. She has eyes in the bread.
+ROSA:angry| I heard that, Mia.
+ROSA| Go on, {NAME}. I'm watching you. Kindly.
+
+node pro_stock_react
+ROSA:happy| Three for three. Not bad, {NAME}. Not bad at all.
+! friend rosa +5
+ROSA| That is the highest praise you will get from me this week.
+
+node pro_pimm_enter
+PIMM| Good morning, my dear. One rye loaf, please. Same as yesterday.
+MIA| Same as the last 14,000 days, Mr. Pimm. ...Oh. The shelf is bare.
+ROSA| {NAME}, the rye is in the storeroom. Second crate on the left.
+! flag pimm_scene
+
+node pro_pimm_deliver
+PLAYER| One rye loaf, Mr. Pimm.
+PIMM:happy| Splendid. A good loaf is like a good bridge. Solid. Honest. Rye.
+! flag rye_delivered, flag met_pimm, friend pimm +5
+PIMM| Come and see me at the library some afternoon. I rarely get to chat these days.
+
+node pro_pimm_wait
+PIMM| Take your time, my dear. A bridge isn't built in a day. A loaf, though...
+
+node pro_lunch
+MIA:happy| Lunch break! Rosa says eat. Bread is on the house today.
+MIA| Bread isn't a meal. It's a hint of a meal.
+! flag lunch_given
+
+node pro_rye_found
+SYSTEM| You carry the rye loaf. Take it to Mr. Pimm.
+
+# ---- Victor Vault arrives (14:00)
+node pro_vault_1
+VALET| Scanning... Obsolete retail unit detected. Logged.
+VICTOR:happy| Hahaha! Look at it, Bert! Wooden shelves! A bell on the door!
+VICTOR| I am Victor Vault. You have heard of me. Everybody has. Billboards.
+ROSA:angry| Mr. Vault. This is a shop. Are you here to buy something?
+VICTOR:happy| Yes! This shop. And the building. Bert, the paperwork!
+VALET| Building purchased at 09:14 today. New rent: triple. Effective now.
+ROSA:surprised| That is not possible. I have a lease. Forty years!
+VALET| Lease terminated. See clause 94b. Printed in font size two.
+MIA:angry| People here know every customer by name. Mr. Pimm has his own loaf!
+VICTOR| Names. How quaint. My machines know everyone by number.
+VICTOR:happy| Smart City, my dear. Self-checkouts. Robot arms. No queues, no chatter.
+VICTOR| Cashiers? Shelves? People? So last century.
+DEX:surprised| Mr. Vault, sir! Dex Corbin. I always said this place needed...
+DEX:happy| ...modernising! I have ideas. Spreadsheets. I am very efficient.
+VICTOR| You. Loud one. You are my manager.
+DEX:surprised| Manager?! Me? Sir, yes sir, thank you sir!
+
+node pro_vault_2
+VALET| Remaining staff: three. Recommended action: dismiss.
+VICTOR:happy| Dismissed, Bert. Everybody else: fired! Congratulations, you're free!
+PLAYER:surprised| Fired? But my room is upstairs!
+VALET| Upstairs unit is now VaultTech property. Access: denied.
+
+node pro_vault_3
+ROSA:sad| Your last pay. It should be more. It should be so much more.
+ROSA:sad| I'm sorry. I couldn't keep the shop. Or your room.
+? It's not your fault. -> pro_vault_c1 | friend rosa +5, flag rosa_comforted
+? I'll get it back, Rosa. -> pro_vault_c2 | friend rosa +3, flag vowed
+? ... -> pro_vault_c3
+node pro_vault_c1
+ROSA:happy| You are a good kid. Don't let anyone tell you otherwise.
+node pro_vault_c2
+ROSA| Don't promise me. Promise yourself. And eat something first.
+node pro_vault_c3
+ROSA| Say nothing, then. Silence is honest. Sometimes it's best.
+
+node pro_vault_4
+VICTOR:happy| By next week this is VaultMart! Clean, cold, efficient. Bert, car!
+
+node pro_vault_5
+DEXV:sad| Sorry, guys. Business is business!
+MIA:angry| Business is a bad friend, Dex.
+
+# ---- Mia's goodbye (outside)
+node pro_goodbye
+MIA| Well. That happened.
+MIA| Rosa will be fine. She has a sister in Old Block. Stubborn runs in families.
+PLAYER| What about you?
+MIA| I know Lou. He runs Lou's Diner. Purple house. He owes me a favour.
+MIA:happy| Here. A coffee voucher. On Lou. Eat, wash, and sleep somewhere warm.
+! flag has_coffee_voucher
+SYSTEM| Mia gave you a Coffee voucher. It buys one free Coffee at the diner counter.
+PLAYER| Where do I sleep?
+MIA:sad| ...Honestly? The park bench is free. I'm sorry. I'll find you tomorrow.
+? Thanks, Mia. For all. -> pro_goodbye_1 | friend mia +4
+? I'm fine. Really. -> pro_goodbye_2 | friend mia +1
+? Dex is a traitor. -> pro_goodbye_3 | friend mia +2
+node pro_goodbye_1
+MIA:happy| Be tough. See you tomorrow, {NAME}.
+node pro_goodbye_2
+MIA| Liar. Be tough anyway. See you tomorrow, {NAME}.
+node pro_goodbye_3
+MIA| Dex is an idiot with a plan. Worse. Be tough. See you tomorrow, {NAME}.
+
+node pro_after_goodbye
+PLAYER:sad| $20, a bench, no job. Great. Just great.
+
+# ---- four hours later
+node pro_vaultmart
+SYSTEM| Welcome to VaultMart. Have a nice day. Next customer.
+PLAYER| That was fast. Forty years gone in four hours.
+PLAYER| OK. Think. Hungry, dirty, tired. And not much money. Let's survive tonight.
+
+node pro_gate_sign
+SYSTEM| STAFF ONLY. VaultMart property. No entry.
+
+# ---- first night, Day 2
+node pro_news
+PLAYER| Cold bench. Stiff back. Rock bottom, then.
+PLAYER| Only one direction from here. Up.
+SYSTEM| A newspaper lies under the bench: SMART CITY! OLD BLOCK TO BE "REIMAGINED". Glass towers and a gym.
+! flag read_newspaper
+PLAYER| "Reimagined." That's a nice word for "bulldozed".
+PLAYER| Old Block. That's where Rosa and Mia live. I should see them.
+
+node pro_mia_tip
+MIA:happy| You made it! And you look... bench-ish. Listen, a tip.
+MIA| The green machine by the park toilets, RETURN and EARN. Cans are fifty cents, bottles a dollar.
+MIA| People drop them everywhere. Pick them up, feed the machine. Free money, {NAME}.
+! flag deposit_tip, friend mia +2
+MIA| Oh, and Lou needs a dish washer. Ask him. Wash your hands first, he's picky.
+
+node bark_dex_vault
+DEXV| Not now, buddy. Efficiency audit. I'm very efficient.
+node bark_victor
+VICTOR| Cashiers? Shelves? People? So last century.
+node bark_robot
+VALET| Have a nice day. Next customer.

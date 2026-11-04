@@ -60,6 +60,11 @@ namespace tl
         constexpr bn::color lit_lamp(31, 31, 24);
     }
 
+    light_params cold_lighting()
+    {
+        return light_params{ 226, 240, 262, 0, 0, 1, 70, 0 };
+    }
+
     light_params lighting_at(int minutes, bool outdoor)
     {
         if(! outdoor)

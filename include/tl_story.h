@@ -17,7 +17,7 @@ namespace tl
 {
     constexpr int npc_count = int(npc_id::count);
     constexpr int topic_count = 8;
-    constexpr int mission_count = 22;           // see tools/story_data.py MISSIONS
+    constexpr int mission_count = 23;           // see tools/story_data.py MISSIONS
 
     // ---------------------------------------------------------------------------------------------------- dialogue data
     enum class dlg_op : uint8_t
@@ -60,6 +60,9 @@ namespace tl
         uint8_t choices_count;
         uint16_t choices_first;
         uint8_t expr;               // portrait expression: 0 neutral, 1 happy, 2 angry, 3 sad, 4 surprised
+        int8_t cond_flag;           // `if <flag> -> node` / `ifnot <flag> -> node` after this page: flag index or -1
+        uint8_t cond_negated;
+        int16_t cond_next;
     };
 
     const dlg_node* dialogue_nodes();

@@ -58,14 +58,33 @@ int main()
 
     if(! field)
     {
-        // New game: ask for the player's name first.
+        // New game: the four narrator cards, then ask for the player's name.
+        tl::run_intro_cards();
         char name[12];
         tl::run_name_entry(name);
         bn::core::update();     // lets Butano release the name entry's VRAM
         tl::story().new_game(name);
 
-        // Start on the sidewalk in front of Corner Market.
-        field.emplace(tl::map_id::city_centre, 44 * tl::cell_size, 19 * tl::cell_size, tl::direction::down);
+        // The prologue starts in the room above Corner Market at 7:00 on Monday with $0 (docs/story_chapter1.md 4.1); the first cutscene
+        // (wake_up in tools/cutscenes_src.txt) lets the player lie in bed and fades in.
+        tl::save_data start;
+        start.map = uint8_t(tl::map_id::player_room);
+        start.x = int16_t(5.2 * tl::cell_size);
+        start.y = int16_t(3.0 * tl::cell_size);
+        start.facing = 0;
+        start.day = 1;
+        start.minutes = 7 * 60;
+        start.money = 0;
+        static constexpr int new_game_needs[5] = { 70, 85, 70, 60, 55 };
+
+        for(int need = 0; need < 5; ++need)
+        {
+            start.need_raw[need] = bn::fixed(new_game_needs[need]).data();
+        }
+
+        tl::story().fill_save(start);
+        field.emplace(start);
+        field->begin_black();
     }
 
 #ifdef TL_DEBUG_CPU
@@ -79,6 +98,22 @@ int main()
     while(true)
     {
         field->update();
+
+        if(field->minigame_pending())
+        {
+            // A minigame is its own scene: the field is destroyed (freeing the VRAM), the minigame runs, then the field is rebuilt
+            // from a snapshot with the result applied (money, needs, clock, story flags).
+            tl::minigame_request request = field->minigame();
+            tl::save_data snapshot;
+            field->snapshot(snapshot);
+            field.reset();
+            bn::core::update();
+            tl::minigame_result result = tl::run_minigame(request);
+            tl::apply_minigame_result(snapshot, request, result);
+            bn::core::update();
+            field.emplace(snapshot);
+        }
+
         bn::core::update();
 #ifdef TL_DEBUG_CPU
         int usage = (bn::core::last_cpu_usage() * 100).round_integer();

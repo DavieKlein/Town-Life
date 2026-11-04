@@ -163,11 +163,14 @@ class Scene:
             d["sy"] = sy
         self.prims.append(d)
 
-    def text(self, s, x, y, z, size, mat, face="left", layer="objects", extrude=0.01):
+    def text(self, s, x, y, z, size, mat, face="left", layer="objects", extrude=0.01, bold=False):
         """Text on a face. face 'left' = facing +y (down-left), 'right' = facing +x (down-right).
-        (x, y, z) = centre of the text baseline area."""
-        self.prims.append(dict(type="text", s=s, x=x, y=y, z=z, size=size, mat=mat, face=face,
-                               layer=layer, extrude=extrude))
+        (x, y, z) = centre of the text baseline area. bold = DejaVu Sans Bold (the key is only added when set, so the render cache
+        of every other scene stays valid)."""
+        prim = dict(type="text", s=s, x=x, y=y, z=z, size=size, mat=mat, face=face, layer=layer, extrude=extrude)
+        if bold:
+            prim["bold"] = True
+        self.prims.append(prim)
 
     def wedge(self, x0, y0, x1, y1, z_top, z_bottom, depth_axis, mat, layer="objects"):
         """Awning: a slanted slab sticking out of a wall. depth_axis 'y' = sticks out towards +y."""
@@ -2481,3 +2484,70 @@ def player_room():
 
 
 SCENES = [city_centre, market_v2, diner, community_centre, vaulttech_lobby, public_toilet, player_room]
+
+# ---------------------------------------------------------------------------------------------
+# VaultTech staff gate at the foot of the storeroom stairs (s55 variant B, owner-approved): a roll-down shutter with the red
+# STAFF ONLY sign. Rendered as an overlay (OVERLAY_SCENES, see tools/gate_overlay.py) and drawn as sprites after the firing.
+# ---------------------------------------------------------------------------------------------
+GATE_X0, GATE_X1, GATE_Y = 14.85, 16.35, 4.1
+
+
+def staff_sign(s, z0, z1, x0=14.1, x1=16.95, y=None):
+    """Big red board with white bold "STAFF" / "ONLY" (two big lines), white border."""
+    y = GATE_Y + 0.1 if y is None else y
+    cx = (x0 + x1) / 2
+    s.box(x0, y - 0.07, x1, y + 0.05, z0, z1, "sign_red")
+    for (a0, a1, b0, b1) in ((x0, x1, z1 - 0.05, z1), (x0, x1, z0, z0 + 0.05)):
+        s.box(a0, y + 0.05, a1, y + 0.065, b0, b1, "sign_white")
+    for xx in (x0, x1 - 0.05):
+        s.box(xx, y + 0.05, xx + 0.05, y + 0.065, z0, z1, "sign_white")
+    zc = (z0 + z1) / 2
+    s.text("STAFF", cx, y + 0.075, zc + 0.28, 0.6, "sign_white", face="left", bold=True, extrude=0.012)
+    s.text("ONLY", cx, y + 0.075, zc - 0.28, 0.6, "sign_white", face="left", bold=True, extrude=0.012)
+
+
+def vault_gate_b(s):
+    """Roll-down shutter: white-grey corrugated steel slats in a heavy frame, dark roller box on top carrying the big red STAFF ONLY
+    sign, yellow/black hazard strip on the bottom bar, gold V disc, card reader on the right."""
+    x0, x1, gy = GATE_X0, GATE_X1, GATE_Y
+    top = 1.75
+    for px in (x0, x1 - 0.12):
+        s.box(px, gy - 0.1, px + 0.12, gy + 0.08, 0, top + 0.3, "metal_light")
+    s.box(x0 - 0.04, gy - 0.12, x1 + 0.04, gy + 0.1, top, top + 0.3, "metal_light")           # roller box
+    z = 0.2
+    k = 0
+    while z < top - 0.02:
+        s.box(x0 + 0.12, gy - 0.03, x1 - 0.12, gy + 0.03, z, z + 0.1, "goods_white" if k % 2 == 0 else "shutter_grey")
+        s.box(x0 + 0.12, gy + 0.03, x1 - 0.12, gy + 0.05, z + 0.075, z + 0.1, "metal_light")
+        z += 0.125
+        k += 1
+    for i in range(7):                                                                          # hazard bottom bar
+        xa = x0 + 0.12 + i * (x1 - x0 - 0.24) / 7
+        xb = xa + (x1 - x0 - 0.24) / 7
+        s.box(xa, gy - 0.05, xb, gy + 0.07, 0.0, 0.2, "price_yellow" if i % 2 == 0 else "hazard_black")
+    xm = (x0 + x1) / 2
+    s.box(xm - 0.32, gy + 0.05, xm + 0.32, gy + 0.09, 0.62, 1.34, "metal_dark")
+    s.box(xm - 0.28, gy + 0.09, xm + 0.28, gy + 0.1, 0.66, 1.3, "gold_dark")
+    s.text("V", xm, gy + 0.115, 0.98, 0.78, "gold_bright", face="left", bold=True, extrude=0.02)
+    s.box(x1 - 0.02, gy + 0.0, x1 + 0.08, gy + 0.1, 0.9, 1.25, "robot_white")             # reader on the post
+    s.box(x1 - 0.0, gy + 0.1, x1 + 0.06, gy + 0.115, 1.12, 1.2, "neon_red")
+    sx = x0 + 0.03
+    s.box(sx, 3.3, sx + 0.08, gy, 0.0, top, "metal_dark")                                       # side wall piece
+    s.box(sx + 0.08, 3.32, sx + 0.1, gy - 0.02, 0.1, top - 0.1, "shutter_grey")
+    staff_sign(s, top + 0.35, top + 1.55, y=gy + 0.1)
+
+
+def overlay_gate():
+    """Only the gate, in the image frame of the Corner Market map (same size / origin as market_v2): rendered by gate_overlay.py."""
+    W, H = 17, 18
+    s = Scene("overlay_gate", "Staff gate overlay", W, H, origin_x=H * 16 + 24, origin_y=64,
+              img_w=(W + H) * 16 + 48, img_h=64 + (W + H) * 8 + 36)
+    s.sun = False
+    vault_gate_b(s)
+    s.point_light(15.4, 4.5, 2.2, 55, colour=(0.85, 0.95, 1.0))
+    s.point_light(15.6, 1.6, 2.9, 230, colour=(1.0, 0.82, 0.55))     # the stairwell light (the gate is in front of it)
+    return s
+
+
+OVERLAY_SCENES = [overlay_gate]
+

@@ -341,6 +341,7 @@ namespace tl
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _redraw_hud_text();
         _update_bars();
+        _map_story_state();         // gate / cold palette depend on the story flags applied above
         _update_lighting(true);
         _update_camera();
     }

@@ -2,7 +2,7 @@
 """Writes a Town Life save file (SRAM image, save version 2) for headless tests (tools/headless_run.py):
 
   python3 tools/make_save.py OUT.sav MAP X Y [--facing 0..7] [--minutes 480] [--day 1] [--money 20] [--bladder 50]
-         [--name Sam] [--mission P1] [--friend mia=40,lou=10] [--flag met_pimm,...] [--done P1,P2]
+         [--name Sam] [--mission M03] [--needs 70,85,70,60,55] [--friend mia=40,lou=10] [--flag met_pimm,...] [--done P1,P2]
   python3 tools/headless_run.py town-life.gba "loadsram OUT.sav; reset; wait 120; press a; ..."
 
 Maps: city_centre corner_market diner community_centre vaulttech_lobby public_toilet. X, Y in cells (feet).
@@ -49,13 +49,14 @@ def make(path, a):
     s.day = a.day
     s.minutes = a.minutes
     s.money = a.money
-    for i, v in enumerate((50, 50, 50, 50, a.bladder)):
+    for i, v in enumerate(a.needs):
         s.need_raw[i] = int(v * 4096)         # bn::fixed: 12 fractional bits
     s.player_name = a.name.encode()[:11]
     codes = [m[0] for m in story_data.MISSIONS]
     s.mission_id = codes.index(a.mission) + 1 if a.mission else 0
     for f in filter(None, a.flag.split(",")):
-        s.story_flags[story_data.FLAGS.index(f)] = 1
+        name, _, value = f.partition("=")
+        s.story_flags[story_data.FLAGS.index(name)] = int(value) if value else 1
     mask = 0
     for c in filter(None, a.done.split(",")):
         mask |= 1 << codes.index(c)
@@ -85,10 +86,12 @@ if __name__ == "__main__":
     p.add_argument("--day", type=int, default=1)
     p.add_argument("--money", type=int, default=20)
     p.add_argument("--bladder", type=int, default=50)
+    p.add_argument("--needs", default="", help="hunger,energy,hygiene,fun,bladder (default 50,50,50,50,--bladder)")
     p.add_argument("--name", default="Sam")
     p.add_argument("--mission", default="P1")
     p.add_argument("--friend", default="")
     p.add_argument("--flag", default="")
     p.add_argument("--done", default="")
     a = p.parse_args()
+    a.needs = [int(v) for v in a.needs.split(",")] if a.needs else [50, 50, 50, 50, a.bladder]
     make(a.out, a)

@@ -72,11 +72,19 @@ IDS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "dex_vault", "victor", "
 # Daily whereabouts follow docs/story_chapter1.md section 1.11. Rosa, Dex, Victor and Valet only appear in story scenes
 # later, so they are not placed freely yet. Facing names: s, sw, w, nw, n, ne, e, se ("sw" looks towards +y).
 PLACEMENTS = [
-    ("mia", "corner_market", 13.9, 13.4, "sw", "7:00", "14:30", 1, 1),     # checkout on Day 1 (the old shop)
+    # Day 1 at the old Corner Market: Rosa, Mia and Dex work from 7:00 once the player is awake, until the firing (flag vault_scene).
+    ("mia", "corner_market", 13.9, 13.4, "sw", "7:00", "14:30", 1, 1, None, "vault_scene"),     # checkout on Day 1 (the old shop)
+    ("rosa", "corner_market", 12.4, 13.4, "sw", "7:00", "14:30", 1, 1, "woke_up", "vault_scene"),
+    ("dex", "corner_market", 9.6, 11.4, "sw", "7:00", "14:30", 1, 1, "woke_up", "vault_scene"),
+    # Mr. Pimm waits at the bakery table for his rye loaf (placed after his arrival scene, leaves in the pimm_leaves scene)
+    ("pimm", "corner_market", 7.0, 6.9, "ne", "9:00", "13:00", 1, 1, "pimm_scene", "pimm_left"),
+    # VaultMart: Dex in the grey blazer paces the aisles (a static figure for now), nobody at the checkout
+    ("dex_vault", "corner_market", 9.6, 11.4, "sw", "6:00", "22:00", 1, 255, "vault_scene", None),
     ("mia", "diner", 9.3, 4.7, "sw", "7:00", "12:00", 2, 255),              # waitress shift
     ("mia", "city_centre", 50.4, 38.9, "w", "12:00", "12:30", 2, 255),     # lunch break at the fountain square bench
     ("mia", "diner", 9.3, 4.7, "sw", "12:30", "15:00", 2, 255),
     ("lou", "diner", 6.4, 2.6, "sw", "6:00", "22:00", 1, 255),             # behind the counter (counter y 3.2..4.1)
-    ("pimm", "community_centre", 4.9, 7.4, "ne", "8:00", "16:00", 1, 255),   # library, beside the reading table
+    ("pimm", "community_centre", 4.9, 7.4, "ne", "13:00", "16:00", 1, 1),   # library, beside the reading table (Day 1 after the shop)
+    ("pimm", "community_centre", 4.9, 7.4, "ne", "8:00", "16:00", 2, 255),
     ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "19:30", 1, 255),   # City Park pond, feeding the pigeons
 ]

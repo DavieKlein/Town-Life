@@ -1,5 +1,9 @@
 #include "tl_npcs.h"
 
+#include "tl_story.h"
+#include "tl_story_ids.h"
+
+#include "bn_math.h"
 #include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_items_npc_mia.h"
 #include "bn_sprite_items_npc_rosa.h"
@@ -43,7 +47,8 @@ namespace tl
 
         [[nodiscard]] bool present(const npc_placement& p, map_id id, int day, int minutes)
         {
-            return p.map == id && day >= p.day_min && day <= p.day_max && minutes >= p.from_minute && minutes < p.to_minute;
+            return p.map == id && day >= p.day_min && day <= p.day_max && minutes >= p.from_minute && minutes < p.to_minute &&
+                   (p.flag_on < 0 || story().flag(p.flag_on)) && (p.flag_off < 0 || ! story().flag(p.flag_off));
         }
 
         BN_DATA_EWRAM_BSS bn::color lit_colours[npcs::max_npcs][16];
@@ -53,6 +58,8 @@ namespace tl
     {
         _npcs.clear();
         _map = nullptr;
+        _scripted = false;
+        _suppress = false;
     }
 
     void npcs::load(const map_info& map, map_id id, int day, int minutes)
@@ -67,7 +74,7 @@ namespace tl
     {
         _npcs.clear();
 
-        for(int index = 0; index < npc_placements_count && ! _npcs.full(); ++index)
+        for(int index = 0; index < npc_placements_count && ! _npcs.full() && ! _suppress; ++index)
         {
             const npc_placement& p = npc_placements[index];
 
@@ -85,7 +92,7 @@ namespace tl
 
             bn::sprite_ptr sprite = item->create_sprite(0, 0, p.facing);
             sprite.set_bg_priority(_map->player_hidden(p.x, p.y, 12, 56) ? 3 : 2);
-            _npcs.push_back(npc{ bn::move(sprite), p.who, p.x, p.y, p.facing, index });
+            _npcs.push_back(npc{ bn::move(sprite), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y) });
             _blockers[_npcs.size() - 1] = { p.x, p.y };
         }
 
@@ -95,7 +102,7 @@ namespace tl
 
     void npcs::refresh(int day, int minutes)
     {
-        if(! _map)
+        if(! _map || _scripted || _suppress)
         {
             return;
         }
@@ -154,7 +161,7 @@ namespace tl
         {
             int screen_x = _map->to_image_x(n.x, n.y) - cam_x - 120;
             int screen_y = _map->to_image_y(n.x, n.y) - cam_y - 80;
-            n.sprite.set_position(screen_x, screen_y - feet_offset_y);
+            n.sprite.set_position(screen_x, screen_y - feet_offset_y - ((n.bob / 6) % 2));
         }
     }
 
@@ -216,6 +223,11 @@ namespace tl
     {
         for(npc& n : _npcs)
         {
+            if(n.placement < 0)
+            {
+                continue;
+            }
+
             int facing = npc_placements[n.placement].facing;
 
             if(facing != n.facing)
@@ -224,5 +236,200 @@ namespace tl
                 n.sprite.set_tiles(item_of(n.who)->tiles_item(), facing);
             }
         }
+    }
+}
+
+namespace tl
+{
+    // ---------------------------------------------------------------------------------------------------- cutscene actors
+    int npcs::_index_of(npc_id who) const
+    {
+        for(int index = 0; index < _npcs.size(); ++index)
+        {
+            if(_npcs[index].who == who)
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    void npcs::_add_actor(npc_id who, int x, int y, int facing)
+    {
+        const bn::sprite_item* item = item_of(who);
+
+        if(! item || _npcs.full())
+        {
+            return;
+        }
+
+        bn::sprite_ptr sprite = item->create_sprite(0, 0, facing);
+        sprite.set_bg_priority(_map->player_hidden(x, y, 12, 56) ? 3 : 2);
+        _npcs.push_back(npc{ bn::move(sprite), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y) });
+        _blockers[_npcs.size() - 1] = { x, y };
+        _apply_palettes();
+        update(_last_cam_x, _last_cam_y);
+    }
+
+    void npcs::spawn(npc_id who, int x, int y, int facing)
+    {
+        _scripted = true;
+        despawn(who);
+        _add_actor(who, x, y, facing);
+    }
+
+    void npcs::despawn(npc_id who)
+    {
+        _scripted = true;
+        int index = _index_of(who);
+
+        if(index < 0)
+        {
+            return;
+        }
+
+        // keep the order of the others (the blockers array follows it)
+        bn::vector<npc, max_npcs> keep;
+
+        for(int other = 0; other < _npcs.size(); ++other)
+        {
+            if(other != index)
+            {
+                keep.push_back(bn::move(_npcs[other]));
+            }
+        }
+
+        _npcs = bn::move(keep);
+
+        for(int other = 0; other < _npcs.size(); ++other)
+        {
+            _blockers[other] = { _npcs[other].x, _npcs[other].y };
+        }
+
+        _apply_palettes();
+    }
+
+    void npcs::swap(npc_id from, npc_id to)
+    {
+        int index = _index_of(from);
+
+        if(index < 0)
+        {
+            return;
+        }
+
+        int x = _npcs[index].x;
+        int y = _npcs[index].y;
+        int facing = _npcs[index].facing;
+        spawn(to, x, y, facing);
+    }
+
+    void npcs::move_to(npc_id who, int x, int y, bool fast)
+    {
+        int index = _index_of(who);
+
+        if(index < 0)
+        {
+            return;
+        }
+
+        _npcs[index].target_x = x;
+        _npcs[index].target_y = y;
+        _npcs[index].speed = fast ? 3 : 2;      // in half units per frame (1 and 1.5 units)
+        face_towards(index, x, y);
+    }
+
+    void npcs::set_facing(npc_id who, int facing)
+    {
+        int index = _index_of(who);
+
+        if(index >= 0)
+        {
+            _npcs[index].facing = facing;
+            _npcs[index].sprite.set_tiles(item_of(who)->tiles_item(), facing);
+        }
+    }
+
+    void npcs::face_actor_towards(npc_id who, int target_x, int target_y)
+    {
+        int index = _index_of(who);
+
+        if(index >= 0)
+        {
+            face_towards(index, target_x, target_y);
+        }
+    }
+
+    bool npcs::moving() const
+    {
+        for(const npc& n : _npcs)
+        {
+            if(n.speed)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void npcs::tick()
+    {
+        for(int index = 0; index < _npcs.size(); ++index)
+        {
+            npc& n = _npcs[index];
+
+            if(! n.speed)
+            {
+                continue;
+            }
+
+            int dx = n.target_x - n.x;
+            int dy = n.target_y - n.y;
+            int length = bn::sqrt((dx * dx) + (dy * dy));
+            bn::fixed step = n.speed == 3 ? bn::fixed(1.5) : bn::fixed(1);
+
+            if(length <= step)
+            {
+                n.x = n.target_x;
+                n.y = n.target_y;
+                n.fx = n.x;
+                n.fy = n.y;
+                n.speed = 0;
+                n.bob = 0;
+            }
+            else
+            {
+                n.fx += bn::fixed(dx) * step / length;
+                n.fy += bn::fixed(dy) * step / length;
+                n.x = n.fx.round_integer();
+                n.y = n.fy.round_integer();
+                ++n.bob;
+            }
+
+            _blockers[index] = { n.x, n.y };
+            n.sprite.set_bg_priority(_map->player_hidden(n.x, n.y, 12, 56) ? 3 : 2);
+        }
+
+        update(_last_cam_x, _last_cam_y);
+    }
+
+    void npcs::set_suppress(bool suppress)
+    {
+        _suppress = suppress;
+        _scripted = true;
+
+        if(suppress)
+        {
+            _npcs.clear();
+        }
+    }
+
+    void npcs::release(int day, int minutes)
+    {
+        _scripted = false;
+        _suppress = false;
+        _build(day, minutes);
     }
 }

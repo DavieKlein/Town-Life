@@ -34,16 +34,23 @@ namespace tl
         int16_t y;
         uint16_t from_minute;
         uint16_t to_minute;
+        int8_t flag_on;      // story flag that must be set (-1 = none)
+        int8_t flag_off;     // story flag that must be clear (-1 = none)
     };
 
     constexpr npc_placement npc_placements[] = {
-        { npc_id::mia, map_id::corner_market, 1, 1, 1, 222, 214, 420, 870 },
-        { npc_id::mia, map_id::diner, 1, 2, 255, 148, 75, 420, 720 },
-        { npc_id::mia, map_id::city_centre, 2, 2, 255, 806, 622, 720, 750 },
-        { npc_id::mia, map_id::diner, 1, 2, 255, 148, 75, 750, 900 },
-        { npc_id::lou, map_id::diner, 1, 1, 255, 102, 41, 360, 1320 },
-        { npc_id::pimm, map_id::community_centre, 5, 1, 255, 78, 118, 480, 960 },
-        { npc_id::pimm, map_id::city_centre, 5, 1, 255, 320, 675, 960, 1170 },
+        { npc_id::mia, map_id::corner_market, 1, 1, 1, 222, 214, 420, 870, -1, 35 },
+        { npc_id::rosa, map_id::corner_market, 1, 1, 1, 198, 214, 420, 870, 28, 35 },
+        { npc_id::dex, map_id::corner_market, 1, 1, 1, 153, 182, 420, 870, 28, 35 },
+        { npc_id::pimm, map_id::corner_market, 5, 1, 1, 112, 110, 540, 780, 31, 33 },
+        { npc_id::dex_vault, map_id::corner_market, 1, 1, 255, 153, 182, 360, 1320, 35, -1 },
+        { npc_id::mia, map_id::diner, 1, 2, 255, 148, 75, 420, 720, -1, -1 },
+        { npc_id::mia, map_id::city_centre, 2, 2, 255, 806, 622, 720, 750, -1, -1 },
+        { npc_id::mia, map_id::diner, 1, 2, 255, 148, 75, 750, 900, -1, -1 },
+        { npc_id::lou, map_id::diner, 1, 1, 255, 102, 41, 360, 1320, -1, -1 },
+        { npc_id::pimm, map_id::community_centre, 5, 1, 1, 78, 118, 780, 960, -1, -1 },
+        { npc_id::pimm, map_id::community_centre, 5, 2, 255, 78, 118, 480, 960, -1, -1 },
+        { npc_id::pimm, map_id::city_centre, 5, 1, 255, 320, 675, 960, 1170, -1, -1 },
     };
 
     constexpr int npc_placements_count = int(sizeof(npc_placements) / sizeof(npc_placement));

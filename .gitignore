@@ -13,3 +13,4 @@ build/
 Thumbs.db
 __pycache__/
 art_cache/
+build_*/

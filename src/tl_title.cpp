@@ -159,4 +159,49 @@ namespace tl
         bn::bg_palettes::set_transparent_color(bn::color(0, 0, 0));
         return false;
     }
+
+    void run_intro_cards()
+    {
+        static constexpr const char* cards[][3] = {
+            { "Corner Market.", "40 years of bread,", "gossip and good mornings." },
+            { "You work here.", "You live upstairs.", "" },
+            { "Today is a normal day.", "", "" },
+            { "(It is not.)", "", "" },
+        };
+
+        ui::set_night(true);
+        bn::bg_palettes::set_fade(bn::color(0, 0, 0), 1);
+
+        for(const auto& card : cards)
+        {
+            ui::label lines[3];
+            int count = card[2][0] ? 3 : (card[1][0] ? 2 : 1);
+            int top = 80 - (count * 7);
+
+            for(int index = 0; index < count; ++index)
+            {
+                lines[index].set_centre(ui::font11, 120, top + 11 + (index * 14), card[index], ui::role::hud_clock);
+            }
+
+            bool skipped = false;
+
+            for(int frame = 0; frame < 12 + 130 + 12 && ! skipped; ++frame)
+            {
+                int fade = frame < 12 ? 12 - frame : (frame >= 142 ? frame - 142 : 0);
+                bn::sprite_palettes::set_fade(bn::color(0, 0, 0), bn::fixed(fade) / 12);
+                skipped = frame > 20 && bn::keypad::a_pressed();
+                bn::core::update();
+            }
+
+            for(ui::label& line : lines)
+            {
+                line.clear();
+            }
+
+            bn::core::update();
+        }
+
+        bn::sprite_palettes::set_fade(bn::color(0, 0, 0), 0);
+        bn::bg_palettes::set_fade(bn::color(0, 0, 0), 0);
+    }
 }

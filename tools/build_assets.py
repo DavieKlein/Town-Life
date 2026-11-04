@@ -728,7 +728,11 @@ def main():
     build_cast(force, fast)
     build_portraits()
     story_data.main()
+    import cutscene_data
+    cutscene_data.main()
     build_ui_sprites()
+    import gate_overlay
+    gate_overlay.main()        # the VaultTech staff gate sprites (renders only the gate, cached)
 
 
 CRITTER_FRAMES = {"pigeon": 5, "squirrel": 4}
@@ -918,11 +922,15 @@ def write_cast_header():
     out += ["    // Where an NPC stands: map, feet position (world units), facing index, minutes of the day and day range.",
             "    struct npc_placement", "    {", "        npc_id who;", "        map_id map;", "        uint8_t facing;",
             "        uint8_t day_min;", "        uint8_t day_max;", "        int16_t x;", "        int16_t y;",
-            "        uint16_t from_minute;", "        uint16_t to_minute;", "    };", "",
+            "        uint16_t from_minute;", "        uint16_t to_minute;", "        int8_t flag_on;      // story flag that must be set (-1 = none)",
+            "        int8_t flag_off;     // story flag that must be clear (-1 = none)", "    };", "",
             "    constexpr npc_placement npc_placements[] = {"]
-    for (who, mp, x, y, face, t0, t1, d0, d1) in cast.PLACEMENTS:
+    for row in cast.PLACEMENTS:
+        (who, mp, x, y, face, t0, t1, d0, d1) = row[:9]
+        fon, foff = (row[9] if len(row) > 9 else None), (row[10] if len(row) > 10 else None)
         out.append(f"        {{ npc_id::{who}, map_id::{mp}, {FACINGS.index(face)}, {d0}, {d1}, {int(x * 16)}, {int(y * 16)}, "
-                   f"{mins(t0)}, {mins(t1)} }},")
+                   f"{mins(t0)}, {mins(t1)}, {story_data.FLAGS.index(fon) if fon else -1}, "
+                   f"{story_data.FLAGS.index(foff) if foff else -1} }},")
     out += ["    };", "", "    constexpr int npc_placements_count = int(sizeof(npc_placements) / sizeof(npc_placement));",
             "}", "", "#endif", ""]
     write_text(os.path.join(ROOT, "include", "tl_cast_data.h"), "\n".join(out))

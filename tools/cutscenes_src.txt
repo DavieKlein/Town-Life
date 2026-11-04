@@ -1,0 +1,177 @@
+# Town Life - cutscene scripts of the prologue and Day 1-2 (docs/story_chapter1.md section 2). Format: see tools/cutscene_data.py.
+# Positions are map cells (actors walk along straight lines and ignore collision, so paths go around the gondolas by waypoints). Corner Market: street door at (8, 17.6) (arrive at 8, 16.4), checkout counter x 11-15.6 / y 14-15 (the cashier
+# stands behind it at y 13.4), bakery table x 6.2-7.9 / y 5-6, storeroom stairs at x 15-16.3 / y 0.9-4.
+# City Centre: Corner Market door at x 43-45 / y 17-18 (arrive at 44, 19), diner door at x 52-54, avenue to the east.
+
+# ------------------------------------------------------------------------------------------------ Scene 1: wake up (7:00)
+script wake_up
+  scene_begin
+  black
+  lie_bed
+  wait 20
+  fade_in 40
+  wait 30
+  say pro_wake1
+  get_up
+  wait 15
+  say pro_wake2
+  flag woke_up
+  scene_end
+trigger wake_up when map=player_room !flag=woke_up
+
+# ------------------------------------------------------------------------------------------------ Scene 2: morning briefing, STOCK IT!
+script briefing
+  flag left_room
+  pan 12.6 14.6
+  wait 20
+  say pro_briefing
+  pan_player
+  flag briefed
+  minigame stock
+trigger briefing when map=corner_market flag=woke_up !flag=briefed
+
+script stock_react
+  player_at 10.6 13.2 down
+  pan 12.6 14.6
+  wait 10
+  say pro_stock_react
+  pan_player
+  flag stock_react_done
+trigger stock_react when map=corner_market flag=shelves_stocked !flag=stock_react_done !flag=vault_scene
+
+# ------------------------------------------------------------------------------------------------ Scene 4: Mr. Pimm's rye loaf (9:00)
+script pimm_arrives
+  pan 8 10
+  wait 15
+  spawn pimm 8.0 17.5 n
+  move pimm 10.5 16.4
+  wait_moves
+  move pimm 10.5 7.4
+  wait_moves
+  move pimm 7.0 7.4
+  wait_moves
+  move pimm 7.0 6.9
+  wait_moves
+  actor_face pimm ne
+  say pro_pimm_enter
+  pan_player
+  objective "Fetch the rye loaf from the storeroom (second crate), then give it to Mr. Pimm."
+trigger pimm_arrives when map=corner_market flag=stock_react_done !flag=pimm_scene !flag=vault_scene day=1 time>=9:00
+
+script pimm_leaves
+  despawn pimm
+  spawn pimm 7.0 6.9 ne
+  move pimm 7.0 7.4
+  wait_moves
+  move pimm 10.5 7.4
+  wait_moves
+  move pimm 10.5 16.4
+  wait_moves
+  move pimm 8.0 17.9
+  wait_moves
+  despawn pimm
+  flag pimm_left
+  objective_clear
+trigger pimm_leaves when map=corner_market flag=rye_delivered !flag=pimm_left
+
+# ------------------------------------------------------------------------------------------------ Scene 5: staff lunch (12:00)
+script staff_lunch
+  pan 13 14
+  wait 10
+  say pro_lunch
+  pan_player
+  info "Mia gave you Bread."
+  eat 15 3 0
+trigger staff_lunch when map=corner_market flag=rye_delivered !flag=lunch_given !flag=vault_scene day=1 time>=12:00
+
+# ------------------------------------------------------------------------------------------------ Scenes 6-8: Victor Vault (14:00)
+script vault_day
+  fade_out 12
+  warp corner_market 8.0 16.4 up
+  scene_begin
+  spawn mia 13.9 13.4 sw
+  spawn rosa 12.4 13.4 sw
+  spawn dex 9.6 11.4 sw
+  pan 11.2 14.6
+  letterbox on
+  fade_in 14
+  wait 40
+  hook car_arrival
+  wait 20
+  spawn robot 8.0 17.6 n
+  move robot 9.6 15.3
+  wait_moves
+  spawn victor 8.0 17.6 n
+  move victor 9.0 14.6
+  wait_moves
+  actor_face victor se
+  say pro_vault_1
+  swap dex dex_vault
+  say pro_vault_2
+  # Vault and Valet leave first (sprite VRAM: fewer actors on screen during Rosa's moment), Dex trots behind
+  say pro_vault_4
+  move victor 8.0 17.9 fast
+  move robot 8.6 17.9 fast
+  wait_moves
+  despawn victor
+  despawn robot
+  move dex_vault 8.2 15.2
+  wait_moves
+  say pro_vault_5
+  move dex_vault 8.0 17.9 fast
+  wait_moves
+  despawn dex_vault
+  # Rosa hands over the last pay (the rank wage of STOCK IT!)
+  move rosa 10.4 13.4
+  wait_moves
+  move rosa 9.4 15.4
+  wait_moves
+  actor_face rosa w
+  money_rank
+  say pro_vault_3
+  letterbox off
+  pan_player
+  flag left_shop
+  flag vault_scene
+  # outside, in front of the shop
+  fade_out 12
+  warp city_centre 44.0 19.0 down
+  spawn mia 42.2 19.5 e
+  spawn rosa 46.2 19.5 w
+  wait 10
+  fade_in 12
+  wait 30
+  move rosa 70.0 21.0
+  wait_moves
+  despawn rosa
+  actor_face_player mia
+  say pro_goodbye
+  flag mia_goodbye
+  move mia 53.0 19.3
+  wait_moves
+  despawn mia
+  say pro_after_goodbye
+  # time skip: four hours later, VaultMart
+  fade_out 14
+  card "Four hours later..."
+  time 18 0
+  needs -17 -12 -10 -14 -24
+  player_at 44.0 19.6 down
+  scene_end
+  wait 20
+  vaultmart_swap
+  fade_in 14
+  wait 30
+  say pro_vaultmart
+trigger vault_day when day=1 time>=14:00 flag=briefed !flag=vault_scene
+
+# ------------------------------------------------------------------------------------------------ Scene 10: Day 2
+script news_day2
+  say pro_news
+  flag news_due 0
+trigger news_day2 when flag=news_due !flag=read_newspaper
+
+script mia_tip
+  say pro_mia_tip
+trigger mia_tip when map=diner day>=2 flag=read_newspaper !flag=deposit_tip time>=7:00 time<12:00
+trigger mia_tip when map=diner day>=2 flag=read_newspaper !flag=deposit_tip time>=12:30 time<15:00

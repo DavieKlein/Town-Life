@@ -44,7 +44,13 @@ TALKERS = ["mia", "rosa", "dex", "pimm", "lou", "halloran"]       # have small t
 FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "met_lou", "met_halloran", "hint_talk_seen",
          "left_room", "shelves_stocked", "rye_delivered", "left_shop", "slept_on_bench", "read_newspaper", "diner_job",
          "odd_jobs_3", "old_block_open", "rosa_stall_done", "vaultmart_visited", "pimm_library_met", "meeting_attended",
-         "certificate_found", "bridge_open", "docks_job", "first_night_off_bench", "prologue_started", "asked_lou_job"]
+         "certificate_found", "bridge_open", "docks_job", "first_night_off_bench", "prologue_started", "asked_lou_job",
+         # prologue / Day 1-2 (cutscenes_src.txt, tl_field_script.cpp)
+         "woke_up", "briefed", "stock_react_done", "pimm_scene", "has_rye", "pimm_left", "lunch_given", "vault_scene",
+         "corner_market_cold", "has_coffee_voucher", "voucher_used", "ate_evening", "washed_evening", "news_due", "deposit_tip",
+         "hint_hunger", "hint_hygiene", "hint_energy", "hint_bladder", "hint_fun", "lou_shift_go", "hyg_ok", "stock_rank",
+         "diner_shift_day", "rosa_comforted", "vowed", "mia_goodbye", "gate_hint_seen"]
+assert len(FLAGS) <= 64
 
 # ---------------------------------------------------------------------------------------------------- missions
 # cond: None (finished by a `done <id>` effect), ("talk", npc), ("map", map), ("money", n), ("flag", name),
@@ -60,10 +66,12 @@ MISSIONS = [
     ("M01", "Open Up", "Get ready for work.", ("flag", "left_room"), "M02", 0),
     ("M02", "Stock the Shelves", "Stock three shelves (0/3).", ("flag", "shelves_stocked"), "M03", 0),
     ("M03", "The Regular", "Fetch Mr. Pimm's rye loaf.", ("flag", "rye_delivered"), "M04", 0),
-    ("M04", "Vault Day", "Leave the shop.", ("flag", "left_shop"), "M05", 20),
+    ("M04", "Vault Day", "Leave the shop.", ("flag", "left_shop"), "M05", 0),
     ("M05", "Survive the Night", "Eat, freshen up, sleep on the bench.", ("flag", "slept_on_bench"), "M06", 0),
     ("M06", "Yesterday's News", "Find out what Smart City means.", ("flag", "read_newspaper"), "M07", 0),
-    ("M07", "Plate Spinner", "Get a job at Lou's Diner.", ("flag", "diner_job"), "M08", 0),
+    ("M07", "Plate Spinner", "Get a job at Lou's Diner.", ("flag", "diner_job"), "X1", 0),
+    # the chain stops here for now (Old Block, the notice board and the Docks are not built yet)
+    ("X1", "Explore the city", "Explore the city (Old Block coming soon).", None, None, 0),
     ("M08", "Odd Jobs", "Do three odd jobs (0/3).", ("flag", "odd_jobs_3"), "M09", 5),
     ("M09", "Old Block Calling", "Follow Mia to Old Block.", ("flag", "old_block_open"), "M10", 0),
     ("M10", "Rosa's Stall", "Carry three crates to Rosa's stall (0/3).", ("flag", "rosa_stall_done"), "M11", 10),
@@ -75,7 +83,7 @@ MISSIONS = [
     ("M16", "Dock Hand", "Meet Foreman Halloran at the Docks.", ("flag", "docks_job"), "M17", 12),
     ("M17", "A Roof for the Night", "Meet Mia at the bridge after your shift.", ("flag", "first_night_off_bench"), None, 0),
 ]
-START_MISSION = "P1"
+START_MISSION = "M01"
 
 COND_KINDS = {"talk": "talk", "map": "enter_map", "money": "money", "flag": "flag", "day": "day", "time": "time"}
 
@@ -89,6 +97,7 @@ class Page:
     def __init__(self, speaker, text, expr=0):
         self.speaker, self.text, self.expr = speaker, text, expr
         self.effects, self.choices, self.next = [], [], None   # next: node name or None (= following page / end)
+        self.cond = None                                        # (flag, negated, node): jump after this page
 
 
 EXPRESSIONS = {"neutral": 0, "happy": 1, "angry": 2, "sad": 3, "surprised": 4}
@@ -128,6 +137,11 @@ def parse_dialogue():
             order.append(cur)
         elif line.startswith("goto "):
             nodes[cur][-1].next = line[5:].strip()
+        elif line.startswith("if ") or line.startswith("ifnot "):
+            m = re.match(r"(if|ifnot) (\S+) -> (\S+)$", line)
+            assert m, f"line {ln}: bad condition"
+            assert m.group(2) in FLAGS, f"line {ln}: unknown flag {m.group(2)}"
+            nodes[cur][-1].cond = (m.group(2), m.group(1) == "ifnot", m.group(3))
         elif line.startswith("! "):
             nodes[cur][-1].effects += parse_effects(line[2:])
         elif line.startswith("? "):
@@ -172,7 +186,10 @@ def main():
                 ef0 = len(effects)
                 effects += eff
                 choices_out.append((text, -1 if target == "end" else first[target], ef0, len(eff)))
-            node_rows.append((p.speaker, p.text, e0, len(p.effects), nxt, c0, len(p.choices), p.expr))
+            cf, cn, cx = -1, 0, -1
+            if p.cond:
+                cf, cn, cx = FLAGS.index(p.cond[0]), 1 if p.cond[1] else 0, first[p.cond[2]]
+            node_rows.append((p.speaker, p.text, e0, len(p.effects), nxt, c0, len(p.choices), p.expr, cf, cn, cx))
     # ---- ids header
     h = ["// Generated by tools/story_data.py - do not edit by hand.", "#ifndef TL_STORY_IDS_H", "#define TL_STORY_IDS_H", "",
          "namespace tl", "{", "    // story flags (story_state::flag / set_flag)", "    namespace story_flag", "    {"]
@@ -199,8 +216,8 @@ def main():
         c.append(f"            {{ {cstr(t)}, {nx}, {e0}, {en} }},")
     c.append("        };")
     c.append("        constexpr dlg_node all_nodes[] = {")
-    for (sp, text, e0, en, nx, c0, cn, ex) in node_rows:
-        c.append(f"            {{ {cstr(text)}, {sp}, {en}, {e0}, {nx}, {cn}, {c0}, {ex} }},")
+    for (sp, text, e0, en, nx, c0, cn, ex, cf, cneg, cnext) in node_rows:
+        c.append(f"            {{ {cstr(text)}, {sp}, {en}, {e0}, {nx}, {cn}, {c0}, {ex}, {cf}, {cneg}, {cnext} }},")
     c.append("        };")
     c.append("    }")
     c.append("")
