@@ -58,8 +58,12 @@ jobs:
           gh release delete latest --yes --cleanup-tag || true
           # Make sure the tag is really gone before recreating it.
           gh api -X DELETE "repos/${GH_REPO}/git/refs/tags/latest" >/dev/null 2>&1 || true
-          gh release create latest town-life.gba \
+          # Also publish a copy with a unique name per build: phones and emulators (Lemuroid keeps
+          # its own copy per file name) would otherwise keep showing an old town-life.gba.
+          STAMP="$(date -u +%Y%m%d-%H%M)"
+          cp town-life.gba "town-life-${STAMP}.gba"
+          gh release create latest town-life.gba "town-life-${STAMP}.gba" \
             --target "${GITHUB_SHA}" \
-            --title "Town Life (latest build)" \
-            --notes "Automatic build of commit ${GITHUB_SHA} on main. Download town-life.gba and open it in an emulator such as Lemuroid." \
+            --title "Town Life (latest build ${STAMP})" \
+            --notes "Automatic build of commit ${GITHUB_SHA} on main (${STAMP} UTC). On a phone, download town-life-${STAMP}.gba (unique name, so the emulator can't mix it up with an old version) and open it in Lemuroid." \
             --latest
