@@ -40,19 +40,19 @@ INTERACTABLES = {
     "diner": [
         ("shop_diner", 4.6, 4.5), ("shop_diner", 6.4, 4.5), ("shop_diner", 8.2, 4.5),
         # booth benches on the west wall (facing the table) and the north chair of the free table
-        ("seat_x", 0.45, 4.4, 1.2), ("seat_x", 0.45, 6.6, 1.2), ("seat", 7.0, 6.3, 1.0),
+        ("seat_x", 0.75, 4.4, 1.2), ("seat_x", 0.75, 6.6, 1.2), ("seat", 7.0, 6.6, 1.0),
     ],
     "community_centre": [
         ("bookshelf", 2.5, 1.0, 0, 2), ("bookshelf", 4.7, 1.0, 0, 2), ("bookshelf", 6.9, 1.0, 0, 2),
         ("bookshelf", 1.0, 4.0, 0, 2), ("bookshelf", 1.0, 6.5, 0, 2),
         ("noticeboard", 10.7, 1.0),
         # armchair nook sofa and two reading-table chairs
-        ("seat_x", 1.3, 9.6, 1.2), ("seat", 6.1, 4.4, 1.0), ("seat", 13.3, 4.4, 1.0),
+        ("seat_x", 1.6, 9.6, 1.2), ("seat", 6.1, 4.7, 1.0), ("seat", 13.3, 4.7, 1.0),
     ],
     "vaulttech_lobby": [
         ("reception", 7.2, 5.5), ("reception", 9.0, 5.5), ("reception", 10.8, 5.5),
         # glass-wall benches (west) and the waiting sofa, all facing into the lobby
-        ("seat_x", 0.6, 3.95, 1.0), ("seat_x", 0.6, 7.95, 1.0), ("seat_x", 10.55, 9.75, 1.0),
+        ("seat_x", 0.9, 3.95, 1.0), ("seat_x", 0.9, 7.95, 1.0), ("seat_x", 10.85, 9.75, 1.0),
     ],
     "public_toilet": [
         ("toilet", 2.9, 1.5, 0, 1), ("sink", 0.5, 3.5), ("bin", 0.75, 1.0),

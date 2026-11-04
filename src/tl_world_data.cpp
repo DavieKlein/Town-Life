@@ -642,9 +642,9 @@ namespace
         { interactable_kind::shop_diner, 73, 72, 0, 0 },
         { interactable_kind::shop_diner, 102, 72, 0, 0 },
         { interactable_kind::shop_diner, 131, 72, 0, 0 },
-        { interactable_kind::seat_x, 7, 70, 19, 0 },
-        { interactable_kind::seat_x, 7, 105, 19, 0 },
-        { interactable_kind::seat, 112, 100, 16, 0 },
+        { interactable_kind::seat_x, 12, 70, 19, 0 },
+        { interactable_kind::seat_x, 12, 105, 19, 0 },
+        { interactable_kind::seat, 112, 105, 16, 0 },
     };
     constexpr int community_centre_floor_tiles_count = 983;
     constexpr bn::color community_centre_floor_palette[] = {
@@ -764,9 +764,9 @@ namespace
         { interactable_kind::bookshelf, 16, 64, 0, 2 },
         { interactable_kind::bookshelf, 16, 104, 0, 2 },
         { interactable_kind::noticeboard, 171, 16, 0, 0 },
-        { interactable_kind::seat_x, 20, 153, 19, 0 },
-        { interactable_kind::seat, 97, 70, 16, 0 },
-        { interactable_kind::seat, 212, 70, 16, 0 },
+        { interactable_kind::seat_x, 25, 153, 19, 0 },
+        { interactable_kind::seat, 97, 75, 16, 0 },
+        { interactable_kind::seat, 212, 75, 16, 0 },
     };
     constexpr int vaulttech_lobby_floor_tiles_count = 1190;
     constexpr bn::color vaulttech_lobby_floor_palette[] = {
@@ -881,9 +881,9 @@ namespace
         { interactable_kind::reception, 115, 88, 0, 0 },
         { interactable_kind::reception, 144, 88, 0, 0 },
         { interactable_kind::reception, 172, 88, 0, 0 },
-        { interactable_kind::seat_x, 9, 63, 16, 0 },
-        { interactable_kind::seat_x, 9, 127, 16, 0 },
-        { interactable_kind::seat_x, 168, 156, 16, 0 },
+        { interactable_kind::seat_x, 14, 63, 16, 0 },
+        { interactable_kind::seat_x, 14, 127, 16, 0 },
+        { interactable_kind::seat_x, 173, 156, 16, 0 },
     };
     constexpr int public_toilet_floor_tiles_count = 190;
     constexpr bn::color public_toilet_floor_palette[] = {
