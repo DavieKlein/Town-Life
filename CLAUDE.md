@@ -835,9 +835,10 @@ lamps, a café table, a mailbox, etc. It was reverted from main until the owner 
 **Owner decisions (latest):**
 - **VaultTech staff gate = variant B** (roll-down shutter with a big red STAFF ONLY sign), proposal `tools/proposals/s55` (gate B). To be built
   together with the prologue / firing scene (not before).
-- **Player bed (s58):** the bed has ONE soft puffy pillow (flattened sphere, `s.sphere(..., sx, sy, sz)`) centred at the head end. The sleeper uses
-  `player_rest` frame 5 (`bed_0`, lying on the back, head towards -x, from `blender_actor.py`), lifted `bed_lift` 14 px onto the mattress; the
-  front-layer mask depth is pulled back (`seat sum - 17`) so the duvet draws over the body and only head and shoulders show. Frame 4 stays for the bench.
+- **Player bed (s58, s59):** `bed_cosy` is soft: bevelled mattress, puffy duvet (hangs 0.07 over the sides), turned-back sheet, ONE round pillow, no
+  footboard, no foot blanket. `s.box(..., bevel=r)` now works (blender_render `add_box`, rounded 3 segments, smooth faces; lines marked
+  `# s57-materials` keep other scenes' cache). The sleeper uses `player_rest` frame 5 (`bed_0`, on the back, head towards -x, face pass off), lifted
+  `bed_lift` 14 px; he lies ON the duvet: the front-layer mask depth is `seat sum + 90` (beyond all bed pixels), so he is drawn fully in front of the bed.
 - **Corner Market v2 interior: APPROVED.** It is bigger and L-shaped, with 2-cell aisles, wall
   shelves, 2 gondolas, a freezer, a fridge, crates, a checkout and a storeroom. The proposal
   scene code is in /tmp/claude-0/s36/tools (scratch). Still to add: Mia at the checkout and buying

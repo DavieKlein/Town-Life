@@ -527,9 +527,9 @@ namespace tl
             x1 = sx + 32;
             y0 = sy - rest_origin_y - 32 - _rest_lift;
             y1 = sy - rest_origin_y + 32 - _rest_lift;
-            // a bit in front of the seat: the bench stays behind. In bed (_rest_lift > 0) the sleeper is pulled back to just in front
-            // of the pillow, so the duvet and footboard draw over his body and only head and shoulders show.
-            depth = _rest_lift > 0 ? _seat_x + _seat_y - 17 : _seat_x + _seat_y + 12;
+            // a bit in front of the seat: the bench stays behind. In bed (_rest_lift > 0) the sleeper lies ON the duvet: his depth is
+            // beyond every bed pixel (bed spans about +-48 units around the use point), so he is drawn in front of the whole bed.
+            depth = _rest_lift > 0 ? _seat_x + _seat_y + 90 : _seat_x + _seat_y + 12;
             return;
         }
 

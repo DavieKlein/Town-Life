@@ -594,6 +594,10 @@ def add_box(bm, p):
                                     (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1))]
     for f in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
         bm.faces.new([vs[i] for i in f])
+    if p.get("bevel"):  # s57-materials
+        bmesh.ops.bevel(bm, geom=list(set(vs[i].link_edges[j] for i in range(8) for j in range(3))), offset=p["bevel"], segments=3, affect="EDGES")  # s57-materials
+        for f in bm.faces:  # s57-materials
+            f.smooth = True  # s57-materials
 
 
 def add_wedge(bm, p):

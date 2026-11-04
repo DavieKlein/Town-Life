@@ -83,20 +83,19 @@ class Local:
 # ------------------------------------------------------------------------------------------------------------------------------
 def _bed_cosy(s):
     """Calm bed, long axis along the wall, headboard at the west end: oak frame with a tall panelled headboard, cream mattress, ONE
-    dusty-blue duvet with a turned-back cream sheet, ONE soft round pillow, one folded mustard blanket at the foot."""
+    dusty-blue duvet with a turned-back cream sheet, ONE soft round pillow, no footboard (the sleeper lies on top)."""
     x0, y0, length, width = 0.15, 0.05, 2.95, 1.45
     x1, y1 = x0 + length, y0 + width
     s.box(x0, y0, x1, y1, 0.1, 0.4, "wood")
     s.box(x0 - 0.12, y0 - 0.02, x0 + 0.05, y1 + 0.02, 0.1, 1.2, "wood_dark")
     s.box(x0 - 0.04, y0 + 0.1, x0 + 0.06, y1 - 0.1, 0.5, 1.08, "wood")
     s.box(x0 - 0.15, y0 - 0.05, x0 + 0.08, y1 + 0.05, 1.2, 1.28, "wood")
-    s.box(x1 - 0.08, y0 - 0.01, x1, y1 + 0.01, 0.1, 0.62, "wood_dark")
-    s.box(x0 + 0.06, y0 + 0.05, x1 - 0.09, y1 - 0.05, 0.4, 0.54, "pillow_white")
-    s.box(x0 + 0.95, y0 - 0.04, x1 - 0.1, y1 + 0.04, 0.34, 0.68, "duvet_blue")
-    s.box(x0 + 0.78, y0 - 0.04, x0 + 1.12, y1 + 0.04, 0.5, 0.74, "pillow_white")
-    # ONE soft, puffy pillow centred at the head end (flattened sphere)
+    # rounded, soft: bevelled mattress, puffy duvet hanging a little over the sides, turned-back sheet, round pillow
+    # (no footboard, no foot blanket: the sleeper lies on top of the duvet, legs towards the foot end)
+    s.box(x0 + 0.06, y0 + 0.02, x1 - 0.02, y1 - 0.02, 0.4, 0.55, "pillow_white", bevel=0.06)
+    s.box(x0 + 0.95, y0 - 0.07, x1 - 0.06, y1 + 0.07, 0.43, 0.68, "duvet_blue", bevel=0.1)
+    s.box(x0 + 0.78, y0 - 0.03, x0 + 1.12, y1 + 0.03, 0.5, 0.72, "pillow_white", bevel=0.06)
     s.sphere(x0 + 0.4, (y0 + y1) / 2, 0.6, 0.3, "pillow_white", sz=0.3, sx=0.67, sy=1.0)
-    s.box(x1 - 0.62, y0 + 0.05, x1 - 0.14, y1 - 0.05, 0.68, 0.8, "blanket_mustard")
     s.set_solid(x0 - 0.12, y0 - 0.02, x1 - 0.001, y1 - 0.001)
     s.occluder(x0 - 0.12, y0 - 0.02, x1, y1, 1.3)
 
