@@ -1024,7 +1024,22 @@ Counter-posters (Old Block, hand-made after M13): "SAVE OLD BLOCK", "OLD BLOCK H
 
 ---
 
-## 6. Open questions for the owner
+## 6. Owner decisions (answers to the open questions)
+
+- **All proposals in this document are approved** (names Big Lou, Valet, Brenna Halloran, Ines, Teo, Duchess;
+  `home_room` as start room; pay level ~$100 at chapter end; slower bench sleep; needs bonus/penalty; the rest as written).
+- **Docks gate levy: $12 stays.**
+- **Weekdays:** show weekday names (Day 1 = Monday): HUD/pause menu show e.g. "Mon 8:05 am", pause menu "Monday, day 1".
+- **Dish-washing minigame at Lou's Diner: yes** (build it instead of a plain wage activity).
+- **New: shelf-stocking minigame at Corner Market.** The prologue's tutorial shift is a real minigame; its result
+  earns the final pay (the $20 the player has after the firing; a good score can add a small bonus, but the
+  story start stays around $20). The same minigame becomes **replayable later as a job once Corner Market is
+  warm/normal again** (after VaultTech is beaten there).
+- Minigame visuals (screens, sprites) follow the owner's rule: show a design proposal before building.
+
+<!-- Previous open questions kept below for reference. -->
+
+## 7. Open questions for the owner (answered in section 6)
 
 1. **Names:** OK with Big Lou (diner), Foreman Brenna Halloran (Docks), Valet (Vault's robot), Ines and Teo (Old Block)?
 2. **Moral side job (#15 VaultMart Tester):** keep it as a tempting option with friendship consequences, or cut it?
