@@ -153,9 +153,9 @@ drive.google.com, drive.usercontent.google.com and docs.google.com in the allowe
 | Ultimate Textured Building Pack (Dec 2019) | `art_source/quaternius_buildings/` (26 FBX "Models with Materials") | buildings via `s.model()` |
 | Animated Men + Women Characters (Feb 2019) | `art_source/quaternius_characters/` (8 FBX, rigged: Idle, Walk, Run, Sitting, Clapping, Jump, ...) | player (Male_LongSleeve, own colours) + future NPCs |
 | Downtown City MegaKit [Standard, free] | `art_source/quaternius_downtown/` (glTF + .bin of the used models, base-colour textures downscaled to 512 px; normal/ORM maps left out) | City Centre: downtown building, planters, bollards, manholes via `s.kit()` |
-| Ultimate Food Pack (Oct 2019) | not yet | supermarket products |
+| Ultimate Food Pack (Oct 2019) | `art_source/quaternius_food/` (12 FBX: Apple, Bread, Carrot, Lettuce, Orange, Tomato, sauce bottles, jars, soda) + License.txt | supermarket products via `s.prop('food/Name', ...)` |
 | Furniture Pack (March 2019) | not yet | furniture to buy/place in homes |
-| Ultimate House Interior Pack (June 2020) | not yet | home interiors, buyable furniture |
+| Ultimate House Interior Pack (June 2020) | `art_source/quaternius_house/` (11 FBX: toilet, sink, mirror, shower, chairs, couch, fridge, lamp, table, bin) + License.txt | interiors via `s.prop('house/Name', ...)`; more models can be copied from Drive when needed |
 | Furniture Pack (Oct 2017) | not yet | **no licence file in the folder** — verify before use |
 | David OReilly — Everything Library: Animals (Drive folder `EverythingLibrary_Animals_002`, ~240 static models incl. Crow, Gull, Cat, dogs, Rat, Duck, Raccoon) | `art_source/everything_library_animals/city_animals.glb` (GroundedPigeon, Pigeon, GraySquirrel only) + License.txt | **CC BY 4.0 (not CC0) — attribution required, credited in README.** Static models; colours are vertex colours; the GLB is in centimetres and lost the FBX up-axis rotation (blender_critter.py compensates: `UNIT`, `BASE_PITCH`, per-model `YAW`). |
 
@@ -196,8 +196,9 @@ ivy, weeds). Budget: free tools only; the owner might spend at most ~€50 later
 
 ## Current state of the code
 
-**Full City Centre (awaiting owner feedback)** plus the Corner Market interior, a 3D-rendered
-player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted isometric prototype at
+**Full City Centre (awaiting owner feedback)** with **five enterable buildings and their interiors**
+(Corner Market, diner, community centre / library, VaultTech lobby, park public toilet), shops and
+fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted isometric prototype at
 `786cc4c`; pre-rendered street corner at `99203ab`.
 
 - City Centre (72x60 cells = 54x45 m, image 2144x1272 px): main avenue along x (y 22..30) and a
@@ -221,7 +222,34 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
 - HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
   Needs (`tl_needs.h`: Hunger, Energy, Hygiene, Fun, 0-100) decay per game minute and drive the
   four HUD bars (`need_bar` sprites, 16 fill levels, green/orange/red).
-- Interactions: `tools/interactions.py` lists interactable objects per map (kind, x, y[, radius]),
+- **Enterable buildings (district 1 milestone):** each has a door warp in `city_centre` and a
+  door-mat exit warp in its interior (all interiors are cutaway rooms made with `std_room()` /
+  `wall_y` / `wall_x` / stubs in scene.py, not outdoor-lit): Corner Market (door x 43-45, y 17-18;
+  17x18 L-shaped shop v2), diner (the purple slim house, door on the left of its facade, neon
+  "DINER" sign), community centre (NW downtown building, arched door at x 11.2-12.4, "COMMUNITY
+  CENTRE" sign; bookcases, notice board), VaultTech lobby (south door of the golden tower, marble
+  and gold, reception desk), public toilet (small brick building in City Park at 1.6..4.6 x
+  36.8..39.8, door onto the park path; 6x6 room with one open WC, a sink, paper towels, bin, a bit
+  grimy). `home_room()` (shabby first flat, approved) stays in scene.py but is NOT in `SCENES` yet
+  (no entrance). The scene list is `SCENES` at the end of scene.py; interior props come from
+  `s.prop('house/Name' | 'food/Name', ...)` (Quaternius CC0 FBX in `art_source/quaternius_house|food`,
+  sizes in `PROP_DIMS`). All flood-fill checked (every door reachable from the start, every free
+  interior cell reachable, every exit target free).
+- **Interactions** (`tools/interactions.py` kinds, `include/tl_world.h` `interactable_kind`,
+  `tl_field.cpp`): reach 28 units for fixtures. Corner Market checkout / Mia: shop menu (Bread $2
+  Hunger +15, Apple $1 +6, Ready meal $5 +35, Soda $1 Hunger +4 Fun +4; "Not enough money." info);
+  diner counter (Coffee $2 Energy +15 Fun +5, Pancakes $4 Hunger +25, Burger $6 Hunger +40);
+  toilet (Hygiene +5, Fun +2), sink (Hygiene +15), bookshelf (Fun +12, 30 game minutes pass),
+  notice board and VaultTech reception (info messages). `tl_menu` now scrolls lists of more than 3
+  options and has `open_info()` (up to 3 text lines). Shops stay open after a purchase until B.
+- **NPCs** (`tools/npcs.py`, `tl_npcs`): static idle sprites per map, rendered by `blender_actor.py`
+  mode `idle` (8 facings, 32x64, feet (16, 54)). Mia (Quaternius Female_Casual, ginger hair, teal
+  top) stands behind the Corner Market checkout; her priority follows `map_info::player_hidden` so
+  the counter covers her legs. The render cache key (`scene_hash`) now hashes the scene content, not
+  scene.py, so editing one scene does not re-render the others.
+- **Collision** is a fine grid (`SOLID_RES` = 4 sub-cells per cell, `solid_res` in tl_world.h);
+  `set_solid` rounds outward to sub-cells.
+- Interactions (older notes): `tools/interactions.py` lists interactable objects per map (kind, x, y[, radius]),
   emitted as `map_info::interactables`. A (while walking) opens a menu (`tl_menu`: dark panel
   top-right, cursor, A ok / B back) for the nearest object in reach: **park bench** → Sit (Fun +,
   small Energy +; seated pose, 4 frames) or Sleep (side-lying pose, zZz text, clock runs 4x faster,
@@ -276,6 +304,7 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
 │   ├── tl_streamed_bg.cpp       tile-streaming regular BG (see "Engine")
 │   ├── tl_player.cpp            player: iso movement, collision, depth priority, animation, shadow
 │   ├── tl_critters.cpp          ambient pigeons + squirrels (behaviour, sprites, depth)
+│   ├── tl_npcs.cpp              standing NPCs (Mia), tl_menu.cpp pop-up menu (scroll + info)
 │   └── tl_world_data.cpp        GENERATED: palettes per layer, collision, warps, occluders, map table
 ├── data/                        GENERATED binary layer data (Butano DATA rule): <map>_<layer>_tiles.bin
 │                                (8 words per 4bpp tile) and <map>_<layer>_cells.bin (uint32 per 8x8 cell)
@@ -298,6 +327,8 @@ player and the HUD. History: top-down maps at commit `5af63a1`; hand-painted iso
     ├── build_assets.py          renders, converts to 4bpp tiles, writes generated files
     ├── hud_sprites.py           HUD bar drawing (pixel art)
     ├── critters.py              animal spawn points per map
+    ├── npcs.py                  NPC spawn points + looks per map (Mia)
+    ├── interactions.py          interactable objects per map
     ├── blender_critter.py       poses + renders the animal models into sprite frames
     └── headless_run.py          headless emulator test runner (screenshots + scripted input)
 ```
@@ -446,8 +477,9 @@ Update the checkboxes at the end of each session.
 - [x] Downtown City MegaKit used in City Centre (building, planters, bollards, manholes)
 - [x] Full City Centre: VaultTech golden tower, park with benches, fountain square, river with the
       closed bridge to the Docks, road works to the north, bus stop
-- [ ] Food pack in the supermarket (owner asked for this next)
-- [ ] Furniture + House Interior packs (homes; later a buyable selection for the housing ladder/shop)
+- [x] Food pack in the supermarket (food props on the shelves and in the crates)
+- [x] House Interior pack used in the interiors; [ ] shabby first home (`home_room`, no entrance yet) and buyable furniture
+- [x] Enterable City Centre buildings: Corner Market, diner, community centre, VaultTech lobby, park public toilet
 - [ ] Owner approves the look (feedback round)
 - [ ] Full Old Block: row houses, garden, laundromat, bakery, court, demolition site
 - [ ] Map transitions between City Centre and Old Block
@@ -457,12 +489,14 @@ Update the checkboxes at the end of each session.
 - [x] HUD: 4 small bars/icons (sprites or a high-priority second bg layer)
 - [ ] Game clock (day/time); START opens a pause menu with exact values
 - [x] Interact with objects (A + option menu): park bench = sit/sleep, fountain = wash
-- [ ] More interactions with furniture (shower, toilet, fridge, cooking, repairing) once homes exist
+- [x] Interactions in the interiors: shops (market, diner), toilet, sink, bookshelf, notice board, reception
+- [ ] More interactions with furniture (shower, fridge, cooking, repairing) once homes exist
 - [x] Text: `bn::sprite_text_generator` with a font (see `butano/common`)
 - [ ] Split `main.cpp` into scenes (`tl_scene.h` with an enum, one class per scene with `update()`)
 
 1.3 Dialogue + NPCs — TODO
-- [ ] NPC class (sprite, position, simple wander pattern, collision with player)
+- [x] Static NPC sprites (`tl_npcs`, Mia at the checkout)
+- [ ] NPC class (simple wander pattern, collision with player, talking)
 - [ ] Dialogue box at the bottom with text paging (A = next) and simple choices
 - [ ] Dialogue data in a compact table format (speaker, lines, choices, effects)
 - [ ] Original NPCs: Corner Market coworkers, regular customers, Old Block residents
@@ -525,6 +559,15 @@ Update the checkboxes at the end of each session.
 - [ ] Polish + owner approval
 
 ## Next session: start here
+
+**Milestone done (owner: "put everything on main; finish the district now, fine-tuning later"):**
+five enterable buildings, shops, fixtures, Mia, fine collision, fountain with water in the basin.
+**Postponed fine-tuning (do when the owner asks):** water quality (the fountain/pond use the simple
+band-ripple palette cycling; a more realistic water material and a detailed fountain "v2" were
+tried and dropped, see commit 4d2d52f), fountain detail, eye-level street details (commit `c3aaccc`),
+the shabby first home entrance (`home_room`), the player V2 look, and a tree in City Park at
+(4.0, 45.5) that covers the player on the path in front of the toilet. Next big steps: dialogue
+box with portraits + friendship meter, missions, Old Block.
 
 **Eye-level street details proposal (parked, "details later"):** the scene.py and
 blender_render.py code is in commit `c3aaccc` (WIP). It adds projecting shop signs, bikes, wall

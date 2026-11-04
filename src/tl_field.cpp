@@ -22,6 +22,23 @@ namespace tl
         constexpr int bar_levels = 16;                 // frames in need_bar.bmp
         constexpr int interact_reach = 26;             // world units from a bench seat
         constexpr int fountain_reach = 32;             // world units beyond the fountain radius
+        constexpr int fixture_reach = 28;              // counters, toilets, sinks, shelves, ...
+
+        struct shop_item
+        {
+            int price;
+            int hunger;
+            int energy;
+            int fun;
+        };
+
+        constexpr bn::string_view market_labels[] = { "Bread $2", "Apple $1", "Ready meal $5", "Soda $1" };
+        constexpr shop_item market_items[] = { { 2, 15, 0, 0 }, { 1, 6, 0, 0 }, { 5, 35, 0, 0 }, { 1, 4, 0, 4 } };
+        constexpr bn::string_view diner_labels[] = { "Coffee $2", "Pancakes $4", "Burger $6" };
+        constexpr shop_item diner_items[] = { { 2, 0, 15, 5 }, { 4, 25, 0, 0 }, { 6, 40, 0, 0 } };
+        constexpr bn::string_view toilet_options[] = { "Use toilet" };
+        constexpr bn::string_view sink_options[] = { "Wash hands" };
+        constexpr bn::string_view book_options[] = { "Read a book" };
 
         // Effects per game minute while resting.
         constexpr bn::fixed sit_fun = 0.35;
@@ -102,6 +119,7 @@ namespace tl
                             front_priority);
         _player.place(*_map, x, y, facing);
         _critters.load(*_map);
+        _npcs.load(*_map);
         _pool_sprites.clear();
         _update_lighting(true);
         _update_camera();
@@ -135,6 +153,7 @@ namespace tl
         _objects_bg->set_view(_cam_x, _cam_y);
         _player.update_sprite(_cam_x, _cam_y);
         _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
+        _npcs.update(_cam_x, _cam_y);
 
         int x0, y0, x1, y1, depth;
         _player.mask_area(x0, y0, x1, y1, depth);
@@ -301,7 +320,17 @@ namespace tl
         for(int index = 0; index < _map->interactables_count; ++index)
         {
             const interactable& it = _map->interactables[index];
-            int reach = it.kind == interactable_kind::fountain ? it.radius + fountain_reach : interact_reach;
+            int reach = interact_reach;
+
+            if(it.kind == interactable_kind::fountain)
+            {
+                reach = it.radius + fountain_reach;
+            }
+            else if(it.kind != interactable_kind::bench)
+            {
+                reach = fixture_reach;
+            }
+
             int d2 = distance2(px, py, it.x, it.y);
 
             if(d2 <= reach * reach && (! best || d2 < best_distance))
@@ -317,22 +346,144 @@ namespace tl
         }
 
         _menu_target = best;
+        _menu_mode = menu_mode::interact;
 
-        if(best->kind == interactable_kind::bench)
+        switch(best->kind)
         {
-            constexpr bn::string_view options[] = { "Sit", "Sleep" };
-            _menu.open("Park Bench", options, 2);
+
+        case interactable_kind::bench:
+            {
+                constexpr bn::string_view options[] = { "Sit", "Sleep" };
+                _menu.open("Park Bench", options, 2);
+            }
+            break;
+
+        case interactable_kind::fountain:
+            {
+                constexpr bn::string_view options[] = { "Wash face" };
+                _menu.open("Fountain", options, 1);
+            }
+            break;
+
+        case interactable_kind::shop_market:
+        case interactable_kind::shop_diner:
+            _open_shop(*best);
+            break;
+
+        case interactable_kind::toilet:
+            _menu.open("Toilet", toilet_options, 1);
+            break;
+
+        case interactable_kind::sink:
+            _menu.open("Sink", sink_options, 1);
+            break;
+
+        case interactable_kind::bookshelf:
+            _menu.open("Bookshelf", book_options, 1);
+            break;
+
+        case interactable_kind::noticeboard:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            _show_info("Notice board", "No jobs posted", "yet. Check", "back soon!");
+            break;
+
+        case interactable_kind::reception:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            _show_info("VaultTech", "Access denied.", "Have a nice day.", "");
+            break;
+
+        default:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            break;
+        }
+    }
+
+    void field::_open_shop(const interactable& target)
+    {
+        _menu_target = &target;
+        _menu_mode = menu_mode::shop;
+
+        if(target.kind == interactable_kind::shop_market)
+        {
+            _menu.open("Corner Market", market_labels, 4);
         }
         else
         {
-            constexpr bn::string_view options[] = { "Wash face" };
-            _menu.open("Fountain", options, 1);
+            _menu.open("Diner", diner_labels, 3);
         }
+    }
+
+    void field::_show_info(const char* title, const char* line_a, const char* line_b, const char* line_c)
+    {
+        // The message lines must outlive the open menu: keep them in static views.
+        static bn::string_view lines[3];
+        static bn::string_view heading;
+        heading = title;
+        lines[0] = line_a;
+        lines[1] = line_b;
+        lines[2] = line_c;
+        int count = line_c[0] ? 3 : (line_b[0] ? 2 : 1);
+        _menu.open_info(heading, lines, count);
+        _menu_mode = menu_mode::info;
+    }
+
+    void field::_buy(const interactable& target, int choice)
+    {
+        bool market = target.kind == interactable_kind::shop_market;
+        const shop_item& item = market ? market_items[choice] : diner_items[choice];
+
+        if(_money < item.price)
+        {
+            _shop_return = &target;
+            _show_info("Shop", "Not enough", "money.", "");
+            return;
+        }
+
+        _money -= item.price;
+        _needs.add(needs::hunger, item.hunger);
+        _needs.add(needs::energy, item.energy);
+        _needs.add(needs::fun, item.fun);
+        _redraw_hud_text();
+        _update_bars();
+        _open_shop(target);     // keep shopping until B
+    }
+
+    void field::_advance_time(int minutes)
+    {
+        for(int index = 0; index < minutes; ++index)
+        {
+            _minutes = (_minutes + 1) % (24 * 60);
+            _needs.minute_passed();
+        }
+
+        _minute_frames = 0;
+        _redraw_hud_text();
+        _update_bars();
     }
 
     void field::_handle_menu_choice(int choice)
     {
         const interactable* target = _menu_target;
+        menu_mode mode = _menu_mode;
+        _menu_mode = menu_mode::none;
+
+        if(mode == menu_mode::info)
+        {
+            const interactable* back = _shop_return;
+            _shop_return = nullptr;
+            _menu_target = nullptr;
+
+            if(back)
+            {
+                _open_shop(*back);
+            }
+
+            return;
+        }
+
         _menu_target = nullptr;
 
         if(! target || choice < 0)
@@ -340,8 +491,16 @@ namespace tl
             return;
         }
 
-        if(target->kind == interactable_kind::bench)
+        if(mode == menu_mode::shop)
         {
+            _buy(*target, choice);
+            return;
+        }
+
+        switch(target->kind)
+        {
+
+        case interactable_kind::bench:
             _rest_target = target;
 
             if(choice == 0)
@@ -352,10 +511,31 @@ namespace tl
             {
                 _player.sleep_on(target->x, target->y);
             }
-        }
-        else
-        {
+            break;
+
+        case interactable_kind::fountain:
             _player.start_washing(target->x, target->y);
+            break;
+
+        case interactable_kind::toilet:
+            _needs.add(needs::hygiene, 5);
+            _needs.add(needs::fun, 2);
+            _update_bars();
+            break;
+
+        case interactable_kind::sink:
+            _needs.add(needs::hygiene, 15);
+            _update_bars();
+            break;
+
+        case interactable_kind::bookshelf:
+            _advance_time(30);
+            _needs.add(needs::fun, 12);
+            _update_bars();
+            break;
+
+        default:
+            break;
         }
     }
 

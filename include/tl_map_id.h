@@ -8,9 +8,13 @@ namespace tl
     {
         city_centre,
         corner_market,
+        diner,
+        community_centre,
+        vaulttech_lobby,
+        public_toilet,
     };
 
-    constexpr int maps_count = 2;
+    constexpr int maps_count = 6;
 }
 
 #endif

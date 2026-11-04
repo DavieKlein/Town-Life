@@ -142,6 +142,14 @@ def main():
         render_actions(sc, arm, meshes, root, co, out_dir, model_yaw)
         return
 
+    if mode == "idle":
+        for name, angle in FACINGS.items():
+            root.rotation_euler = (0, 0, math.radians(angle + model_yaw))
+            sc.frame_set(1)
+            sc.render.filepath = os.path.join(out_dir, f"{name}_0.png")
+            bpy.ops.render.render(write_still=True)
+        return
+
     w0, w1 = int(walk.frame_range[0]), int(walk.frame_range[1])
     cycle = w1 - w0
     for name, angle in FACINGS.items():

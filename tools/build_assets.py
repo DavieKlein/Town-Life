@@ -29,7 +29,7 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import scene as scn          # noqa: E402
 import hud_sprites           # noqa: E402
-import critters              # noqa: E402
+import critters, npcs              # noqa: E402
 import interactions          # noqa: E402
 
 CACHE = os.path.join(ROOT, "art_cache")
@@ -43,9 +43,12 @@ RENDER_SAMPLES = 96
 # Rendering
 # ---------------------------------------------------------------------------------------------
 def scene_hash(s, layer, scale, samples):
+    # Hash of what is rendered (primitives, lights, sizes, sun) + the renderer, not of scene.py itself:
+    # editing another scene never forces a re-render of this one.
     h = hashlib.sha1()
-    for f in ("scene.py", "blender_render.py"):
-        h.update(open(os.path.join(TOOLS, f), "rb").read())
+    h.update(open(os.path.join(TOOLS, "blender_render.py"), "rb").read())
+    skip = ("solid", "warps", "occluders", "lamps")
+    h.update(repr({k: v for k, v in sorted(vars(s).items()) if k not in skip}).encode())
     h.update(f"{s.ident}{layer}{scale}{samples}".encode())
     return h.hexdigest()[:12]
 
@@ -150,18 +153,17 @@ def kmeans(points, k, weights=None, iters=12, seed=1):
 
 # Special palette entries (same positions in every map; the game animates / relights them):
 #   class 1 window glass -> 2 entries (dark, bright), lit at night
-#   class 2 water glints -> 4 entries (twinkle ramp rotated by the game); the water itself is quantized normally
+#   class 2 water        -> N entries with a ripple pattern, cycled (palette cycling)
 #   class 3 lamp glass   -> 1 entry, bright at night
-FLOOR_WATER_BANKS = (6, 7)          # floor banks that hold water (entries 12..15, glints only)
+FLOOR_WATER_BANKS = (6, 7)          # floor banks that hold water (entries 12..15)
 FLOOR_WATER_FIRST = 12
-FLOOR_WATER_CYCLE = 4               # entries rotated by the palette cycling (smooth brightness wave)
-FLOOR_WATER_FIXED = 0               # then fixed entries: darkest (edges / deep) and highlight
+FLOOR_WATER_COUNT = 4
 OBJ_GLASS_FIRST = 13                # objects: glass 13, 14 and lamp 15 in every bank
 OBJ_LAMP_INDEX = 15
-OBJ_WATER_BANKS = (6,)              # objects banks with water (fountain), entries 9..12
-OBJ_WATER_FIRST = 9
-OBJ_WATER_CYCLE = 4
-OBJ_WATER_FIXED = 0
+OBJ_WATER_BANKS = (6,)              # objects banks with water (fountain), entries 10..12
+OBJ_WATER_FIRST = 10
+OBJ_WATER_COUNT = 3
+WATER_TINTS = np.array([[-16, -12, -6], [0, 0, 0], [14, 16, 20], [34, 38, 36]], dtype=np.float64)
 
 
 def special_layout(layer, present, banks):
@@ -171,9 +173,9 @@ def special_layout(layer, present, banks):
     if layer == "floor":
         if 2 in present:
             for b in FLOOR_WATER_BANKS:
-                layout[b][2] = list(range(FLOOR_WATER_FIRST, FLOOR_WATER_FIRST + FLOOR_WATER_CYCLE + FLOOR_WATER_FIXED))
+                layout[b][2] = list(range(FLOOR_WATER_FIRST, FLOOR_WATER_FIRST + FLOOR_WATER_COUNT))
                 info["water_banks"] |= 1 << b
-            info.update(water_first=FLOOR_WATER_FIRST, water_count=FLOOR_WATER_CYCLE)
+            info.update(water_first=FLOOR_WATER_FIRST, water_count=FLOOR_WATER_COUNT)
     else:
         if present & {1, 3}:
             for b in range(banks):
@@ -182,27 +184,17 @@ def special_layout(layer, present, banks):
             info.update(glass_first=OBJ_GLASS_FIRST, lamp_index=OBJ_LAMP_INDEX)
         if 2 in present:
             for b in OBJ_WATER_BANKS:
-                layout[b][2] = list(range(OBJ_WATER_FIRST, OBJ_WATER_FIRST + OBJ_WATER_CYCLE + OBJ_WATER_FIXED))
+                layout[b][2] = list(range(OBJ_WATER_FIRST, OBJ_WATER_FIRST + OBJ_WATER_COUNT))
                 info["water_banks"] |= 1 << b
-            info.update(water_first=OBJ_WATER_FIRST, water_count=OBJ_WATER_CYCLE)
+            info.update(water_first=OBJ_WATER_FIRST, water_count=OBJ_WATER_COUNT)
     return layout, info
 
 
-GLINT_FRACTION = 0.012      # brightest share of the water pixels that twinkle
-
-
-def glint_index(x, y, n):
-    """Deterministic twinkle phase (entry index) per pixel."""
-    return (((x * 73856093) ^ (y * 19349663)) >> 3) % n
-
-
-def glint_ramp(base, n):
-    """Twinkle ramp: water colour -> highlight -> water colour; the game rotates the entries."""
-    base = np.asarray(base, dtype=np.float64)
-    hi = np.array([232, 246, 252], dtype=np.float64)
-    mid = (base + hi) / 2
-    seq = [base * 1.05, mid, hi, mid]
-    return np.array([seq[i % len(seq)] for i in range(n)])
+def water_pattern(x, y, n):
+    """Diagonal ripple bands, periodic every 16x8 pixels (2 tiles) so water tiles deduplicate."""
+    wobble = np.round(np.sin(x * (2 * np.pi / 16)) * 2).astype(np.int64)
+    band = (x + 2 * y + wobble) // 4
+    return band % n
 
 
 def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
@@ -216,14 +208,6 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
     if cls_img is None:
         cls_img = np.zeros((h, w), dtype=np.uint8)
     cls_img = np.where(opaque, cls_img, 0).astype(np.uint8)
-    water_mean = None
-    if (cls_img == 2).any():
-        # water keeps its rendered colours; only the brightest pixels become twinkling glints (class 2)
-        wmask = cls_img == 2
-        water_mean = rgb[wmask].mean(0)
-        luma = (rgb * [0.299, 0.587, 0.114]).sum(2)
-        thr = np.quantile(luma[wmask], 1.0 - GLINT_FRACTION)
-        cls_img = np.where(wmask & (luma < thr), 0, cls_img).astype(np.uint8)
     present = set(int(c) for c in np.unique(cls_img)) - {0}
     layout, info = special_layout(layer, present, banks)
     # classes without reserved entries in this layer are treated as normal colours
@@ -265,7 +249,9 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
         px = rgb[cls_img == 3]
         special_cols[3] = to5(px.mean(0)[None] if len(px) else np.array([[255, 240, 200]])) * WEIGHT
     if 2 in reserved:
-        special_cols[2] = to5(glint_ramp(water_mean, info["water_count"])) * WEIGHT
+        n = info["water_count"]
+        base = rgb[cls_img == 2].mean(0)
+        special_cols[2] = to5(np.clip(base[None] + WATER_TINTS[:n], 0, 255)) * WEIGHT
 
     # initial bank assignment: k-means on tile mean colour + spread (normal pixels)
     feats = []
@@ -327,7 +313,7 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
                 if not m.any():
                     continue
                 if c == 2:
-                    pat = glint_index(tiles_x[chunk], tiles_y[chunk], len(entries))
+                    pat = water_pattern(tiles_x[chunk], tiles_y[chunk], len(entries))
                     idx[m] = (entries[0] + pat[m]).astype(np.uint8)
                 else:
                     sc_ = special_cols[c]
@@ -586,6 +572,13 @@ def main():
             out.append("    };")
         interact_entry = (f"{s.ident}_interactables, int(sizeof({s.ident}_interactables) / sizeof(interactable))"
                           if things else "nullptr, 0")
+        people = npcs.NPCS.get(s.ident, [])
+        if people:
+            out.append(f"    constexpr npc_spawn {s.ident}_npcs[] = {{")
+            for (who, nx, ny, nf) in people:
+                out.append(f"        {{ npc_kind::{who}, {int(nx * 16)}, {int(ny * 16)}, {npcs.FACINGS.index(nf)} }},")
+            out.append("    };")
+        npc_entry = (f"{s.ident}_npcs, int(sizeof({s.ident}_npcs) / sizeof(npc_spawn))" if people else "nullptr, 0")
         if s.lamps:
             out.append(f"    constexpr lamp {s.ident}_lamps[] = {{")
             for (lx, ly) in s.lamps:
@@ -608,7 +601,7 @@ def main():
                      f"{s.origin_x}, {s.origin_y}, {s.img_w}, {s.img_h}, {view[0]}, {view[1]}, {view[2]}, {view[3]}, "
                      f"{s.ident}_solid, {s.ident}_warps, int(sizeof({s.ident}_warps) / sizeof(warp)), "
                      f"{s.ident}_occluders, int(sizeof({s.ident}_occluders) / sizeof(occluder)), "
-                     f"{critter_entry}, {interact_entry}, {lamp_entry}, {'true' if s.sun else 'false'} }},")
+                     f"{critter_entry}, {interact_entry}, {npc_entry}, {lamp_entry}, {'true' if s.sun else 'false'} }},")
 
     out += ["}", "", "namespace", "{", "    constexpr map_info maps[] = {"] + table + ["    };", "}", "",
             "static_assert(sizeof(maps) / sizeof(map_info) == maps_count);", "",
@@ -634,6 +627,7 @@ def main():
     build_player(force, fast)
     build_player_actions(force, fast)
     build_critters(force, fast)
+    build_npcs(force, fast)
     build_ui_sprites()
 
 
@@ -744,6 +738,32 @@ def build_critters(force, fast):
     for name, count in CRITTER_FRAMES.items():
         frames = [sprite_frame(os.path.join(out_dir, f"{name}_{i}.png"), ss, 32, 32) for i in range(count)]
         write_sprite_sheet(name, frames, 32, 32)
+
+
+def build_npcs(force, fast):
+    """Standing NPCs: Quaternius characters in our own colours, idle pose, 8 facings (32x64 frames)."""
+    import json
+    ss, samples = (2, 16) if fast else (4, 48)
+    for name, look in npcs.LOOKS.items():
+        colours = json.dumps(look["colours"], sort_keys=True)
+        fbx = os.path.join(ROOT, "art_source", "quaternius_characters", look["model"] + ".fbx")
+        h = hashlib.sha1()
+        for f in ("scene.py", "blender_render.py", "blender_actor.py"):
+            h.update(open(os.path.join(TOOLS, f), "rb").read())
+        h.update(f"npc{name}{ss}{samples}{colours}{look['model']}".encode())
+        out_dir = os.path.join(CACHE, f"npc_{name}_" + h.hexdigest()[:12])
+        last = os.path.join(out_dir, "se_0.png")
+        if force or not os.path.exists(last):
+            print(f"rendering npc {name}...", flush=True)
+            r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_actor.py"),
+                                "--", fbx, out_dir, str(ss), str(samples), colours, "0", "idle"],
+                               capture_output=True, text=True)
+            if not os.path.exists(last):
+                print(r.stdout[-3000:], r.stderr[-3000:])
+                raise RuntimeError("npc render failed")
+        frames = [sprite_frame(os.path.join(out_dir, f"{f}_0.png"), ss, FRAME_W, FRAME_H) for f in FACINGS]
+        write_sprite_sheet("npc_" + name, frames, FRAME_W, FRAME_H)
+        # the sprite sheet writer draws outline + palette like the animals / player poses
 
 
 # ---------------------------------------------------------------------------------------------

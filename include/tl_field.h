@@ -11,6 +11,7 @@
 #include "tl_needs.h"
 #include "tl_player.h"
 #include "tl_critters.h"
+#include "tl_npcs.h"
 #include "tl_streamed_bg.h"
 #include "tl_lighting.h"
 
@@ -42,6 +43,7 @@ namespace tl
         bn::vector<bn::sprite_ptr, 8> _money_sprites;
         player _player;
         critters _critters;
+        npcs _npcs;
         menu _menu;
         needs _needs;
         bn::vector<bn::sprite_ptr, needs::count> _bar_sprites;
@@ -53,6 +55,16 @@ namespace tl
         int _light_minutes = -1;
         int _water_phase = 0;
         bool _lamps_on = false;
+        enum class menu_mode
+        {
+            none,
+            interact,       // the object's own menu (bench, fountain, toilet, ...)
+            shop,           // buying food
+            info            // a message; reopens the shop afterwards if shop_return is set
+        };
+
+        menu_mode _menu_mode = menu_mode::none;
+        const interactable* _shop_return = nullptr;
         const interactable* _menu_target = nullptr;
         const interactable* _rest_target = nullptr;
         const map_info* _map = nullptr;
@@ -72,6 +84,10 @@ namespace tl
         void _update_bars();
         void _open_interaction_menu();
         void _handle_menu_choice(int choice);
+        void _open_shop(const interactable& target);
+        void _buy(const interactable& target, int choice);
+        void _show_info(const char* title, const char* line_a, const char* line_b, const char* line_c);
+        void _advance_time(int minutes);
         void _update_zzz();
         void _update_lighting(bool force);
         void _update_lamps();

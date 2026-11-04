@@ -83,7 +83,14 @@ namespace tl
     enum class interactable_kind : uint8_t
     {
         bench,
-        fountain
+        fountain,
+        shop_market,
+        shop_diner,
+        toilet,
+        sink,
+        bookshelf,
+        noticeboard,
+        reception
     };
 
     struct interactable
@@ -92,6 +99,20 @@ namespace tl
         int x;          // world units: bench = seat centre, fountain = centre
         int y;
         int radius;     // fountain radius (world units), 0 for benches
+    };
+
+    // Standing NPCs (see tools/npcs.py): one idle sprite, facing is an index into the 8-frame sheet.
+    enum class npc_kind : uint8_t
+    {
+        mia
+    };
+
+    struct npc_spawn
+    {
+        npc_kind kind;
+        int x;          // world units (feet)
+        int y;
+        int facing;     // 0..7: s, sw, w, nw, n, ne, e, se
     };
 
     // One pre-rendered layer, split into 4bpp 8x8 tiles.
@@ -144,6 +165,8 @@ namespace tl
         int critters_count;
         const interactable* interactables;
         int interactables_count;
+        const npc_spawn* npcs;
+        int npcs_count;
         const lamp* lamps;
         int lamps_count;
         bool outdoor;   // day/night lighting applies

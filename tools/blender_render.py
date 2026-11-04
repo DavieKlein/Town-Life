@@ -153,49 +153,6 @@ def grit_material(nt, bsdf, coords, kind, spec):
     L.new(col, bsdf.inputs["Base Color"])
 
 
-def water_material(nt, bsdf, spec):
-    """Water seen from above: deep teal base with slow colour variation, glossy reflection of the sky
-    and a wave bump (noise + wave textures) that breaks the reflection into soft glints."""
-    coords = surface_coords(nt)
-    # slow colour variation (depth)
-    n1 = nt.nodes.new("ShaderNodeTexNoise")
-    n1.inputs["Scale"].default_value = spec.get("depth_scale", 0.5)
-    n1.inputs["Detail"].default_value = 2.0
-    nt.links.new(coords, n1.inputs["Vector"])
-    ramp = nt.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].color = rgb(spec["c"])
-    ramp.color_ramp.elements[1].color = rgb(spec["c2"])
-    ramp.color_ramp.elements[0].position = 0.3
-    ramp.color_ramp.elements[1].position = 0.7
-    nt.links.new(n1.outputs["Fac"], ramp.inputs["Fac"])
-    nt.links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
-    # waves: stretched noise + wave bands drive a bump
-    n2 = nt.nodes.new("ShaderNodeTexNoise")
-    n2.inputs["Scale"].default_value = spec.get("wave_scale", 5.0)
-    n2.inputs["Detail"].default_value = 3.0
-    n2.inputs["Roughness"].default_value = 0.6
-    nt.links.new(coords, n2.inputs["Vector"])
-    w = nt.nodes.new("ShaderNodeTexWave")
-    w.wave_type = "BANDS"
-    w.bands_direction = "DIAGONAL"
-    w.inputs["Scale"].default_value = spec.get("wave_scale", 5.0) * 0.6
-    w.inputs["Distortion"].default_value = 4.0
-    w.inputs["Detail"].default_value = 2.0
-    nt.links.new(coords, w.inputs["Vector"])
-    add = nt.nodes.new("ShaderNodeMath")
-    add.operation = "ADD"
-    nt.links.new(n2.outputs["Fac"], add.inputs[0])
-    nt.links.new(w.outputs["Fac"], add.inputs[1])
-    bump = nt.nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = spec.get("bump", 0.35)
-    bump.inputs["Distance"].default_value = 0.05
-    nt.links.new(add.outputs[0], bump.inputs["Height"])
-    nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
-    bsdf.inputs["IOR"].default_value = 1.33
-    if "Specular IOR Level" in bsdf.inputs:
-        bsdf.inputs["Specular IOR Level"].default_value = 0.8
-
-
 def make_material(name, spec):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
@@ -242,13 +199,30 @@ def make_material(name, spec):
         chk.inputs["Scale"].default_value = spec.get("scale", 3.0)
         nt.links.new(coords, chk.inputs["Vector"])
         nt.links.new(chk.outputs["Color"], bsdf.inputs["Base Color"])
+    elif kind == "stripes":
+        coords = surface_coords(nt)
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(coords, sep.inputs[0])
+        div = nt.nodes.new("ShaderNodeMath")
+        div.operation = "DIVIDE"
+        div.inputs[1].default_value = spec.get("w", 0.1)
+        nt.links.new(sep.outputs["X"], div.inputs[0])
+        fl = nt.nodes.new("ShaderNodeMath")
+        fl.operation = "FLOOR"
+        nt.links.new(div.outputs[0], fl.inputs[0])
+        md = nt.nodes.new("ShaderNodeMath")
+        md.operation = "MODULO"
+        md.inputs[1].default_value = 2.0
+        nt.links.new(fl.outputs[0], md.inputs[0])
+        mx = nt.nodes.new("ShaderNodeMix")
+        mx.data_type = "RGBA"
+        mx.inputs[6].default_value = rgb(col)
+        mx.inputs[7].default_value = rgb(spec["c2"])
+        nt.links.new(md.outputs[0], mx.inputs["Factor"])
+        nt.links.new(mx.outputs[2], bsdf.inputs["Base Color"])
     elif kind in ("asphalt_grit", "paving_grit", "slab_grit"):
         coords = surface_coords(nt)
         grit_material(nt, bsdf, coords, kind, spec)
-    elif kind == "water":
-        water_material(nt, bsdf, spec)
-    if "alpha" in spec:
-        bsdf.inputs["Alpha"].default_value = spec["alpha"]
     if "emit" in spec:
         bsdf.inputs["Emission Color"].default_value = rgb(spec.get("emit_c", col))
         bsdf.inputs["Emission Strength"].default_value = spec["emit"]
@@ -322,13 +296,7 @@ MATERIALS = {
     "gold": dict(c="#e8b840", rough=0.25, metal=0.9),
     "gold_dark": dict(c="#a87c28", rough=0.35, metal=0.8),
     "gold_bright": dict(c="#ffd860", emit=0.8),
-    "water": dict(kind="water", c="#143f5c", c2="#2a6f86", rough=0.07, depth_scale=0.4),
-    "water_pond": dict(kind="water", c="#27503f", c2="#4a7a58", rough=0.12, depth_scale=0.9, bump=0.25),
-    "water_clear": dict(kind="water", c="#1d5f98", c2="#3a8cc4", rough=0.04, depth_scale=1.5, wave_scale=9.0, bump=0.2),
-    "stream": dict(c="#bfe4f6", rough=0.1, alpha=0.55),
-    "stone_worn": dict(kind="noise", c="#c4bba4", c2="#8e8672", scale=14),
-    "stone_stain": dict(c="#6e685c", rough=0.95),
-    "moss": dict(kind="noise", c="#4d7a2e", c2="#7a9a3c", scale=30, rough=1.0),
+    "water": dict(c="#2a5a8a", rough=0.05),
     "pond_edge": dict(kind="noise", c="#a8a294", c2="#948e80", scale=10),
     "path_dirt": dict(kind="noise", c="#c8a878", c2="#b8986a", scale=8),
     "plaza_stone": dict(kind="brick", c="#d8d0bc", c2="#c8c0aa", mortar="#9a9284", bw=0.6, bh=0.6,
@@ -362,7 +330,105 @@ MATERIALS = {
     "belt_dark": dict(c="#26262c", rough=0.8),
     "basket_red": dict(c="#c83232", rough=0.5),
     "crate": dict(kind="brick", c="#b08048", c2="#a07040", mortar="#6a4a28", bw=0.6, bh=0.12),
+    # ---- interiors v2 ----
+    "wp_cream": dict(kind="stripes", c="#f1dfb2", c2="#e8d09c", w=0.11),
+    "wp_peach": dict(kind="stripes", c="#f0cdb4", c2="#e7bda0", w=0.12),
+    "wp_sage": dict(kind="stripes", c="#b9d2b0", c2="#a9c6a0", w=0.1),
+    "wp_blue": dict(kind="stripes", c="#b8cce0", c2="#a6bdd6", w=0.1),
+    "wall_cap": dict(c="#f7f0dc", rough=0.6),
+    "floor_edge": dict(c="#5a4030", rough=0.8),
+    "floor_wood2": dict(kind="brick", c="#b87440", c2="#9e5f34", mortar="#5c3a20", bw=1.0, bh=0.13,
+                        mortar_size=0.01, offset=0.31, rough=0.35),
+    "floor_wood_dark": dict(kind="brick", c="#8a5a38", c2="#7a4c2e", mortar="#3e2818", bw=1.1, bh=0.14,
+                            mortar_size=0.01, offset=0.43, rough=0.35),
+    "tile_cafe": dict(kind="checker", c="#efe4c8", c2="#a8402c", scale=2.2, rough=0.25),
+    "tile_kitchen": dict(kind="checker", c="#f0ead6", c2="#5f9a8c", scale=2.4, rough=0.25),
+    "tile_bath": dict(kind="brick", c="#cfe4ea", c2="#bad6df", mortar="#8da7b0", bw=0.3, bh=0.3,
+                      mortar_size=0.03, offset=0.0, rough=0.2),
+    "tile_wall_white": dict(kind="brick", c="#f2f2ee", c2="#e6e8e6", mortar="#a8b0b4", bw=0.25, bh=0.15,
+                            mortar_size=0.04, offset=0.5, rough=0.2),
+    "store_floor": dict(kind="brick", c="#9a9ea6", c2="#8e929a", mortar="#5e6068", bw=0.6, bh=0.6,
+                        mortar_size=0.02, offset=0.0),
+    "rug_red": dict(c="#a83a34", rough=0.95),
+    "rug_cream": dict(c="#ecdcb4", rough=0.95),
+    "rug_navy": dict(c="#34487a", rough=0.95),
+    "rug_green": dict(c="#4e8a5a", rough=0.95),
+    "rug_gold": dict(c="#d8a84a", rough=0.95),
+    "rug_teal": dict(c="#4a9a96", rough=0.95),
+    "cardboard": dict(kind="noise", c="#bc8e5c", c2="#a87c4c", scale=14),
+    "cardboard_dark": dict(c="#8e6a42"),
+    "window_sky": dict(c="#d4ecff", emit=1.4, emit_c="#d8eeff"),
+    "clock_face": dict(c="#f6f2e2", rough=0.4),
+    "tv_screen": dict(c="#2c4c80", emit=0.9, emit_c="#3a68b0"),
+    "tv_body": dict(c="#1c1c22", rough=0.4),
+    "bucket_yellow": dict(c="#e8c02c", rough=0.4),
+    "mop": dict(c="#d8d4c4", rough=0.9),
+    "poster_green": dict(kind="noise", c="#4a9a5a", c2="#f0e8c8", scale=9),
+    "poster_orange": dict(kind="noise", c="#e88a3a", c2="#f6e8c0", scale=8),
+    "chalk_menu": dict(c="#2a3430", rough=0.9),
+    "glass_lid": dict(c="#bfe0f0", rough=0.05),
+    "ice_cream_pink": dict(c="#f0a0c0"),
+    "frozen_blue": dict(c="#4a78c8"),
+    "metal_shelf": dict(c="#7c828c", rough=0.4, metal=0.5),
+    "sofa_orange": dict(c="#c4643a", rough=0.9),
+    "lamp_shade": dict(c="#f8e8b8", emit=0.5, emit_c="#ffe8b0"),
+    "plate_white": dict(c="#f4f4ee", rough=0.3),
+    "curtain_red": dict(c="#b8503c", rough=0.95),
+    "frame_wood": dict(c="#6a4428"),
+    "picture_sea": dict(kind="noise", c="#3a7aa8", c2="#e8d8a0", scale=6),
+    "picture_hill": dict(kind="noise", c="#5a9a52", c2="#e8c870", scale=7),
+    "tag_red": dict(c="#d83a2a", rough=0.5),
+    # ---- interiors v2b ----
+    "marble": dict(kind="checker", c="#eceef2", c2="#cfd4dc", scale=0.75, rough=0.12),
+    "wall_panel_cold": dict(kind="brick", c="#dfe3e9", c2="#d2d7de", mortar="#c9a550", bw=1.5, bh=3.6,
+                            mortar_size=0.012, offset=0.0, rough=0.25),
+    "steel": dict(c="#c4cad4", rough=0.25, metal=0.8),
+    "cork": dict(kind="noise", c="#b98a52", c2="#a37640", scale=34),
+    "neon_red": dict(c="#ff5048", emit=3.0, emit_c="#ff3a30"),
+    "neon_blue": dict(c="#60c8ff", emit=3.0, emit_c="#40b0ff"),
+    "neon_gold": dict(c="#ffd870", emit=2.5, emit_c="#ffc850"),
+    "chrome": dict(c="#d8dde6", rough=0.15, metal=0.9),
+    "robot_white": dict(c="#f0f4f8", rough=0.2),
+    "robot_eye": dict(c="#60e0ff", emit=4.0, emit_c="#50d8ff"),
+    "tile_bw": dict(kind="checker", c="#f2f0e8", c2="#2a2a34", scale=2.6, rough=0.2),
+    "diner_red": dict(c="#b8302c", rough=0.45),
+    "diner_teal": dict(c="#3a9a92", rough=0.45),
+    "locker_blue": dict(c="#4a78b8", rough=0.4, metal=0.3),
+    "locker_green": dict(c="#4a9a6a", rough=0.4, metal=0.3),
+    "locker_orange": dict(c="#e08a40", rough=0.4, metal=0.3),
+    "locker_grey": dict(c="#8a909a", rough=0.4, metal=0.3),
+    "stall_panel": dict(c="#6a9ab4", rough=0.5),
+    "carpet_blue": dict(kind="noise", c="#3a5a8a", c2="#34527e", scale=40, rough=1.0),
+    "carpet_green": dict(kind="noise", c="#4a7a5a", c2="#42705a", scale=40, rough=1.0),
+    "book_a": dict(c="#9a2e2a"), "book_b": dict(c="#2e5a8a"), "book_c": dict(c="#3a7a4a"),
+    "book_d": dict(c="#c8a038"), "book_e": dict(c="#6a3a7a"), "book_f": dict(c="#e8e0cc"),
+    "paper_cream": dict(c="#f6f0dc", rough=0.9),
+    "fake_leaf": dict(c="#58b868", rough=0.35),
+    "wp_grey": dict(c="#c8ccd4", rough=0.3),
+    "glass_pane": dict(c="#a8d0e8", rough=0.03),
+    "pie_crust": dict(c="#d89a50"),
+    "pie_red": dict(c="#b83a44"),
+    "coffee": dict(c="#3a2418", rough=0.3),
+    "wp_shabby": dict(kind="noise", c="#cbbb90", c2="#a89572", scale=4),
+    "wp_shabby_blue": dict(kind="noise", c="#92a9b0", c2="#788f98", scale=4),
+    "plaster_bare": dict(kind="noise", c="#aaa496", c2="#8a8478", scale=9, rough=1.0),
+    "floor_bare": dict(kind="brick", c="#8c6c48", c2="#76593a", mortar="#2e2016", bw=1.0, bh=0.12,
+                       mortar_size=0.03, offset=0.37, rough=0.8),
+    "stain": dict(c="#4a3a28", rough=1.0),
+    "tile_dirty": dict(kind="brick", c="#bcc4c0", c2="#a8b2b0", mortar="#5a6260", bw=0.25, bh=0.25,
+                       mortar_size=0.05, offset=0.0, rough=0.5),
+    "tile_floor_dirty": dict(kind="brick", c="#b0bcbc", c2="#9aa8a8", mortar="#4a5252", bw=0.3, bh=0.3,
+                             mortar_size=0.05, offset=0.0, rough=0.5),
+    "mattress": dict(kind="noise", c="#8a98a8", c2="#6e7c8c", scale=12, rough=1.0),
+    "blanket_old": dict(c="#8a4a3a", rough=1.0),
+    "fridge_old": dict(c="#d6cea0", rough=0.5),
+    "hotplate": dict(c="#2a2a2e", rough=0.5),
+    "coil_hot": dict(c="#ff5a2a", emit=2.0, emit_c="#ff4a1a"),
+    "rust": dict(c="#8a4a2a", rough=0.9),
+    "bulb": dict(c="#fff2c0", emit=8.0, emit_c="#ffe8a0"),
+    "cord_black": dict(c="#1a1a1a"),
 }
+
 
 
 # ---------------------------------------------------------------------------------------------
@@ -395,6 +461,17 @@ def add_wedge(bm, p):
 
 
 def add_cyl(bm, p):
+    axis = p.get("axis", "z")
+    if axis != "z":
+        from mathutils import Matrix
+        depth = p["z1"] - p["z0"]
+        res = bmesh.ops.create_cone(bm, cap_ends=True, segments=p.get("verts", 24), radius1=p["r"],
+                                    radius2=p.get("r2", p["r"]), depth=depth)
+        rot = Matrix.Rotation(math.radians(90), 4, "X" if axis == "y" else "Y")
+        bmesh.ops.transform(bm, matrix=rot, verts=res["verts"])
+        x, y, _ = bl(p["x"], p["y"])
+        bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, p["z0"])))
+        return
     r = p["r"]
     res = bmesh.ops.create_cone(bm, cap_ends=True, segments=p.get("verts", 16), radius1=r, radius2=p.get("r2", r),
                                 depth=p["z1"] - p["z0"])
@@ -559,6 +636,79 @@ def add_kit(p, layer_visible):
             o.location = (x, y, p["z"])
 
 
+
+PROP_DIRS = {"house": ["quaternius_house"], "food": ["quaternius_food"]}
+ART_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "art_source")
+_PROP_TEMPLATES = {}
+
+
+def _prop_path(name):
+    pack, base = name.split("/")
+    for d in PROP_DIRS[pack]:
+        full = d if os.path.isabs(d) else os.path.join(ART_DIR, d)
+        f = os.path.join(full, base + ".fbx")
+        if os.path.exists(f):
+            return f
+    raise FileNotFoundError(name)
+
+
+def _prop_template(name, colours):
+    """Imports a prop once per (name, colours) and keeps it unlinked as a template."""
+    key = (name, tuple(sorted(colours.items())))
+    if key in _PROP_TEMPLATES:
+        return _PROP_TEMPLATES[key]
+    from mathutils import Matrix
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.fbx(filepath=_prop_path(name))
+    obs = [o for o in bpy.data.objects if o not in before]
+    bpy.context.view_layer.update()
+    meshes = [o for o in obs if o.type == "MESH"]
+    worlds = {o: o.matrix_world.copy() for o in meshes}
+    for o in meshes:
+        for slot in o.material_slots:
+            m = slot.material
+            if m is None:
+                continue
+            base = m.name.split(".")[0]
+            if m.use_nodes and "Principled BSDF" in m.node_tree.nodes:
+                bsdf = m.node_tree.nodes["Principled BSDF"]
+                bsdf.inputs["Alpha"].default_value = 1.0
+                bsdf.inputs["Roughness"].default_value = 0.6
+                if base in colours:
+                    bsdf.inputs["Base Color"].default_value = rgb(colours[base])
+                if base in ("Glass", "Mirror"):
+                    bsdf.inputs["Roughness"].default_value = 0.08
+                if base == "Light":
+                    bsdf.inputs["Emission Color"].default_value = (1, 0.9, 0.6, 1)
+                    bsdf.inputs["Emission Strength"].default_value = 1.5
+    pts = [worlds[o] @ Vector(c) for o in meshes for c in o.bound_box]
+    mn = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+    mx = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+    for o in obs:
+        for c in list(o.users_collection):
+            c.objects.unlink(o)
+    _PROP_TEMPLATES[key] = (meshes, worlds, mn, mx)
+    return _PROP_TEMPLATES[key]
+
+
+def add_prop(p, layer_visible):
+    from mathutils import Matrix
+    meshes, worlds, mn, mx = _prop_template(p["name"], p["colours"])
+    root = bpy.data.objects.new("prop", None)
+    bpy.context.scene.collection.objects.link(root)
+    for o in meshes:
+        c = o.copy()
+        c.parent = root
+        c.matrix_parent_inverse = Matrix.Identity(4)
+        c.matrix_basis = worlds[o]
+        c.visible_camera = (p["layer"] == layer_visible)
+        bpy.context.scene.collection.objects.link(c)
+    cx, cy = (mn.x + mx.x) / 2, (mn.y + mx.y) / 2
+    x, y, _ = bl(p["x"], p["y"])
+    root.matrix_world = (Matrix.Translation((x, y, p["z"])) @ Matrix.Rotation(math.radians(p["rot"]), 4, "Z")
+                         @ Matrix.Scale(p["scale"], 4) @ Matrix.Translation((-cx, -cy, -mn.z)))
+
+
 def build(scene_obj, layer_visible):
     mats = {}
 
@@ -573,8 +723,10 @@ def build(scene_obj, layer_visible):
             add_model(p, layer_visible)
         elif p["type"] == "kit":
             add_kit(p, layer_visible)
+        elif p["type"] == "prop":
+            add_prop(p, layer_visible)
     for p in scene_obj.prims:
-        if p["type"] in ("text", "model", "kit"):
+        if p["type"] in ("text", "model", "kit", "prop"):
             continue
         groups.setdefault((p["layer"], p["mat"]), []).append(p)
 
@@ -667,13 +819,14 @@ def setup_camera_and_lights(s, scale):
         d = Vector((-0.25, 0.7, -0.65)).normalized()
         so.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
     else:
-        bg.inputs["Color"].default_value = (0.9, 0.8, 0.65, 1)
-        bg.inputs["Strength"].default_value = 0.35
+        wc = getattr(s, "world", (0.9, 0.8, 0.65))
+        bg.inputs["Color"].default_value = (wc[0], wc[1], wc[2], 1)
+        bg.inputs["Strength"].default_value = getattr(s, "world_strength", 0.35)
         d = Vector((-0.25, 0.7, -0.65)).normalized()
         sun = bpy.data.lights.new("fill", "SUN")
-        sun.energy = 1.2
+        sun.energy = getattr(s, "fill_energy", 1.2)
         sun.angle = math.radians(20)
-        sun.color = (1.0, 0.92, 0.8)
+        sun.color = getattr(s, "fill", (1.0, 0.92, 0.8))
         so = bpy.data.objects.new("fill", sun)
         sc.collection.objects.link(so)
         so.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
