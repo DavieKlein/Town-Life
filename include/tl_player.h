@@ -44,6 +44,22 @@ namespace tl
         // when the target is the player's own position).
         void start_action(action_kind kind, int target_x, int target_y, int frames);
 
+        // Turns the (walking) player towards a world point and stops him (conversations).
+        void face_towards(int target_x, int target_y);
+
+        // Standing NPCs the player cannot walk through (world units, feet positions); only the pointer is kept.
+        struct blocker
+        {
+            int x;
+            int y;
+        };
+
+        void set_blockers(const blocker* list, int count)
+        {
+            _blockers = list;
+            _blockers_count = count;
+        }
+
         // Slides the player (if free) to `distance` units from a point, on the line through the player.
         void approach(int target_x, int target_y, int distance);
 
@@ -137,6 +153,8 @@ namespace tl
         bool _seat_mirrored = false;
         bool _action_finished = false;
         const map_info* _map = nullptr;
+        const blocker* _blockers = nullptr;
+        int _blockers_count = 0;
         bn::fixed _x;
         bn::fixed _y;
         bn::fixed _vx;              // world units per frame
@@ -145,6 +163,7 @@ namespace tl
         bn::fixed _anim_distance;   // screen pixels walked, drives the walk cycle
         int _anim_frame = 0;
 
+        [[nodiscard]] bool _blocked(int nx, int ny) const;
         void _update_graphics();
         void _apply_lighting();
         void _stand_up();

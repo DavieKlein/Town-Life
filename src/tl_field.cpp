@@ -25,6 +25,7 @@ namespace tl
         constexpr int fountain_reach = 32;             // world units beyond the fountain radius
         constexpr int fixture_reach = 28;              // counters, toilets, sinks, shelves, ...
         constexpr int pickup_reach = 20;               // cans and bottles lying on the ground
+        constexpr int npc_reach = 36;                  // world units to talk to somebody
         constexpr int pickup_frames = 72;              // ~1.2 s bend-down
         constexpr int topup_minute = 6 * 60;           // pickups are topped up at 6:00 every day
 
@@ -107,6 +108,7 @@ namespace tl
         _deposit.top_up(_rng);          // new game (Continue overwrites this from the save)
         _hud_bg = bn::regular_bg_items::hud.create_bg(0, 0);
         _hud_bg->set_priority(hud_priority);
+        _sync_objective();
         _redraw_hud_text();
 
         // Build date at the top left for a few seconds, so the owner can check which ROM is running.
@@ -142,7 +144,10 @@ namespace tl
                             front_priority);
         _player.place(*_map, x, y, facing);
         _critters.load(*_map);
-        _npcs.load(*_map);
+        _map_id = id;
+        _npcs.load(*_map, id, _day, _minutes);
+        _player.set_blockers(_npcs.blockers(), _npcs.count());
+        _story_check_due = true;
         _deposit.load(*_map);
         _pool_sprites.clear();
         _update_lighting(true);
@@ -200,6 +205,7 @@ namespace tl
             _light_minutes = _minutes;
             _light = lighting_at(_minutes, _map->outdoor);
             _player.set_lighting(_light);
+            _npcs.set_lighting(_light);
             _critters.set_lighting(_light);
             _deposit.set_lighting(_light);
 
@@ -295,8 +301,9 @@ namespace tl
         const ui::font_data& clock_font = ui::text_width(ui::font11, clock_digits) + 2 +
                 ui::text_width(ui::font9, "am") > 47 ? ui::font9 : ui::font11;
         _clock_label.set(clock_font, 13, 141, clock_digits, ui::role::hud_clock);
-        _clock_small_label.set(ui::font9, 13 + ui::text_width(clock_font, clock_digits) + 2, 141, pm ? "pm" : "am",
-                               ui::role::hud_clock);
+        int small_x = 13 + ui::text_width(clock_font, clock_digits) + 2;
+        _clock_small_label.set(ui::font9, small_x, 139, pm ? "pm" : "am", ui::role::hud_clock);
+        _day_label.set(ui::font9, small_x, 148, weekday_short(_day), ui::role::hud_clock);
         _money_label.set(ui::font11, 13, 156, money, ui::role::hud_money);
     }
 
@@ -311,6 +318,9 @@ namespace tl
 
         ++_total_minutes;
         _needs.minute_passed();
+        _npcs.refresh(_day, _minutes);
+        _player.set_blockers(_npcs.blockers(), _npcs.count());
+        _story_check_due = true;
 
         if(_minutes == topup_minute)
         {
@@ -476,6 +486,11 @@ namespace tl
         return best;
     }
 
+    int field::_find_npc(int& d2) const
+    {
+        return _npcs.find(_player.x(), _player.y(), npc_reach, d2);
+    }
+
     int field::_find_pickup(int& d2) const
     {
         return _deposit.find(_player.x(), _player.y(), pickup_reach, d2);
@@ -493,7 +508,22 @@ namespace tl
             pickup = -1;        // the fixture is closer
         }
 
-        if(! target && pickup < 0)
+        int npc_d2 = 0;
+        int npc = _find_npc(npc_d2);
+
+        if(npc >= 0 && ((target && distance2(_player.x(), _player.y(), target->x, target->y) < npc_d2) ||
+                        (pickup >= 0 && pickup_d2 < npc_d2)))
+        {
+            npc = -1;       // something else is closer
+        }
+
+        if(npc >= 0)
+        {
+            target = nullptr;
+            pickup = -1;
+        }
+
+        if(! target && pickup < 0 && npc < 0)
         {
             _cue.reset();
             return;
@@ -503,7 +533,13 @@ namespace tl
         int cue_x = 0;
         int cue_y = 0;
 
-        if(pickup >= 0)
+        if(npc >= 0)
+        {
+            height = 64;
+            cue_x = _npcs.x_of(npc);
+            cue_y = _npcs.y_of(npc);
+        }
+        else if(pickup >= 0)
         {
             height = 12;
             cue_x = pickup_spots[pickup].x;
@@ -576,6 +612,21 @@ namespace tl
         const interactable* best = _find_target();
         int pickup_d2 = 0;
         int pickup = _find_pickup(pickup_d2);
+
+        int npc_d2 = 0;
+        int npc = _find_npc(npc_d2);
+        int best_d2 = best ? distance2(_player.x(), _player.y(), best->x, best->y) : 0x7FFFFFFF;
+
+        if(pickup >= 0 && pickup_d2 < best_d2)
+        {
+            best_d2 = pickup_d2;
+        }
+
+        if(npc >= 0 && npc_d2 <= best_d2)
+        {
+            _start_conversation(npc);
+            return;
+        }
 
         if(pickup >= 0 && (! best || pickup_d2 < distance2(_player.x(), _player.y(), best->x, best->y)))
         {
@@ -663,14 +714,27 @@ namespace tl
         _menu_target = &target;
         _menu_mode = menu_mode::shop;
 
-        if(target.kind == interactable_kind::shop_market)
+        // The shop menu also offers a chat with the person behind the counter (if somebody is in reach).
+        static bn::string_view options[5];
+        bool market = target.kind == interactable_kind::shop_market;
+        int count = market ? 4 : 3;
+
+        for(int index = 0; index < count; ++index)
         {
-            _menu.open("Corner Market", market_labels, 4);
+            options[index] = market ? market_labels[index] : diner_labels[index];
         }
-        else
+
+        int d2 = 0;
+        _shop_npc = _npcs.find(_player.x(), _player.y(), 48, d2);
+
+        if(_shop_npc >= 0)
         {
-            _menu.open("Diner", diner_labels, 3);
+            _talk_label = "Talk to ";
+            _talk_label.append(npc_infos[int(_npcs.id_of(_shop_npc))].name);
+            options[count++] = _talk_label;
         }
+
+        _menu.open(market ? "Corner Market" : "Diner", options, count);
     }
 
     void field::_show_info(const char* title, const char* line_a, const char* line_b, const char* line_c)
@@ -940,6 +1004,18 @@ namespace tl
 
         if(mode == menu_mode::shop)
         {
+            int items = target->kind == interactable_kind::shop_market ? 4 : 3;
+
+            if(choice >= items)
+            {
+                if(_shop_npc >= 0 && _shop_npc < _npcs.count())
+                {
+                    _start_conversation(_shop_npc);
+                }
+
+                return;
+            }
+
             _buy(*target, choice);
             return;
         }
@@ -1043,6 +1119,138 @@ namespace tl
         }
     }
 
+    void field::_set_hud_hidden(bool hidden)
+    {
+        if(hidden == _hud_hidden)
+        {
+            return;
+        }
+
+        _hud_hidden = hidden;
+
+        if(hidden)
+        {
+            // the dialogue box covers the HUD: free its text sprites (128 sprite budget) and hide the need bars
+            _clock_label.clear();
+            _clock_small_label.clear();
+            _money_label.clear();
+            _day_label.clear();
+            _version_label.clear();
+            _version_frames = 0;
+        }
+
+        for(bn::sprite_ptr& bar : _bar_sprites)
+        {
+            bar.set_visible(! hidden);
+        }
+
+        if(! hidden)
+        {
+            _redraw_hud_text();
+        }
+    }
+
+    void field::_start_conversation(int npc_index)
+    {
+        int npc = int(_npcs.id_of(npc_index));
+        int nx = _npcs.x_of(npc_index);
+        int ny = _npcs.y_of(npc_index);
+        _player.face_towards(nx, ny);
+        _npcs.face_towards(npc_index, _player.x(), _player.y());
+        _set_hud_hidden(true);
+        ui::set_night(is_night(_minutes));
+        _conversation.start_talk(npc, _day, _minutes);
+    }
+
+    void field::_end_conversation()
+    {
+        int npc = _conversation.partner();
+        _npcs.reset_facings();
+        _set_hud_hidden(false);
+        _money += story().take_money();
+        _redraw_hud_text();
+        _handle_story_events(npc);
+    }
+
+    void field::_sync_objective()
+    {
+        if(! _objective_override)
+        {
+            _objective = story().objective();
+        }
+    }
+
+    // Checks the current mission and shows what changed (a system page in the dialogue box).
+    void field::_handle_story_events(int talked_npc)
+    {
+        story_context context;
+        context.day = _day;
+        context.minutes = _minutes;
+        context.money = _money;
+        context.map = int(_map_id);
+        context.talked_npc = talked_npc;
+        int completed = 0;
+        int reward = 0;
+
+        for(int guard = 0; guard < 4; ++guard)
+        {
+            int id = story().check_mission(context);
+
+            if(! id)
+            {
+                break;
+            }
+
+            completed = id;
+            reward += mission_defs[id - 1].reward_money;
+            context.talked_npc = -1;
+        }
+
+        int extra = story().take_completed();       // finished by a dialogue effect
+
+        if(! completed)
+        {
+            completed = extra;
+        }
+
+        (void)story().take_started();
+        int money = story().take_money();
+        _money += money;
+        _story_check_due = false;
+        _sync_objective();
+
+        if(money)
+        {
+            _redraw_hud_text();
+        }
+
+        if(! completed)
+        {
+            return;
+        }
+
+        _story_text = "Mission complete: ";
+        _story_text.append(mission_defs[completed - 1].title);
+        _story_text.append(".");
+
+        if(reward > 0)
+        {
+            _story_text.append(" Reward: $");
+            _story_text.append(bn::to_string<8>(reward));
+            _story_text.append(".");
+        }
+
+        if(story().mission())
+        {
+            _story_text.append(" New goal: ");
+            _story_text.append(mission_defs[story().mission() - 1].objective);
+        }
+
+        _set_hud_hidden(true);
+        ui::set_night(is_night(_minutes));
+        _conversation.start_message(_story_text.c_str());
+    }
+
     void field::update()
     {
         switch(_state)
@@ -1073,6 +1281,28 @@ namespace tl
                 break;
             }
 
+            if(_conversation.active())
+            {
+                // the world stands still (also the clock) while somebody talks
+                _cue.reset();
+                _update_camera();
+                _update_lighting(false);
+
+                if(_conversation.update())
+                {
+                    if(_conversation.is_message())
+                    {
+                        _set_hud_hidden(false);
+                    }
+                    else
+                    {
+                        _end_conversation();
+                    }
+                }
+
+                break;
+            }
+
             if(_menu.is_open())
             {
                 _cue.reset();
@@ -1087,6 +1317,16 @@ namespace tl
                 _update_clock();
                 _update_lighting(false);
                 break;
+            }
+
+            if(_story_check_due && _can_pause())
+            {
+                _handle_story_events(-1);
+
+                if(_conversation.active())
+                {
+                    break;
+                }
             }
 
             if(bn::keypad::start_pressed() && _can_pause())

@@ -1,0 +1,255 @@
+# Town Life - dialogue source (compiled by tools/story_data.py into src/tl_dialogue_data.cpp + include/tl_dialogue_ids.h).
+#
+# node <name>                 starts a node; its pages chain in order. Names with a convention are looked up by the game:
+#                               greet_<npc>_<good|neutral|grumpy>   greeting at the start of small talk
+#                               talk_<npc>_<topic>                  NPC answer to a small-talk topic (weather work music sports
+#                                                                   gossip compliment joke complain)
+#                               bye_<npc>                           farewell
+#                               intro_<npc>                         first conversation ever (scripted, may have choices)
+# SPEAKER| text               one page (speaker: MIA ROSA DEX PIMM LOU HALLORAN DEXV VICTOR VALET PLAYER SYSTEM NPC;
+#                               NPC = whoever you are talking to, PLAYER = {NAME}, SYSTEM = no portrait). The text is
+#                               word-wrapped to 3 lines by the game and split into more pages if it is longer. {NAME} = the
+#                               player's name. " / " is just a space (kept from the story document).
+# ! effect, effect            effects of the page above (applied when the page is shown):
+#                               friend <npc> <+-n>   money <+-n>   flag <name> [value]   mission <id>   done <id>   coins <n>
+# ? text -> node | effects    a choice shown after the page above (2-4 per page, text up to ~24 chars); `-> end` ends the
+#                               conversation; effects as above, comma separated
+# goto <node>                 continue with another node after the last page
+
+node hint_talk
+SYSTEM| A = talk. Pick a topic. People like different things! The bar shows how they feel about you.
+
+node bye_mia
+MIA| Later, {NAME}! Don't be a stranger.
+node bye_rosa
+ROSA| Off you go. Eat something.
+node bye_dex
+DEX| Catch you later, buddy. Winners keep moving.
+node bye_pimm
+PIMM| Good day to you. Mind the pigeons.
+node bye_lou
+LOU| Come back hungry, hah!
+node bye_halloran
+HALLORAN| Don't be late.
+
+node talk_repeat
+NPC| We just talked about that.
+node talk_annoyed_leave
+NPC| I should go. See you around.
+node talk_enough
+NPC| Good talk. Let's do this again soon.
+
+# ---------------------------------------------------------------------------------------------------- greetings
+node greet_mia_good
+MIA| Morning, {NAME}! Coffee's on and the gossip is hot.
+node greet_mia_neutral
+MIA| Hey {NAME}. What's up?
+node greet_mia_grumpy
+MIA| Ugh. Long shift. Talk fast.
+node greet_rosa_good
+ROSA| {NAME}! Come, come. Forty years and I still like company.
+node greet_rosa_neutral
+ROSA| Yes, {NAME}? Don't just stand there.
+node greet_rosa_grumpy
+ROSA| I'm busy. Make it quick.
+node greet_dex_good
+DEX| Buddy! Perfect timing. I'm on a roll today.
+node greet_dex_neutral
+DEX| Oh. It's you, buddy. What's up?
+node greet_dex_grumpy
+DEX| Not now. Bert has the numbers again.
+node greet_pimm_good
+PIMM| Ah, {NAME}! A fine day for a chat.
+node greet_pimm_neutral
+PIMM| Good day... {NAME}, is it? Names, I'm afraid. Bridges, never.
+node greet_pimm_grumpy
+PIMM| Hmm? Oh. Hello. No rye loaf today, I suppose.
+node greet_lou_good
+LOU| Hah! Hello, hello, {NAME}! Hungry?
+node greet_lou_neutral
+LOU| Welcome! Today's special is on the board.
+node greet_lou_grumpy
+LOU| Plates, plates, plates. Yes? What is it?
+node greet_halloran_good
+HALLORAN| On time again. Good.
+node greet_halloran_neutral
+HALLORAN| Talk.
+node greet_halloran_grumpy
+HALLORAN| Make it short.
+
+# ---------------------------------------------------------------------------------------------------- first meetings
+node intro_mia
+MIA| {NAME}! Finally someone with a pulse. It's dead around here today.
+MIA| By the way, Lou could use a pair of hands at the diner. Interested?
+? Maybe. Tell me more. -> intro_mia_more | friend mia +2, flag lou_tip
+? I'm fine, thanks. -> intro_mia_no
+? Is it paid? -> intro_mia_pay | friend mia +1, flag lou_tip
+node intro_mia_more
+MIA| Dishes, mostly. Big Lou shouts, but he feeds you. Ask him yourself.
+! friend mia +1
+goto hint_talk
+node intro_mia_no
+MIA| Suit yourself. The offer stays. Lou never fills a job.
+goto hint_talk
+node intro_mia_pay
+MIA| Ha! Yes. Not much, but it's honest money. And a staff meal.
+goto hint_talk
+
+node intro_pimm
+PIMM| Good day. Albert Pimm. I inspected bridges for forty years.
+PIMM| You have the look of someone who reads signs. Do you like bridges?
+? I love bridges. -> intro_pimm_love | friend pimm +3, flag met_pimm
+? They are all right. -> intro_pimm_ok | friend pimm +1, flag met_pimm
+? Not really. -> intro_pimm_no | flag met_pimm
+node intro_pimm_love
+PIMM| Splendid! A rare young person. Each one has a personality, you know.
+goto hint_talk
+node intro_pimm_ok
+PIMM| Honest. A bridge respects honesty. It holds, or it doesn't.
+goto hint_talk
+node intro_pimm_no
+PIMM| Hm. Then you have not crossed the right one yet.
+goto hint_talk
+
+node intro_lou
+LOU| HAH! A new face! Welcome to Lou's Diner! Best pancakes in town!
+LOU| Also the only pancakes in town. But still the best!
+? Smells great! -> intro_lou_nice | friend lou +3
+? Got any work? -> intro_lou_work | friend lou +1, flag lou_asked
+? Just looking. -> intro_lou_look
+node intro_lou_nice
+LOU| It's the grease! Fifty years old! Hah! Sit, eat, talk.
+goto hint_talk
+node intro_lou_work
+LOU| Work? You? Come back when you smell less like a bench, hah!
+LOU| Wash up, then we talk. Plates are life!
+goto hint_talk
+node intro_lou_look
+LOU| Look all you like. Looking is free. Pancakes are not.
+goto hint_talk
+
+node intro_rosa
+ROSA| Hmph. You are standing in my light. {NAME}, isn't it?
+ROSA| Good. Stand somewhere useful. Forty years I say that to everyone.
+goto hint_talk
+
+node intro_dex
+DEX| {NAME}! Buddy! Dex Corbin, future manager. Remember the name.
+DEX| I did five shelves before breakfast. Not that I'm counting.
+goto hint_talk
+
+node intro_halloran
+HALLORAN| Halloran. Foreman. State your business.
+goto hint_talk
+
+# ---------------------------------------------------------------------------------------------------- small-talk answers
+# Rosa
+node talk_rosa_weather
+ROSA| Rain tomorrow. My knee says so. Knees are never wrong.
+node talk_rosa_work
+ROSA| Work is the only thing that never lets you down. Good question.
+node talk_rosa_music
+ROSA| Puccini on the radio. Every morning. It keeps my heart young.
+node talk_rosa_sports
+ROSA| Men running after a ball. I would rather bake.
+node talk_rosa_gossip
+ROSA| I never gossip. ...Is it about Dex?
+node talk_rosa_compliment
+ROSA| Hmph. Thank you. Flattery works. A little.
+node talk_rosa_joke
+ROSA| Ha. Don't quit your day job. ...Sorry. Too soon.
+node talk_rosa_complain
+ROSA| Complaining never stacked a shelf. Pick up a crate.
+# Mia
+node talk_mia_weather
+MIA| It's weather. Wet or dry, I serve the same coffee.
+node talk_mia_work
+MIA| Please. I just clocked out. Ask me on Monday.
+node talk_mia_music
+MIA| Oh yes! I dance in the kitchen. Do NOT tell Lou.
+node talk_mia_sports
+MIA| Ball goes in the net. Everyone shouts. I get it.
+node talk_mia_gossip
+MIA| Sit down. You will not believe what Ines said...
+node talk_mia_compliment
+MIA| Is this a line? It sounds like a line.
+node talk_mia_joke
+MIA| Ha! I'm stealing that. Lou will pay me in pancakes.
+node talk_mia_complain
+MIA| Ha! Same. Life is hard. We do it anyway.
+# Dex
+node talk_dex_weather
+DEX| Weather doesn't matter when you're winning. Fact.
+node talk_dex_work
+DEX| Efficiency up 40 %! Do you know what that does for a career?
+node talk_dex_music
+DEX| Noise. Pure noise. I run on silence and spreadsheets.
+node talk_dex_sports
+DEX| Sports! Winners and losers! Clear scores. I love it.
+node talk_dex_gossip
+DEX| I don't gossip. I network. ...What did you hear?
+node talk_dex_compliment
+DEX| Finally someone with taste. Keep talking.
+node talk_dex_joke
+DEX| Ha. Wait. Let me write that down. For later.
+node talk_dex_complain
+DEX| Complaints go to Bert. Bert files them under "noise".
+# Mr. Pimm
+node talk_pimm_weather
+PIMM| A fine day for a bridge. Clear sky. No wind. Lovely.
+node talk_pimm_work
+PIMM| I inspected 214 bridges. Each one has a personality.
+node talk_pimm_music
+PIMM| A brass band played at the opening of Bridge 7. Fondly.
+node talk_pimm_sports
+PIMM| I played bowls. Slowly. Winning wasn't quick either.
+node talk_pimm_gossip
+PIMM| I prefer facts, my dear. Facts are sturdy.
+node talk_pimm_compliment
+PIMM| How kind. I shall try to deserve it.
+node talk_pimm_joke
+PIMM| Ha! Very good. I will tell the pigeons.
+node talk_pimm_complain
+PIMM| Complaining is rust on a bridge. It eats everything.
+# Big Lou
+node talk_lou_weather
+LOU| Rain means soup. Sun means ice cream. I'm happy either way.
+node talk_lou_work
+LOU| The grill never sleeps. Neither do I! Hah!
+node talk_lou_music
+LOU| Radio on all day. I sing when nobody listens. Don't tell.
+node talk_lou_sports
+LOU| The game last night! Did you see that goal? Fantastic!
+node talk_lou_gossip
+LOU| You didn't hear it from me, but... pull up a stool.
+node talk_lou_compliment
+LOU| Ha ha, thank you! The pancakes say thanks too.
+node talk_lou_joke
+LOU| Why is the grill happy? It's on fire. Hah!
+node talk_lou_complain
+LOU| Complaints go in the grease bin. Eat a pancake instead.
+# Foreman Halloran (Docks, after M16)
+node talk_halloran_weather
+HALLORAN| Tide's out. Wind from the west. Good day for cranes.
+node talk_halloran_work
+HALLORAN| Crates don't lift themselves. Show up. Do it.
+node talk_halloran_music
+HALLORAN| Radio on the crane. Only the news.
+node talk_halloran_sports
+HALLORAN| Tug of war every Friday on the dock. Winner gets lunch.
+node talk_halloran_gossip
+HALLORAN| Don't talk behind backs. Say it to a face.
+node talk_halloran_compliment
+HALLORAN| Save it. Pay me with a good shift.
+node talk_halloran_joke
+HALLORAN| ...Hm. That was almost funny. Almost.
+node talk_halloran_complain
+HALLORAN| Complain to the sea. It doesn't care. Neither do I.
+
+# ---------------------------------------------------------------------------------------------------- system pages
+node coins_first
+SYSTEM| You are real friends now! Reward: 3 City Coins.
+node coins_again
+SYSTEM| A good friend looks out for you. Reward: 1 City Coin.
+node mission_done
+SYSTEM| Mission complete!

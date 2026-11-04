@@ -82,6 +82,8 @@ namespace tl::ui
                 return { i_white, i_navy };
             case role::hud_money:
                 return { i_gold, i_navy };
+            case role::name_tag:
+                return { i_gold, night_style ? i_title_bg : i_title_out };
             default:
                 return { i_text, i_text_out };
             }
@@ -378,6 +380,11 @@ namespace tl::ui
     }
 
     // ---------------------------------------------------------------------------------------------------------
+
+    bn::sprite_ptr make_piece(const bn::sprite_item& item, int x, int y, int frame, bool hflip, int z_order)
+    {
+        return place(item, x, y, frame, hflip, z_order);
+    }
 
     bn::sprite_ptr make_button(int frame, int x, int y)
     {

@@ -1,6 +1,7 @@
 #include "tl_pause.h"
 
 #include "bn_keypad.h"
+#include "tl_story.h"
 #include "bn_string.h"
 #include "bn_sprite_items_need_bar.h"
 
@@ -9,7 +10,7 @@ namespace tl
     namespace
     {
         constexpr bn::string_view need_names[] = { "Hunger", "Energy", "Hygiene", "Fun", "Bladder" };
-        constexpr bn::string_view pause_options[] = { "Resume", "Save game", "Quit to title" };
+        constexpr bn::string_view pause_options[] = { "Resume", "Mission log", "Save game", "Quit to title" };
 
         constexpr int dialog_w = 212;
         constexpr int dialog_x = (240 - dialog_w) / 2;
@@ -147,13 +148,15 @@ namespace tl
             _labels.back().set(font, x, baseline, text, r);
         };
 
-        bn::string<16> day("Day ");
+        bn::string<24> day(weekday_name(info.day));
+        day.append(", day ");
         day.append(bn::to_string<8>(info.day));
         add(ui::font11, 12, 21, day, ui::role::text);
-        add(ui::font9, 62, 20, clock_text(info.minutes), ui::role::text);
+        add(ui::font9, 12 + ui::text_width(ui::font11, day) + 8, 20, clock_text(info.minutes), ui::role::text);
         bn::string<16> money("$");
         money.append(bn::to_string<12>(info.money));
-        add(ui::font11, 116, 21, money, ui::role::money);
+        _labels.emplace_back();
+        _labels.back().set_right(ui::font11, 228, 21, money, ui::role::money);
 
         for(int need = 0; need < 5; ++need)
         {
@@ -217,23 +220,24 @@ namespace tl
             bag.append(bn::to_string<8>(info.bag));
             bag.append("/10   Credit ");
             bag.append(bn::to_string<8>(info.credit));
-            bag.append("/2");
+            bag.append("/2  Coins ");
+            bag.append(bn::to_string<8>(info.coins));
             add(ui::font9, 12, 116, bag, ui::role::hint);
         }
 
-        _hint.open(142, 88, true, "OK");
+        _hint.open(142, 86, true, "OK");
         _draw_options();
     }
 
     void pause_screen::_draw_options()
     {
-        for(int option = 0; option < 3; ++option)
+        for(int option = 0; option < options_count; ++option)
         {
-            _option_labels[option].set(ui::font9, 138 + 12, 32 + (option * 16) + 10, pause_options[option],
+            _option_labels[option].set(ui::font9, 138 + 12, 28 + (option * 14) + 10, pause_options[option],
                                        option == _selected ? ui::role::selected : ui::role::text);
         }
 
-        _bar.set(138, 32 + (_selected * 16), 92);
+        _bar.set(138, 28 + (_selected * 14), 92);
     }
 
     void pause_screen::close()
@@ -262,7 +266,7 @@ namespace tl
             --_selected;
             _draw_options();
         }
-        else if(bn::keypad::down_pressed() && _selected < 2)
+        else if(bn::keypad::down_pressed() && _selected < options_count - 1)
         {
             ++_selected;
             _draw_options();
@@ -279,5 +283,132 @@ namespace tl
         }
 
         return open_still;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+
+    void log_screen::open(const log_info& info)
+    {
+        close();
+        _info = info;
+        _scroll = 0;
+        _panel.open(4, 4, 232, 120, false);
+        _labels.emplace_back();
+        _labels.back().set(ui::font11, 12, 21, "Mission log", ui::role::text);
+        bn::string<24> coins("City Coins ");
+        coins.append(bn::to_string<8>(info.coins));
+        _labels.emplace_back();
+        _labels.back().set_right(ui::font9, 228, 20, coins, ui::role::money);
+
+        // current mission: title and the objective wrapped to two lines
+        bn::string<48> now("Now: ");
+        now.append(info.current_title[0] ? info.current_title : "Explore the city");
+        _labels.emplace_back();
+        _labels.back().set(ui::font9, 12, 36, now, ui::role::text);
+        bn::string_view text(info.current_objective);
+        int pos = 0;
+        int length = text.size();
+
+        for(int line = 0; line < 2 && pos < length; ++line)
+        {
+            int end = length;
+
+            while(end > pos + 1 && ui::text_width(ui::font9, text.substr(pos, end - pos)) > 212)
+            {
+                --end;
+            }
+
+            if(end < length)
+            {
+                int cut = end;
+
+                while(cut > pos && text[cut] != ' ')
+                {
+                    --cut;
+                }
+
+                if(cut > pos)
+                {
+                    end = cut;
+                }
+            }
+
+            _labels.emplace_back();
+            _labels.back().set(ui::font9, 12, 47 + (line * 10), text.substr(pos, end - pos), ui::role::hint);
+            pos = end;
+
+            while(pos < length && text[pos] == ' ')
+            {
+                ++pos;
+            }
+        }
+
+        bn::string<24> done("Done (");
+        done.append(bn::to_string<8>(info.done_count));
+        done.append(")");
+        _labels.emplace_back();
+        _labels.back().set(ui::font9, 12, 74, done, ui::role::text);
+
+        for(int index = 0; index < visible_rows; ++index)
+        {
+            _rows.emplace_back();
+        }
+
+        _draw_rows();
+        _hint.open(142, 108, false, "Back");
+    }
+
+    void log_screen::_draw_rows()
+    {
+        for(int index = 0; index < visible_rows; ++index)
+        {
+            int entry = _scroll + index;
+
+            if(entry < _info.done_count)
+            {
+                bn::string<40> row("- ");
+                row.append(_info.done_titles[entry]);
+                _rows[index].set(ui::font9, 16, 85 + (index * 10), row, ui::role::hint);
+            }
+            else
+            {
+                _rows[index].clear();
+            }
+        }
+    }
+
+    void log_screen::close()
+    {
+        _panel.close();
+        _labels.clear();
+        _rows.clear();
+        _hint.close();
+    }
+
+    bool log_screen::update()
+    {
+        if(! is_open())
+        {
+            return true;
+        }
+
+        if(bn::keypad::up_pressed() && _scroll > 0)
+        {
+            --_scroll;
+            _draw_rows();
+        }
+        else if(bn::keypad::down_pressed() && _scroll + visible_rows < _info.done_count)
+        {
+            ++_scroll;
+            _draw_rows();
+        }
+
+        if(bn::keypad::a_pressed() || bn::keypad::b_pressed() || bn::keypad::start_pressed())
+        {
+            close();
+            return true;
+        }
+
+        return false;
     }
 }

@@ -195,6 +195,40 @@ namespace tl
         _update_graphics();
     }
 
+    void player::face_towards(int target_x, int target_y)
+    {
+        if(_activity == activity::walking && (target_x != x() || target_y != y()))
+        {
+            _facing = facing_towards(target_x - x(), target_y - y());
+        }
+
+        _vx = 0;
+        _vy = 0;
+        _anim_frame = 0;
+        _update_graphics();
+    }
+
+    bool player::_blocked(int nx, int ny) const
+    {
+        // NPCs are solid discs of radius 7 (plus the hitbox); moving away from one is always allowed
+        constexpr int radius = 7 + hitbox_radius;
+
+        for(int index = 0; index < _blockers_count; ++index)
+        {
+            int dx = nx - _blockers[index].x;
+            int dy = ny - _blockers[index].y;
+            int ox = x() - _blockers[index].x;
+            int oy = y() - _blockers[index].y;
+
+            if(((dx * dx) + (dy * dy)) < radius * radius && ((dx * dx) + (dy * dy)) < ((ox * ox) + (oy * oy)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void player::set_facing_index(int facing)
     {
         _facing = facing & 7;
@@ -394,7 +428,8 @@ namespace tl
         bn::fixed old_y = _y;
         bn::fixed new_x = _x + _vx;
 
-        if(! _map->solid_around(new_x.floor_integer(), _y.floor_integer(), hitbox_radius))
+        if(! _map->solid_around(new_x.floor_integer(), _y.floor_integer(), hitbox_radius) &&
+           ! _blocked(new_x.floor_integer(), _y.floor_integer()))
         {
             _x = new_x;
         }
@@ -405,7 +440,8 @@ namespace tl
 
         bn::fixed new_y = _y + _vy;
 
-        if(! _map->solid_around(_x.floor_integer(), new_y.floor_integer(), hitbox_radius))
+        if(! _map->solid_around(_x.floor_integer(), new_y.floor_integer(), hitbox_radius) &&
+           ! _blocked(_x.floor_integer(), new_y.floor_integer()))
         {
             _y = new_y;
         }

@@ -4,6 +4,7 @@
 #include "bn_vector.h"
 #include "bn_optional.h"
 #include "bn_sprite_ptr.h"
+#include "bn_sprite_item.h"
 #include "bn_string_view.h"
 
 #include "tl_ui_font.h"
@@ -27,7 +28,8 @@ namespace tl::ui
         hint,           // "Choose" / "Back"
         money,          // money on a panel
         hud_clock,      // HUD: white
-        hud_money       // HUD: gold
+        hud_money,      // HUD: gold
+        name_tag        // gold on the dialogue name tag
     };
 
     // Night style when true (set from the game clock; the title screen always uses it).
@@ -98,6 +100,9 @@ namespace tl::ui
         int _x = 0;
         int _y = 0;
     };
+
+    // One sprite of a UI piece sheet in the current style palette (priority 0): x, y = top-left, `frame` = graphic index.
+    [[nodiscard]] bn::sprite_ptr make_piece(const bn::sprite_item& item, int x, int y, int frame, bool hflip, int z_order);
 
     // Round A / B button icons (frame 0 = A, 1 = B), x, y = top-left of the 10 x 10 circle.
     [[nodiscard]] bn::sprite_ptr make_button(int frame, int x, int y);

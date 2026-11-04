@@ -19,6 +19,8 @@
 #include "tl_streamed_bg.h"
 #include "tl_lighting.h"
 #include "tl_deposit.h"
+#include "tl_story.h"
+#include "tl_dialogue.h"
 
 namespace tl
 {
@@ -32,10 +34,11 @@ namespace tl
         // Continue: starts from a saved game.
         explicit field(const save_data& save);
 
-        // Text shown as the objective in the pause menu (a future mission system sets it).
+        // Overrides the objective line of the pause menu (normally the current mission's objective, see tl_story.h).
         void set_objective(const bn::string_view& text)
         {
             _objective = text;
+            _objective_override = true;
         }
 
         void update();
@@ -55,6 +58,7 @@ namespace tl
         ui::label _clock_label;
         ui::label _clock_small_label;      // "am" / "pm"
         ui::label _money_label;
+        ui::label _day_label;           // weekday above the clock
         ui::label _version_label;
         ui::label _zzz_label;
         bn::optional<bn::sprite_ptr> _cue;  // the bobbing "A" over the nearest object in reach
@@ -86,6 +90,7 @@ namespace tl
         const interactable* _menu_target = nullptr;
         const interactable* _rest_target = nullptr;
         const map_info* _map = nullptr;
+        map_id _map_id = map_id::city_centre;
         const warp* _pending_warp = nullptr;
         state _state = state::fading_in;
         int _fade_counter = 0;
@@ -103,6 +108,8 @@ namespace tl
         bn::string<24> _info_line_b;
         bn::string<24> _info_line_c;
         bn::string<24> _deposit_label;
+        bn::string<24> _talk_label;
+        int _shop_npc = -1;
 
         // The running timed activity: need gains are spread over its frames, bars fill gradually.
         struct activity_state
@@ -127,15 +134,24 @@ namespace tl
         {
             none,
             main,
+            log,
             confirm_save,
             saved,
             confirm_quit
         };
 
         pause_screen _pause;
+        log_screen _log;
         dialog _dialog;
         pause_mode _pause_mode = pause_mode::none;
         bn::string<48> _objective = "Explore the city";
+        bool _objective_override = false;
+
+        // Conversations with the cast and story events (tl_dialogue.h, tl_story.h).
+        conversation _conversation;
+        bn::string<200> _story_text;
+        bool _story_check_due = true;
+        bool _hud_hidden = false;
 
         [[nodiscard]] bool _can_pause() const;
         void _open_pause();
@@ -145,6 +161,15 @@ namespace tl
         void _fill_save(save_data& out) const;
         void _apply_save(const save_data& in);
         void _open_dialog(int which);
+        void _open_log();
+
+        // Conversations
+        [[nodiscard]] int _find_npc(int& d2) const;
+        void _start_conversation(int npc_index);
+        void _end_conversation();
+        void _set_hud_hidden(bool hidden);
+        void _handle_story_events(int talked_npc);
+        void _sync_objective();
 
         void _load_map(map_id id, int x, int y, direction facing);
         void _update_camera();

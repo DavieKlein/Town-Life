@@ -14,10 +14,13 @@ namespace tl
     struct save_data
     {
         static constexpr uint32_t magic_value = 0x56534C54;     // "TLSV"
-        static constexpr uint16_t save_version = 1;
+        static constexpr uint16_t save_version = 2;
         static constexpr int max_maps = 8;                      // bin cooldown slots reserved per map index
         static constexpr int bins_per_map = 16;
         static constexpr int needs_count = 5;
+        static constexpr int name_size = 12;
+        static constexpr int npc_slots = 16;
+        static constexpr int talk_slots = 8;        // NPCs with small-talk memory
 
         // header
         uint32_t magic = magic_value;
@@ -46,11 +49,11 @@ namespace tl
         int32_t bin_emptied[max_maps * bins_per_map] = {};
 
         // reserved for the future
-        char player_name[12] = {};
+        char player_name[name_size] = {};
         uint8_t story_flags[64] = {};
         uint16_t mission_id = 0;
         uint16_t pad_mission = 0;
-        uint8_t friendship[16] = {};
+        uint8_t friendship[npc_slots] = {};
         // can & bottle deposit (carved out of the former spare bytes, so the layout size is unchanged)
         uint8_t deposit_init = 0;               // 1 once the pickup state below is valid (else the field tops up)
         uint8_t deposit_cans = 0;               // bag
@@ -58,6 +61,17 @@ namespace tl
         uint8_t deposit_credit = 0;             // 0 or 1
         uint8_t deposit_spot[32] = {};          // per pickup spot: 0 = none, kind (1 can, 2 bottle) | variant << 2
         uint8_t spare[28] = {};
+        // story (version 2): small talk memory per NPC (per topic: day mod 64 << 2 | uses), last talk day, daily gain,
+        // City Coins, finished missions
+        uint8_t topic_mem[talk_slots][8] = {};
+        uint8_t talk_day[talk_slots] = {};      // day (mod 256) of the last conversation, 0 = never
+        uint8_t gain_day[talk_slots] = {};      // day (mod 256) `gained` belongs to
+        uint8_t gained[talk_slots] = {};
+        uint8_t coin_day[talk_slots] = {};
+        uint8_t coin70 = 0;                     // bit per NPC: friendship reached 70 once
+        uint8_t pad_story = 0;
+        uint16_t coins = 0;
+        uint32_t missions_done = 0;
     };
 
     static_assert(maps_count <= save_data::max_maps, "raise save_data::max_maps (and the save version)");

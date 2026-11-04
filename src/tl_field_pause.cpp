@@ -30,6 +30,7 @@ namespace tl
         _clock_label.clear();
         _clock_small_label.clear();
         _money_label.clear();
+        _day_label.clear();
         _version_label.clear();
         _version_frames = 0;
 
@@ -45,15 +46,41 @@ namespace tl
 
         info.bag = _deposit.bag_total();
         info.credit = _deposit.credit;
+        info.coins = story().coins();
+        _sync_objective();
         info.objective = _objective.c_str();
         ui::set_night(is_night(_minutes));
         _pause.open(info);
         _pause_mode = pause_mode::main;
     }
 
+    void field::_open_log()
+    {
+        static log_info info;
+        info = log_info();
+        int current = story().mission();
+        info.current_title = current ? mission_defs[current - 1].title : "";
+        info.current_objective = _objective.c_str();
+        info.coins = story().coins();
+
+        for(int id = mission_count; id >= 1 && info.done_count < 24; --id)
+        {
+            if(story().mission_done(id))
+            {
+                info.done_titles[info.done_count++] = mission_defs[id - 1].title;
+            }
+        }
+
+        _pause.close();
+        ui::set_night(is_night(_minutes));
+        _log.open(info);
+        _pause_mode = pause_mode::log;
+    }
+
     void field::_close_pause()
     {
         _pause.close();
+        _log.close();
         _dialog.close();
         _pause_mode = pause_mode::none;
         _redraw_hud_text();
@@ -107,6 +134,10 @@ namespace tl
                 {
                     _close_pause();
                 }
+                else if(choice == pause_screen::log)
+                {
+                    _open_log();
+                }
                 else if(choice == pause_screen::save)
                 {
                     save_data existing;
@@ -124,6 +155,13 @@ namespace tl
                 {
                     _open_dialog(2);
                 }
+            }
+            break;
+
+        case pause_mode::log:
+            if(_log.update())
+            {
+                _open_pause();
             }
             break;
 
@@ -212,6 +250,7 @@ namespace tl
             out.bin_emptied[index] = _bin_emptied[index];
         }
 
+        story().fill_save(out);
         out.deposit_init = 1;
         out.deposit_cans = uint8_t(_deposit.bag_cans);
         out.deposit_bottles = uint8_t(_deposit.bag_bottles);
@@ -225,6 +264,8 @@ namespace tl
 
     void field::_apply_save(const save_data& in)
     {
+        story().apply_save(in);
+        _sync_objective();
         _day = in.day;
         _minutes = in.minutes;
         _minute_frames = in.minute_frames;
@@ -261,6 +302,8 @@ namespace tl
         }
 
         _player.set_facing_index(in.facing);
+        _npcs.load(*_map, _map_id, _day, _minutes);
+        _player.set_blockers(_npcs.blockers(), _npcs.count());
         _redraw_hud_text();
         _update_bars();
         _update_lighting(true);

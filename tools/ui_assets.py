@@ -139,6 +139,60 @@ def build_icons():
     write_item("ui_icons", out, 16, ICON_PAL)
 
 
+# ------------------------------------------------------------------------------------------------ dialogue pieces
+def build_tag():
+    """Name tag of the dialogue box (ui palette): frame 0 = left cap, frame 1 = middle (the right cap is the left one
+    flipped). 16x16 frames, the tag is 12 px high (rows 2..13)."""
+    out = Image.new("P", (16, 32), TRANSP)
+    left = Image.new("P", (16, 16), TRANSP)
+    d = ImageDraw.Draw(left)
+    d.rounded_rectangle((0, 2, 40, 13), radius=3, fill=TITLE_BG, outline=BORDER, width=1)
+    mid = Image.new("P", (16, 16), TRANSP)
+    d = ImageDraw.Draw(mid)
+    d.rectangle((0, 3, 15, 12), fill=TITLE_BG)
+    d.line((0, 2, 15, 2), fill=BORDER)
+    d.line((0, 13, 15, 13), fill=BORDER)
+    out.paste(left.crop((0, 0, 16, 16)), (0, 0))
+    out.paste(mid, (0, 16))
+    write_item("ui_tag", out, 16, preview_palette())
+
+
+def build_key():
+    """Key / cursor cell of the name entry keyboard: a rounded highlight (the highlight bar colours), 16x16."""
+    im = Image.new("P", (16, 16), TRANSP)
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((0, 1, 15, 14), radius=3, fill=BAR, outline=BAR_EDGE, width=1)
+    write_item("ui_key", im, 16, preview_palette())
+
+
+METER_H = 28           # inner height of the friendship meter in pixels = number of fill frames - 1
+METER_PAL = [(255, 0, 255), (16, 14, 24), (200, 210, 230), (34, 36, 58), (214, 52, 44), (240, 130, 44), (244, 208, 60),
+             (160, 214, 62), (62, 196, 84), (255, 214, 92), (255, 255, 255)] + [(0, 0, 0)] * 5
+
+
+def build_meter():
+    """Vertical friendship meter, 16x32 frames: frame n has n pixel rows filled from the bottom, colours graded red (bottom)
+    to green (top); a gold tick marks 70 (where City Coins start)."""
+    frames = Image.new("P", (16, 32 * (METER_H + 1)), TRANSP)
+    for n in range(METER_H + 1):
+        f = Image.new("P", (16, 32), TRANSP)
+        d = ImageDraw.Draw(f)
+        d.rounded_rectangle((3, 0, 12, 31), radius=2, fill=1)
+        d.rounded_rectangle((4, 1, 11, 30), radius=1, fill=2)
+        d.rectangle((5, 2, 10, 29), fill=3)
+        for r in range(n):                       # r = pixel row from the bottom of the inner area
+            colour = 4 if r < 6 else 5 if r < 11 else 6 if r < 16 else 7 if r < 21 else 8
+            y = 29 - r
+            d.line((5, y, 10, y), fill=colour)
+            if r % 3 == 1:
+                f.putpixel((5, y), 10 if colour != 8 else 10)
+        tick = 29 - round(METER_H * 0.7)
+        f.putpixel((4, tick), 9)
+        f.putpixel((11, tick), 9)
+        frames.paste(f, (0, 32 * n))
+    write_item("ui_meter", frames, 32, METER_PAL)
+
+
 # ------------------------------------------------------------------------------------------------ fonts
 def build_font(size, baseline):
     """Glyph cells 16 x 16: pixel (2 + ink x), baseline row `baseline`; 2 bits per pixel (0 none, 1 fill, 2 outline)."""
@@ -198,6 +252,9 @@ def main():
     build_panels()
     build_bars()
     build_icons()
+    build_tag()
+    build_key()
+    build_meter()
     write_font_cpp()
     print("ui assets written")
 
