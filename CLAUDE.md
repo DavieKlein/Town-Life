@@ -276,6 +276,14 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
     (bread roll, book with a page flip, water in the hands) placed at the hands; the art cache key
     hashes only blender_acts.py + colours. Wide frames are needed because the bent poses stick out of
     32 px. Keep the front-layer mask (`player::mask_area`) 32 px wide: a wider mask makes the game lag.
+- **Feedback round (diner/doors/water/depth):** the diner exterior is bigger (49.2..57.4 x, door cells
+  52..54) and its interior is somewhat smaller. Doors are more realistic; the VaultTech entrance is a glass
+  double door. Wash animation (sink, fountain "Wash face"): the player approaches the basin (`player::approach`),
+  hands in the water, face bent down (`blender_acts.py`). Fountain and park-pond water is calm like the river.
+  Depth: the per-pixel depth cell word is now bits 0-11 min depth, 12-15 ceil(max offset / 17), 16-31 block
+  (`tl_streamed_bg.cpp`; `mask_slots` 56), so the player is hidden behind the toilet hut and trees only when
+  behind them. `-DTL_DEBUG_TELEPORT` (USERCXXFLAGS) enables L/R/SELECT debug teleports using
+  `include/tl_debug_points.h` (never in normal builds). Not done: VaultTech door does not slide open.
 - **NPCs** (`tools/npcs.py`, `tl_npcs`): static idle sprites per map, rendered by `blender_actor.py`
   mode `idle` (8 facings, 32x64, feet (16, 54)). Mia (Quaternius Female_Casual, ginger hair, teal
   top) stands behind the Corner Market checkout; her priority follows `map_info::player_hidden` so
