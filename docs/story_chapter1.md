@@ -1036,6 +1036,17 @@ Counter-posters (Old Block, hand-made after M13): "SAVE OLD BLOCK", "OLD BLOCK H
   story start stays around $20). The same minigame becomes **replayable later as a job once Corner Market is
   warm/normal again** (after VaultTech is beaten there).
 - Minigame visuals (screens, sprites) follow the owner's rule: show a design proposal before building.
+- **Minigame designs APPROVED** (mock-ups in /tmp/claude-0/s45, generator scripts lib.py/shelf.py/dishes.py):
+  - **"STOCK IT!"** (Corner Market, Rosa): 3 sections MILK/CANS/CEREAL, belt with the next 4 items; Left/Right walk,
+    A put away, B swap (-2 s); 45 s; 10 pts x combo (x2 at 3, x3 at 6, x4 at 10 in a row); wrong shelf = combo reset,
+    -2 s, Rosa's hint; full section +50. Rank C/B/A/S (<400 / 400+ / 700+ / 1000+ or 0 mistakes) pays $18/$19/$20/$22
+    in the prologue (Rosa's envelope at the firing). Replay job when the store is warm again: 3 rounds, $4-7 per round,
+    4th section (fruit), faster belt, heavy crates (hold A 0.5 s), "Rosa's order" cards; trains Strength.
+  - **"PLATE RUSH"** (Lou's Diner): plates ride the counter through SCRUB (A), RINSE (B), STACK (Up); press while the
+    plate is inside the [ ] brackets (PERFECT centre / GOOD); greasy pan = mash A x5; a missed step breaks the plate.
+    8 rushes of ~5 plates. Wage $16 always; tip $0-3 by PERFECT share (85 %+ with <=1 break $3, 60 % $2, 35 % $1),
+    -$1 tip per broken plate (floor $0); **3 broken plates end the shift early (owner decision), wage still paid**;
+    free staff meal. Dinner shift +30 % tempo and more pans; fragile glasses (B only) after day 3.
 
 <!-- Previous open questions kept below for reference. -->
 
