@@ -193,6 +193,59 @@ def water_material(nt, bsdf, spec):
         nt.links.new(mix_n.outputs[0], add_n.inputs[1])
         fac = add_n.outputs[0]
         lo, hi = 0.15, 1.0
+    elif "cx" in spec:
+        # small pool (pond, fountain basin): calm radial / box depth gradient (deep centre, light edge) with only
+        # a hint of noise, so it quantizes into a few clean colour steps
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(geo.outputs["Position"], sep.inputs[0])
+        parts = []
+        for axis, c, half in (("X", spec["cx"], spec["hx"]), ("Y", spec["cy"], spec["hy"])):
+            sub = nt.nodes.new("ShaderNodeMath")
+            sub.operation = "SUBTRACT"
+            sub.inputs[1].default_value = c
+            nt.links.new(sep.outputs[axis], sub.inputs[0])
+            ab = nt.nodes.new("ShaderNodeMath")
+            ab.operation = "ABSOLUTE"
+            nt.links.new(sub.outputs[0], ab.inputs[0])
+            dv = nt.nodes.new("ShaderNodeMath")
+            dv.operation = "DIVIDE"
+            dv.inputs[1].default_value = half
+            nt.links.new(ab.outputs[0], dv.inputs[0])
+            parts.append(dv)
+        if spec.get("shape") == "round":
+            sq = []
+            for dv in parts:
+                m = nt.nodes.new("ShaderNodeMath")
+                m.operation = "MULTIPLY"
+                nt.links.new(dv.outputs[0], m.inputs[0])
+                nt.links.new(dv.outputs[0], m.inputs[1])
+                sq.append(m)
+            add = nt.nodes.new("ShaderNodeMath")
+            add.operation = "ADD"
+            nt.links.new(sq[0].outputs[0], add.inputs[0])
+            nt.links.new(sq[1].outputs[0], add.inputs[1])
+            rt = nt.nodes.new("ShaderNodeMath")
+            rt.operation = "SQRT"
+            nt.links.new(add.outputs[0], rt.inputs[0])
+            dist = rt
+        else:
+            mx = nt.nodes.new("ShaderNodeMath")
+            mx.operation = "MAXIMUM"
+            nt.links.new(parts[0].outputs[0], mx.inputs[0])
+            nt.links.new(parts[1].outputs[0], mx.inputs[1])
+            dist = mx
+        mix_n = nt.nodes.new("ShaderNodeMath")
+        mix_n.operation = "MULTIPLY_ADD"       # dist + (noise - 0.5) * 0.12
+        nt.links.new(n1.outputs["Fac"], mix_n.inputs[0])
+        mix_n.inputs[1].default_value = 0.12
+        mix_n.inputs[2].default_value = 0.0
+        add_n = nt.nodes.new("ShaderNodeMath")
+        add_n.operation = "ADD"
+        nt.links.new(dist.outputs[0], add_n.inputs[0])
+        nt.links.new(mix_n.outputs[0], add_n.inputs[1])
+        fac = add_n.outputs[0]
+        lo, hi = 0.15, 1.0
     else:
         fac = n1.outputs["Fac"]
         lo, hi = 0.3, 0.7
@@ -353,6 +406,7 @@ MATERIALS = {
     "goods_white": dict(c="#f0f0ea", rough=0.5),
     "tiles_checker": dict(kind="checker", c="#e8e8e0", c2="#3a4a7a", scale=2.0, rough=0.3),
     "plaster_cream": dict(kind="noise", c="#e6d6aa", c2="#dccc9e", scale=6),
+    "plaster_purple": dict(kind="noise", c="#8a5ca8", c2="#7e5099", scale=6),
     "plaster_mint": dict(kind="noise", c="#9ccab0", c2="#92c0a6", scale=6),
     "floor_wood": dict(kind="brick", c="#c08048", c2="#a86c3c", mortar="#6a4224", bw=1.2, bh=0.14,
                        mortar_size=0.008, offset=0.37, rough=0.35),
@@ -366,10 +420,11 @@ MATERIALS = {
     "gold_bright": dict(c="#ffd860", emit=0.8),
     # river: y 52..60 cells = 39..45 m, middle line at 42 m
     "water": dict(kind="water", c="#0a2536", c2="#26607a", rough=0.1, ymid=42.0, yhalf=3.2, depth_scale=0.5, ior=1.42, bump=0.55),
-    "water_pond": dict(kind="water", c="#2a4a3a", c2="#557a56", rough=0.18, depth_scale=1.2, wave_scale=3.0,
-                       bump=0.25),
-    "water_fountain": dict(kind="water", c="#2a73ae", c2="#5aa6d8", rough=0.06, depth_scale=1.5, wave_scale=5.0,
-                           bump=0.3, stretch=1.0),
+    # small pools: not class "water" (no glints / water banks), calm radial gradients
+    "pond_surface": dict(kind="water", c="#2c4e42", c2="#5f8a68", rough=0.12, depth_scale=0.5, wave_scale=1.5,
+                         bump=0.05, ior=1.2, cx=13.125, cy=-33.86, hx=2.1, hy=1.1, shape="box"),
+    "fountain_surface": dict(kind="water", c="#2f7cb8", c2="#6cb4e0", rough=0.1, depth_scale=0.5, wave_scale=1.5,
+                             bump=0.05, ior=1.2, cx=39.75, cy=-30.75, hx=1.5, hy=1.5, shape="round"),
     "dirty_liquid": dict(c="#6a7664", rough=0.15),
     "pond_edge": dict(kind="noise", c="#a8a294", c2="#948e80", scale=10),
     "path_dirt": dict(kind="noise", c="#c8a878", c2="#b8986a", scale=8),

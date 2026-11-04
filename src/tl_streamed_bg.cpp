@@ -207,13 +207,15 @@ namespace tl
                 }
 
                 uint32_t info = _data.depth[cell_index];
-                int base = int(info & 0xFFFF);
+                int base = int(info & 0xFFF);
+                int max_offset = int((info >> 12) & 0xF) * 17;     // upper bound of the per-pixel offsets
                 int block = int(info >> 16);
                 int map_index = ((cy & (hw_map_size - 1)) * hw_map_size) + (cx & (hw_map_size - 1));
 
-                if(block == 0xFFFF)
+                if(block == 0xFFFF || base > depth)
                 {
-                    if(base > depth && _front_written_count < 160)
+                    // one depth for the whole cell, or every pixel of it is in front of the player: no mask needed
+                    if(base > depth && _front_written_count < front_cells)
                     {
                         _front_vram[map_index] = _map_vram[map_index];
                         _front_written[_front_written_count++] = uint16_t(map_index);
@@ -222,7 +224,7 @@ namespace tl
                     continue;
                 }
 
-                if(base + 254 <= depth || mask_used == mask_slots || _front_written_count == 160)
+                if(base + max_offset <= depth || mask_used == mask_slots || _front_written_count == front_cells)
                 {
                     continue;
                 }

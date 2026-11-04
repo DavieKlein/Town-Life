@@ -67,6 +67,10 @@ namespace tl
 
         // Image rectangle covered by the player's sprites and the iso depth to test the map against
         // (for the front layer: map pixels in front of the player are drawn over it).
+#ifdef TL_DEBUG_TELEPORT
+        void debug_toggle() { _sprite.set_visible(! _sprite.visible()); }
+        void debug_toggle2() { _shadow.set_visible(! _shadow.visible()); }
+#endif
         void mask_area(int& x0, int& y0, int& x1, int& y1, int& depth) const;
 
         // Places the player on a map at world position (x, y) = the feet.

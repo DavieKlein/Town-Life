@@ -154,6 +154,22 @@ def drink_pose(i):
     return ops
 
 
+def wash_pose(i):
+    """Leans over the basin: hands reach down into the water, scoop it up to the bent face, splash."""
+    bend = [34, 56, 46, 40][i]
+    reach = [0.5, 1.0, 0.0, 0.1][i]       # 1 = hands down in the basin, 0 = hands at the face
+    ops = [("Abdomen", "X", bend * 0.5), ("Torso", "X", bend * 0.5)]
+    for side, sgn in (("R", -1), ("L", 1)):
+        ops += [
+            ("UpperArm." + side, "X", -35 - 40 * reach),
+            ("UpperArm." + side, "Z", -sgn * (14 + 8 * reach)),
+            ("LowerArm." + side, "X", -50 - 75 * (1 - reach) - (0 if i else 0)),
+            ("LowerArm." + side, "Z", -sgn * 18),
+        ]
+    ops += [("Head", "X", [8, 14, 30, 26][i])]
+    return ops
+
+
 def read_pose(i):
     ops = [("Torso", "X", 6), ("Head", "X", [24, 26, 24, 28][i])]
     for side, sgn in (("R", -1), ("L", 1)):
@@ -186,7 +202,7 @@ def main():
     SS = int(argv[2])
     samples = int(argv[3])
     colours = json.loads(argv[4])
-    only = argv[5].split(",") if len(argv) > 5 else ["eat", "drink", "read", "search"]
+    only = argv[5].split(",") if len(argv) > 5 else ["eat", "drink", "read", "search", "wash"]
     facings = argv[6].split(",") if len(argv) > 6 else list(FACINGS)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -261,7 +277,8 @@ def main():
     flip = make_prop("cube", "#e8dcb8", (0.18, 0.25, 0.012))
     water = make_prop("sphere", "#58a8e8", (0.16, 0.11, 0.05))
     drop = make_prop("sphere", "#90ccf8", (0.04, 0.04, 0.07))
-    props = [food, bite, book, page_l, page_r, flip, water, drop]
+    drop2 = make_prop("sphere", "#90ccf8", (0.04, 0.04, 0.07))
+    props = [food, bite, book, page_l, page_r, flip, water, drop, drop2]
 
     def shot(name):
         sc.render.filepath = os.path.join(out_dir, name)
@@ -273,7 +290,7 @@ def main():
             for i in range(4):
                 for p in props:
                     p.hide_render = True
-                ops = {"eat": eat_pose, "drink": drink_pose, "read": read_pose, "search": search_pose}[act](i)
+                ops = {"eat": eat_pose, "drink": drink_pose, "read": read_pose, "search": search_pose, "wash": wash_pose}[act](i)
                 rig.pose(ops)
                 k = rig.k
                 if act == "eat":
@@ -287,6 +304,15 @@ def main():
                         rig.place(water, hc + Vector((0, -0.04, 0.03)) * k)
                     if i == 3:
                         rig.place(drop, hc + Vector((0, -0.04, -0.08)) * k)
+                elif act == "wash":
+                    hc = (hand_centre(rig, "R") + hand_centre(rig, "L")) / 2
+                    if i == 1:
+                        rig.place(water, hc + Vector((0, -0.03, -0.05)) * k)
+                    if i == 2:
+                        rig.place(water, hc + Vector((0, -0.03, 0.03)) * k)
+                    if i == 3:
+                        rig.place(drop, hc + Vector((0.14, -0.06, -0.02)) * k)
+                        rig.place(drop2, hc + Vector((-0.14, -0.08, -0.12)) * k)
                 elif act == "read":
                     hc = (hand_centre(rig, "R") + hand_centre(rig, "L")) / 2
                     tilt = [("X", -62)]

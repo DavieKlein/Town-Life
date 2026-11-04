@@ -426,8 +426,8 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
 
 
 def build_depth(name, depth, drawn, cells):
-    """Per objects cell: u32 = min depth | (0xFFFF << 16) if the cell is (nearly) one depth, else
-    min depth | (block << 16) with a 64-byte block of per-pixel offsets (255 = no pixel)."""
+    """Per objects cell: u32 = min depth (12 bits) | ceil(max offset / 17) << 12 | (0xFFFF << 16) if the cell is
+    (nearly) one depth, else with (block << 16) and a 64-byte block of per-pixel offsets (255 = no pixel)."""
     d = depth.astype(np.int64).copy()
     known = d >= 0
     for _ in range(3):                       # outline pixels: take the closest neighbour's depth
@@ -453,12 +453,14 @@ def build_depth(name, depth, drawn, cells):
         if len(px) == 0:
             continue
         lo, hi = int(px.min()), int(px.max())
+        assert lo < 4096
         if hi - lo <= 2:
             out[t] = lo | (0xFFFF << 16)
         else:
             assert len(blocks) < 0xFFFF
             blk = np.where(dr[t], np.clip(dt[t] - lo, 0, 254), 255).astype(np.uint8)
-            out[t] = lo | (len(blocks) << 16)
+            maxq = min(15, -(-int(min(hi - lo, 254)) // 17))
+            out[t] = lo | (maxq << 12) | (len(blocks) << 16)
             blocks.append(blk.tobytes())
     out.astype("<u4").tofile(os.path.join(ROOT, "data", f"{name}_depth.bin"))
     with open(os.path.join(ROOT, "data", f"{name}_depthpx.bin"), "wb") as f:
@@ -782,12 +784,9 @@ def build_player_actions(force, fast):
     frames = [sprite_frame(os.path.join(out_dir, f"sit_{i}.png"), ss, 64, 64) for i in range(4)]
     frames.append(sprite_frame(os.path.join(out_dir, "lie_0.png"), ss, 64, 64))
     write_sprite_sheet("player_rest", frames, 64, 64)
-    frames = [sprite_frame(os.path.join(out_dir, f"wash_{f}_{i}.png"), ss, FRAME_W, FRAME_H)
-              for f in FACINGS for i in range(4)]
-    write_sprite_sheet("player_wash", frames, FRAME_W, FRAME_H)
 
 
-ACT_SHEETS = ("eat", "drink", "read", "search")
+ACT_SHEETS = ("eat", "drink", "read", "search", "wash")
 
 
 def build_player_acts(force, fast):

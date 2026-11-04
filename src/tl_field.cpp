@@ -705,6 +705,7 @@ namespace tl
             break;
 
         case interactable_kind::sink:
+            _player.approach(target->x, target->y, 12);        // stand at the basin, facing it
             _begin_activity(wash_hands_frames);
             _act.gain[needs::hygiene] = wash_hands_hygiene;
             _player.start_action(player::action_kind::wash, target->x, target->y, _act.frames);
@@ -800,6 +801,27 @@ namespace tl
                 }
             }
 
+#ifdef TL_DEBUG_TELEPORT
+            if(bn::keypad::l_pressed())
+            {
+                _player.debug_toggle();
+            }
+
+            if(bn::keypad::r_pressed())
+            {
+                _player.debug_toggle2();
+            }
+
+            if(bn::keypad::select_pressed())
+            {
+                static int debug_index = 0;
+                #include "tl_debug_points.h"
+                constexpr int debug_count = sizeof(debug_points) / sizeof(debug_points[0]);
+                const debug_point& point = debug_points[debug_index++ % debug_count];
+
+                _player.place(*_map, int(point.x * cell_size), int(point.y * cell_size), direction::down);
+            }
+#endif
             _player.update();
 
             _update_activity();

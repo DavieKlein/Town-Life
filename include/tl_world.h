@@ -125,9 +125,9 @@ namespace tl
         const uint32_t* cells;      // per 8x8 cell: bits 0-15 tile, bit 16 hflip, bit 17 vflip, bits 20-23 bank
         const bn::color* palette;   // 16 colours per bank
         int banks;
-        // objects layer only (else nullptr): per cell u32 = min iso depth (x + y, world units) in the
-        // low 16 bits; the high 16 bits are 0xFFFF when the whole cell has that depth, else the index of
-        // a 64-byte block in depth_pixels (per pixel depth - min, 255 = no pixel).
+        // objects layer only (else nullptr): per cell u32: bits 0-11 = min iso depth (x + y, world
+        // units), bits 12-15 = ceil(max offset / 17), bits 16-31 = 0xFFFF when the whole cell has that depth,
+        // else the index of a 64-byte block in depth_pixels (per pixel depth - min, 255 = no pixel).
         const uint32_t* depth;
         const uint8_t* depth_pixels;
         // special palette entries (see tools/build_assets.py): water (palette cycling) in the banks of

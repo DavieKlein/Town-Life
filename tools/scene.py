@@ -281,11 +281,26 @@ def window_right(s, y0, y1, x_face, z0, z1, frame="trim_white", glass="glass", s
 
 
 def door_left(s, x0, x1, y_face, z1, mat="wood_green", frame="trim_white"):
+    """Panelled door with a proper frame (jambs + lintel), glass pane with muntins, lever handle, step."""
     d = 0.04 / 0.75
-    s.box(x0 - 0.1, y_face - d, x1 + 0.1, y_face + d, 0, z1 + 0.12, frame)
-    s.box(x0, y_face - d, x1, y_face + 1.5 * d, 0, z1, mat)
-    s.box(x0 + 0.2, y_face - d, x1 - 0.2, y_face + 2 * d, z1 * 0.45, z1 - 0.2, "glass")
-    s.box(x1 - 0.32, y_face, x1 - 0.22, y_face + 3 * d, z1 * 0.42, z1 * 0.47, "brass")
+    xm = (x0 + x1) / 2
+    s.box(x0 - 0.14, y_face - d, x1 + 0.14, y_face + d, 0, z1 + 0.14, frame)               # recess behind the leaf
+    s.box(x0 - 0.14, y_face - d, x0, y_face + 2.2 * d, 0, z1, frame)                       # jambs stand out
+    s.box(x1, y_face - d, x1 + 0.14, y_face + 2.2 * d, 0, z1, frame)
+    s.box(x0 - 0.2, y_face - d, x1 + 0.2, y_face + 3 * d, z1, z1 + 0.14, frame)             # lintel
+    s.box(x0, y_face - d, x1, y_face + 1.2 * d, 0, z1, mat)                                # door leaf
+    pw = (x1 - x0 - 0.36) / 2
+    for px0 in (x0 + 0.12, xm + 0.06):                                                      # raised lower panels
+        s.box(px0, y_face + d, px0 + pw, y_face + 1.8 * d, 0.14, z1 * 0.4, mat)
+    gx0, gx1, gz0, gz1 = x0 + 0.2, x1 - 0.2, z1 * 0.5, z1 - 0.2
+    s.box(gx0 - 0.05, y_face + d, gx1 + 0.05, y_face + 1.8 * d, gz0 - 0.05, gz1 + 0.05, mat)  # pane surround
+    s.box(gx0, y_face + d, gx1, y_face + 2 * d, gz0, gz1, "glass")
+    s.box(xm - 0.025, y_face + 1.5 * d, xm + 0.025, y_face + 2.6 * d, gz0, gz1, frame)       # muntins
+    s.box(gx0, y_face + 1.5 * d, gx1, y_face + 2.6 * d, (gz0 + gz1) / 2 - 0.025, (gz0 + gz1) / 2 + 0.025, frame)
+    s.box(x1 - 0.34, y_face + d, x1 - 0.2, y_face + 2.2 * d, z1 * 0.38, z1 * 0.48, "brass")  # handle plate
+    s.box(x1 - 0.42, y_face + 2 * d, x1 - 0.22, y_face + 3.4 * d, z1 * 0.42, z1 * 0.45, "brass")  # lever
+    s.box(x0 - 0.25, y_face, x1 + 0.25, y_face + 0.4, 0.0, 0.09, "stone")                   # door step
+    s.box(x0 - 0.2, y_face + 0.4, x1 + 0.2, y_face + 0.5, 0.0, 0.05, "stone")
 
 
 def door_right(s, y0, y1, x_face, z1, mat="wood_green", frame="trim_white"):
@@ -355,6 +370,38 @@ def hydrant(s, x, y):
 # ---------------------------------------------------------------------------------------------
 # City Centre street corner (prototype)
 # ---------------------------------------------------------------------------------------------
+def vaulttech_door(s, xm, y1):
+    """Automatic sliding glass doors: metal frame, two glass leaves with a visible split, push bars,
+    kick rails, a sensor box above and a metal threshold."""
+    hw = 2.0                                         # half width in cells
+    hz = 3.0                                         # clear height (m)
+    s.box(xm - hw - 0.2, y1 - 0.06, xm + hw + 0.2, y1 + 0.12, 0, hz + 0.45, "metal_dark")     # recess / reveal
+    s.box(xm - hw - 0.18, y1 + 0.02, xm - hw + 0.02, y1 + 0.2, 0, hz + 0.1, "metal_light")    # side posts
+    s.box(xm + hw - 0.02, y1 + 0.02, xm + hw + 0.18, y1 + 0.2, 0, hz + 0.1, "metal_light")
+    s.box(xm - hw - 0.18, y1 + 0.02, xm + hw + 0.18, y1 + 0.2, hz + 0.1, hz + 0.28, "metal_light")  # header
+    s.box(xm - hw, y1 - 0.02, xm + hw, y1 + 0.02, 0.0, hz + 0.1, "glass_office")                # glass behind
+    # two leaves: glass in an aluminium frame, each with a kick rail and a vertical push bar at the split
+    for sgn in (-1, 1):
+        lx0 = xm - hw + 0.03 if sgn < 0 else xm + 0.04
+        lx1 = xm - 0.04 if sgn < 0 else xm + hw - 0.03
+        s.box(lx0, y1 + 0.05, lx1, y1 + 0.16, 0.0, hz, "metal_light")                              # leaf frame
+        s.box(lx0 + 0.06, y1 + 0.16, lx1 - 0.06, y1 + 0.2, 0.34, hz - 0.1, "glass")             # glass pane
+        s.box(lx0, y1 + 0.16, lx1, y1 + 0.2, 0.0, 0.34, "metal_grey")                              # kick rail
+        s.box(lx0, y1 + 0.16, lx1, y1 + 0.2, 1.1, 1.16, "metal_light")                              # mid rail
+        bx = (xm - 0.2) if sgn < 0 else (xm + 0.14)
+        s.box(bx, y1 + 0.2, bx + 0.06, y1 + 0.3, 0.8, 1.9, "chrome")                              # push bar
+        s.box(bx - 0.01, y1 + 0.2, bx + 0.07, y1 + 0.24, 0.85, 0.9, "chrome")
+        s.box(bx - 0.01, y1 + 0.2, bx + 0.07, y1 + 0.24, 1.8, 1.85, "chrome")
+    s.box(xm - 0.04, y1 + 0.02, xm + 0.04, y1 + 0.2, 0.0, hz, "metal_dark")                          # the split
+    s.box(xm - hw - 0.1, y1, xm + hw + 0.1, y1 + 0.55, 0.0, 0.05, "metal_light")                    # threshold plate
+    s.box(xm - 0.05, y1 + 0.1, xm + 0.05, y1 + 0.55, 0.0, 0.07, "metal_dark")                        # door track
+    # sensor box + sign plate above
+    s.box(xm - 0.7, y1 + 0.1, xm + 0.7, y1 + 0.3, hz + 0.28, hz + 0.5, "metal_dark")
+    s.box(xm - 0.1, y1 + 0.3, xm + 0.1, y1 + 0.34, hz + 0.32, hz + 0.44, "neon_blue")
+    s.box(xm - 1.6, y1 + 0.2, xm - 1.0, y1 + 0.24, hz + 0.3, hz + 0.45, "gold_bright")
+    s.box(xm + 1.0, y1 + 0.2, xm + 1.6, y1 + 0.24, hz + 0.3, hz + 0.45, "gold_bright")
+
+
 def vaulttech_tower(s, x0, y0, x1, y1):
     """Victor Vault's golden VaultTech tower: podium + tall glass shaft with gold fins and a crown."""
     podium_h = 4.5
@@ -368,8 +415,7 @@ def vaulttech_tower(s, x0, y0, x1, y1):
     s.box(x0, y1 - 0.1, x1, y1 + 0.12, podium_h - 0.6, podium_h, "gold")
     # entrance + sign
     xm = (x0 + x1) / 2
-    s.box(xm - 2.0, y1 - 0.05, xm + 2.0, y1 + 0.1, 0, 3.0, "glass")
-    s.box(xm - 2.2, y1 - 0.05, xm + 2.2, y1 + 0.15, 3.0, 3.25, "gold")
+    vaulttech_door(s, xm, y1)
     s.box(xm - 3.6, y1 - 0.05, xm + 3.6, y1 + 0.14, podium_h + 0.2, podium_h + 1.2, "metal_dark")
     s.text("VAULTTECH", xm, y1 + 0.16, podium_h + 0.48, 0.62, "gold_bright", face="left")
     # shaft (inset), glass with gold fins and floor bands
@@ -399,15 +445,15 @@ def vaulttech_tower(s, x0, y0, x1, y1):
 def fountain(s, cx, cy, r=2.2):
     R = r * CELL_M
     s.cyl(cx, cy, 0, 0.45, R, "stone", verts=32)                       # basin body
-    s.cyl(cx, cy, 0.4, 0.5, R - 0.2, "water_fountain", verts=32)                # water surface inside the rim
+    s.cyl(cx, cy, 0.4, 0.5, R - 0.2, "fountain_surface", verts=32)                # water surface inside the rim
     ring = [(cx + math.cos(a * math.pi / 16) * (R - 0.1) / CELL_M, cy + math.sin(a * math.pi / 16) * (R - 0.1) / CELL_M, 0.52)
             for a in range(33)]
     s.tube(ring, 0.1, "stone")                                         # rounded stone rim
     s.cyl(cx, cy, 0.5, 1.4, 0.35, "stone", verts=16)
     s.cyl(cx, cy, 1.4, 1.5, 0.9, "stone", verts=16)
-    s.cyl(cx, cy, 1.45, 1.52, 0.75, "water_fountain", verts=16)
+    s.cyl(cx, cy, 1.45, 1.52, 0.75, "fountain_surface", verts=16)
     s.cyl(cx, cy, 1.5, 2.1, 0.12, "stone", verts=10)
-    s.sphere(cx, cy, 2.15, 0.16, "water_fountain")
+    s.sphere(cx, cy, 2.15, 0.16, "fountain_surface")
     s.set_solid(cx - r, cy - r, cx + r - 0.001, cy + r - 0.001)
     s.occluder(cx - r, cy - r, cx + r, cy + r, 2.3)
 
@@ -607,6 +653,7 @@ def city_centre():
     s.kit("Building_Medium_2_001", 11.0, AV0 - 4.0)
     # arched door of the community centre / library, with a sign beside it
     s.set_solid(11.2, AV0 - 4.0, 12.4, AV0 - 3.2, False)
+    arched_door(s, 11.8, AV0 - 4.0 + 0.1)
     s.box(12.9, AV0 - 3.3, 15.1, AV0 - 3.12, 1.85, 2.5, "sign_blue")
     s.text("COMMUNITY", 14.0, AV0 - 3.1, 2.28, 0.2, "robot_white", face="left")
     s.text("CENTRE", 14.0, AV0 - 3.1, 2.02, 0.2, "robot_white", face="left")
@@ -623,19 +670,14 @@ def city_centre():
 
     # ---- north-east block: Corner Market, a slim house and the VaultTech tower ----
     corner_market_building(s, CS1 + 5, AV0 - 4)
-    s.model("2Story_Slim_Mat", CS1 + 15.6, AV0 - 4, front="left", colours="purple")
-    # the purple house is the diner: door on the left of its facade, small neon sign above it
-    s.set_solid(50.55, AV0 - 4.9, 51.75, AV0 - 4.0, False)
-    s.box(50.4, AV0 - 4.06, 51.8, AV0 - 3.9, 2.4, 2.85, "diner_red")
-    s.text("DINER", 51.1, AV0 - 3.86, 2.62, 0.3, "robot_white", face="left")
-    s.warp(50.55, AV0 - 4.6, 51.75, AV0 - 4.0, "diner", 8.0, 12.4, "up")
+    diner_building(s, 49.2, 57.4, AV0 - 4)
     s.box(54, 14, W, AV0 - 4, -0.1, 0.01, "plaza_gold", layer="floor")
     vaulttech_tower(s, 56, 2, 70, 14)
     s.set_solid(61.5, 13.0, 64.5, 14.0, False)                                        # lobby entrance
     s.warp(61.5, 13.3, 64.5, 14.0, "vaulttech_lobby", 9.0, 14.4, "up")
-    for x in (55.5, 70.5):
+    for x in (58.8, 70.5):
         s.kit("Prop_Planter_Single", x, 16.5, solid=True, occlude=True)
-    for x in (58, 61, 65, 68):
+    for x in (61, 65, 68):
         s.kit("Prop_Bollard", x, 17.3)
 
     # ---- sidewalk furniture along the avenue ----
@@ -649,12 +691,8 @@ def city_centre():
     newspaper_box(s, 45.0, AV1 + 2.6, "sign_blue")
     newspaper_box(s, 46.0, AV1 + 2.6, "red_paint")
     trash_can(s, 38.5, AV1 + 1.0)
-    for x in (CS1 + 16.6, CS1 + 18.0):
+    for x in (CS1 + 16.0, CS1 + 22.6):
         weeds(s, x, AV0 - 3.6, 3)
-    ivy(s, CS1 + 15.6, CS1 + 16.6, AV0 - 4 + 0.05, 2.2)
-    potted_plant(s, CS1 + 16.2, AV0 - 3.5, "flowers")
-    potted_plant(s, CS1 + 18.9, AV0 - 3.5, "bush")
-    shrub(s, CS1 + 19.6, AV0 - 3.6, 0.4, "leaves_light")
     conifer(s, CS1 + 3.9, AV0 - 3.3, 3.4)
     shrub(s, CS1 + 4.3, AV0 - 2.6, 0.4)
     street_tree(s, CS1 + 2.4, AV0 - 1.2)
@@ -683,7 +721,7 @@ def city_centre():
     bench_along_x(s, 6.0, 8.6, 39.4)
     bench_along_x(s, 14.0, 16.6, 39.4)
     s.box(14.5, 43.5, 20.5, 46.8, -0.1, 0.09, "pond_edge", layer="floor")
-    s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "water_pond", layer="floor")
+    s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "pond_surface", layer="floor")
     s.set_solid(14.5, 43.5, 20.499, 46.799)
     for (x, y, sc) in ((7.6, 36.2, 1.0), (19.5, 36.5, 1.1), (4.0, 45.5, 1.05), (7.5, 46.0, 0.85), (21.0, 41.0, 0.9)):
         tree(s, x, y, sc)
@@ -868,6 +906,99 @@ def park_toilet(s, x0, y0, x1, y1):
     s.set_solid(xm - 0.6, y1 - 0.8, xm + 0.6, y1, False)                                 # doorway
     s.occluder(x0, y0, x1, y1, h + 0.3)
     s.warp(xm - 0.6, y1 - 0.5, xm + 0.6, y1, "public_toilet", 3.5, 4.3, "up")
+
+
+def arched_door(s, xm, y_face, hw=0.58, hz=1.65, r=0.44):
+    """Door leaves filling the arched opening of the community centre: dark wood with raised panels, a fan
+    window with muntins in the arch, brass handles and a stone step. xm / y_face in cells."""
+    d = 0.04 / 0.75
+    rc = r / CELL_M
+    s.box(xm - hw - 0.02, y_face - d, xm + hw + 0.02, y_face + d, 0, hz, "wood_dark")              # leaves
+    s.cyl(xm, y_face, hz, hz + 0.1, r, "wood_dark", axis="y", verts=24)
+    s.cyl(xm, y_face + d, hz + 0.02, hz + 0.1, r - 0.1, "glass", axis="y", verts=24)             # fan window
+    s.box(xm - 0.03, y_face + d, xm + 0.03, y_face + 2 * d, hz, hz + r - 0.08, "metal_dark")     # muntins
+    s.box(xm - rc + 0.1, y_face + d, xm + rc - 0.1, y_face + 2 * d, hz + 0.02, hz + 0.06, "metal_dark")
+    s.box(xm - hw, y_face + d, xm - 0.02, y_face + 1.8 * d, 1.0, 1.55, "wood_dark")              # raised panels
+    s.box(xm + 0.02, y_face + d, xm + hw, y_face + 1.8 * d, 1.0, 1.55, "wood_dark")
+    s.box(xm - hw, y_face + d, xm - 0.02, y_face + 1.8 * d, 0.2, 0.85, "wood_dark")
+    s.box(xm + 0.02, y_face + d, xm + hw, y_face + 1.8 * d, 0.2, 0.85, "wood_dark")
+    s.box(xm - 0.015, y_face + d, xm + 0.015, y_face + 2 * d, 0, hz, "metal_dark")                # leaf split
+    for sgn in (-1, 1):
+        s.box(xm + sgn * 0.14 - 0.02, y_face + d, xm + sgn * 0.14 + 0.02, y_face + 3 * d, 0.85, 1.15, "brass")
+    s.box(xm - hw - 0.12, y_face - 0.02, xm + hw + 0.12, y_face + 0.4, 0.0, 0.1, "stone")          # step
+
+
+def diner_building(s, x0, x1, fy):
+    """The diner: a wide one-storey corner diner in purple stucco, facade at y = fy facing +y, big display
+    windows, a striped awning, a large neon DINER sign and a glass door. Rear annex goes back 7.5 cells."""
+    h = 4.2
+    yb = fy - 4.0                      # the front block is 4 cells deep, the annex goes further back
+    ya = fy - 7.5
+    xa = x1 - 1.6                      # annex stops before the VaultTech tower
+    s.box(x0, yb, x1, fy, 0, h, "plaster_purple")
+    s.box(x0, ya, xa, yb, 0, h, "plaster_purple")
+    s.box(x0 - 0.05, fy - 0.08, x1 + 0.05, fy + 0.05, 0, 0.4, "stone")                # plinth
+    # parapet cornice and roof with a rim, vent and two air-conditioning boxes
+    s.box(x0 - 0.1, fy - 0.1, x1 + 0.1, fy + 0.12, h - 0.2, h + 0.1, "trim_white")
+    s.box(x0 - 0.1, ya, x0 + 0.05, yb, h - 0.2, h + 0.1, "trim_white")
+    s.box(x0, yb, x1, fy - 0.1, h, h + 0.04, "roof")
+    s.box(x0, ya, xa, yb, h, h + 0.04, "roof")
+    s.box(x0 + 1.0, yb + 0.6, x0 + 2.4, yb + 1.6, h + 0.04, h + 0.65, "metal_light")
+    s.box(x0 + 1.1, yb + 0.7, x0 + 2.3, yb + 0.9, h + 0.65, h + 0.72, "metal_dark")
+    s.box(x0 + 3.2, yb + 1.2, x0 + 4.4, yb + 2.0, h + 0.04, h + 0.55, "metal_light")
+    s.cyl(x1 - 2.6, yb + 1.0, h + 0.04, h + 0.8, 0.14, "metal_grey", verts=10)
+    # display windows with a warm lit interior (counter, red stools silhouetted) and a lit sign band
+    for (wx0, wx1) in ((x0 + 0.7, x0 + 2.9), (x1 - 3.1, x1 - 0.7)):
+        s.box(wx0 - 0.14, fy - 0.1, wx1 + 0.14, fy + 0.08, 0.62, 2.42, "metal_light")
+        s.box(wx0, fy - 0.2, wx1, fy - 0.12, 0.76, 2.28, "shop_light")
+        s.box(wx0, fy - 0.2, wx1, fy - 0.0, 0.76, 1.12, "diner_teal")                # counter front
+        n = int((wx1 - wx0) / 0.6)
+        for k in range(n):
+            sx = wx0 + 0.3 + k * (wx1 - wx0 - 0.4) / max(n - 1, 1)
+            s.cyl(sx, fy - 0.12, 1.12, 1.4, 0.1, "diner_red", verts=8)
+        s.box(wx0, fy - 0.01, wx1, fy + 0.04, 0.76, 2.28, "glass")
+        s.box((wx0 + wx1) / 2 - 0.03, fy - 0.1, (wx0 + wx1) / 2 + 0.03, fy + 0.07, 0.76, 2.28, "metal_light")
+        s.box(wx0 - 0.1, fy - 0.1, wx1 + 0.1, fy + 0.2, 0.52, 0.62, "stone")             # sill
+    s.text("OPEN", x1 - 1.9, fy + 0.07, 1.9, 0.26, "neon_blue", face="left")
+    s.box(x1 - 2.6, fy + 0.04, x1 - 1.2, fy + 0.07, 1.72, 1.74, "neon_red")
+    # door: aluminium frame, glass leaf with a push bar, step and a mat
+    dx0, dx1 = 52.25, 53.75
+    d = 0.04 / 0.75
+    s.box(dx0 - 0.14, fy - d, dx1 + 0.14, fy + 1.5 * d, 0, 2.5, "metal_light")
+    s.box(dx0, fy - 1.2 * d, dx1, fy + 2 * d, 0, 2.38, "glass")
+    s.box(dx0, fy - 1.2 * d, dx1, fy + 2.4 * d, 0, 0.35, "metal_light")               # kick plate
+    s.box((dx0 + dx1) / 2 - 0.03, fy - 1.2 * d, (dx0 + dx1) / 2 + 0.03, fy + 3 * d, 0.35, 2.38, "metal_dark")
+    s.box(dx0 + 0.12, fy + 3 * d, dx0 + 0.2, fy + 7 * d, 0.9, 1.5, "chrome")          # handles
+    s.box(dx1 - 0.2, fy + 3 * d, dx1 - 0.12, fy + 7 * d, 0.9, 1.5, "chrome")
+    s.box(dx0 - 0.2, fy, dx1 + 0.2, fy + 0.45, 0.0, 0.07, "stone")                    # step
+    s.box(dx0 - 0.1, fy + 0.05, dx1 + 0.1, fy + 0.4, 0.07, 0.09, "mat_red")
+    # striped awning along the whole front
+    x = x0 + 0.1
+    i = 0
+    while x < x1 - 0.1:
+        s.wedge(x, fy, min(x + 0.5, x1 - 0.1), fy + 1.2, 2.95, 2.6, "y",
+                "diner_red" if i % 2 == 0 else "awning_white")
+        x += 0.5
+        i += 1
+    # big neon sign band above the awning
+    s.box(x0 + 0.6, fy - 0.05, x1 - 0.6, fy + 0.16, 3.05, 4.0, "diner_teal")
+    s.box(x0 + 0.5, fy - 0.05, x1 - 0.5, fy + 0.2, 3.0, 3.08, "chrome")
+    s.box(x0 + 0.5, fy - 0.05, x1 - 0.5, fy + 0.2, 3.97, 4.05, "chrome")
+    xm = (x0 + x1) / 2
+    s.text("DINER", xm, fy + 0.2, 3.5, 0.78, "neon_red", face="left")
+    s.box(xm - 2.4, fy + 0.17, xm + 2.4, fy + 0.2, 3.2, 3.24, "neon_blue")
+    s.box(xm - 2.4, fy + 0.17, xm + 2.4, fy + 0.2, 3.82, 3.86, "neon_blue")
+    # street details
+    potted_plant(s, 51.35, fy + 0.7, "bay")
+    potted_plant(s, 54.65, fy + 0.7, "flowers")
+    a_frame_sign(s, 56.4, fy + 1.5)
+    weeds(s, x0 + 0.4, fy + 0.5, 3)
+    s.set_solid(x0, ya, xa - 0.001, yb)
+    s.set_solid(x0, yb, x1 - 0.001, fy - 0.001)
+    s.set_solid(52.0, fy - 1.0, 53.999, fy - 0.001, False)                            # door cells walkable
+    s.occluder(x0, yb, x1, fy, h + 0.8)
+    s.occluder(x0, ya, xa, yb, h + 0.8)
+    s.warp(52.0, fy - 1.0, 54.0, fy, "diner", 5.5, 8.4, "up")
 
 
 def corner_market_building(s, x0, fy):
@@ -1519,42 +1650,42 @@ def bench(s, x0, y0, x1, y1, seat="wood", legs="metal_dark", h=0.45):
 
 # ------------------------------------------------------------------ diner
 def diner():
-    W, H = 16, 14
-    s = std_room("diner", "Diner", W, H, "tile_bw", "wp_cream", "diner_red", 1.0, 3.2, (6, 10),
-                 "city_centre", 51.1, 19.4, mat_cols=("diner_red", "rug_cream"))
-    rnd = random.Random(5)
+    W, H = 11, 10
+    s = std_room("diner", "Diner", W, H, "tile_bw", "wp_cream", "diner_red", 1.0, 3.2, (4, 7),
+                 "city_centre", 53.0, 19.6, mat_cols=("diner_red", "rug_cream"))
     s.box(0.0, 0.0, W, 0.35, 0.0, 0.012, "diner_red", layer="floor")                 # red border strip at the back
     # kitchen pass-through (painted opening with a glowing kitchen behind)
-    s.box(6.3, 0.0, 10.7, 0.04, 0.95, 1.9, "wood_dark")
-    s.box(6.45, 0.04, 10.55, 0.07, 1.05, 1.8, "shop_light")
-    s.box(6.35, 0.04, 10.65, 0.3, 0.9, 0.97, "chrome")                                  # ledge
-    for i in range(6):                                                                    # order tickets on a rail
-        s.box(6.7 + i * 0.6, 0.07, 6.85 + i * 0.6, 0.09, 1.45, 1.75, "paper_cream")
-    s.box(6.5, 0.06, 10.5, 0.1, 1.82, 1.86, "chrome")
-    for i in range(5):                                                                    # hanging pans silhouettes
-        s.cyl(6.9 + i * 0.8, 0.12, 1.35, 1.38, 0.17, "metal_dark", axis="y", verts=16)
-    s.box(7.0, 0.0, 10.0, 0.06, 2.1, 2.7, "metal_dark")
-    s.text("DINER", 8.5, 0.09, 2.4, 0.5, "neon_red", face="left")
-    s.box(6.0, 0.0, 10.4, 0.05, 2.02, 2.06, "neon_blue")
+    kx0, kx1 = 5.2, 8.6
+    s.box(kx0, 0.0, kx1, 0.04, 0.95, 1.9, "wood_dark")
+    s.box(kx0 + 0.15, 0.04, kx1 - 0.15, 0.07, 1.05, 1.8, "shop_light")
+    s.box(kx0 + 0.05, 0.04, kx1 - 0.05, 0.3, 0.9, 0.97, "chrome")                      # ledge
+    for i in range(5):                                                                    # order tickets on a rail
+        s.box(kx0 + 0.45 + i * 0.55, 0.07, kx0 + 0.6 + i * 0.55, 0.09, 1.45, 1.75, "paper_cream")
+    s.box(kx0 + 0.2, 0.06, kx1 - 0.2, 0.1, 1.82, 1.86, "chrome")
+    for i in range(4):                                                                    # hanging pans silhouettes
+        s.cyl(kx0 + 0.6 + i * 0.75, 0.12, 1.35, 1.38, 0.17, "metal_dark", axis="y", verts=16)
+    s.box(kx0 + 0.6, 0.0, kx1 - 0.6, 0.06, 2.1, 2.7, "metal_dark")
+    s.text("DINER", (kx0 + kx1) / 2, 0.09, 2.4, 0.5, "neon_red", face="left")
+    s.box(kx0 - 0.2, 0.0, kx1 + 0.2, 0.05, 2.02, 2.06, "neon_blue")
     # back shelves with cups
-    s.box(0.2, 0.05, 5.1, 0.6, 0, 1.25, "wood")
+    s.box(0.2, 0.05, 3.3, 0.6, 0, 1.25, "wood")
     for lz in (0.45, 0.85, 1.22):
-        s.box(0.2, 0.05, 5.1, 0.6, lz, lz + 0.04, "wood_dark")
-    for k in range(10):
-        x = 0.45 + k * 0.45
+        s.box(0.2, 0.05, 3.3, 0.6, lz, lz + 0.04, "wood_dark")
+    for k in range(7):
+        x = 0.5 + k * 0.42
         s.cyl(x, 0.35, 0.49, 0.62, 0.08, ("goods_white", "diner_teal", "diner_red", "goods_yellow")[k % 4], verts=10)
         s.cyl(x, 0.35, 0.89, 1.0, 0.08, ("diner_teal", "goods_white", "goods_yellow", "diner_red")[k % 4], verts=10)
-    s.set_solid(0.2, 0.05, 5.099, 0.599)
-    s.occluder(0.2, 0.05, 5.1, 0.6, 1.3)
-    window_y(s, 1.4, 3.0, 0.0, 1.55, 2.55, curtain=True)
-    s.box(3.4, 0.0, 5.3, 0.05, 1.5, 2.6, "chalk_menu")
-    s.box(3.35, 0.0, 5.35, 0.04, 1.45, 1.5, "wood")
-    s.text("MENU", 4.35, 0.07, 2.35, 0.22, "chalk", face="left")
-    for i, ln in enumerate(("COFFEE $1", "PIE  $2", "EGGS  $3")):
-        s.text(ln, 4.35, 0.07, 2.05 - i * 0.2, 0.15, "chalk", face="left")
-    wall_clock_y(s, 11.6, 0.0, 2.45, 0.3)
+    s.set_solid(0.2, 0.05, 3.299, 0.599)
+    s.occluder(0.2, 0.05, 3.3, 0.6, 1.3)
+    window_y(s, 0.7, 2.2, 0.0, 1.55, 2.55, curtain=True)
+    s.box(3.5, 0.0, 5.0, 0.05, 1.5, 2.6, "chalk_menu")
+    s.box(3.45, 0.0, 5.05, 0.04, 1.45, 1.5, "wood")
+    s.text("MENU", 4.25, 0.07, 2.35, 0.2, "chalk", face="left")
+    for i, ln in enumerate(("COFFEE $2", "PANCAKES $4", "BURGER $6")):
+        s.text(ln, 4.25, 0.07, 2.05 - i * 0.2, 0.13, "chalk", face="left")
+    wall_clock_y(s, 10.0, 0.0, 2.5, 0.28)
     # jukebox-like music box (own design): arched cabinet with glowing panel, speaker slats and lights
-    jx0, jx1 = 13.3, 14.7
+    jx0, jx1 = 9.1, 10.5
     jm = (jx0 + jx1) / 2
     s.box(jx0, 0.05, jx1, 0.85, 0, 1.15, "wood_red")
     s.cyl(jm, 0.45, 1.15, 0.8, 0.7, "wood_red", axis="y", verts=24)
@@ -1570,37 +1701,37 @@ def diner():
     s.set_solid(jx0, 0.05, jx1 - 0.001, 0.849)
     s.occluder(jx0, 0.05, jx1, 0.9, 1.9)
     # counter with pie case, coffee machine, register
-    counter(s, 5.5, 3.2, 12.5, 4.1, 0.95, "diner_teal", "rug_cream", trim="chrome")
-    s.box(5.5, 4.1, 12.5, 4.15, 0.7, 0.78, "chrome")                                     # chrome foot rail band
-    s.box(5.7, 3.3, 7.1, 3.95, 0.99, 1.04, "goods_white")                                # pie case
-    s.box(5.75, 3.35, 7.05, 3.9, 1.04, 1.45, "glass_lid")
+    cx0, cx1 = 3.6, 8.8
+    counter(s, cx0, 3.2, cx1, 4.1, 0.95, "diner_teal", "rug_cream", trim="chrome")
+    s.box(cx0, 4.1, cx1, 4.15, 0.7, 0.78, "chrome")                                     # chrome foot rail band
+    s.box(3.8, 3.3, 5.2, 3.95, 0.99, 1.04, "goods_white")                                # pie case
+    s.box(3.85, 3.35, 5.15, 3.9, 1.04, 1.45, "glass_lid")
     for k in range(2):
         for j in range(3):
             if k == 1 and j == 2:
                 continue
-            px, py = 6.0 + k * 0.6, 3.5 + j * 0.2
+            px, py = 4.1 + k * 0.6, 3.5 + j * 0.2
             s.cyl(px, py, 1.045, 1.12, 0.12, "pie_crust", verts=12)
             s.cyl(px, py, 1.12, 1.15, 0.1, "pie_red" if (j + k) % 2 else "banana_yellow", verts=12)
-    s.box(5.7, 3.3, 7.1, 3.35, 1.45, 1.5, "chrome")
-    s.box(8.4, 3.3, 9.1, 3.8, 0.99, 1.15, "metal_dark")                                   # register
-    s.box(8.45, 3.35, 9.05, 3.6, 1.15, 1.22, "screen")
-    s.box(9.7, 3.3, 10.5, 3.85, 0.99, 1.45, "chrome")                                     # coffee machine
-    s.box(9.75, 3.6, 10.45, 3.85, 1.0, 1.1, "tv_body")
-    s.cyl(9.95, 3.6, 1.12, 1.4, 0.09, "glass_lid", verts=10)
-    s.cyl(10.3, 3.6, 1.12, 1.4, 0.09, "glass_lid", verts=10)
-    s.cyl(9.95, 3.6, 1.12, 1.25, 0.085, "coffee", verts=10)
-    s.cyl(10.3, 3.6, 1.12, 1.25, 0.085, "coffee", verts=10)
-    for sx in (11.2, 11.9):                                                                 # napkins
-        s.box(sx, 3.55, sx + 0.18, 3.7, 0.99, 1.1, "chrome")
-    s.cyl(8.0, 3.75, 0.99, 1.13, 0.1, "glass_lid", verts=12)
-    for i in range(6):
-        sx = 6.3 + i * 1.1
+    s.box(3.8, 3.3, 5.2, 3.35, 1.45, 1.5, "chrome")
+    s.box(6.0, 3.3, 6.7, 3.8, 0.99, 1.15, "metal_dark")                                   # register
+    s.box(6.05, 3.35, 6.65, 3.6, 1.15, 1.22, "screen")
+    s.box(7.4, 3.3, 8.2, 3.85, 0.99, 1.45, "chrome")                                      # coffee machine
+    s.box(7.45, 3.6, 8.15, 3.85, 1.0, 1.1, "tv_body")
+    s.cyl(7.65, 3.6, 1.12, 1.4, 0.09, "glass_lid", verts=10)
+    s.cyl(8.0, 3.6, 1.12, 1.4, 0.09, "glass_lid", verts=10)
+    s.cyl(7.65, 3.6, 1.12, 1.25, 0.085, "coffee", verts=10)
+    s.cyl(8.0, 3.6, 1.12, 1.25, 0.085, "coffee", verts=10)
+    s.box(8.4, 3.55, 8.58, 3.7, 0.99, 1.1, "chrome")                                      # napkins
+    s.cyl(5.7, 3.75, 0.99, 1.13, 0.1, "glass_lid", verts=12)
+    for i in range(5):
+        sx = 4.3 + i * 1.05
         s.cyl(sx, 4.85, 0.0, 0.55, 0.045, "chrome", verts=8)
         s.cyl(sx, 4.85, 0.55, 0.65, 0.2, "diner_red", verts=14)
         s.cyl(sx, 4.85, 0.0, 0.03, 0.14, "chrome", verts=10)
         s.set_solid(sx - 0.2, 4.65, sx + 0.2, 4.99)
     # booths along the west wall
-    for i in range(3):
+    for i in range(2):
         y0 = 3.4 + i * 2.2
         y1 = y0 + 2.0
         s.box(0.1, y0, 0.75, y1, 0, 0.45, "diner_red")                                    # far bench (against wall)
@@ -1615,20 +1746,20 @@ def diner():
         s.cyl(1.4, y1 - 0.5, 0.75, 0.83, 0.08, "goods_white", verts=10)
         s.set_solid(0.1, y0, 2.649, y1 - 0.001)
         s.occluder(0.1, y0, 2.65, y1, 1.1)
-    window_x(s, 5.8, 7.4, 0.0, 1.4, 2.4, curtain=True)
-    picture_x(s, 3.6, 4.8, 0.0, 1.5, 2.1, "poster_orange")
-    picture_x(s, 9.0, 10.2, 0.0, 1.5, 2.1, "poster_yellow")
-    # free tables with chairs (north/south)
-    for tx in (6.0, 10.2):
-        s.prop("house/Table_RoundSmall", tx, 9.1, h=0.66)
-        s.prop("house/Chair_1", tx, 7.8, rot=0, h=0.9, colours={"Wood": "#b8302c"})
-        s.prop("house/Chair_1", tx, 10.45, rot=180, h=0.9, colours={"Wood": "#b8302c"})
-        s.box(tx - 0.2, 8.9, tx - 0.05, 9.05, 0.7, 0.8, "goods_red")
-        s.box(tx + 0.05, 8.9, tx + 0.2, 9.05, 0.7, 0.8, "goods_yellow")
-    potted_plant(s, 14.2, 9.2, "bay")
-    for (lx, ly) in ((3, 6), (8, 6), (13, 6), (5, 10), (11, 10)):
+    window_x(s, 3.9, 5.5, 0.0, 1.4, 2.4, curtain=True)
+    picture_x(s, 6.2, 7.2, 0.0, 1.5, 2.1, "poster_orange")
+    picture_x(s, 7.8, 8.8, 0.0, 1.5, 2.1, "poster_yellow")
+    # free table with chairs (south), a small one at the east wall
+    for (tx, ty) in ((7.0, 7.6),):
+        s.prop("house/Table_RoundSmall", tx, ty, h=0.66)
+        s.prop("house/Chair_1", tx, ty - 1.3, rot=0, h=0.9, colours={"Wood": "#b8302c"})
+        s.prop("house/Chair_1", tx, ty + 1.35, rot=180, h=0.9, colours={"Wood": "#b8302c"})
+        s.box(tx - 0.2, ty - 0.2, tx - 0.05, ty - 0.05, 0.7, 0.8, "goods_red")
+        s.box(tx + 0.05, ty - 0.2, tx + 0.2, ty - 0.05, 0.7, 0.8, "goods_yellow")
+    potted_plant(s, 9.4, 6.6, "bay")
+    for (lx, ly) in ((3, 5), (7, 5), (4, 8), (8, 8)):
         s.point_light(lx, ly, 2.8, 120, colour=(1.0, 0.9, 0.75))
-    s.point_light(8.5, 1.2, 2.0, 80, colour=(1.0, 0.8, 0.5))
+    s.point_light(7.0, 1.2, 2.0, 80, colour=(1.0, 0.8, 0.5))
     return s
 
 

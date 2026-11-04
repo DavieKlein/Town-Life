@@ -24,7 +24,7 @@ namespace tl
         static constexpr int hash_bits = 11;
         static constexpr int hash_size = 1 << hash_bits;   // > 3x cache_slots: short probe sequences
 
-        static constexpr int mask_slots = 40;       // per frame, double buffered (front layer only)
+        static constexpr int mask_slots = 56;       // per frame, double buffered (front layer only)
 
         // storage_index: 0 or 1 (each streamed_bg alive at the same time needs its own storage).
         // front_priority >= 0 also creates the "front layer" used for per-pixel depth (objects only).
@@ -62,7 +62,8 @@ namespace tl
         bn::optional<bn::regular_bg_ptr> _front_bg;
         uint16_t* _map_vram = nullptr;
         uint16_t* _front_vram = nullptr;
-        uint16_t _front_written[160];
+        static constexpr int front_cells = 160;
+        uint16_t _front_written[front_cells];
         int _front_written_count = 0;
         int _front_parity = 0;
         int _palette_bank = 0;

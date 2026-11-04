@@ -33,7 +33,7 @@ INTERACTABLES = {
         ("shop_market", 12.2, 15.0), ("shop_market", 13.9, 15.0), ("shop_market", 15.2, 15.0),
     ],
     "diner": [
-        ("shop_diner", 6.5, 4.5), ("shop_diner", 8.8, 4.5), ("shop_diner", 11.0, 4.5),
+        ("shop_diner", 4.6, 4.5), ("shop_diner", 6.4, 4.5), ("shop_diner", 8.2, 4.5),
     ],
     "community_centre": [
         ("bookshelf", 2.5, 1.0, 0, 2), ("bookshelf", 4.7, 1.0, 0, 2), ("bookshelf", 6.9, 1.0, 0, 2),

@@ -32,7 +32,7 @@ namespace tl
         constexpr bn::fixed step_length = 4;    // screen pixels per walk animation frame
 
         // player_rest.bmp: 64x64, frames 0-3 sitting (facing down-left), 4 sleeping on the side; the
-        // seat point is at (32, 44). player_wash.bmp: 32x64, 4 frames per facing.
+        // seat point is at (32, 44). player_wash.bmp: 64x64, 8 facings x 4 frames, feet at (32, 54).
         constexpr int rest_origin_y = 44 - 32;
         constexpr int sleep_frame = 4;
         constexpr int act_frames_per_facing = 4;
