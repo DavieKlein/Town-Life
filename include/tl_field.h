@@ -10,6 +10,8 @@
 #include "bn_sprite_text_generator.h"
 
 #include "tl_menu.h"
+#include "tl_save.h"
+#include "tl_pause.h"
 #include "tl_needs.h"
 #include "tl_player.h"
 #include "tl_critters.h"
@@ -25,6 +27,15 @@ namespace tl
 
     public:
         field(map_id start_map, int start_x, int start_y, direction facing);
+
+        // Continue: starts from a saved game.
+        explicit field(const save_data& save);
+
+        // Text shown as the objective in the pause menu (a future mission system sets it).
+        void set_objective(const bn::string_view& text)
+        {
+            _objective = text;
+        }
 
         void update();
 
@@ -77,6 +88,7 @@ namespace tl
         int _cam_x = 0;
         int _cam_y = 0;
         int _minutes = 8 * 60;          // time of day in minutes (prototype clock)
+        int _day = 1;                   // day counter, +1 at midnight
         int _minute_frames = 0;
         int _money = 20;
         int _total_minutes = 0;         // game minutes since the start (bin cooldowns)
@@ -101,6 +113,30 @@ namespace tl
         };
 
         activity_state _act;
+
+        // Pause menu (START) and saving, see tl_field_pause.cpp.
+        enum class pause_mode
+        {
+            none,
+            main,
+            confirm_save,
+            saved,
+            confirm_quit
+        };
+
+        pause_screen _pause;
+        dialog _dialog;
+        pause_mode _pause_mode = pause_mode::none;
+        bn::string<48> _objective = "Explore the city";
+
+        [[nodiscard]] bool _can_pause() const;
+        void _open_pause();
+        void _close_pause();
+        void _update_pause();
+        void _save_game();
+        void _fill_save(save_data& out) const;
+        void _apply_save(const save_data& in);
+        void _open_dialog(int which);
 
         void _load_map(map_id id, int x, int y, direction facing);
         void _update_camera();

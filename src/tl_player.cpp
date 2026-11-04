@@ -189,6 +189,12 @@ namespace tl
         _update_graphics();
     }
 
+    void player::set_facing_index(int facing)
+    {
+        _facing = facing & 7;
+        _update_graphics();
+    }
+
     void player::sit_on(int seat_x, int seat_y)
     {
         _activity = activity::sitting;

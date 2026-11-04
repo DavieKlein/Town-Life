@@ -4,19 +4,39 @@
  */
 
 #include "bn_core.h"
+#include "bn_optional.h"
 
 #include "tl_field.h"
+#include "tl_title.h"
 
 int main()
 {
     bn::core::init();
 
-    // Start on the sidewalk in front of Corner Market.
-    tl::field field(tl::map_id::city_centre, 44 * tl::cell_size, 19 * tl::cell_size, tl::direction::down);
+    // Title screen first; "Quit to title" in the pause menu soft-resets back to here.
+    bool continue_game = tl::run_title();
+    bn::core::update();     // lets Butano release the title screen's VRAM
+    bn::optional<tl::field> field;
+
+    if(continue_game)
+    {
+        tl::save_data save;
+
+        if(tl::save_read(save))
+        {
+            field.emplace(save);
+        }
+    }
+
+    if(! field)
+    {
+        // Start on the sidewalk in front of Corner Market.
+        field.emplace(tl::map_id::city_centre, 44 * tl::cell_size, 19 * tl::cell_size, tl::direction::down);
+    }
 
     while(true)
     {
-        field.update();
+        field->update();
         bn::core::update();
     }
 }

@@ -94,7 +94,9 @@ namespace tl
 
     field::field(map_id start_map, int start_x, int start_y, direction facing) :
         _text_generator(common::variable_8x8_sprite_font),
-        _menu(_text_generator)
+        _menu(_text_generator),
+        _pause(_text_generator),
+        _dialog(_text_generator)
     {
         _text_generator.set_bg_priority(hud_priority);
         _set_fade(fade_frames);
@@ -295,6 +297,12 @@ namespace tl
     void field::_tick_minute()
     {
         _minutes = (_minutes + 1) % (24 * 60);
+
+        if(_minutes == 0)
+        {
+            ++_day;
+        }
+
         ++_total_minutes;
         _needs.minute_passed();
 
@@ -776,6 +784,12 @@ namespace tl
                 _version_sprites.clear();
             }
 
+            if(_pause_mode != pause_mode::none)
+            {
+                _update_pause();
+                break;
+            }
+
             if(_menu.is_open())
             {
                 int choice = _menu.update();
@@ -788,6 +802,12 @@ namespace tl
                 _update_camera();
                 _update_clock();
                 _update_lighting(false);
+                break;
+            }
+
+            if(bn::keypad::start_pressed() && _can_pause())
+            {
+                _open_pause();
                 break;
             }
 

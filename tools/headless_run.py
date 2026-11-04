@@ -15,6 +15,11 @@ Commands (separated by ';'):
   hold KEYS N          hold keys (e.g. right, up+b) for N frames
   press KEYS           hold keys for 2 frames, then release for 2 frames
   shot FILE            save the current frame as a PNG
+  dumpsram FILE        write the cartridge save RAM to FILE
+  loadsram FILE        load FILE into the cartridge save RAM (use before the game reads it, e.g. as the
+                       first command, followed by `reset`)
+  clearsram            fill the save RAM with 0xFF (an empty cartridge)
+  reset                reset the console (back to the title screen), keeping the save RAM
 Keys: a b select start up down left right l r
 """
 
@@ -80,6 +85,32 @@ class Runner:
         for _ in range(frames):
             self.core.retro_run()
 
+    def _sram(self):
+        self.core.retro_get_memory_data.restype = ct.c_void_p
+        self.core.retro_get_memory_size.restype = ct.c_size_t
+        ptr = self.core.retro_get_memory_data(0)       # RETRO_MEMORY_SAVE_RAM
+        size = self.core.retro_get_memory_size(0)
+        if not ptr or not size:
+            raise RuntimeError("no save RAM exposed by the core (SRAM not detected?)")
+        return ptr, size
+
+    def dump_sram(self, path):
+        ptr, size = self._sram()
+        open(path, "wb").write(ct.string_at(ptr, size))
+        print("sram", size, "bytes ->", path)
+
+    def load_sram(self, path):
+        ptr, size = self._sram()
+        data = open(path, "rb").read()[:size]
+        ct.memmove(ptr, data, len(data))
+
+    def clear_sram(self):
+        ptr, size = self._sram()
+        ct.memset(ptr, 0xFF, size)
+
+    def reset(self):
+        self.core.retro_reset()
+
     def screenshot(self, path):
         from PIL import Image
         data, w, h, pitch = self.frame
@@ -120,6 +151,14 @@ def main():
         elif op == "shot":
             runner.screenshot(parts[1])
             print("saved", parts[1])
+        elif op == "dumpsram":
+            runner.dump_sram(parts[1])
+        elif op == "loadsram":
+            runner.load_sram(parts[1])
+        elif op == "clearsram":
+            runner.clear_sram()
+        elif op == "reset":
+            runner.reset()
         else:
             raise ValueError("unknown command: " + op)
 

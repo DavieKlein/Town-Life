@@ -347,6 +347,7 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
 │   ├── tl_player.cpp            player: iso movement, collision, depth priority, animation, shadow
 │   ├── tl_critters.cpp          ambient pigeons + squirrels (behaviour, sprites, depth)
 │   ├── tl_npcs.cpp              standing NPCs (Mia), tl_menu.cpp pop-up menu (scroll + info)
+│   ├── tl_save.cpp, tl_title.cpp, tl_pause.cpp, tl_field_pause.cpp   save format, title screen, pause screen
 │   └── tl_world_data.cpp        GENERATED: palettes per layer, collision, warps, occluders, map table
 ├── data/                        GENERATED binary layer data (Butano DATA rule): <map>_<layer>_tiles.bin
 │                                (8 words per 4bpp tile) and <map>_<layer>_cells.bin (uint32 per 8x8 cell)
@@ -489,6 +490,8 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
 
 - D-pad: walk (straight on screen; diagonals follow the streets) · hold B: run
 - A: interact (menu) · in menus: up/down, A ok, B back · while sitting/sleeping: D-pad or B gets up
+- START (while walking): pause menu (freezes the game): day, time, money, the five needs with exact values,
+  objective line, Resume / Save game / Quit to title. B or START resumes.
 
 ---
 
@@ -529,7 +532,7 @@ Update the checkboxes at the end of each session.
 1.2 Needs + HUD + clock — IN PROGRESS
 - [x] `needs` struct: Hunger, Energy, Hygiene, Fun, Bladder (0–100), decaying over time; timed activities with animations, gradual bars
 - [x] HUD: 4 small bars/icons (sprites or a high-priority second bg layer)
-- [ ] Game clock (day/time); START opens a pause menu with exact values
+- [x] Game clock with day counter (+1 at midnight); START opens a pause menu with exact values
 - [x] Interact with objects (A + option menu): park bench = sit/sleep, fountain = wash
 - [x] Interactions in the interiors: shops (market, diner), toilet, sink, bookshelf, notice board, reception
 - [x] Eating / drinking / reading / bin searching / toilet with animations and quality levels; trash bins; fountain drink; Bladder need + accident
@@ -559,10 +562,24 @@ Update the checkboxes at the end of each session.
 - [ ] Introduce the rival character
 - [ ] Chapter end: unlock the Docks
 
-1.6 Save/load — TODO (moved forward: needed to play a whole district on the phone)
-- [ ] Versioned save struct with `bn::sram::write/read` (see `butano/examples/sram`)
-- [ ] Title screen: New Game / Continue
-- [ ] Verify SRAM saves work in Lemuroid
+1.6 Save/load — IN PROGRESS (moved forward: needed to play a whole district on the phone)
+- [x] Versioned save struct with `bn::sram::write/read` (`tl_save.h/.cpp`), manual saving only (owner: no autosave)
+- [x] Title screen: Continue (only with a valid save) / New Game (`tl_title.cpp`)
+- [x] Pause menu (`tl_pause.cpp`, `tl_field_pause.cpp`)
+- [x] Headless: save, reset, Continue restores map/position/time (mGBA reports 32 KB SRAM)
+- [ ] Verify SRAM saves work in Lemuroid on the phone
+
+Save/pause notes: `save_data` (tl_save.h) is one packed struct at SRAM offset 0 (732 bytes): magic "TLSV", version,
+size, Fletcher checksum over everything after the header; map, facing, x, y, day, minutes, minute frames,
+total minutes, money, the five needs (bn::fixed raw), bladder boost, bin cooldowns (8 maps x 16 bins), plus
+reserved fields: player name char[12], story flags u8[64], mission id, friendship u8[16], 64 spare bytes. A save
+with a wrong magic/version/size/checksum is ignored (title shows only New Game). Changing the layout means
+bumping `save_version`. `field::_fill_save/_apply_save` map the field state to and from it; new state that must
+survive needs a field in the struct. Pause screen: `pause_screen`, `dialog` (3 lines + Yes/No) and `panel`
+(tiled menu panel sprites, widths 96 or 222) in tl_pause.cpp; `field::set_objective(text)` sets the objective
+line for a future mission system. The pause screen frees the HUD text sprites while open (128-sprite budget).
+"Quit to title" uses `bn::core::reset()`. `tools/headless_run.py` has `dumpsram`, `loadsram`, `clearsram`
+and `reset` commands for save tests.
 
 1.7 Polish — TODO
 - [x] Day/night lighting, lamp light pools, lit windows, water palette cycling, per-pixel depth

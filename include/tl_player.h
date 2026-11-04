@@ -62,6 +62,9 @@ namespace tl
             return _facing;
         }
 
+        // Restores a saved facing (0..7) after place().
+        void set_facing_index(int facing);
+
         // Applies day/night lighting to the player's sprite palettes.
         void set_lighting(const light_params& params);
 
