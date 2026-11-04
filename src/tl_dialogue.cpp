@@ -883,7 +883,7 @@ namespace tl
 
     void conversation::_finish_small_talk()
     {
-        int coins = _first_today ? story().check_coin_reward(_npc, _day) : 0;
+        int coins = story().check_coin_reward(_npc, _day, _first_today);
 
         if(coins > 0)
         {

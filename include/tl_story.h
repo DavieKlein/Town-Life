@@ -182,9 +182,9 @@ namespace tl
         [[nodiscard]] int gained_today(int npc, int day) const;
         void note_gain(int npc, int day, int points);
 
-        // City Coins: 3 on the first time friendship reaches 70, 1 on the first conversation of every third day after that.
+        // City Coins: 3 when friendship has reached 70 (once), then 1 on the first conversation of the day, at most every third day.
         // Returns the coins granted now (0 if none).
-        int check_coin_reward(int npc, int day);
+        int check_coin_reward(int npc, int day, bool first_talk_today);
 
         // Applies a dialogue effect. Money is not applied here: it is collected for the field (take_money).
         void apply_effect(const dlg_effect& effect);

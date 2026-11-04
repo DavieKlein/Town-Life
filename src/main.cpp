@@ -11,6 +11,12 @@
 #include "tl_story.h"
 #include "tl_name_entry.h"
 
+#ifdef TL_DEBUG_CPU
+#include "bn_core.h"
+#include "bn_string.h"
+#include "tl_ui.h"
+#endif
+
 int main()
 {
     bn::core::init();
@@ -43,9 +49,32 @@ int main()
         field.emplace(tl::map_id::city_centre, 44 * tl::cell_size, 19 * tl::cell_size, tl::direction::down);
     }
 
+#ifdef TL_DEBUG_CPU
+    // Debug build only: worst CPU usage (percent) and missed frames of the last second, top left.
+    tl::ui::label cpu_label;
+    int worst = 0;
+    int missed = 0;
+    int frame = 0;
+#endif
+
     while(true)
     {
         field->update();
         bn::core::update();
+#ifdef TL_DEBUG_CPU
+        int usage = (bn::core::last_cpu_usage() * 100).round_integer();
+        worst = usage > worst ? usage : worst;
+        missed += bn::core::last_missed_frames();
+
+        if(++frame % 30 == 0)
+        {
+            bn::string<24> text("cpu ");
+            text.append(bn::to_string<8>(worst));
+            text.append(" miss ");
+            text.append(bn::to_string<8>(missed));
+            cpu_label.set(tl::ui::font9, 100, 11, text, tl::ui::role::hud_clock);
+            worst = 0;
+        }
+#endif
     }
 }

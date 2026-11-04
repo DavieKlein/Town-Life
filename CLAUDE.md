@@ -580,6 +580,46 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
 
 ---
 
+## Story systems (dialogue, missions, cast) - built in session s53
+
+- **Dialogue box** (`tl_dialogue.h/.cpp`, class `dialogue_box`): approved "variant 2" in the Paper/Night style: 40 px box at the
+  bottom (covers the HUD while open; HUD text is freed and the need bars hidden), the speaker's 64x64 portrait standing on it at
+  the left, gold name tag (`ui_tag` pieces), text typed out (A completes the page, then next; B same), word-wrapped to 3 lines
+  (140 px, 196 px for system pages without portrait) and split into pages, blinking A button, choices (2-4) in a panel above the
+  box, vertical friendship meter (`ui_meter`, red bottom to green top, gold tick at 70, number + "+6"/"-4" delta) at the right
+  edge, animating about 3 frames per point. The clock is frozen during conversations.
+- **`conversation`** (same files): plays dialogue nodes (pages, choices, effects) and runs **small talk**: greeting by mood, 3 random
+  topics out of 8 (+ Bye; first talk of a day always offers a liked topic), player opener, NPC answer, friendship per
+  docs/story_chapter1.md 4.5 (like +6, neutral +2, dislike -4, mood x1.5/x0.5, repeat falloff over 3 days, daily cap +12, +1 for
+  the first hello, 3 topics max, 2 dislikes end it), City Coins (3 at 70, then 1 per first talk, every 3rd day). First ever talk plays
+  `intro_<npc>` first. `start_message(text)` shows a one-page system message (mission complete).
+- **Dialogue data**: source `tools/dialogue_src.txt` (format documented at its top: `node name`, `SPEAKER| text`, `! effects`,
+  `? choice -> node | effects`, `goto node`; effects: `friend npc +n`, `money n`, `flag name [v]`, `mission id`, `done id`, `coins n`).
+  `tools/story_data.py` (also holds FLAGS, MISSIONS, NPC_INFO likes/mood/start friendship, topics) generates
+  `src/tl_story_data.cpp` + `include/tl_story_ids.h` (`dlg::`, `story_flag::`, `mission_id::` constants); run it alone with
+  `python3 tools/story_data.py` (build_assets.py calls it too). Name conventions looked up by the game: `greet_<npc>_<good|neutral|grumpy>`,
+  `talk_<npc>_<topic>`, `bye_<npc>`, `intro_<npc>`. `mission_count` in tl_story.h must match MISSIONS.
+- **Story state** (`tl_story.h/.cpp`, `story()` singleton): player name, 64 flags (u8), friendship[16], small-talk memory, City Coins,
+  current mission + finished mask, pending money. Saved in `save_data` (**save version 2**: old saves are ignored), `story_state::fill_save/apply_save`.
+- **Missions**: MISSIONS table (code, title, objective, condition talk/map/money/flag/day/time or manual `done` effect, next, reward $).
+  Interim sandbox chain P1 Say hello (talk Mia) -> P2 Find the library (enter map) -> P3 talk Pimm -> P4 talk Lou -> P5 have $30 -> "Explore the
+  city"; M01-M17 (Chapter 1) are in the table but wait for flags the prologue will set (`START_MISSION` in story_data.py switches the start to M01).
+  `field::_handle_story_events` checks the mission after conversations, every game minute and on map entry and shows a system page.
+  Pause screen: "Monday, day 1" header, objective from the mission, new option **Mission log** (`log_screen`: current + finished list).
+- **Cast NPCs**: looks and PLACEMENTS in `tools/cast.py` (Mia, Rosa, Dex, Dex VaultMart, Pimm, Lou, Victor, Valet + player portrait), rendered by
+  `tools/blender_cast.py` via `build_assets.build_cast` into `graphics/npc_<id>.bmp` (8 facings 32x64) and `graphics/portrait_<id>.bmp` (64x64, 15
+  colours), plus generated `include/tl_cast_data.h` (npc_id enum, `npc_placements` by map/day/time). Placed now: Mia (market checkout Day 1
+  7:00-14:30; diner 7-15 from Day 2; fountain bench 12:00-12:30), Lou (diner 6-22), Pimm (library 10-15:30, park pond 16-18). Rosa/Dex/Victor/Valet
+  only in later story scenes. `tl_npcs` rebuilds the present set each game minute, NPCs block the player (`player::set_blockers`), are lit like
+  the player outdoors, turn towards you. Talk with A (reach 36 units; the shop menus at the market/diner counter get a "Talk to X" option).
+- **Name entry** (`tl_name_entry.cpp`): New Game -> on-screen keyboard (D-pad, A type, B delete, START done, SELECT/L/R case), max 10, default "Sam",
+  confirm dialog, `{NAME}` in dialogue.
+- **Weekdays**: Day 1 = Monday. HUD shows "am/pm" and "Mon" stacked next to the clock; pause "Monday, day 1" (`weekday_name/short`).
+- **Tools**: `tools/make_save.py` writes version-2 saves for headless tests (`--mission --friend --flag --done --day --minutes ...`);
+  debug CPU readout: build with `make USERCXXFLAGS="-DTL_DEBUG_CPU"` (top label "cpu % miss N"). Typing a page costs a few missed frames, idle is ~70 %.
+- Roadmap 1.3 / 1.4: dialogue, NPC talking, friendship meter, mission data, flags, mission log are done; still to do: NPC wandering, gifts, barks,
+  prologue scenes, the Chapter 1 mission scripts, Old Block NPCs.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)
@@ -626,17 +666,17 @@ Update the checkboxes at the end of each session.
       with the 16x16 common font
 - [ ] Split `main.cpp` into scenes (`tl_scene.h` with an enum, one class per scene with `update()`)
 
-1.3 Dialogue + NPCs — TODO
+1.3 Dialogue + NPCs — IN PROGRESS
 - [x] Static NPC sprites (`tl_npcs`, Mia at the checkout)
 - [ ] NPC class (simple wander pattern, collision with player, talking)
-- [ ] Dialogue box at the bottom with text paging (A = next) and simple choices
-- [ ] Dialogue data in a compact table format (speaker, lines, choices, effects)
+- [x] Dialogue box at the bottom with text paging (A = next) and simple choices (+ friendship meter, small talk)
+- [x] Dialogue data in a compact table format (tools/dialogue_src.txt)
 - [ ] Original NPCs: Corner Market coworkers, regular customers, Old Block residents
 
-1.4 Missions + mission log — TODO
-- [ ] Mission data: id, objective text, conditions (talk to X, go to Y, earn $Z), rewards
-- [ ] Story flags + current chapter/mission state
-- [ ] Mission log in the pause menu showing the current objective
+1.4 Missions + mission log — IN PROGRESS
+- [x] Mission data: id, objective text, conditions (talk to X, go to Y, earn $Z), rewards
+- [x] Story flags + current chapter/mission state
+- [x] Mission log in the pause menu showing the current objective
 - [ ] District lock system driven by flags (the Docks blocker)
 
 1.5 Chapter 1 story — TODO

@@ -60,7 +60,7 @@ namespace tl
         info = log_info();
         int current = story().mission();
         info.current_title = current ? mission_defs[current - 1].title : "";
-        info.current_objective = _objective.c_str();
+        info.current_objective = current ? _objective.c_str() : "";
         info.coins = story().coins();
 
         for(int id = mission_count; id >= 1 && info.done_count < 24; --id)

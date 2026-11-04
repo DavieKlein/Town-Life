@@ -73,9 +73,9 @@ IDS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "dex_vault", "victor", "
 # later, so they are not placed freely yet. Facing names: s, sw, w, nw, n, ne, e, se ("sw" looks towards +y).
 PLACEMENTS = [
     ("mia", "corner_market", 13.9, 13.4, "sw", "7:00", "14:30", 1, 1),     # checkout on Day 1 (the old shop)
-    ("mia", "diner", 9.2, 6.6, "w", "7:00", "12:00", 2, 255),              # waitress shift
-    ("mia", "city_centre", 46.6, 38.4, "e", "12:00", "12:30", 2, 255),     # lunch break at the fountain square bench
-    ("mia", "diner", 9.2, 6.6, "w", "12:30", "15:00", 2, 255),
+    ("mia", "diner", 9.3, 4.7, "sw", "7:00", "12:00", 2, 255),              # waitress shift
+    ("mia", "city_centre", 50.4, 38.9, "w", "12:00", "12:30", 2, 255),     # lunch break at the fountain square bench
+    ("mia", "diner", 9.3, 4.7, "sw", "12:30", "15:00", 2, 255),
     ("lou", "diner", 6.4, 3.4, "sw", "6:00", "22:00", 1, 255),             # behind the counter
     ("pimm", "community_centre", 6.1, 6.2, "n", "10:00", "15:30", 1, 255),  # library reading table
     ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "18:00", 1, 255),   # City Park pond, feeding the pigeons

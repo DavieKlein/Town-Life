@@ -199,7 +199,7 @@ namespace tl
         }
     }
 
-    int story_state::check_coin_reward(int npc, int day)
+    int story_state::check_coin_reward(int npc, int day, bool first_talk_today)
     {
         if(npc >= save_data::talk_slots || _friendship[npc] < 70)
         {
@@ -214,7 +214,7 @@ namespace tl
             _coin70 = uint8_t(_coin70 | bit);
             amount = 3;
         }
-        else if(((day - _coin_day[npc]) & 255) >= 3)
+        else if(first_talk_today && ((day - _coin_day[npc]) & 255) >= 3)
         {
             amount = 1;
         }
