@@ -90,7 +90,8 @@ namespace tl
         sink,
         bookshelf,
         noticeboard,
-        reception
+        reception,
+        bin
     };
 
     struct interactable
@@ -99,6 +100,7 @@ namespace tl
         int x;          // world units: bench = seat centre, fountain = centre
         int y;
         int radius;     // fountain radius (world units), 0 for benches
+        int quality;    // 1..3 (toilet, bookshelf), 0 = not used
     };
 
     // Standing NPCs (see tools/npcs.py): one idle sprite, facing is an index into the 8-frame sheet.

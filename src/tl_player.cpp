@@ -8,6 +8,10 @@
 #include "bn_sprite_items_shadow.h"
 #include "bn_sprite_items_player_rest.h"
 #include "bn_sprite_items_player_wash.h"
+#include "bn_sprite_items_player_eat.h"
+#include "bn_sprite_items_player_drink.h"
+#include "bn_sprite_items_player_read.h"
+#include "bn_sprite_items_player_search.h"
 
 namespace tl
 {
@@ -31,8 +35,31 @@ namespace tl
         // seat point is at (32, 44). player_wash.bmp: 32x64, 4 frames per facing.
         constexpr int rest_origin_y = 44 - 32;
         constexpr int sleep_frame = 4;
-        constexpr int wash_frames = 4;
-        constexpr int wash_duration = 150;      // frames
+        constexpr int act_frames_per_facing = 4;
+
+        // Frames each animation step lasts, per action_kind.
+        constexpr int act_step[5] = { 6, 16, 18, 36, 14 };
+
+        [[nodiscard]] const bn::sprite_item& action_item(player::action_kind kind)
+        {
+            switch(kind)
+            {
+            case player::action_kind::eat:
+                return bn::sprite_items::player_eat;
+
+            case player::action_kind::drink:
+                return bn::sprite_items::player_drink;
+
+            case player::action_kind::read:
+                return bn::sprite_items::player_read;
+
+            case player::action_kind::search:
+                return bn::sprite_items::player_search;
+
+            default:
+                return bn::sprite_items::player_wash;
+            }
+        }
 
         [[nodiscard]] int facing_towards(int dx, int dy)
         {
@@ -183,15 +210,61 @@ namespace tl
         _activity = activity::sleeping;
     }
 
-    void player::start_washing(int target_x, int target_y)
+    void player::sit_for(int seat_x, int seat_y, int frames)
     {
-        _activity = activity::washing;
+        sit_on(seat_x, seat_y);
+        _sit_frames = frames;
+    }
+
+    void player::start_action(action_kind kind, int target_x, int target_y, int frames)
+    {
+        _activity = activity::acting;
         _activity_timer = 0;
+        _act_kind = kind;
+        _act_frames = frames;
         _vx = 0;
         _vy = 0;
-        _facing = facing_towards(target_x - x(), target_y - y());
-        _sprite.set_palette(bn::sprite_items::player_wash.palette_item());
+
+        if(target_x != x() || target_y != y())
+        {
+            _facing = facing_towards(target_x - x(), target_y - y());
+        }
+
+        const bn::sprite_item& item = action_item(kind);
+        _act_item = &item;
+        _act_sprite = item.create_sprite(0, 0, _facing * act_frames_per_facing);
+        _act_sprite->set_bg_priority(2);
         _apply_lighting();
+        _sprite.set_visible(false);
+        update_sprite(_last_cam_x, _last_cam_y);
+    }
+
+    void player::approach(int target_x, int target_y, int distance)
+    {
+        int dx = x() - target_x;
+        int dy = y() - target_y;
+        int len2 = (dx * dx) + (dy * dy);
+
+        if(len2 == 0)
+        {
+            return;
+        }
+
+        int len = bn::sqrt(len2);
+
+        // the closest free spot on the line, at least `distance` from the target and not further away than now
+        for(int d = distance; d < len; d += 2)
+        {
+            int nx = target_x + (dx * d / len);
+            int ny = target_y + (dy * d / len);
+
+            if(! _map->solid_around(nx, ny, hitbox_radius))
+            {
+                _x = nx;
+                _y = ny;
+                return;
+            }
+        }
     }
 
     void player::_stand_up()
@@ -206,11 +279,13 @@ namespace tl
             _shadow.set_visible(true);
         }
 
-        if(_activity == activity::washing)
+        if(_activity == activity::acting)
         {
-            _sprite.set_palette(bn::sprite_items::player.palette_item());
+            _act_sprite.reset();
+            _sprite.set_visible(true);
         }
 
+        _sit_frames = 0;
         _activity = activity::walking;
         _anim_frame = 0;
         _update_graphics();
@@ -222,17 +297,28 @@ namespace tl
     {
         ++_activity_timer;
 
-        if(_activity == activity::washing)
+        if(_activity == activity::acting)
         {
-            int frame = (_activity_timer / 6) % wash_frames;
-            _sprite.set_tiles(bn::sprite_items::player_wash.tiles_item(), (_facing * wash_frames) + frame);
+            int frame = (_activity_timer / act_step[int(_act_kind)]) % act_frames_per_facing;
 
-            if(_activity_timer >= wash_duration)
+            if(_activity_timer % act_step[int(_act_kind)] == 0)
             {
-                _washing_finished = true;
+                _act_sprite->set_tiles(_act_item->tiles_item(), (_facing * act_frames_per_facing) + frame);
+            }
+
+            if(_activity_timer >= _act_frames)
+            {
+                _action_finished = true;
                 _stand_up();
             }
 
+            return;
+        }
+
+        if(_sit_frames > 0 && _activity_timer >= _sit_frames)
+        {
+            _action_finished = true;
+            _stand_up();
             return;
         }
 
@@ -250,7 +336,7 @@ namespace tl
 
     void player::update()
     {
-        _washing_finished = false;
+        _action_finished = false;
 
         if(_activity != activity::walking)
         {
@@ -341,6 +427,18 @@ namespace tl
 
     void player::update_sprite(int cam_x, int cam_y)
     {
+        _last_cam_x = cam_x;
+        _last_cam_y = cam_y;
+
+        if(_act_sprite)
+        {
+            _act_sprite->set_position(image_x() - cam_x - 120, image_y() - cam_y - 80 - feet_offset_y);
+            _shadow.set_position(image_x() - cam_x - 120, image_y() - cam_y - 80 - 1);
+            _act_sprite->set_bg_priority(2);
+            _shadow.set_bg_priority(3);
+            return;
+        }
+
         if(_rest_sprite)
         {
             int seat_image_x = _map->to_image_x(_seat_x, _seat_y);
@@ -378,6 +476,7 @@ namespace tl
 
         int ix = image_x();
         int iy = image_y();
+        // (kept narrow even for the wide activity sprites: a wider front-layer redraw makes the game lag)
         x0 = ix - 16;
         x1 = ix + 16;
         y0 = iy - 54;
@@ -394,11 +493,16 @@ namespace tl
     void player::_apply_lighting()
     {
         bn::color colours[16];
-        const bn::sprite_palette_item& item = _activity == activity::washing ?
-                bn::sprite_items::player_wash.palette_item() : bn::sprite_items::player.palette_item();
-        light_colours(item.colors_ref().data(), colours, 16, _light);
+        light_colours(bn::sprite_items::player.palette_item().colors_ref().data(), colours, 16, _light);
         bn::sprite_palette_ptr palette = _sprite.palette();
         palette.set_colors(bn::span<const bn::color>(colours, 16));
+
+        if(_act_sprite)
+        {
+            light_colours(_act_item->palette_item().colors_ref().data(), colours, 16, _light);
+            bn::sprite_palette_ptr act_palette = _act_sprite->palette();
+            act_palette.set_colors(bn::span<const bn::color>(colours, 16));
+        }
 
         if(_rest_sprite)
         {

@@ -399,15 +399,15 @@ def vaulttech_tower(s, x0, y0, x1, y1):
 def fountain(s, cx, cy, r=2.2):
     R = r * CELL_M
     s.cyl(cx, cy, 0, 0.45, R, "stone", verts=32)                       # basin body
-    s.cyl(cx, cy, 0.4, 0.5, R - 0.2, "water", verts=32)                # water surface inside the rim
+    s.cyl(cx, cy, 0.4, 0.5, R - 0.2, "water_fountain", verts=32)                # water surface inside the rim
     ring = [(cx + math.cos(a * math.pi / 16) * (R - 0.1) / CELL_M, cy + math.sin(a * math.pi / 16) * (R - 0.1) / CELL_M, 0.52)
             for a in range(33)]
     s.tube(ring, 0.1, "stone")                                         # rounded stone rim
     s.cyl(cx, cy, 0.5, 1.4, 0.35, "stone", verts=16)
     s.cyl(cx, cy, 1.4, 1.5, 0.9, "stone", verts=16)
-    s.cyl(cx, cy, 1.45, 1.52, 0.75, "water", verts=16)
+    s.cyl(cx, cy, 1.45, 1.52, 0.75, "water_fountain", verts=16)
     s.cyl(cx, cy, 1.5, 2.1, 0.12, "stone", verts=10)
-    s.sphere(cx, cy, 2.15, 0.16, "water")
+    s.sphere(cx, cy, 2.15, 0.16, "water_fountain")
     s.set_solid(cx - r, cy - r, cx + r - 0.001, cy + r - 0.001)
     s.occluder(cx - r, cy - r, cx + r, cy + r, 2.3)
 
@@ -683,7 +683,7 @@ def city_centre():
     bench_along_x(s, 6.0, 8.6, 39.4)
     bench_along_x(s, 14.0, 16.6, 39.4)
     s.box(14.5, 43.5, 20.5, 46.8, -0.1, 0.09, "pond_edge", layer="floor")
-    s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "water", layer="floor")
+    s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "water_pond", layer="floor")
     s.set_solid(14.5, 43.5, 20.499, 46.799)
     for (x, y, sc) in ((7.6, 36.2, 1.0), (19.5, 36.5, 1.1), (4.0, 45.5, 1.05), (7.5, 46.0, 0.85), (21.0, 41.0, 0.9)):
         tree(s, x, y, sc)
@@ -1398,7 +1398,7 @@ def market_v2():
     s.occluder(11.1, 1.3, 12.0, 3.3, 1.1)
     # mop bucket + mop
     s.cyl(11.55, 3.8, 0, 0.32, 0.22, "bucket_yellow", r2=0.28)
-    s.cyl(11.55, 3.8, 0.28, 0.3, 0.24, "water")
+    s.cyl(11.55, 3.8, 0.28, 0.3, 0.24, "dirty_liquid")
     s.cyl(11.75, 3.7, 0.1, 1.3, 0.025, "wood")
     s.sphere(11.75, 3.7, 0.08, 0.18, "mop", sz=0.7)
     s.set_solid(11.2, 3.5, 11.999, 3.999)

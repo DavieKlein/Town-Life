@@ -99,7 +99,7 @@ Mentors (one per type) and other named characters are still to be designed; keep
 
 ### Systems
 
-- **Needs:** Hunger, Energy, Hygiene, Fun (0–100). They decay over time and are shown in a HUD.
+- **Needs:** Hunger, Energy, Hygiene, Fun, Bladder (0–100, 100 = fine). They decay over time and are shown in a HUD.
   Keeping them balanced is rewarded (e.g. better job performance / skill gain when all are high).
 - **Skills:** Strength, Creativity, Logic, Charm, Fitness. Required for better jobs; trained by
   working, practicing and reading.
@@ -220,8 +220,10 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
 - Player: rigged CC0 character (Quaternius Male_LongSleeve in our own colours: blue sweater,
   khaki trousers, brown hair), idle + 8-frame walk in 8 facings, with a blended shadow.
 - HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
-  Needs (`tl_needs.h`: Hunger, Energy, Hygiene, Fun, 0-100) decay per game minute and drive the
-  four HUD bars (`need_bar` sprites, 16 fill levels, green/orange/red).
+  Needs (`tl_needs.h`: Hunger, Energy, Hygiene, Fun, Bladder, 0-100) decay per game minute and drive the
+  five HUD bars (`need_bar` sprites, 16 fill levels, green/orange/red). HUD layout (`hud_sprites.py
+  build_hud`): clock/money panel x 10..60, five slots of 35 px at pitch 37 starting at x 62 (bg coords);
+  `tl_field.cpp` places the bar sprites at x = -48 + 37 * need. The Bladder icon is a toilet.
 - **Enterable buildings (district 1 milestone):** each has a door warp in `city_centre` and a
   door-mat exit warp in its interior (all interiors are cutaway rooms made with `std_room()` /
   `wall_y` / `wall_x` / stubs in scene.py, not outdoor-lit): Corner Market (door x 43-45, y 17-18;
@@ -236,12 +238,44 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
   sizes in `PROP_DIMS`). All flood-fill checked (every door reachable from the start, every free
   interior cell reachable, every exit target free).
 - **Interactions** (`tools/interactions.py` kinds, `include/tl_world.h` `interactable_kind`,
-  `tl_field.cpp`): reach 28 units for fixtures. Corner Market checkout / Mia: shop menu (Bread $2
-  Hunger +15, Apple $1 +6, Ready meal $5 +35, Soda $1 Hunger +4 Fun +4; "Not enough money." info);
-  diner counter (Coffee $2 Energy +15 Fun +5, Pancakes $4 Hunger +25, Burger $6 Hunger +40);
-  toilet (Hygiene +5, Fun +2), sink (Hygiene +15), bookshelf (Fun +12, 30 game minutes pass),
-  notice board and VaultTech reception (info messages). `tl_menu` now scrolls lists of more than 3
-  options and has `open_info()` (up to 3 text lines). Shops stay open after a purchase until B.
+  `tl_field.cpp`): reach 28 units for fixtures. An interactable has an optional **quality** 1..3
+  (5th tuple element in interactions.py, `interactable::quality`).
+  - **Timed activities with animation** (`field::_begin_activity` + `activity_state`): every action
+    lasts ~2.5-6 s, plays an animation (`player::start_action(kind, target, frames)`) and spreads its
+    need gains evenly over the frames, so the HUD bars fill gradually. B/D-pad cancels only the
+    toilet (sitting); partial gains stay. Time runs normally during activities (reading adds 30 game
+    minutes).
+  - **Food** (market checkout / Mia, diner counter): buying pays and the player eats at once (eat
+    animation). Table `market_items` / `diner_items` in tl_field.cpp (price, quality 1-3, Hunger, Energy,
+    Fun, Bladder); the meal lasts `100 + 5 * (Hunger + Energy) + 20 * quality` frames (max 360).
+    Bread $2 q1 Hunger +15 Energy +3; Apple $1 q1 +6/+1; Ready meal $5 q2 +35/+8; Soda $1 q1 Hunger +4
+    Fun +4 Energy +3 Bladder -8; Coffee $2 q2 Energy +15 Fun +5 Bladder -10; Pancakes $4 q2 +25/+8;
+    Burger $6 q3 +40/+12. Drinks drain the bladder and speed its decay for 90 game minutes.
+  - **Bladder** (5th need, starts 80, -0.1/min, x3 right after drinking). Toilet (`toilet`, quality =
+    speed: `toilet_full_frames` 6 s / 4 s / 2.5 s from empty to full; the public park WC is quality 1):
+    the player sits on the WC (reuses the `player_rest` sit frames at `toilet y - 14` units) and the
+    bladder fills over the sitting time. "You don't need to go right now." when nearly full. At 0 an
+    **accident** happens: Hygiene -30, Fun -10, Bladder back to 60, info "Oops... You couldn't hold it."
+  - **Reading** (`bookshelf`, quality = Fun gained over the 5 s: 10 / 18 / 30; community centre
+    shelves are quality 2, a future luxury library should be 3). Sink = wash hands (Hygiene +15,
+    2 s), fountain = Wash face (+35, 2.5 s) or Drink water (Hygiene -6, Energy +3, Bladder -15, 3 s).
+    The player slides to the fountain rim / bin first (`player::approach`).
+  - **Trash bins** (`bin`, every `trash_can()` in the City Centre plus the public toilet bin): "Search
+    the bin", 3.5 s rummaging, random result (`bn::random` mixed with frame timing): 35 % half a
+    sandwich (Hunger +12, Hygiene -12), 20 % $1-3 (Hygiene -5), else "Nothing useful." (Hygiene -5).
+    A bin gives something once per 60 game minutes ("Someone already emptied this bin.";
+    `_bin_emptied[map * 16 + index]`).
+  - Notice board and VaultTech reception show info messages. `tl_menu` scrolls lists of more than 3
+    options and has `open_info()` (up to 3 text lines). Option arrays handed to `tl_menu` must be
+    `static constexpr` (the menu keeps the pointer; a stack array crashed the game).
+  - Activity animations: `player_wash` (32x64, 8 facings x 4) and the new 64x64 sheets `player_eat`,
+    `player_drink`, `player_read`, `player_search` (8 facings x 4 frames, feet at (32, 54), own
+    15-colour palette each, shown as a separate `_act_sprite` while the normal player sprite is
+    hidden). They are rendered by `tools/blender_acts.py`: poses are made procedurally on the
+    Quaternius Male_LongSleeve rig (the Idle pose bent bone by bone, `Rig.rot`) with small prop meshes
+    (bread roll, book with a page flip, water in the hands) placed at the hands; the art cache key
+    hashes only blender_acts.py + colours. Wide frames are needed because the bent poses stick out of
+    32 px. Keep the front-layer mask (`player::mask_area`) 32 px wide: a wider mask makes the game lag.
 - **NPCs** (`tools/npcs.py`, `tl_npcs`): static idle sprites per map, rendered by `blender_actor.py`
   mode `idle` (8 facings, 32x64, feet (16, 54)). Mia (Quaternius Female_Casual, ginger hair, teal
   top) stands behind the Corner Market checkout; her priority follows `map_info::player_hidden` so
@@ -271,9 +305,17 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
   palettes and the player and animal sprite palettes. It applies only to outdoor maps
   (`map_info::outdoor` = `Scene.sun`).
   - Special palette entries per layer (`layer_data`): window glass (objects entries 13-14) blends to
-    warm lit colours at night; lamp glass (15) glows. Water uses floor banks 5-6, entries 12-15,
-    and objects bank 6, entries 10-12 (the fountain). It has a fixed ripple pattern whose colours
-    rotate (palette cycling).
+    warm lit colours at night; lamp glass (15) glows.
+  - **Water** is rendered realistically in Blender (`water_material` in blender_render.py: depth
+    colour ramp, darker mid-river / lighter near the banks via `ymid`/`yhalf`, bump waves stretched
+    along the flow, sky reflection; materials `water` river, `water_pond` murkier green,
+    `water_fountain` clear blue; any material name containing "water" becomes ID class 2) and quantized
+    like normal pixels (calm, no pattern). Only ~1.2 % of the water pixels (`pick_glints` in
+    build_assets.py: bright local maxima, >= 7 px apart, where the local colour is close to the typical
+    water colour) are special: floor banks 6-7 entries 12-14 / objects bank 6 entries 10-11 are sun
+    glint colours and the LAST water entry (15 / 12) is the surrounding water colour. `tl_lighting.cpp`
+    fades every glint entry between its highlight and that base colour with `glint_profile` at
+    different phases (they twinkle), under the day/night transform.
   - At night, `light_pool` sprites (64x32, priority 3, semi-transparent) lie under every lamp in
     `Scene.lamps`. Blending is top 0.55 / bottom 1, so it is additive and the player's shadow
     vanishes. By day the blending is 50 % alpha for the shadow.
@@ -485,11 +527,12 @@ Update the checkboxes at the end of each session.
 - [ ] Map transitions between City Centre and Old Block
 
 1.2 Needs + HUD + clock — IN PROGRESS
-- [x] `needs` struct: Hunger, Energy, Hygiene, Fun (0–100), decaying over time
+- [x] `needs` struct: Hunger, Energy, Hygiene, Fun, Bladder (0–100), decaying over time; timed activities with animations, gradual bars
 - [x] HUD: 4 small bars/icons (sprites or a high-priority second bg layer)
 - [ ] Game clock (day/time); START opens a pause menu with exact values
 - [x] Interact with objects (A + option menu): park bench = sit/sleep, fountain = wash
 - [x] Interactions in the interiors: shops (market, diner), toilet, sink, bookshelf, notice board, reception
+- [x] Eating / drinking / reading / bin searching / toilet with animations and quality levels; trash bins; fountain drink; Bladder need + accident
 - [ ] More interactions with furniture (shower, fridge, cooking, repairing) once homes exist
 - [x] Text: `bn::sprite_text_generator` with a font (see `butano/common`)
 - [ ] Split `main.cpp` into scenes (`tl_scene.h` with an enum, one class per scene with `update()`)
@@ -562,9 +605,8 @@ Update the checkboxes at the end of each session.
 
 **Milestone done (owner: "put everything on main; finish the district now, fine-tuning later"):**
 five enterable buildings, shops, fixtures, Mia, fine collision, fountain with water in the basin.
-**Postponed fine-tuning (do when the owner asks):** water quality (the fountain/pond use the simple
-band-ripple palette cycling; a more realistic water material and a detailed fountain "v2" were
-tried and dropped, see commit 4d2d52f), fountain detail, eye-level street details (commit `c3aaccc`),
+**Postponed fine-tuning (do when the owner asks):** water is now realistic with sparse glints (see
+Day/night lighting; check it on the phone), fountain detail, eye-level street details (commit `c3aaccc`),
 the shabby first home entrance (`home_room`), the player V2 look, and a tree in City Park at
 (4.0, 45.5) that covers the player on the path in front of the toilet. Next big steps: dialogue
 box with portraits + friendship meter, missions, Old Block.

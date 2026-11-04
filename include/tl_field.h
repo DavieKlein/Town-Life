@@ -2,6 +2,8 @@
 #define TL_FIELD_H
 
 #include "bn_vector.h"
+#include "bn_random.h"
+#include "bn_string.h"
 #include "bn_optional.h"
 #include "bn_sprite_ptr.h"
 #include "bn_regular_bg_ptr.h"
@@ -47,6 +49,7 @@ namespace tl
         menu _menu;
         needs _needs;
         bn::vector<bn::sprite_ptr, needs::count> _bar_sprites;
+        int _bar_levels[needs::count] = { -1, -1, -1, -1, -1 };
         bn::vector<bn::sprite_ptr, 4> _zzz_sprites;
         bn::vector<bn::sprite_ptr, 6> _pool_sprites;
         bn::vector<bn::sprite_ptr, 12> _version_sprites;
@@ -76,6 +79,28 @@ namespace tl
         int _minutes = 8 * 60;          // time of day in minutes (prototype clock)
         int _minute_frames = 0;
         int _money = 20;
+        int _total_minutes = 0;         // game minutes since the start (bin cooldowns)
+        bn::random _rng;
+        bool _accident_pending = false;
+        int _bin_emptied[maps_count * 16] = {};      // _total_minutes + 1 when a bin was last searched, 0 = never
+        bn::string<24> _info_line_a;
+        bn::string<24> _info_line_b;
+
+        // The running timed activity: need gains are spread over its frames, bars fill gradually.
+        struct activity_state
+        {
+            bool active = false;
+            int frames = 0;
+            int done = 0;
+            bn::fixed gain[needs::count];       // total change per need
+            bn::fixed applied[needs::count];    // part of it already applied
+            int extra_minutes = 0;              // additional game minutes that pass during it (reading)
+            int extra_done = 0;
+            int money = 0;                      // found at the end (bins)
+            bool message = false;               // show _info_line_a / _info_line_b at the end
+        };
+
+        activity_state _act;
 
         void _load_map(map_id id, int x, int y, direction facing);
         void _update_camera();
@@ -86,8 +111,13 @@ namespace tl
         void _handle_menu_choice(int choice);
         void _open_shop(const interactable& target);
         void _buy(const interactable& target, int choice);
+        void _begin_activity(int frames);
+        void _update_activity();
+        void _tick_minute();
+        void _use_toilet(const interactable& target);
+        void _search_bin(const interactable& target);
+        void _handle_accident();
         void _show_info(const char* title, const char* line_a, const char* line_b, const char* line_c);
-        void _advance_time(int minutes);
         void _update_zzz();
         void _update_lighting(bool force);
         void _update_lamps();

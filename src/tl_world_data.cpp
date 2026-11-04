@@ -44,26 +44,26 @@ namespace tl
 {
 namespace
 {
-    constexpr int city_centre_floor_tiles_count = 12952;
+    constexpr int city_centre_floor_tiles_count = 15165;
     constexpr bn::color city_centre_floor_palette[] = {
-        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(28, 27, 25), bn::color(18, 11, 9), bn::color(9, 7, 7), bn::color(16, 14, 13), bn::color(22, 21, 19), bn::color(21, 12, 9), bn::color(26, 25, 23), bn::color(7, 5, 5), bn::color(11, 8, 7), bn::color(19, 18, 16), bn::color(11, 7, 7), bn::color(11, 19, 8), bn::color(14, 10, 8), bn::color(16, 9, 8),
-        bn::color(0, 0, 0), bn::color(31, 31, 28), bn::color(11, 11, 13), bn::color(24, 23, 22), bn::color(0, 0, 0), bn::color(19, 19, 18), bn::color(16, 16, 16), bn::color(27, 26, 24), bn::color(29, 24, 12), bn::color(25, 20, 11), bn::color(30, 29, 26), bn::color(21, 21, 20), bn::color(6, 6, 7), bn::color(9, 9, 11), bn::color(14, 14, 14), bn::color(31, 31, 31),
-        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(26, 22, 12), bn::color(8, 7, 6), bn::color(17, 15, 11), bn::color(30, 28, 24), bn::color(2, 4, 2), bn::color(10, 6, 6), bn::color(6, 4, 4), bn::color(3, 8, 3), bn::color(7, 5, 6), bn::color(9, 6, 6), bn::color(5, 12, 4), bn::color(14, 10, 8), bn::color(2, 1, 1), bn::color(7, 14, 5),
-        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0),
-        bn::color(0, 0, 0), bn::color(10, 10, 12), bn::color(31, 31, 31), bn::color(9, 9, 11), bn::color(20, 20, 20), bn::color(0, 0, 0), bn::color(11, 12, 13), bn::color(7, 7, 9), bn::color(27, 26, 26), bn::color(6, 14, 5), bn::color(12, 24, 8), bn::color(5, 6, 7), bn::color(10, 19, 7), bn::color(11, 11, 13), bn::color(15, 15, 16), bn::color(13, 13, 14),
-        bn::color(0, 0, 0), bn::color(17, 11, 9), bn::color(17, 10, 8), bn::color(23, 12, 10), bn::color(16, 13, 9), bn::color(16, 15, 8), bn::color(21, 11, 9), bn::color(19, 11, 9), bn::color(19, 12, 10), bn::color(11, 8, 8), bn::color(14, 11, 8), bn::color(22, 21, 20), bn::color(20, 12, 10), bn::color(16, 11, 9), bn::color(14, 9, 8), bn::color(19, 14, 9),
-        bn::color(0, 0, 0), bn::color(22, 21, 19), bn::color(17, 17, 15), bn::color(12, 24, 9), bn::color(31, 30, 27), bn::color(24, 23, 21), bn::color(26, 25, 24), bn::color(20, 19, 17), bn::color(14, 26, 9), bn::color(4, 5, 4), bn::color(13, 14, 14), bn::color(28, 23, 16), bn::color(5, 13, 22), bn::color(7, 14, 23), bn::color(9, 16, 25), bn::color(11, 19, 27),
-        bn::color(0, 0, 0), bn::color(31, 30, 27), bn::color(10, 10, 12), bn::color(31, 27, 6), bn::color(13, 24, 9), bn::color(19, 16, 11), bn::color(11, 11, 13), bn::color(9, 9, 11), bn::color(19, 12, 10), bn::color(30, 23, 7), bn::color(25, 24, 20), bn::color(7, 16, 6), bn::color(5, 13, 22), bn::color(7, 14, 23), bn::color(9, 16, 25), bn::color(11, 19, 27),
+        bn::color(0, 0, 0), bn::color(17, 11, 9), bn::color(30, 29, 26), bn::color(12, 12, 14), bn::color(23, 12, 10), bn::color(22, 22, 20), bn::color(11, 11, 13), bn::color(21, 11, 9), bn::color(17, 14, 9), bn::color(11, 8, 8), bn::color(1, 0, 1), bn::color(19, 11, 9), bn::color(10, 10, 12), bn::color(15, 9, 8), bn::color(6, 14, 5), bn::color(9, 9, 11),
+        bn::color(0, 0, 0), bn::color(28, 27, 24), bn::color(0, 0, 0), bn::color(31, 31, 28), bn::color(30, 29, 26), bn::color(29, 24, 16), bn::color(16, 15, 14), bn::color(23, 22, 20), bn::color(26, 21, 10), bn::color(25, 25, 22), bn::color(29, 29, 26), bn::color(19, 19, 18), bn::color(9, 8, 8), bn::color(29, 24, 12), bn::color(31, 30, 27), bn::color(27, 26, 24),
+        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(10, 10, 10), bn::color(28, 27, 24), bn::color(8, 6, 6), bn::color(16, 15, 14), bn::color(21, 20, 18), bn::color(5, 13, 5), bn::color(29, 28, 25), bn::color(3, 2, 2), bn::color(15, 12, 10), bn::color(15, 9, 8), bn::color(25, 21, 11), bn::color(6, 5, 5), bn::color(18, 17, 15), bn::color(25, 24, 22),
+        bn::color(0, 0, 0), bn::color(20, 20, 18), bn::color(10, 10, 12), bn::color(31, 31, 31), bn::color(31, 26, 6), bn::color(18, 18, 17), bn::color(14, 14, 14), bn::color(22, 21, 20), bn::color(26, 26, 24), bn::color(9, 9, 11), bn::color(24, 23, 22), bn::color(18, 11, 9), bn::color(11, 11, 13), bn::color(16, 18, 13), bn::color(29, 29, 27), bn::color(16, 16, 15),
+        bn::color(0, 0, 0), bn::color(6, 14, 5), bn::color(11, 22, 8), bn::color(28, 23, 16), bn::color(0, 0, 0), bn::color(18, 11, 9), bn::color(15, 18, 12), bn::color(12, 24, 9), bn::color(2, 6, 2), bn::color(21, 19, 15), bn::color(9, 18, 7), bn::color(5, 11, 4), bn::color(12, 13, 11), bn::color(23, 23, 21), bn::color(14, 26, 9), bn::color(16, 15, 12),
+        bn::color(0, 0, 0), bn::color(5, 5, 5), bn::color(22, 21, 20), bn::color(14, 14, 14), bn::color(0, 0, 0), bn::color(11, 11, 13), bn::color(16, 9, 8), bn::color(12, 7, 7), bn::color(18, 18, 17), bn::color(8, 8, 9), bn::color(10, 7, 7), bn::color(10, 10, 12), bn::color(9, 6, 6), bn::color(6, 6, 8), bn::color(19, 11, 8), bn::color(14, 10, 7),
+        bn::color(0, 0, 0), bn::color(7, 15, 20), bn::color(9, 8, 11), bn::color(10, 16, 19), bn::color(8, 15, 20), bn::color(7, 14, 19), bn::color(5, 14, 19), bn::color(9, 16, 21), bn::color(10, 16, 20), bn::color(8, 16, 21), bn::color(8, 11, 16), bn::color(4, 4, 4), bn::color(26, 29, 30), bn::color(30, 31, 31), bn::color(22, 26, 28), bn::color(8, 16, 20),
+        bn::color(0, 0, 0), bn::color(9, 15, 18), bn::color(31, 31, 31), bn::color(22, 22, 21), bn::color(26, 25, 23), bn::color(5, 6, 8), bn::color(12, 17, 15), bn::color(10, 12, 14), bn::color(17, 18, 18), bn::color(15, 15, 16), bn::color(19, 20, 19), bn::color(30, 29, 27), bn::color(26, 29, 30), bn::color(30, 31, 31), bn::color(22, 26, 28), bn::color(8, 16, 20),
     };
-    constexpr int city_centre_objects_tiles_count = 9891;
+    constexpr int city_centre_objects_tiles_count = 9890;
     constexpr bn::color city_centre_objects_palette[] = {
-        bn::color(0, 0, 0), bn::color(11, 22, 9), bn::color(4, 7, 5), bn::color(8, 16, 8), bn::color(25, 21, 17), bn::color(16, 12, 10), bn::color(26, 13, 10), bn::color(7, 12, 7), bn::color(5, 10, 6), bn::color(10, 19, 8), bn::color(7, 14, 7), bn::color(8, 8, 9), bn::color(9, 18, 8), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
-        bn::color(0, 0, 0), bn::color(24, 23, 17), bn::color(16, 15, 13), bn::color(18, 15, 24), bn::color(11, 9, 9), bn::color(31, 31, 29), bn::color(16, 12, 10), bn::color(18, 17, 14), bn::color(23, 19, 30), bn::color(22, 20, 16), bn::color(29, 26, 21), bn::color(13, 12, 11), bn::color(31, 19, 8), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
-        bn::color(0, 0, 0), bn::color(31, 13, 18), bn::color(24, 19, 5), bn::color(14, 12, 6), bn::color(31, 30, 20), bn::color(30, 25, 8), bn::color(26, 13, 11), bn::color(17, 16, 12), bn::color(20, 16, 6), bn::color(11, 9, 6), bn::color(26, 20, 17), bn::color(28, 7, 8), bn::color(17, 14, 7), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
-        bn::color(0, 0, 0), bn::color(12, 9, 8), bn::color(18, 17, 13), bn::color(26, 24, 22), bn::color(13, 10, 9), bn::color(6, 16, 9), bn::color(16, 12, 10), bn::color(16, 13, 22), bn::color(12, 14, 16), bn::color(17, 13, 11), bn::color(17, 12, 4), bn::color(10, 12, 14), bn::color(18, 8, 7), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
-        bn::color(0, 0, 0), bn::color(16, 13, 22), bn::color(31, 31, 31), bn::color(7, 7, 10), bn::color(18, 18, 19), bn::color(7, 23, 12), bn::color(15, 15, 16), bn::color(13, 12, 13), bn::color(26, 26, 25), bn::color(6, 12, 24), bn::color(7, 20, 11), bn::color(10, 9, 14), bn::color(22, 21, 21), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
-        bn::color(0, 0, 0), bn::color(10, 10, 12), bn::color(15, 10, 3), bn::color(23, 15, 7), bn::color(11, 12, 14), bn::color(5, 4, 4), bn::color(14, 14, 16), bn::color(12, 9, 8), bn::color(18, 12, 5), bn::color(28, 25, 12), bn::color(13, 7, 2), bn::color(7, 7, 7), bn::color(10, 8, 8), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
-        bn::color(0, 0, 0), bn::color(9, 12, 9), bn::color(5, 5, 5), bn::color(8, 6, 8), bn::color(31, 30, 27), bn::color(4, 8, 5), bn::color(21, 21, 20), bn::color(16, 16, 16), bn::color(27, 26, 24), bn::color(1, 1, 1), bn::color(4, 11, 19), bn::color(6, 12, 19), bn::color(8, 14, 22), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
+        bn::color(0, 0, 0), bn::color(9, 8, 11), bn::color(18, 18, 19), bn::color(16, 13, 22), bn::color(31, 31, 31), bn::color(26, 25, 26), bn::color(15, 15, 16), bn::color(6, 12, 24), bn::color(7, 6, 9), bn::color(11, 9, 14), bn::color(13, 12, 14), bn::color(13, 12, 4), bn::color(22, 21, 22), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
+        bn::color(0, 0, 0), bn::color(17, 14, 7), bn::color(24, 20, 5), bn::color(14, 12, 5), bn::color(31, 28, 12), bn::color(14, 13, 12), bn::color(26, 6, 7), bn::color(12, 9, 8), bn::color(27, 13, 13), bn::color(21, 17, 6), bn::color(24, 21, 16), bn::color(18, 17, 13), bn::color(19, 15, 6), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
+        bn::color(0, 0, 0), bn::color(4, 4, 4), bn::color(16, 15, 12), bn::color(12, 9, 9), bn::color(4, 8, 4), bn::color(10, 6, 2), bn::color(15, 9, 2), bn::color(9, 7, 9), bn::color(6, 13, 7), bn::color(13, 8, 2), bn::color(1, 1, 1), bn::color(13, 10, 9), bn::color(7, 6, 8), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
+        bn::color(0, 0, 0), bn::color(5, 10, 5), bn::color(11, 21, 9), bn::color(27, 13, 9), bn::color(28, 27, 24), bn::color(8, 16, 8), bn::color(18, 17, 14), bn::color(9, 18, 8), bn::color(10, 10, 9), bn::color(7, 7, 7), bn::color(19, 11, 8), bn::color(7, 13, 7), bn::color(25, 21, 17), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
+        bn::color(0, 0, 0), bn::color(10, 11, 13), bn::color(12, 14, 16), bn::color(5, 4, 4), bn::color(23, 15, 6), bn::color(18, 16, 13), bn::color(13, 10, 7), bn::color(17, 12, 4), bn::color(17, 13, 11), bn::color(17, 8, 7), bn::color(25, 24, 18), bn::color(10, 8, 7), bn::color(16, 12, 10), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
+        bn::color(0, 0, 0), bn::color(24, 23, 18), bn::color(14, 13, 12), bn::color(12, 11, 10), bn::color(31, 31, 29), bn::color(21, 19, 15), bn::color(29, 19, 14), bn::color(18, 17, 14), bn::color(29, 26, 22), bn::color(17, 15, 12), bn::color(26, 13, 10), bn::color(23, 19, 30), bn::color(23, 21, 16), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
+        bn::color(0, 0, 0), bn::color(11, 22, 31), bn::color(31, 31, 31), bn::color(17, 16, 21), bn::color(10, 17, 21), bn::color(23, 19, 30), bn::color(7, 22, 12), bn::color(23, 23, 22), bn::color(9, 12, 15), bn::color(5, 7, 9), bn::color(26, 29, 30), bn::color(30, 31, 31), bn::color(10, 20, 28), bn::color(9, 13, 20), bn::color(12, 19, 28), bn::color(30, 29, 29),
     };
     constexpr uint8_t city_centre_solid[] = {
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -409,13 +409,18 @@ namespace
         { critter_kind::squirrel, 104, 720, 64, 728 },
     };
     constexpr interactable city_centre_interactables[] = {
-        { interactable_kind::bench, 116, 630, 0 },
-        { interactable_kind::bench, 244, 630, 0 },
-        { interactable_kind::bench, 772, 608, 0 },
-        { interactable_kind::bench, 923, 608, 0 },
-        { interactable_kind::bench, 772, 720, 0 },
-        { interactable_kind::bench, 923, 720, 0 },
-        { interactable_kind::fountain, 848, 656, 35 },
+        { interactable_kind::bench, 116, 630, 0, 0 },
+        { interactable_kind::bench, 244, 630, 0, 0 },
+        { interactable_kind::bench, 772, 608, 0, 0 },
+        { interactable_kind::bench, 923, 608, 0, 0 },
+        { interactable_kind::bench, 772, 720, 0, 0 },
+        { interactable_kind::bench, 923, 720, 0, 0 },
+        { interactable_kind::fountain, 848, 656, 35, 0 },
+        { interactable_kind::bin, 80, 337, 0, 0 },
+        { interactable_kind::bin, 272, 337, 0, 0 },
+        { interactable_kind::bin, 848, 337, 0, 0 },
+        { interactable_kind::bin, 1088, 337, 0, 0 },
+        { interactable_kind::bin, 616, 496, 0, 0 },
     };
     constexpr lamp city_centre_lamps[] = {
         { 48, 360 },
@@ -547,9 +552,9 @@ namespace
     };
 
     constexpr interactable corner_market_interactables[] = {
-        { interactable_kind::shop_market, 195, 240, 0 },
-        { interactable_kind::shop_market, 222, 240, 0 },
-        { interactable_kind::shop_market, 243, 240, 0 },
+        { interactable_kind::shop_market, 195, 240, 0, 0 },
+        { interactable_kind::shop_market, 222, 240, 0, 0 },
+        { interactable_kind::shop_market, 243, 240, 0, 0 },
     };
     constexpr npc_spawn corner_market_npcs[] = {
         { npc_kind::mia, 222, 214, 1 },
@@ -654,9 +659,9 @@ namespace
     };
 
     constexpr interactable diner_interactables[] = {
-        { interactable_kind::shop_diner, 104, 72, 0 },
-        { interactable_kind::shop_diner, 140, 72, 0 },
-        { interactable_kind::shop_diner, 176, 72, 0 },
+        { interactable_kind::shop_diner, 104, 72, 0, 0 },
+        { interactable_kind::shop_diner, 140, 72, 0, 0 },
+        { interactable_kind::shop_diner, 176, 72, 0, 0 },
     };
     constexpr int community_centre_floor_tiles_count = 973;
     constexpr bn::color community_centre_floor_palette[] = {
@@ -770,12 +775,12 @@ namespace
     };
 
     constexpr interactable community_centre_interactables[] = {
-        { interactable_kind::bookshelf, 40, 16, 0 },
-        { interactable_kind::bookshelf, 75, 16, 0 },
-        { interactable_kind::bookshelf, 110, 16, 0 },
-        { interactable_kind::bookshelf, 16, 64, 0 },
-        { interactable_kind::bookshelf, 16, 104, 0 },
-        { interactable_kind::noticeboard, 171, 16, 0 },
+        { interactable_kind::bookshelf, 40, 16, 0, 2 },
+        { interactable_kind::bookshelf, 75, 16, 0, 2 },
+        { interactable_kind::bookshelf, 110, 16, 0, 2 },
+        { interactable_kind::bookshelf, 16, 64, 0, 2 },
+        { interactable_kind::bookshelf, 16, 104, 0, 2 },
+        { interactable_kind::noticeboard, 171, 16, 0, 0 },
     };
     constexpr int vaulttech_lobby_floor_tiles_count = 1190;
     constexpr bn::color vaulttech_lobby_floor_palette[] = {
@@ -788,15 +793,15 @@ namespace
         bn::color(0, 0, 0), bn::color(8, 9, 11), bn::color(6, 7, 8), bn::color(15, 15, 17), bn::color(0, 0, 0), bn::color(3, 4, 5), bn::color(10, 10, 12), bn::color(6, 6, 8), bn::color(8, 8, 10), bn::color(1, 1, 2), bn::color(9, 9, 11), bn::color(7, 7, 9), bn::color(4, 5, 6), bn::color(3, 3, 4), bn::color(7, 8, 10), bn::color(5, 5, 7),
         bn::color(0, 0, 0), bn::color(10, 8, 7), bn::color(0, 0, 0), bn::color(19, 20, 23), bn::color(9, 9, 12), bn::color(9, 7, 10), bn::color(2, 2, 3), bn::color(10, 8, 8), bn::color(9, 7, 6), bn::color(15, 16, 18), bn::color(5, 5, 6), bn::color(10, 11, 13), bn::color(23, 25, 28), bn::color(8, 7, 8), bn::color(9, 8, 11), bn::color(12, 13, 15),
     };
-    constexpr int vaulttech_lobby_objects_tiles_count = 1215;
+    constexpr int vaulttech_lobby_objects_tiles_count = 1211;
     constexpr bn::color vaulttech_lobby_objects_palette[] = {
-        bn::color(0, 0, 0), bn::color(6, 6, 7), bn::color(31, 31, 21), bn::color(20, 22, 25), bn::color(9, 20, 12), bn::color(13, 13, 15), bn::color(25, 21, 10), bn::color(31, 28, 14), bn::color(9, 8, 7), bn::color(20, 16, 7), bn::color(12, 9, 7), bn::color(16, 12, 7), bn::color(6, 5, 5), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(21, 17, 6), bn::color(31, 31, 31), bn::color(16, 15, 15), bn::color(13, 11, 8), bn::color(30, 24, 7), bn::color(17, 31, 31), bn::color(27, 28, 29), bn::color(18, 14, 7), bn::color(19, 19, 20), bn::color(31, 30, 11), bn::color(24, 24, 23), bn::color(25, 20, 6), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(21, 20, 19), bn::color(30, 31, 31), bn::color(27, 30, 31), bn::color(28, 28, 28), bn::color(29, 31, 31), bn::color(23, 22, 20), bn::color(27, 26, 21), bn::color(18, 18, 18), bn::color(26, 26, 27), bn::color(16, 16, 17), bn::color(24, 24, 25), bn::color(31, 31, 31), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(5, 5, 6), bn::color(18, 31, 27), bn::color(9, 17, 30), bn::color(11, 14, 15), bn::color(8, 19, 12), bn::color(13, 29, 18), bn::color(9, 23, 14), bn::color(8, 8, 9), bn::color(19, 20, 23), bn::color(10, 11, 12), bn::color(16, 17, 17), bn::color(11, 26, 15), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(26, 28, 31), bn::color(16, 17, 20), bn::color(31, 31, 31), bn::color(27, 30, 31), bn::color(24, 26, 29), bn::color(23, 24, 26), bn::color(27, 28, 28), bn::color(12, 12, 14), bn::color(18, 20, 22), bn::color(14, 15, 17), bn::color(20, 22, 25), bn::color(20, 20, 20), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(9, 7, 7), bn::color(2, 2, 2), bn::color(24, 25, 27), bn::color(15, 16, 18), bn::color(12, 12, 15), bn::color(5, 5, 6), bn::color(14, 10, 6), bn::color(10, 10, 12), bn::color(17, 12, 5), bn::color(22, 17, 5), bn::color(19, 20, 23), bn::color(7, 6, 8), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(30, 31, 31), bn::color(8, 7, 8), bn::color(31, 29, 11), bn::color(27, 29, 31), bn::color(17, 17, 19), bn::color(19, 20, 23), bn::color(23, 19, 7), bn::color(24, 26, 29), bn::color(12, 11, 9), bn::color(17, 14, 7), bn::color(22, 23, 26), bn::color(15, 14, 15), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(10, 8, 7), bn::color(23, 19, 10), bn::color(21, 23, 26), bn::color(12, 10, 7), bn::color(9, 21, 12), bn::color(13, 13, 14), bn::color(29, 25, 13), bn::color(31, 31, 22), bn::color(6, 6, 7), bn::color(17, 19, 22), bn::color(31, 30, 14), bn::color(18, 14, 7), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(11, 10, 11), bn::color(31, 31, 31), bn::color(17, 17, 17), bn::color(15, 12, 7), bn::color(29, 23, 5), bn::color(17, 31, 31), bn::color(24, 26, 28), bn::color(20, 15, 5), bn::color(27, 26, 21), bn::color(27, 29, 31), bn::color(21, 21, 21), bn::color(11, 22, 27), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(18, 18, 18), bn::color(31, 31, 31), bn::color(24, 25, 25), bn::color(29, 30, 29), bn::color(21, 20, 19), bn::color(23, 22, 20), bn::color(31, 31, 30), bn::color(28, 30, 31), bn::color(29, 31, 31), bn::color(16, 16, 17), bn::color(31, 31, 31), bn::color(28, 28, 28), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(11, 27, 16), bn::color(6, 5, 6), bn::color(9, 17, 31), bn::color(18, 31, 24), bn::color(8, 18, 12), bn::color(10, 24, 14), bn::color(12, 11, 6), bn::color(8, 8, 10), bn::color(9, 12, 15), bn::color(13, 30, 18), bn::color(14, 16, 15), bn::color(9, 22, 13), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(27, 26, 21), bn::color(12, 11, 14), bn::color(31, 31, 31), bn::color(21, 22, 25), bn::color(17, 18, 20), bn::color(23, 24, 26), bn::color(19, 20, 22), bn::color(15, 15, 17), bn::color(26, 27, 28), bn::color(24, 26, 29), bn::color(28, 30, 31), bn::color(26, 28, 31), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(5, 5, 6), bn::color(23, 24, 26), bn::color(13, 10, 6), bn::color(12, 12, 15), bn::color(9, 8, 9), bn::color(15, 16, 19), bn::color(19, 15, 5), bn::color(2, 2, 3), bn::color(9, 6, 4), bn::color(6, 6, 8), bn::color(10, 10, 12), bn::color(18, 19, 22), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(7, 7, 8), bn::color(30, 31, 31), bn::color(28, 23, 8), bn::color(23, 24, 26), bn::color(16, 16, 17), bn::color(22, 18, 6), bn::color(11, 9, 9), bn::color(14, 11, 9), bn::color(26, 28, 30), bn::color(18, 14, 7), bn::color(31, 30, 12), bn::color(20, 21, 22), bn::color(11, 19, 28), bn::color(24, 31, 31), bn::color(31, 30, 25),
     };
     constexpr uint8_t vaulttech_lobby_solid[] = {
         0,0,0,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -887,9 +892,9 @@ namespace
     };
 
     constexpr interactable vaulttech_lobby_interactables[] = {
-        { interactable_kind::reception, 115, 88, 0 },
-        { interactable_kind::reception, 144, 88, 0 },
-        { interactable_kind::reception, 172, 88, 0 },
+        { interactable_kind::reception, 115, 88, 0, 0 },
+        { interactable_kind::reception, 144, 88, 0, 0 },
+        { interactable_kind::reception, 172, 88, 0, 0 },
     };
     constexpr int public_toilet_floor_tiles_count = 181;
     constexpr bn::color public_toilet_floor_palette[] = {
@@ -951,8 +956,9 @@ namespace
     };
 
     constexpr interactable public_toilet_interactables[] = {
-        { interactable_kind::toilet, 19, 24, 0 },
-        { interactable_kind::sink, 16, 54, 0 },
+        { interactable_kind::toilet, 19, 24, 0, 1 },
+        { interactable_kind::sink, 16, 54, 0, 0 },
+        { interactable_kind::bin, 15, 74, 0, 0 },
     };
 }
 

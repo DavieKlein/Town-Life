@@ -5,7 +5,11 @@ Blender re-render). Positions in cells. The player must stand within reach of th
 
   ("bench", seat_x, seat_y)       a bench along x with its backrest towards -y; you sit facing +y
                                    (screen down-left). Options: Sit, Sleep.
-  ("fountain", centre_x, centre_y, radius)   Options: Wash face.
+  ("fountain", centre_x, centre_y, radius)   Options: Wash face, Drink water.
+  ("bin", x, y)                   trash can: Search the bin (random find, once per game hour per bin).
+
+Optional 5th element = quality 1..3 (activities: toilet = speed of emptying the bladder, bookshelf =
+how fast Fun fills); the 4th element (radius) is 0 for everything but the fountain.
   ("shop_market", x, y)           Corner Market checkout: shop menu (Bread, Apple, Ready meal, Soda).
   ("shop_diner", x, y)            diner counter: Coffee, Pancakes, Burger.
   ("toilet", x, y)                Use toilet.
@@ -22,6 +26,8 @@ INTERACTABLES = {
         # fountain square
         ("bench", 48.3, 38.0), ("bench", 57.7, 38.0), ("bench", 48.3, 45.0), ("bench", 57.7, 45.0),
         ("fountain", 53.0, 41.0, 2.2),
+        # trash cans along the avenue (scene.py city_centre)
+        ("bin", 5.0, 21.1), ("bin", 17.0, 21.1), ("bin", 53.0, 21.1), ("bin", 68.0, 21.1), ("bin", 38.5, 31.0),
     ],
     "corner_market": [
         ("shop_market", 12.2, 15.0), ("shop_market", 13.9, 15.0), ("shop_market", 15.2, 15.0),
@@ -30,14 +36,14 @@ INTERACTABLES = {
         ("shop_diner", 6.5, 4.5), ("shop_diner", 8.8, 4.5), ("shop_diner", 11.0, 4.5),
     ],
     "community_centre": [
-        ("bookshelf", 2.5, 1.0), ("bookshelf", 4.7, 1.0), ("bookshelf", 6.9, 1.0),
-        ("bookshelf", 1.0, 4.0), ("bookshelf", 1.0, 6.5),
+        ("bookshelf", 2.5, 1.0, 0, 2), ("bookshelf", 4.7, 1.0, 0, 2), ("bookshelf", 6.9, 1.0, 0, 2),
+        ("bookshelf", 1.0, 4.0, 0, 2), ("bookshelf", 1.0, 6.5, 0, 2),
         ("noticeboard", 10.7, 1.0),
     ],
     "vaulttech_lobby": [
         ("reception", 7.2, 5.5), ("reception", 9.0, 5.5), ("reception", 10.8, 5.5),
     ],
     "public_toilet": [
-        ("toilet", 1.2, 1.5), ("sink", 1.0, 3.4),
+        ("toilet", 1.2, 1.5, 0, 1), ("sink", 1.0, 3.4), ("bin", 0.95, 4.65),
     ],
 }

@@ -45,8 +45,15 @@ namespace tl
                              clamp31(mix(a.blue(), b.blue(), t, 256)));
         }
 
-        // Ripple shades rotate through the water entries.
+        // Water glints: every glint entry fades between its highlight colour and the surrounding water
+        // colour (the last water entry) following this profile (0..8), one step per water_frames_per_step
+        // frames. The entries run at different phases, so the sparkles twinkle one after the other.
         constexpr int water_frames_per_step = 10;
+        constexpr int glint_period = 24;
+        constexpr int8_t glint_profile[glint_period] = {
+            0, 0, 0, 0, 0, 0, 0, 1, 2, 4, 6, 8, 8, 6, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0
+        };
+        constexpr int glint_phase_offset = 7;
 
         // Lit window glass (dark, bright) and lamp glass at night.
         constexpr bn::color lit_glass[2] = { bn::color(28, 21, 9), bn::color(31, 28, 17) };
@@ -144,12 +151,15 @@ namespace tl
 
             if(layer.water_count && (layer.water_banks & (1 << bank)))
             {
-                int n = layer.water_count;
+                int glints = layer.water_count - 1;
+                bn::color base = light_colour(source[layer.water_first + glints], params);
+                target[layer.water_first + glints] = base;
 
-                for(int index = 0; index < n; ++index)
+                for(int index = 0; index < glints; ++index)
                 {
-                    int from = layer.water_first + ((index + step) % n);
-                    target[layer.water_first + index] = light_colour(source[from], params);
+                    int phase = (step + (index * glint_phase_offset)) % glint_period;
+                    bn::color highlight = light_colour(source[layer.water_first + index], params);
+                    target[layer.water_first + index] = mix_colour(base, highlight, glint_profile[phase] * 32);
                 }
             }
         }

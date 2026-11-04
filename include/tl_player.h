@@ -4,6 +4,7 @@
 #include "bn_fixed.h"
 #include "bn_optional.h"
 #include "bn_sprite_ptr.h"
+#include "bn_sprite_item.h"
 
 #include "tl_world.h"
 #include "tl_lighting.h"
@@ -19,7 +20,16 @@ namespace tl
             walking,
             sitting,    // on a bench
             sleeping,   // lying on a bench
-            washing     // at the fountain
+            acting      // a timed activity with its own animation (see action_kind)
+        };
+
+        enum class action_kind
+        {
+            wash,       // hands at the sink, face at the fountain
+            eat,
+            drink,      // scooping water with both hands
+            read,
+            search      // rummaging through a trash bin
         };
 
         player();
@@ -27,17 +37,24 @@ namespace tl
         // Interactions (positions in world units).
         void sit_on(int seat_x, int seat_y);
         void sleep_on(int seat_x, int seat_y);
-        void start_washing(int target_x, int target_y);
+        void sit_for(int seat_x, int seat_y, int frames);     // sits on a toilet, stands up after `frames`
+
+        // Plays an animation for `frames` frames, turned towards (target_x, target_y) (or keeping the facing
+        // when the target is the player's own position).
+        void start_action(action_kind kind, int target_x, int target_y, int frames);
+
+        // Slides the player (if free) to `distance` units from a point, on the line through the player.
+        void approach(int target_x, int target_y, int distance);
 
         [[nodiscard]] activity current_activity() const
         {
             return _activity;
         }
 
-        // True during the frame a washing animation finishes.
-        [[nodiscard]] bool washing_finished() const
+        // True during the frame a timed activity (action or toilet) ends by itself.
+        [[nodiscard]] bool action_finished() const
         {
-            return _washing_finished;
+            return _action_finished;
         }
 
         [[nodiscard]] int facing_index() const
@@ -97,12 +114,19 @@ namespace tl
         bn::sprite_ptr _shadow;
         bn::sprite_ptr _sprite;
         bn::optional<bn::sprite_ptr> _rest_sprite;     // 64x64 sitting / sleeping sprite
+        bn::optional<bn::sprite_ptr> _act_sprite;      // eat / drink / read / search / wash animation
+        const bn::sprite_item* _act_item = nullptr;
+        action_kind _act_kind = action_kind::wash;
+        int _act_frames = 0;                           // duration of the current action
+        int _last_cam_x = 0;
+        int _last_cam_y = 0;
+        int _sit_frames = 0;                           // > 0: auto stand up (toilet)
         activity _activity = activity::walking;
         int _activity_timer = 0;
         light_params _light;
         int _seat_x = 0;
         int _seat_y = 0;
-        bool _washing_finished = false;
+        bool _action_finished = false;
         const map_info* _map = nullptr;
         bn::fixed _x;
         bn::fixed _y;

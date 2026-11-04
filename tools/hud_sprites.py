@@ -131,6 +131,26 @@ ICONS = {
 }
 
 
+ICONS["bladder"] = [
+    "................",
+    "...##########...",
+    "...#........#...",
+    "...##########...",
+    "....########....",
+    "....########....",
+    "..############..",
+    "..############..",
+    "..#..........#..",
+    "...#........#...",
+    "....#......#....",
+    ".....######.....",
+    "......####......",
+    "......####......",
+    ".....######.....",
+    "................",
+]
+
+
 def build_hud():
     cv = Canvas(256, 256)
     top = 176
@@ -139,22 +159,22 @@ def build_hud():
     panel_d = (24, 28, 56)
     cv.rect(8, top, 240, 32, panel_d)
     # clock / money panel
-    cv.rect(10, top + 2, 66, 28, panel)
-    cv.rect(10, top + 2, 66, 1, panel_l)
-    cv.rect(14, top + 15, 58, 1, panel_l)
-    # need slots
-    names = ["hunger", "energy", "hygiene", "fun"]
+    cv.rect(10, top + 2, 50, 28, panel)
+    cv.rect(10, top + 2, 50, 1, panel_l)
+    cv.rect(14, top + 15, 42, 1, panel_l)
+    # need slots: 5 x 35 px, pitch 37 (see NEED_SLOT_X / need bar placement in tl_field.cpp)
+    names = ["hunger", "energy", "hygiene", "fun", "bladder"]
     for i, n in enumerate(names):
-        x = 80 + i * 42
-        cv.rect(x, top + 2, 40, 28, panel)
-        cv.rect(x, top + 2, 40, 1, panel_l)
+        x = 62 + i * 37
+        cv.rect(x, top + 2, 35, 28, panel)
+        cv.rect(x, top + 2, 35, 1, panel_l)
         for yy, row in enumerate(ICONS[n]):
             for xx, ch in enumerate(row):
                 if ch == "#":
-                    cv.set(x + 12 + xx + 1, top + 3 + yy + 1, panel_d)
-                    cv.set(x + 12 + xx, top + 3 + yy, WHITE)
+                    cv.set(x + 10 + xx + 1, top + 3 + yy + 1, panel_d)
+                    cv.set(x + 10 + xx, top + 3 + yy, WHITE)
         # bar background; the fill is a sprite (graphics/need_bar.bmp) updated by the game
-        cv.rect(x + 4, top + 22, 32, 5, (16, 16, 24))
+        cv.rect(x + 1, top + 22, 32, 5, (16, 16, 24))
     return cv
 
 

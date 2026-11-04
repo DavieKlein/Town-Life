@@ -153,17 +153,71 @@ def kmeans(points, k, weights=None, iters=12, seed=1):
 
 # Special palette entries (same positions in every map; the game animates / relights them):
 #   class 1 window glass -> 2 entries (dark, bright), lit at night
-#   class 2 water        -> N entries with a ripple pattern, cycled (palette cycling)
+#   class 2 water glints -> N entries: N-1 highlight colours that twinkle (the game fades each one between its
+#                           highlight and the last entry = the surrounding water colour, at different phases).
+#                           Only ~1 % of the water pixels are glints; the rest of the water keeps its rendered
+#                           colours (quantized like every other pixel).
 #   class 3 lamp glass   -> 1 entry, bright at night
 FLOOR_WATER_BANKS = (6, 7)          # floor banks that hold water (entries 12..15)
 FLOOR_WATER_FIRST = 12
-FLOOR_WATER_COUNT = 4
+FLOOR_WATER_COUNT = 4               # 3 glint entries + 1 base colour
 OBJ_GLASS_FIRST = 13                # objects: glass 13, 14 and lamp 15 in every bank
 OBJ_LAMP_INDEX = 15
 OBJ_WATER_BANKS = (6,)              # objects banks with water (fountain), entries 10..12
 OBJ_WATER_FIRST = 10
-OBJ_WATER_COUNT = 3
-WATER_TINTS = np.array([[-16, -12, -6], [0, 0, 0], [14, 16, 20], [34, 38, 36]], dtype=np.float64)
+OBJ_WATER_COUNT = 3                 # 2 glint entries + 1 base colour
+GLINT_COLOURS = np.array([[205, 230, 240], [240, 248, 252], [172, 208, 228]], dtype=np.float64)
+GLINT_DENSITY = 0.012               # fraction of the water pixels that become glints
+GLINT_SPACING = 7                   # minimum distance (px) between two glints
+
+
+def box_blur(a, r):
+    """Mean over a (2r+1)^2 window (edges replicate)."""
+    p = np.pad(a, ((r, r), (r, r)) + ((0, 0),) * (a.ndim - 2), mode="edge")
+    c = np.cumsum(np.cumsum(p, 0), 1)
+    c = np.pad(c, ((1, 0), (1, 0)) + ((0, 0),) * (a.ndim - 2))
+    n = 2 * r + 1
+    return (c[n:, n:] - c[:-n, n:] - c[n:, :-n] + c[:-n, :-n]) / (n * n)
+
+
+def pick_glints(rgb, water):
+    """Deterministic sparse sun glints on the water: bright local maxima, spread out, only where the local
+    water colour is close to the layer's typical water colour (so the twinkle fades into its surroundings).
+    Returns (glint mask, base colour)."""
+    h, w = water.shape
+    wf = water.astype(np.float64)
+    sums = box_blur(rgb * wf[..., None], 4)
+    cnt = box_blur(wf, 4)
+    surround = sums / np.maximum(cnt, 1e-6)[..., None]
+    base = np.median(surround[water], axis=0)
+    luma = rgb @ np.array([0.3, 0.59, 0.11])
+    # brightness relative to the surroundings, plus a deterministic hash so the choice is not clustered
+    rel = luma - surround @ np.array([0.3, 0.59, 0.11])
+    yy, xx = np.mgrid[0:h, 0:w]
+    hsh = ((xx * 73856093) ^ (yy * 19349663)) & 1023
+    score = rel + hsh / 1023.0 * 4.0
+    close = ((surround - base) ** 2).sum(2) < 28.0 ** 2
+    cand = water & close
+    target = int(water.sum() * GLINT_DENSITY)
+    glints = np.zeros_like(water)
+    if target == 0 or not cand.any():
+        return glints, base
+    order = np.argsort(-np.where(cand, score, -1e9), axis=None)[:target * 6]
+    taken = np.zeros((h // GLINT_SPACING + 2, w // GLINT_SPACING + 2), dtype=bool)
+    count = 0
+    for flat in order:
+        y, x = divmod(int(flat), w)
+        if not cand[y, x]:
+            break
+        gy, gx = y // GLINT_SPACING, x // GLINT_SPACING
+        if taken[gy:gy + 1, gx:gx + 1].any():
+            continue
+        taken[gy, gx] = True
+        glints[y, x] = True
+        count += 1
+        if count >= target:
+            break
+    return glints, base
 
 
 def special_layout(layer, present, banks):
@@ -190,13 +244,6 @@ def special_layout(layer, present, banks):
     return layout, info
 
 
-def water_pattern(x, y, n):
-    """Diagonal ripple bands, periodic every 16x8 pixels (2 tiles) so water tiles deduplicate."""
-    wobble = np.round(np.sin(x * (2 * np.pi / 16)) * 2).astype(np.int64)
-    band = (x + 2 * y + wobble) // 4
-    return band % n
-
-
 def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
     """img: RGBA PIL image (dims multiple of 8); cls_img: per pixel material class (or None).
     Returns (palettes[banks][16] rgb, cells, tiles, info)."""
@@ -208,6 +255,12 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
     if cls_img is None:
         cls_img = np.zeros((h, w), dtype=np.uint8)
     cls_img = np.where(opaque, cls_img, 0).astype(np.uint8)
+    water_base = None
+    water_orig = cls_img == 2
+    if (cls_img == 2).any():
+        # water keeps its rendered colours; only a sparse set of glint pixels stays class 2
+        glints, water_base = pick_glints(rgb, cls_img == 2)
+        cls_img = np.where((cls_img == 2) & ~glints, 0, cls_img).astype(np.uint8)
     present = set(int(c) for c in np.unique(cls_img)) - {0}
     layout, info = special_layout(layer, present, banks)
     # classes without reserved entries in this layer are treated as normal colours
@@ -229,7 +282,11 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
     used = np.where(tiles_op.any(1))[0]
 
     normal_count = [15 - sum(len(v) for v in layout[b].values()) for b in range(banks)]
-    needs = [frozenset(int(c) for c in np.unique(tiles_cls[t][tiles_op[t]]) if c) for t in used]
+    tiles_wcount = tiled(water_orig & opaque).sum(1)
+    # tiles that are mostly water go to the water banks (the ones with glint entries) so the other banks keep
+    # their colours for everything else
+    needs = [frozenset(int(c) for c in np.unique(tiles_cls[t][tiles_op[t]]) if c) |
+             (frozenset([2]) if tiles_wcount[t] >= 8 and 2 in reserved else frozenset()) for t in used]
     allowed = np.ones((len(used), banks), dtype=bool)
     for i, nd in enumerate(needs):
         if nd:
@@ -250,8 +307,7 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
         special_cols[3] = to5(px.mean(0)[None] if len(px) else np.array([[255, 240, 200]])) * WEIGHT
     if 2 in reserved:
         n = info["water_count"]
-        base = rgb[cls_img == 2].mean(0)
-        special_cols[2] = to5(np.clip(base[None] + WATER_TINTS[:n], 0, 255)) * WEIGHT
+        special_cols[2] = to5(np.concatenate([GLINT_COLOURS[:n - 1], water_base[None]])) * WEIGHT
 
     # initial bank assignment: k-means on tile mean colour + spread (normal pixels)
     feats = []
@@ -263,7 +319,18 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
         wts.append(len(px))
     feats = np.array(feats)
     wts = np.array(wts, dtype=np.float64)
-    centers = kmeans(feats, banks, wts, iters=15)
+    water_b = [b for b in range(banks) if 2 in layout[b]]
+    wt = np.array([2 in nd for nd in needs])
+    if water_b and wt.any() and (~wt).any():
+        other_b = [b for b in range(banks) if b not in water_b]
+        centers = np.zeros((banks, feats.shape[1]))
+        for bl, sel in ((other_b, ~wt), (water_b, wt)):
+            c = kmeans(feats[sel], len(bl), wts[sel], iters=15)
+            if len(c) < len(bl):
+                c = np.concatenate([c, np.repeat(c[-1:], len(bl) - len(c), 0)])
+            centers[bl] = c
+    else:
+        centers = kmeans(feats, banks, wts, iters=15)
     dist = ((feats[:, None, :] - centers[None]) ** 2).sum(2)
     dist[~allowed] = np.inf
     assign = dist.argmin(1)
@@ -313,7 +380,7 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
                 if not m.any():
                     continue
                 if c == 2:
-                    pat = water_pattern(tiles_x[chunk], tiles_y[chunk], len(entries))
+                    pat = ((tiles_x[chunk] * 7) + (tiles_y[chunk] * 13)) % (len(entries) - 1)
                     idx[m] = (entries[0] + pat[m]).astype(np.uint8)
                 else:
                     sc_ = special_cols[c]
@@ -567,8 +634,9 @@ def main():
             out.append(f"    constexpr interactable {s.ident}_interactables[] = {{")
             for t in things:
                 radius = t[3] if len(t) > 3 else 0
+                quality = t[4] if len(t) > 4 else 0
                 out.append(f"        {{ interactable_kind::{t[0]}, {int(t[1] * 16)}, {int(t[2] * 16)}, "
-                           f"{int(radius * 16)} }},")
+                           f"{int(radius * 16)}, {quality} }},")
             out.append("    };")
         interact_entry = (f"{s.ident}_interactables, int(sizeof({s.ident}_interactables) / sizeof(interactable))"
                           if things else "nullptr, 0")
@@ -626,6 +694,7 @@ def main():
 
     build_player(force, fast)
     build_player_actions(force, fast)
+    build_player_acts(force, fast)
     build_critters(force, fast)
     build_npcs(force, fast)
     build_ui_sprites()
@@ -716,6 +785,34 @@ def build_player_actions(force, fast):
     frames = [sprite_frame(os.path.join(out_dir, f"wash_{f}_{i}.png"), ss, FRAME_W, FRAME_H)
               for f in FACINGS for i in range(4)]
     write_sprite_sheet("player_wash", frames, FRAME_W, FRAME_H)
+
+
+ACT_SHEETS = ("eat", "drink", "read", "search")
+
+
+def build_player_acts(force, fast):
+    """Activity poses (eat, drink, read, search a bin): 64x64 frames, 8 facings x 4, one palette per sheet."""
+    import json
+    ss, samples = (2, 16) if fast else (4, 48)
+    colours = json.dumps(PLAYER_COLOURS)
+    fbx = os.path.join(ROOT, "art_source", "quaternius_characters", PLAYER_MODEL + ".fbx")
+    h = hashlib.sha1()
+    h.update(open(os.path.join(TOOLS, "blender_acts.py"), "rb").read())
+    h.update(f"acts{ss}{samples}{colours}{PLAYER_MODEL}".encode())
+    out_dir = os.path.join(CACHE, "player_acts_" + h.hexdigest()[:12])
+    last = os.path.join(out_dir, "search_se_3.png")
+    if force or not os.path.exists(last):
+        print("rendering player activity poses...", flush=True)
+        r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_acts.py"),
+                            "--", fbx, out_dir, str(ss), str(samples), colours],
+                           capture_output=True, text=True)
+        if not os.path.exists(last):
+            print(r.stdout[-3000:], r.stderr[-3000:])
+            raise RuntimeError("player activity render failed")
+    for act in ACT_SHEETS:
+        frames = [sprite_frame(os.path.join(out_dir, f"{act}_{f}_{i}.png"), ss, 64, 64)
+                  for f in FACINGS for i in range(4)]
+        write_sprite_sheet("player_" + act, frames, 64, 64)
 
 
 def build_critters(force, fast):

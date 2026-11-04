@@ -153,6 +153,72 @@ def grit_material(nt, bsdf, coords, kind, spec):
     L.new(col, bsdf.inputs["Base Color"])
 
 
+def water_material(nt, bsdf, spec):
+    """Calm, realistic water seen from above: a dark colour that is lighter near the banks (y distance from the
+    river's middle line, or slow noise for ponds), long soft waves as a bump map (stretched along x = the flow)
+    and a glossy sky reflection that the bump breaks up into soft highlights and sun glints."""
+    coords = surface_coords(nt)
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (spec.get("stretch", 0.45), 1.0, 1.0)
+    nt.links.new(coords, mp.inputs["Vector"])
+    # slow colour variation (depth)
+    n1 = nt.nodes.new("ShaderNodeTexNoise")
+    n1.inputs["Scale"].default_value = spec.get("depth_scale", 0.5)
+    n1.inputs["Detail"].default_value = 2.0
+    nt.links.new(mp.outputs["Vector"], n1.inputs["Vector"])
+    if "ymid" in spec:
+        # river: distance from the middle line (metres) drives deep -> shallow
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(geo.outputs["Position"], sep.inputs[0])
+        sub = nt.nodes.new("ShaderNodeMath")
+        sub.operation = "SUBTRACT"
+        sub.inputs[1].default_value = spec["ymid"]
+        nt.links.new(sep.outputs["Y"], sub.inputs[0])
+        ab = nt.nodes.new("ShaderNodeMath")
+        ab.operation = "ABSOLUTE"
+        nt.links.new(sub.outputs[0], ab.inputs[0])
+        dv = nt.nodes.new("ShaderNodeMath")
+        dv.operation = "DIVIDE"
+        dv.inputs[1].default_value = spec["yhalf"]
+        nt.links.new(ab.outputs[0], dv.inputs[0])
+        mix_n = nt.nodes.new("ShaderNodeMath")
+        mix_n.operation = "MULTIPLY_ADD"       # dist + (noise - 0.5) * 0.5
+        nt.links.new(n1.outputs["Fac"], mix_n.inputs[0])
+        mix_n.inputs[1].default_value = 0.5
+        mix_n.inputs[2].default_value = 0.0
+        add_n = nt.nodes.new("ShaderNodeMath")
+        add_n.operation = "ADD"
+        nt.links.new(dv.outputs[0], add_n.inputs[0])
+        nt.links.new(mix_n.outputs[0], add_n.inputs[1])
+        fac = add_n.outputs[0]
+        lo, hi = 0.15, 1.0
+    else:
+        fac = n1.outputs["Fac"]
+        lo, hi = 0.3, 0.7
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = rgb(spec["c"])
+    ramp.color_ramp.elements[1].color = rgb(spec["c2"])
+    ramp.color_ramp.elements[0].position = lo
+    ramp.color_ramp.elements[1].position = hi
+    nt.links.new(fac, ramp.inputs["Fac"])
+    nt.links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
+    # waves: two noise octaves (long and short) drive a gentle bump
+    n2 = nt.nodes.new("ShaderNodeTexNoise")
+    n2.inputs["Scale"].default_value = spec.get("wave_scale", 2.2)
+    n2.inputs["Detail"].default_value = 4.0
+    n2.inputs["Roughness"].default_value = 0.55
+    nt.links.new(mp.outputs["Vector"], n2.inputs["Vector"])
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = spec.get("bump", 0.4)
+    bump.inputs["Distance"].default_value = 0.06
+    nt.links.new(n2.outputs["Fac"], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+    bsdf.inputs["IOR"].default_value = spec.get("ior", 1.6)
+    if "Specular IOR Level" in bsdf.inputs:
+        bsdf.inputs["Specular IOR Level"].default_value = 1.0
+
+
 def make_material(name, spec):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
@@ -223,6 +289,8 @@ def make_material(name, spec):
     elif kind in ("asphalt_grit", "paving_grit", "slab_grit"):
         coords = surface_coords(nt)
         grit_material(nt, bsdf, coords, kind, spec)
+    elif kind == "water":
+        water_material(nt, bsdf, spec)
     if "emit" in spec:
         bsdf.inputs["Emission Color"].default_value = rgb(spec.get("emit_c", col))
         bsdf.inputs["Emission Strength"].default_value = spec["emit"]
@@ -296,7 +364,13 @@ MATERIALS = {
     "gold": dict(c="#e8b840", rough=0.25, metal=0.9),
     "gold_dark": dict(c="#a87c28", rough=0.35, metal=0.8),
     "gold_bright": dict(c="#ffd860", emit=0.8),
-    "water": dict(c="#2a5a8a", rough=0.05),
+    # river: y 52..60 cells = 39..45 m, middle line at 42 m
+    "water": dict(kind="water", c="#0a2536", c2="#26607a", rough=0.1, ymid=42.0, yhalf=3.2, depth_scale=0.5, ior=1.42, bump=0.55),
+    "water_pond": dict(kind="water", c="#2a4a3a", c2="#557a56", rough=0.18, depth_scale=1.2, wave_scale=3.0,
+                       bump=0.25),
+    "water_fountain": dict(kind="water", c="#2a73ae", c2="#5aa6d8", rough=0.06, depth_scale=1.5, wave_scale=5.0,
+                           bump=0.3, stretch=1.0),
+    "dirty_liquid": dict(c="#6a7664", rough=0.15),
     "pond_edge": dict(kind="noise", c="#a8a294", c2="#948e80", scale=10),
     "path_dirt": dict(kind="noise", c="#c8a878", c2="#b8986a", scale=8),
     "plaza_stone": dict(kind="brick", c="#d8d0bc", c2="#c8c0aa", mortar="#9a9284", bw=0.6, bh=0.6,

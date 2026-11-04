@@ -24,27 +24,47 @@ namespace tl
         constexpr int fountain_reach = 32;             // world units beyond the fountain radius
         constexpr int fixture_reach = 28;              // counters, toilets, sinks, shelves, ...
 
+        // Food: price, quality (1-3), gains over the meal; the meal lasts 100 + 5 * (Hunger + Energy) + 20 * quality
+        // frames (max 360): better food is both worth more and takes a bit longer.
         struct shop_item
         {
             int price;
+            int quality;
             int hunger;
             int energy;
             int fun;
+            int bladder;
         };
 
         constexpr bn::string_view market_labels[] = { "Bread $2", "Apple $1", "Ready meal $5", "Soda $1" };
-        constexpr shop_item market_items[] = { { 2, 15, 0, 0 }, { 1, 6, 0, 0 }, { 5, 35, 0, 0 }, { 1, 4, 0, 4 } };
+        constexpr shop_item market_items[] = {
+            { 2, 1, 15, 3, 0, 0 }, { 1, 1, 6, 1, 0, 0 }, { 5, 2, 35, 8, 0, 0 }, { 1, 1, 4, 3, 4, -8 } };
         constexpr bn::string_view diner_labels[] = { "Coffee $2", "Pancakes $4", "Burger $6" };
-        constexpr shop_item diner_items[] = { { 2, 0, 15, 5 }, { 4, 25, 0, 0 }, { 6, 40, 0, 0 } };
+        constexpr shop_item diner_items[] = {
+            { 2, 2, 0, 15, 5, -10 }, { 4, 2, 25, 8, 0, 0 }, { 6, 3, 40, 12, 0, 0 } };
         constexpr bn::string_view toilet_options[] = { "Use toilet" };
+        constexpr bn::string_view bin_options[] = { "Search the bin" };
         constexpr bn::string_view sink_options[] = { "Wash hands" };
         constexpr bn::string_view book_options[] = { "Read a book" };
+
+        // Activities (frames at 60 per second).
+        constexpr int wash_hands_frames = 120;
+        constexpr int wash_face_frames = 150;
+        constexpr int drink_frames = 180;
+        constexpr int read_frames = 300;
+        constexpr int read_minutes = 30;                    // game minutes that pass while reading
+        constexpr int search_frames = 210;
+        constexpr int bin_cooldown = 60;                    // game minutes until a bin has something new
+        constexpr int toilet_full_frames[3] = { 360, 240, 150 };   // empty to full, by toilet quality 1..3
+        constexpr int read_fun[3] = { 10, 18, 30 };         // Fun gained by bookshelf quality 1..3
+        constexpr int bladder_boost_minutes = 90;
 
         // Effects per game minute while resting.
         constexpr bn::fixed sit_fun = 0.35;
         constexpr bn::fixed sit_energy = 0.15;
         constexpr bn::fixed sleep_energy = 0.5;
-        constexpr bn::fixed wash_hygiene = 35;
+        constexpr bn::fixed wash_face_hygiene = 35;
+        constexpr bn::fixed wash_hands_hygiene = 15;
 
         [[nodiscard]] int distance2(int ax, int ay, int bx, int by)
         {
@@ -92,7 +112,7 @@ namespace tl
         // Need bars: one sprite per need over the dark bar slots of the HUD background.
         for(int need = 0; need < needs::count; ++need)
         {
-            bn::sprite_ptr bar = bn::sprite_items::need_bar.create_sprite(77 + (need * 42) + 16 - 120, 151 + 4 - 80);
+            bn::sprite_ptr bar = bn::sprite_items::need_bar.create_sprite(-48 + (need * 37), 151 + 4 - 80);
             bar.set_bg_priority(0);
             _bar_sprites.push_back(bn::move(bar));
         }
@@ -272,6 +292,26 @@ namespace tl
         _text_generator.generate(-112, 71, money, _money_sprites);
     }
 
+    void field::_tick_minute()
+    {
+        _minutes = (_minutes + 1) % (24 * 60);
+        ++_total_minutes;
+        _needs.minute_passed();
+
+        if(_needs.values[needs::bladder] < 1 && ! _accident_pending)
+        {
+            _handle_accident();
+        }
+    }
+
+    void field::_handle_accident()
+    {
+        _accident_pending = true;
+        _needs.add(needs::hygiene, -30);
+        _needs.add(needs::fun, -10);
+        _needs.values[needs::bladder] = 60;
+    }
+
     void field::_update_clock()
     {
         player::activity act = _player.current_activity();
@@ -281,8 +321,7 @@ namespace tl
         if(++_minute_frames >= frames_per_minute)
         {
             _minute_frames = 0;
-            _minutes = (_minutes + 1) % (24 * 60);
-            _needs.minute_passed();
+            _tick_minute();
 
             if(act == player::activity::sitting)
             {
@@ -300,12 +339,78 @@ namespace tl
         }
     }
 
+    void field::_begin_activity(int frames)
+    {
+        _act = activity_state();
+        _act.active = true;
+        _act.frames = frames;
+    }
+
+    void field::_update_activity()
+    {
+        if(! _act.active)
+        {
+            return;
+        }
+
+        bool finished = _player.action_finished();
+        bool cancelled = ! finished && _player.current_activity() == player::activity::walking;
+        _act.done = finished ? _act.frames : (_act.done + 1 < _act.frames ? _act.done + 1 : _act.frames);
+
+        for(int need = 0; need < needs::count; ++need)
+        {
+            if(_act.gain[need] != 0)
+            {
+                bn::fixed target = _act.gain[need] * _act.done / _act.frames;
+                _needs.add(need, target - _act.applied[need]);
+                _act.applied[need] = target;
+            }
+        }
+
+        if(_act.extra_minutes)
+        {
+            int due = _act.extra_minutes * _act.done / _act.frames;
+
+            while(_act.extra_done < due)
+            {
+                ++_act.extra_done;
+                _tick_minute();
+            }
+
+            _redraw_hud_text();
+        }
+
+        _update_bars();
+
+        if(finished || cancelled)
+        {
+            _act.active = false;
+
+            if(finished && _act.money)
+            {
+                _money += _act.money;
+                _redraw_hud_text();
+            }
+
+            if(finished && _act.message)
+            {
+                _menu_mode = menu_mode::none;
+                _show_info("Trash bin", _info_line_a.c_str(), _info_line_b.c_str(), "");
+            }
+        }
+    }
+
     void field::_update_bars()
     {
         for(int need = 0; need < needs::count; ++need)
         {
             int level = (_needs.values[need] * (bar_levels - 1) / 100).round_integer();
-            _bar_sprites[need].set_tiles(bn::sprite_items::need_bar.tiles_item(), level);
+
+            if(level != _bar_levels[need])
+            {
+                _bar_levels[need] = level;
+                _bar_sprites[need].set_tiles(bn::sprite_items::need_bar.tiles_item(), level);
+            }
         }
     }
 
@@ -353,15 +458,15 @@ namespace tl
 
         case interactable_kind::bench:
             {
-                constexpr bn::string_view options[] = { "Sit", "Sleep" };
+                static constexpr bn::string_view options[] = { "Sit", "Sleep" };
                 _menu.open("Park Bench", options, 2);
             }
             break;
 
         case interactable_kind::fountain:
             {
-                constexpr bn::string_view options[] = { "Wash face" };
-                _menu.open("Fountain", options, 1);
+                static constexpr bn::string_view options[] = { "Wash face", "Drink water" };
+                _menu.open("Fountain", options, 2);
             }
             break;
 
@@ -380,6 +485,10 @@ namespace tl
 
         case interactable_kind::bookshelf:
             _menu.open("Bookshelf", book_options, 1);
+            break;
+
+        case interactable_kind::bin:
+            _menu.open("Trash bin", bin_options, 1);
             break;
 
         case interactable_kind::noticeboard:
@@ -442,26 +551,84 @@ namespace tl
             return;
         }
 
+        // Pay, then eat right away: the needs fill gradually during the eating animation.
         _money -= item.price;
-        _needs.add(needs::hunger, item.hunger);
-        _needs.add(needs::energy, item.energy);
-        _needs.add(needs::fun, item.fun);
         _redraw_hud_text();
-        _update_bars();
-        _open_shop(target);     // keep shopping until B
-    }
+        int frames = 100 + (5 * (item.hunger + item.energy)) + (20 * item.quality);
+        _begin_activity(frames > 360 ? 360 : frames);
+        _act.gain[needs::hunger] = item.hunger;
+        _act.gain[needs::energy] = item.energy;
+        _act.gain[needs::fun] = item.fun;
+        _act.gain[needs::bladder] = item.bladder;
 
-    void field::_advance_time(int minutes)
-    {
-        for(int index = 0; index < minutes; ++index)
+        if(item.bladder < 0)
         {
-            _minutes = (_minutes + 1) % (24 * 60);
-            _needs.minute_passed();
+            _needs.bladder_boost = bladder_boost_minutes;
         }
 
-        _minute_frames = 0;
-        _redraw_hud_text();
-        _update_bars();
+        _player.start_action(player::action_kind::eat, _player.x(), _player.y(), _act.frames);
+    }
+
+    void field::_use_toilet(const interactable& target)
+    {
+        bn::fixed missing = 100 - _needs.values[needs::bladder];
+
+        if(missing < 8)
+        {
+            _show_info("Toilet", "You don't need", "to go right now.", "");
+            return;
+        }
+
+        int quality = target.quality < 1 ? 1 : (target.quality > 3 ? 3 : target.quality);
+        int frames = (missing * toilet_full_frames[quality - 1] / 100).round_integer();
+        _begin_activity(frames < 90 ? 90 : frames);
+        _act.gain[needs::bladder] = missing;
+        // the seat is a bit behind the spot where you stand (the toilet stands against the back wall)
+        _player.sit_for(target.x, target.y - 14, _act.frames);
+    }
+
+    void field::_search_bin(const interactable& target)
+    {
+        int index = int(&target - _map->interactables);
+        int slot = (int(_map - &get_map(map_id(0))) * 16) + (index & 15);
+
+        if(_bin_emptied[slot] && _total_minutes + 1 - _bin_emptied[slot] < bin_cooldown)
+        {
+            _show_info("Trash bin", "Someone already", "emptied this bin.", "");
+            return;
+        }
+
+        _bin_emptied[slot] = _total_minutes + 1;
+        _player.approach(target.x, target.y, 13);
+        _begin_activity(search_frames);
+        int roll = _rng.get_unbiased_int(100);
+
+        if(roll < 35)
+        {
+            _act.gain[needs::hunger] = 12;
+            _act.gain[needs::hygiene] = -12;
+            _info_line_a = "You found half a";
+            _info_line_b = "sandwich.";
+        }
+        else if(roll < 55)
+        {
+            int amount = 1 + _rng.get_unbiased_int(3);
+            _act.money = amount;
+            _act.gain[needs::hygiene] = -5;
+            _info_line_a = "You found $";
+            _info_line_a.append(bn::to_string<4>(amount));
+            _info_line_a.append('!');
+            _info_line_b = "";
+        }
+        else
+        {
+            _act.gain[needs::hygiene] = -5;
+            _info_line_a = "Nothing useful.";
+            _info_line_b = "";
+        }
+
+        _act.message = true;
+        _player.start_action(player::action_kind::search, target.x, target.y, _act.frames);
     }
 
     void field::_handle_menu_choice(int choice)
@@ -514,24 +681,47 @@ namespace tl
             break;
 
         case interactable_kind::fountain:
-            _player.start_washing(target->x, target->y);
+            _player.approach(target->x, target->y, target->radius + 6);
+
+            if(choice == 0)
+            {
+                _begin_activity(wash_face_frames);
+                _act.gain[needs::hygiene] = wash_face_hygiene;
+                _player.start_action(player::action_kind::wash, target->x, target->y, _act.frames);
+            }
+            else
+            {
+                _begin_activity(drink_frames);
+                _act.gain[needs::hygiene] = -6;
+                _act.gain[needs::energy] = 3;
+                _act.gain[needs::bladder] = -15;
+                _needs.bladder_boost = bladder_boost_minutes;
+                _player.start_action(player::action_kind::drink, target->x, target->y, _act.frames);
+            }
             break;
 
         case interactable_kind::toilet:
-            _needs.add(needs::hygiene, 5);
-            _needs.add(needs::fun, 2);
-            _update_bars();
+            _use_toilet(*target);
             break;
 
         case interactable_kind::sink:
-            _needs.add(needs::hygiene, 15);
-            _update_bars();
+            _begin_activity(wash_hands_frames);
+            _act.gain[needs::hygiene] = wash_hands_hygiene;
+            _player.start_action(player::action_kind::wash, target->x, target->y, _act.frames);
             break;
 
         case interactable_kind::bookshelf:
-            _advance_time(30);
-            _needs.add(needs::fun, 12);
-            _update_bars();
+            {
+                int quality = target->quality < 1 ? 1 : (target->quality > 3 ? 3 : target->quality);
+                _begin_activity(read_frames);
+                _act.gain[needs::fun] = read_fun[quality - 1];
+                _act.extra_minutes = read_minutes;
+                _player.start_action(player::action_kind::read, target->x, target->y, _act.frames);
+            }
+            break;
+
+        case interactable_kind::bin:
+            _search_bin(*target);
             break;
 
         default:
@@ -578,6 +768,8 @@ namespace tl
             break;
 
         case state::playing:
+            _rng.update();      // the outcome of random events depends on when the player acts
+
             if(_version_frames > 0 && --_version_frames == 0)
             {
                 _version_sprites.clear();
@@ -610,9 +802,13 @@ namespace tl
 
             _player.update();
 
-            if(_player.washing_finished())
+            _update_activity();
+
+            if(_accident_pending && ! _act.active && ! _menu.is_open() &&
+               _player.current_activity() == player::activity::walking)
             {
-                _needs.add(needs::hygiene, wash_hygiene);
+                _accident_pending = false;
+                _show_info("Oops...", "You couldn't", "hold it.", "");
                 _update_bars();
             }
 
