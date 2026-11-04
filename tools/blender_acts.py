@@ -195,6 +195,23 @@ def search_pose(i):
     return ops
 
 
+# crouch depth, lean, arm reach per pickup frame: reach down, grab, rise holding the can, stand holding it
+PICKUP = [(30, 22, -35), (62, 38, -20), (34, 14, -70), (0, 0, -60)]
+
+
+def pickup_pose(i):
+    th, lean, arm = PICKUP[i]
+    ops = [("UpperLeg.R", "X", -th), ("UpperLeg.L", "X", -th), ("LowerLeg.R", "X", 2 * th), ("LowerLeg.L", "X", 2 * th),
+           ("Foot.R", "X", -th), ("Foot.L", "X", -th),
+           ("Abdomen", "X", lean * 0.5), ("Torso", "X", lean * 0.5), ("Head", "X", -lean * 0.5)]
+    for side, sgn in (("R", -1), ("L", 1)):
+        a = arm if side == "R" else (arm * 0.5 if i < 3 else -8)
+        ops += [("UpperArm." + side, "X", a), ("UpperArm." + side, "Z", -sgn * 6)]
+        if i == 3 and side == "R":
+            ops += [("LowerArm.R", "X", -70)]
+    return ops
+
+
 def main():
     global SS
     argv = sys.argv[sys.argv.index("--") + 1:]
@@ -202,7 +219,7 @@ def main():
     SS = int(argv[2])
     samples = int(argv[3])
     colours = json.loads(argv[4])
-    only = argv[5].split(",") if len(argv) > 5 else ["eat", "drink", "read", "search", "wash"]
+    only = argv[5].split(",") if len(argv) > 5 else ["eat", "drink", "read", "search", "wash", "pickup"]
     facings = argv[6].split(",") if len(argv) > 6 else list(FACINGS)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -278,21 +295,25 @@ def main():
     water = make_prop("sphere", "#58a8e8", (0.16, 0.11, 0.05))
     drop = make_prop("sphere", "#90ccf8", (0.04, 0.04, 0.07))
     drop2 = make_prop("sphere", "#90ccf8", (0.04, 0.04, 0.07))
-    props = [food, bite, book, page_l, page_r, flip, water, drop, drop2]
+    can = make_prop("cube", "#c8d0d8", (0.07, 0.07, 0.12))
+    props = [can, food, bite, book, page_l, page_r, flip, water, drop, drop2]
 
     def shot(name):
         sc.render.filepath = os.path.join(out_dir, name)
         bpy.ops.render.render(write_still=True)
 
+    ground = root.location.z
     for act in only:
         for fname in facings:
             root.rotation_euler = (0, 0, math.radians(FACINGS[fname]))
             for i in range(4):
                 for p in props:
                     p.hide_render = True
-                ops = {"eat": eat_pose, "drink": drink_pose, "read": read_pose, "search": search_pose, "wash": wash_pose}[act](i)
+                ops = {"eat": eat_pose, "drink": drink_pose, "read": read_pose, "search": search_pose, "wash": wash_pose, "pickup": pickup_pose}[act](i)
                 rig.pose(ops)
                 k = rig.k
+                if act == "pickup":
+                    root.location.z = ground - 0.9 * (1 - math.cos(math.radians(PICKUP[i][0]))) * HEIGHT_M / 1.78
                 if act == "eat":
                     hc = hand_centre(rig, "R")
                     rig.place(food, hc + Vector((0, -0.12, 0.05)) * k, [("X", 15)])
@@ -313,6 +334,14 @@ def main():
                     if i == 3:
                         rig.place(drop, hc + Vector((0.14, -0.06, -0.02)) * k)
                         rig.place(drop2, hc + Vector((-0.14, -0.08, -0.12)) * k)
+                elif act == "pickup":
+                    hc = hand_centre(rig, "R")
+                    if i == 0:
+                        rig.place(can, hc * 0 + Vector((hc.x, hc.y - 0.12 * k, 0.04 * k)))
+                    elif i == 1:
+                        rig.place(can, hc + Vector((0, -0.02, 0.0)) * k)
+                    else:
+                        rig.place(can, hc + Vector((0, -0.02, 0.0)) * k)
                 elif act == "read":
                     hc = (hand_centre(rig, "R") + hand_centre(rig, "L")) / 2
                     tilt = [("X", -62)]

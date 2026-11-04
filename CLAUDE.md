@@ -308,7 +308,8 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
     above the nearest interactable in reach (same reach rules as the menu, `field::_find_target`) while walking;
     hidden during menus, activities, pause and fades. Per-kind height offsets (bench 22, seat 26, fountain 36,
     bin/sink/reception 40, shelf/notice board 46, rest 38 px) are in `_update_cue`.
-  - Activity animations: `player_wash` (32x64, 8 facings x 4) and the new 64x64 sheets `player_eat`,
+  - **Pick-up animation:** `player_pickup` (64x64, 8 facings x 4 frames: reach down, crouch + grab a can, rise, hold it) from `blender_acts.py` (`pickup_pose`, legs bent + root lowered); used by `field::_pick_up` via `action_kind::pickup` (RETURN & EARN cans/bottles; B cancels). Story: Mia explains the machine after the first night (docs/story_chapter1.md).
+- Activity animations: `player_wash` (32x64, 8 facings x 4) and the new 64x64 sheets `player_eat`,
     `player_drink`, `player_read`, `player_search` (8 facings x 4 frames, feet at (32, 54), own
     15-colour palette each, shown as a separate `_act_sprite` while the normal player sprite is
     hidden). They are rendered by `tools/blender_acts.py`: poses are made procedurally on the

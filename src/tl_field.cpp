@@ -842,7 +842,7 @@ namespace tl
         _info_line_b.append("/");
         _info_line_b.append(bn::to_string<4>(deposit::bag_max));
         _info_line_c = "";
-        _player.start_action(player::action_kind::search, place.x, place.y, _act.frames);
+        _player.start_action(player::action_kind::pickup, place.x, place.y, _act.frames);
     }
 
     void field::_open_deposit_menu()

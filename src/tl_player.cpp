@@ -12,6 +12,7 @@
 #include "bn_sprite_items_player_drink.h"
 #include "bn_sprite_items_player_read.h"
 #include "bn_sprite_items_player_search.h"
+#include "bn_sprite_items_player_pickup.h"
 
 namespace tl
 {
@@ -57,6 +58,9 @@ namespace tl
 
             case player::action_kind::search:
                 return bn::sprite_items::player_search;
+
+            case player::action_kind::pickup:
+                return bn::sprite_items::player_pickup;
 
             default:
                 return bn::sprite_items::player_wash;

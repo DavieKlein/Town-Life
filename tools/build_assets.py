@@ -819,7 +819,7 @@ def build_player_actions(force, fast):
     write_sprite_sheet("player_rest", frames, 64, 64)
 
 
-ACT_SHEETS = ("eat", "drink", "read", "search", "wash")
+ACT_SHEETS = ("eat", "drink", "read", "search", "wash", "pickup")
 
 
 def build_player_acts(force, fast):
@@ -832,7 +832,7 @@ def build_player_acts(force, fast):
     h.update(open(os.path.join(TOOLS, "blender_acts.py"), "rb").read())
     h.update(f"acts{ss}{samples}{colours}{PLAYER_MODEL}".encode())
     out_dir = os.path.join(CACHE, "player_acts_" + h.hexdigest()[:12])
-    last = os.path.join(out_dir, "search_se_3.png")
+    last = os.path.join(out_dir, "pickup_se_3.png")
     if force or not os.path.exists(last):
         print("rendering player activity poses...", flush=True)
         r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_acts.py"),

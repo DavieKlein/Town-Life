@@ -725,7 +725,8 @@ A small side income that is always available in the City Centre, built (approved
 - Cost per pick-up (~1.2 s bend-down): **Energy -0.5, Hygiene -1** (-2 in bushes and hedges). B cancels.
 - Daily value: the cap is $3.50, so a full sweep plus return takes about 40 game minutes and earns up to $3.50 (only the first day
   after a long break; on a normal day roughly $2-3). Comparable to one cheap meal, never a replacement for a job (odd jobs ~$9/h).
-- Story hook: Mr. Pimm grumbles that "the park machine pays more than your cousin's allowance"; Mia (Day 2) shows the player how it
+- **Story hook (owner-approved):** Mia explains the RETURN & EARN machine to the player (after the first night).
+- Story hook (earlier idea): Mr. Pimm grumbles that "the park machine pays more than your cousin's allowance"; Mia (Day 2) shows the player how it
   works as an optional tip ("Cans are fifty cents. The green machine by the toilets."). It is a bridge on bad evenings, like the bins.
 
 ### 4.8 Skills and reputation

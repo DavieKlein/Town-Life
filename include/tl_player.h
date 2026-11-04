@@ -29,7 +29,8 @@ namespace tl
             eat,
             drink,      // scooping water with both hands
             read,
-            search      // rummaging through a trash bin
+            search,     // rummaging through a trash bin
+            pickup      // bending down to grab a can or bottle
         };
 
         player();
