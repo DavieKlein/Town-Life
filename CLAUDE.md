@@ -219,7 +219,8 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
   with conveyor belt and register, basket stack, plant, door mat (exit).
 - Player: rigged CC0 character (Quaternius Male_LongSleeve in our own colours: blue sweater,
   khaki trousers, brown hair), idle + 8-frame walk in 8 facings, with a blended shadow.
-- HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20).
+- HUD bar with a working clock (1 real second = 1 game minute, starts 8:00 am) and money ($20): bold 11 px digits,
+  gold money (see "UI style system").
   Needs (`tl_needs.h`: Hunger, Energy, Hygiene, Fun, Bladder, 0-100) decay per game minute and drive the
   five HUD bars (`need_bar` sprites, 16 fill levels, green/orange/red). HUD layout (`hud_sprites.py
   build_hud`): clock/money panel x 10..60, five slots of 35 px at pitch 37 starting at x 62 (bg coords);
@@ -232,7 +233,10 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
   CENTRE" sign; bookcases, notice board), VaultTech lobby (south door of the golden tower, marble
   and gold, reception desk), public toilet (small brick building in City Park at 1.6..4.6 x
   36.8..39.8, door onto the park path; 6x6 room with one open WC, a sink, paper towels, bin, a bit
-  grimy). `home_room()` (shabby first flat, approved) stays in scene.py but is NOT in `SCENES` yet
+  grimy). **Public toilet layout (6x6):** open white WC on the back wall at (2.9, 1.5) (`toilet_unit`, lid up, nothing in
+  front of it), big basin with tap, soap and mirror on the west wall at (0.5, 3.5) (`sink_unit`), the ONLY bin at
+  (0.75, 1.0), hand dryer, toilet-roll shelf, "PLEASE KEEP CLEAN" notice, mop + bucket + broom, wet-floor sign and
+  a hygiene poster. `home_room()` (shabby first flat, approved) stays in scene.py but is NOT in `SCENES` yet
   (no entrance). The scene list is `SCENES` at the end of scene.py; interior props come from
   `s.prop('house/Name' | 'food/Name', ...)` (Quaternius CC0 FBX in `art_source/quaternius_house|food`,
   sizes in `PROP_DIMS`). All flood-fill checked (every door reachable from the start, every free
@@ -271,9 +275,16 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
     sandwich (Hunger +12, Hygiene -12), 20 % $1-3 (Hygiene -5), else "Nothing useful." (Hygiene -5).
     A bin gives something once per 60 game minutes ("Someone already emptied this bin.";
     `_bin_emptied[map * 16 + index]`).
-  - Notice board and VaultTech reception show info messages. `tl_menu` scrolls lists of more than 3
-    options and has `open_info()` (up to 3 text lines). Option arrays handed to `tl_menu` must be
+  - Notice board and VaultTech reception show info messages. `tl_menu` shows up to 5 option rows (no scrolling) and
+    has `open_info()` (up to 3 text lines). Option arrays handed to `tl_menu` must be
     `static constexpr` (the menu keeps the pointer; a stack array crashed the game).
+  - **Clearer objects (owner feedback):** `trash_can()` is the flared green bin with a white band, dark lid and litter
+    (street bins and the toilet bin); `sink_unit`, `toilet_unit` in scene.py; library chairs are light oak
+    (`#e6b866`), diner chairs bigger (h 1.05) and bright red (`#e04030`).
+  - **"A" cue:** `field::_update_cue` draws a bobbing gold bubble (`ui_icons` frame 2, bob 0/1/2/1 px per 8 frames)
+    above the nearest interactable in reach (same reach rules as the menu, `field::_find_target`) while walking;
+    hidden during menus, activities, pause and fades. Per-kind height offsets (bench 22, seat 26, fountain 36,
+    bin/sink/reception 40, shelf/notice board 46, rest 38 px) are in `_update_cue`.
   - Activity animations: `player_wash` (32x64, 8 facings x 4) and the new 64x64 sheets `player_eat`,
     `player_drink`, `player_read`, `player_search` (8 facings x 4 frames, feet at (32, 54), own
     15-colour palette each, shown as a separate `_act_sprite` while the normal player sprite is
@@ -298,8 +309,8 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
 - **Collision** is a fine grid (`SOLID_RES` = 4 sub-cells per cell, `solid_res` in tl_world.h);
   `set_solid` rounds outward to sub-cells.
 - Interactions (older notes): `tools/interactions.py` lists interactable objects per map (kind, x, y[, radius]),
-  emitted as `map_info::interactables`. A (while walking) opens a menu (`tl_menu`: dark panel
-  top-right, cursor, A ok / B back) for the nearest object in reach: **park bench** → Sit (Fun +,
+  emitted as `map_info::interactables`. A (while walking) opens a menu (`tl_menu`: panel
+  top-right, highlight bar, A Choose / B Back) for the nearest object in reach: **park bench** → Sit (Fun +,
   small Energy +; seated pose, 4 frames) or Sleep (side-lying pose, zZz text, clock runs 4x faster,
   Energy +); **fountain** → Wash face (8-facing washing animation, Hygiene +35). D-pad or B gets up.
   Player poses come from `blender_actor.py` mode `actions` (`player_rest.bmp` 64x64: 0-3 sit,
@@ -353,14 +364,14 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
 ├── .github/workflows/build.yml  CI: builds ROM in devkitpro/devkitarm, publishes release "latest"
 ├── butano/                      git submodule: Butano engine (pinned to tag 21.9.0)
 ├── Makefile                     TARGET=town-life, ROMTITLE=TOWN LIFE; also uses butano/common
-│                                (graphics + include) for the 8x8 sprite font
+│                                (graphics + include) for the 16x16 font of the title
 ├── src/
 │   ├── main.cpp                 init + main loop (creates the field scene)
 │   ├── tl_field.cpp             field scene: camera, streamed layers, player, warps with fades, HUD text + clock
 │   ├── tl_streamed_bg.cpp       tile-streaming regular BG (see "Engine")
 │   ├── tl_player.cpp            player: iso movement, collision, depth priority, animation, shadow
 │   ├── tl_critters.cpp          ambient pigeons + squirrels (behaviour, sprites, depth)
-│   ├── tl_npcs.cpp              standing NPCs (Mia), tl_menu.cpp pop-up menu (scroll + info)
+│   ├── tl_npcs.cpp              standing NPCs (Mia), tl_menu.cpp pop-up menu, tl_ui.cpp UI toolkit
 │   ├── tl_save.cpp, tl_title.cpp, tl_pause.cpp, tl_field_pause.cpp   save format, title screen, pause screen
 │   └── tl_world_data.cpp        GENERATED: palettes per layer, collision, warps, occluders, map table
 ├── data/                        GENERATED binary layer data (Butano DATA rule): <map>_<layer>_tiles.bin
@@ -463,6 +474,32 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   order s, sw, w, nw, n, ne, e, se), 4x supersampled; build_assets adds a 1 px dark outline and
   quantizes to one 15-colour palette. Frame 32x64, feet at (16, 54); sheet = 72 frames.
 
+### UI style system (tl_ui, tools/ui_assets.py)
+
+- **Two styles, switched by the game clock** (`ui::set_night(is_night(minutes))`, `is_night` = lamps-on time
+  19:40..6:15; indoors too): **Paper** by day (cream panel, dark ink text, red title band, gold highlight bar) and
+  **Night** (navy panel, white outlined text, gold title, teal highlight bar with dark text). The title screen is
+  always Night. The style is read when a panel/label is built (menus, pause, dialogs) and refreshed every game minute
+  for the HUD.
+- **Palette:** all panels, bars and text share ONE 16-colour sprite palette (fixed indices, enum in tl_ui.cpp and
+  tools/ui_assets.py; `paper_colours` / `night_colours` hold the two colour sets). Text roles (`ui::role`) pick fill and
+  outline palette indices when the text is rendered, so no extra palettes are needed (the 16-palette sprite budget
+  is tight). `ui_icons` (A button, B button, "A" cue) has its own palette.
+- **Fonts:** DejaVu Sans Bold, rasterised by `tools/ui_assets.py` into `src/tl_ui_font_data.cpp` (GENERATED; 9 px
+  `ui::font9` for menus, 11 px `ui::font11` for HUD clock/money and "Day N"): 95 glyphs, 16x16 cells, 2 bits per pixel
+  (fill + 1 px outline). Licence: `art_source/fonts/LICENSE-DejaVu.txt` (Bitstream Vera/DejaVu, free), credited in the README.
+- **Text rendering:** `ui::label::set(font, x, baseline_y, text, role)` composes the string into a RAM line buffer and
+  copies it into `bn::sprite_tiles_ptr::allocate()`d tiles: one 32x16 sprite per 32 px of text (not one per letter),
+  so a full pause screen needs ~50 sprites. All coordinates are screen pixels, top-left origin. Changing the
+  selected row just re-sets its label with `role::selected`.
+- **Panels:** `ui::panel::open(x, y, w, h, titled)` assembles `ui_pan_*` pieces (64x32 top/bottom, 64x64 body; the right
+  end is the left end flipped; middle pieces fill wider panels). Min size: w >= 112, h >= 36 (49 titled); heights
+  between 65 and 71 are bumped to 72. `ui::bar` = rounded highlight bar exactly fitting a 13 px row (caps + mid
+  pieces), `ui::hint_row` = A/B icons + "Choose"/"Back"/"OK". Layout metrics follow the approved mock-up
+  (`tools/proposals/ui_objects/ui_mock.py`): menu width 120 at (116, 5), title band 17 px, rows pitch 14, hint row 19 px;
+  pause panel 232x120 at (4, 4); dialog width 212.
+- Sprite z order: text 0, highlight bar 10-11, panel 20-24 (lower = in front).
+
 ### Engine
 
 - **World units**: 1 cell = 16 units; +x goes down-right, +y goes down-left on screen.
@@ -551,7 +588,8 @@ Update the checkboxes at the end of each session.
 - [x] Interactions in the interiors: shops (market, diner), toilet, sink, bookshelf, notice board, reception
 - [x] Eating / drinking / reading / bin searching / toilet with animations and quality levels; trash bins; fountain drink; Bladder need + accident
 - [ ] More interactions with furniture (shower, fridge, cooking, repairing) once homes exist
-- [x] Text: `bn::sprite_text_generator` with a font (see `butano/common`)
+- [x] Text: software-rendered bold pixel fonts (`tl_ui`, see "UI style system"); the title uses `bn::sprite_text_generator`
+      with the 16x16 common font
 - [ ] Split `main.cpp` into scenes (`tl_scene.h` with an enum, one class per scene with `update()`)
 
 1.3 Dialogue + NPCs — TODO
@@ -589,9 +627,9 @@ total minutes, money, the five needs (bn::fixed raw), bladder boost, bin cooldow
 reserved fields: player name char[12], story flags u8[64], mission id, friendship u8[16], 64 spare bytes. A save
 with a wrong magic/version/size/checksum is ignored (title shows only New Game). Changing the layout means
 bumping `save_version`. `field::_fill_save/_apply_save` map the field state to and from it; new state that must
-survive needs a field in the struct. Pause screen: `pause_screen`, `dialog` (3 lines + Yes/No) and `panel`
-(tiled menu panel sprites, widths 96 or 222) in tl_pause.cpp; `field::set_objective(text)` sets the objective
-line for a future mission system. The pause screen frees the HUD text sprites while open (128-sprite budget).
+survive needs a field in the struct. Pause screen: `pause_screen` and `dialog` (title + up to 3 lines + Yes/No) in tl_pause.cpp (built on `ui::panel`); `field::set_objective(text)` sets the objective
+line for a future mission system. The pause screen frees the HUD text sprites while open (128-sprite budget; with line-wise text sprites it uses
+about 50).
 "Quit to title" uses `bn::core::reset()`. `tools/headless_run.py` has `dumpsram`, `loadsram`, `clearsram`
 and `reset` commands for save tests.
 

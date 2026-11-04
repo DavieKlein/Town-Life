@@ -7,8 +7,8 @@
 #include "bn_optional.h"
 #include "bn_sprite_ptr.h"
 #include "bn_regular_bg_ptr.h"
-#include "bn_sprite_text_generator.h"
 
+#include "tl_ui.h"
 #include "tl_menu.h"
 #include "tl_save.h"
 #include "tl_pause.h"
@@ -51,9 +51,13 @@ namespace tl
         bn::optional<streamed_bg> _floor_bg;
         bn::optional<streamed_bg> _objects_bg;
         bn::optional<bn::regular_bg_ptr> _hud_bg;
-        bn::sprite_text_generator _text_generator;
-        bn::vector<bn::sprite_ptr, 8> _clock_sprites;
-        bn::vector<bn::sprite_ptr, 8> _money_sprites;
+        ui::label _clock_label;
+        ui::label _clock_small_label;      // "am" / "pm"
+        ui::label _money_label;
+        ui::label _version_label;
+        ui::label _zzz_label;
+        bn::optional<bn::sprite_ptr> _cue;  // the bobbing "A" over the nearest object in reach
+        int _cue_frame = 0;
         player _player;
         critters _critters;
         npcs _npcs;
@@ -61,9 +65,7 @@ namespace tl
         needs _needs;
         bn::vector<bn::sprite_ptr, needs::count> _bar_sprites;
         int _bar_levels[needs::count] = { -1, -1, -1, -1, -1 };
-        bn::vector<bn::sprite_ptr, 4> _zzz_sprites;
         bn::vector<bn::sprite_ptr, 6> _pool_sprites;
-        bn::vector<bn::sprite_ptr, 12> _version_sprites;
         int _version_frames = 300;     // the build date is shown for 5 seconds at start
         light_params _light;
         int _light_minutes = -1;
@@ -143,6 +145,8 @@ namespace tl
         void _update_clock();
         void _redraw_hud_text();
         void _update_bars();
+        [[nodiscard]] const interactable* _find_target() const;
+        void _update_cue();
         void _open_interaction_menu();
         void _handle_menu_choice(int choice);
         void _open_shop(const interactable& target);

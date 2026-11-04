@@ -10,3 +10,5 @@ Town Life GBA game
   [David OReilly](https://davidoreilly.itch.io/everything-library-animals),
   licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (posed and rendered to sprites).
 - Engine: [Butano](https://github.com/GValiente/butano) by Gustavo Valiente (zlib).
+- Menu and HUD text: DejaVu Sans Bold (Bitstream Vera / DejaVu licence, free to use and embed; licence text in
+  `art_source/fonts/LICENSE-DejaVu.txt`), rasterised to a pixel font at build time.

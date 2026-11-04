@@ -1,122 +1,90 @@
 #include "tl_menu.h"
 
 #include "bn_keypad.h"
-#include "bn_sprite_items_menu_left.h"
-#include "bn_sprite_items_menu_right.h"
-#include "bn_sprite_items_menu_highlight.h"
 
 namespace tl
 {
     namespace
     {
-        // Panel 96x64, top-right of the play area (screen coordinates, centre = 0, 0).
-        constexpr int panel_x = 120 - 96 - 6;           // left edge
-        constexpr int panel_y = -80 + 6;                // top edge
-        constexpr int first_option_y = panel_y + 19;
-        constexpr int option_step = 12;
+        constexpr int panel_w = 120;
+        constexpr int panel_x = 240 - panel_w - 4;
+        constexpr int panel_y = 5;
+        constexpr int title_height = 17;
+        constexpr int row_pitch = 14;
+        constexpr int hint_height = 19;
     }
 
-    menu::menu(bn::sprite_text_generator& text_generator) :
-        _text_generator(text_generator)
-    {
-    }
-
-    void menu::_open_panel()
+    void menu::_open_panel(const bn::string_view& title, int rows)
     {
         close();
         _open = true;
         _selected = 0;
-        _top = 0;
+        _labels.clear();
 
-        _left = bn::sprite_items::menu_left.create_sprite(panel_x + 32, panel_y + 32);
-        _right = bn::sprite_items::menu_right.create_sprite(panel_x + 64 + 16, panel_y + 32);
-        _highlight = bn::sprite_items::menu_highlight.create_sprite(0, 0, 0);
-        _highlight_right = bn::sprite_items::menu_highlight.create_sprite(0, 0, 1);
-
-        for(bn::sprite_ptr* sprite : { &*_left, &*_right, &*_highlight, &*_highlight_right })
+        for(int index = 0; index < rows; ++index)
         {
-            sprite->set_bg_priority(0);
-            sprite->set_z_order(2);
+            _labels.emplace_back();
         }
 
-        _highlight->set_z_order(1);
-        _highlight_right->set_z_order(1);
+        int height = title_height + (rows * row_pitch) + hint_height;
+        _panel.open(panel_x, panel_y, panel_w, height, true);
+        _title_label.set(ui::font9, panel_x + 7, panel_y + 12, title, ui::role::title);
     }
 
     void menu::open(const bn::string_view& title, const bn::string_view* options, int options_count)
     {
-        _open_panel();
+        BN_ASSERT(options_count <= max_options, "Too many menu options: ", options_count);
         _info = false;
         _options = options;
-        _title = title;
         _options_count = options_count;
-        _draw_options();
+        _open_panel(title, options_count);
+        _hint.open(panel_x + 7, panel_y + title_height + 2 + (options_count * row_pitch) + 3, true);
+        _draw_rows();
     }
 
     void menu::open_info(const bn::string_view& title, const bn::string_view* lines, int lines_count)
     {
-        _open_panel();
         _info = true;
         _options = lines;
-        _title = title;
-        _options_count = lines_count < max_options ? lines_count : max_options;
-        _highlight->set_visible(false);
-        _highlight_right->set_visible(false);
-        _draw_options();
+        _options_count = lines_count < 3 ? lines_count : 3;
+        _open_panel(title, _options_count);
+        _hint.open(panel_x + 7, panel_y + title_height + 2 + (_options_count * row_pitch) + 3, false);
+        _draw_rows();
     }
 
-    void menu::_draw_options()
+    void menu::_draw_rows()
     {
-        _text_sprites.clear();
-        _arrow_sprites.clear();
-        _text_generator.set_left_alignment();
-        _text_generator.generate(panel_x + 6, panel_y + 7, _title, _text_sprites);
-        int visible = _options_count < max_options ? _options_count : max_options;
+        int top = panel_y + title_height;
 
-        for(int index = 0; index < visible; ++index)
+        for(int index = 0; index < _options_count; ++index)
         {
-            _text_generator.generate(panel_x + (_info ? 6 : 16), first_option_y + (index * option_step),
-                                     _options[_top + index], _text_sprites);
+            if(_info)
+            {
+                _labels[index].set(ui::font9, panel_x + 8, top + 11 + (index * row_pitch), _options[index],
+                                   ui::role::text);
+            }
+            else
+            {
+                bool selected = index == _selected;
+                _labels[index].set(ui::font9, panel_x + 17, top + 2 + (index * row_pitch) + 10, _options[index],
+                                   selected ? ui::role::selected : ui::role::text);
+            }
         }
-
-        _text_generator.generate(panel_x + 6, panel_y + 56, _info ? "A:ok" : "A:ok  B:back", _text_sprites);
 
         if(! _info)
         {
-            if(_top > 0)
-            {
-                _text_generator.generate(panel_x + 84, first_option_y - 8, "^", _arrow_sprites);
-            }
-
-            if(_top + max_options < _options_count)
-            {
-                _text_generator.generate(panel_x + 84, first_option_y + (max_options * option_step) - 8, "v",
-                                         _arrow_sprites);
-            }
-
-            _place_cursor();
+            _bar.set(panel_x + 5, top + 2 + (_selected * row_pitch), panel_w - 10);
         }
     }
 
     void menu::close()
     {
         _open = false;
-        _left.reset();
-        _right.reset();
-        _highlight.reset();
-        _highlight_right.reset();
-        _text_sprites.clear();
-        _cursor_sprites.clear();
-        _arrow_sprites.clear();
-    }
-
-    void menu::_place_cursor()
-    {
-        int y = first_option_y + ((_selected - _top) * option_step);
-        _highlight->set_position(panel_x + 3 + 16, y + 6);
-        _highlight_right->set_position(panel_x + 3 + 48, y + 6);
-        _cursor_sprites.clear();
-        _text_generator.generate(panel_x + 7, y, ">", _cursor_sprites);
+        _panel.close();
+        _bar.clear();
+        _title_label.clear();
+        _labels.clear();
+        _hint.close();
     }
 
     int menu::update()
@@ -140,24 +108,12 @@ namespace tl
         if(bn::keypad::up_pressed() && _selected > 0)
         {
             --_selected;
-
-            if(_selected < _top)
-            {
-                _top = _selected;
-            }
-
-            _draw_options();
+            _draw_rows();
         }
         else if(bn::keypad::down_pressed() && _selected < _options_count - 1)
         {
             ++_selected;
-
-            if(_selected >= _top + max_options)
-            {
-                _top = _selected - max_options + 1;
-            }
-
-            _draw_options();
+            _draw_rows();
         }
 
         if(bn::keypad::a_pressed())

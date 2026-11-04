@@ -29,6 +29,7 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import scene as scn          # noqa: E402
 import hud_sprites           # noqa: E402
+import ui_assets             # noqa: E402
 import critters, npcs              # noqa: E402
 import interactions          # noqa: E402
 
@@ -751,13 +752,7 @@ def build_ui_sprites():
     pal = pal + [(0, 0, 0)] * (16 - len(pal))
     write_bmp(os.path.join(ROOT, "graphics", "need_bar.bmp"), pixels, 32, len(pixels), 4, pal)
     write_text(os.path.join(ROOT, "graphics", "need_bar.json"), '{\n    "type": "sprite",\n    "height": 8\n}\n')
-    left, right, highlight, pal = hud_sprites.build_menu_panel()
-    pal = pal + [(0, 0, 0)] * (16 - len(pal))
-    for name, px, w, h in (("menu_left", left, 64, 64), ("menu_right", right, 32, 64),
-                           ("menu_highlight", highlight, 32, 16)):
-        write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), px, w, len(px), 4, pal)
-        write_text(os.path.join(ROOT, "graphics", name + ".json"),
-                   f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
+    ui_assets.main()           # panels, highlight bars, icons, fonts (tools/ui_assets.py)
 
 
 def build_player_actions(force, fast):

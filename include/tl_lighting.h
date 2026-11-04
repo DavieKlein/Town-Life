@@ -25,6 +25,9 @@ namespace tl
 
     [[nodiscard]] light_params lighting_at(int minutes, bool outdoor);
 
+    // True when the lamps are on (outdoor night from about 19:40 to 6:15); the UI switches to its Night style then.
+    [[nodiscard]] bool is_night(int minutes);
+
     [[nodiscard]] bn::color light_colour(bn::color colour, const light_params& params);
 
     void light_colours(const bn::color* source, bn::color* destination, int count, const light_params& params);

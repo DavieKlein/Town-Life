@@ -27,9 +27,10 @@ namespace tl
     void field::_open_pause()
     {
         // Free the HUD text sprites while the pause screen is up (the sprite budget is 128).
-        _clock_sprites.clear();
-        _money_sprites.clear();
-        _version_sprites.clear();
+        _clock_label.clear();
+        _clock_small_label.clear();
+        _money_label.clear();
+        _version_label.clear();
         _version_frames = 0;
 
         pause_info info;
@@ -43,6 +44,7 @@ namespace tl
         }
 
         info.objective = _objective.c_str();
+        ui::set_night(is_night(_minutes));
         _pause.open(info);
         _pause_mode = pause_mode::main;
     }
@@ -58,8 +60,8 @@ namespace tl
     void field::_open_dialog(int which)
     {
         static constexpr bn::string_view overwrite_lines[] = { "Overwrite saved game?" };
-        static constexpr bn::string_view quit_lines[] = { "Quit to title?", "Unsaved progress will", "be lost." };
-        static constexpr bn::string_view saved_lines[] = { "Game saved." };
+        static constexpr bn::string_view quit_lines[] = { "Go back to the title?", "Unsaved progress will", "be lost." };
+        static constexpr bn::string_view saved_lines[] = { "Your progress is saved." };
         static constexpr bn::string_view yes_no[] = { "Yes", "No" };
         static constexpr bn::string_view ok[] = { "OK" };
 
@@ -69,17 +71,17 @@ namespace tl
         {
 
         case 0:
-            _dialog.open(overwrite_lines, 1, yes_no, 2);
+            _dialog.open("Save game", overwrite_lines, 1, yes_no, 2);
             _pause_mode = pause_mode::confirm_save;
             break;
 
         case 1:
-            _dialog.open(saved_lines, 1, ok, 1);
+            _dialog.open("Game saved", saved_lines, 1, ok, 1);
             _pause_mode = pause_mode::saved;
             break;
 
         default:
-            _dialog.open(quit_lines, 3, yes_no, 2);
+            _dialog.open("Quit to title", quit_lines, 3, yes_no, 2);
             _pause_mode = pause_mode::confirm_quit;
             break;
         }

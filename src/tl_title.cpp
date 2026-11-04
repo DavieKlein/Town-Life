@@ -7,19 +7,30 @@
 #include "bn_bg_palettes.h"
 #include "bn_sprite_palettes.h"
 #include "bn_sprite_text_generator.h"
+#include "bn_sprite_palette_item.h"
 
-#include "common_variable_8x8_sprite_font.h"
 #include "common_variable_16x16_sprite_font.h"
 
 #include "tl_save.h"
 #include "tl_pause.h"
+#include "tl_ui.h"
 
 namespace tl
 {
     namespace
     {
-        constexpr int options_x = -48;
-        constexpr int options_y = -2;       // panel top
+        constexpr int menu_x = 64;
+        constexpr int menu_w = 112;
+
+        // "TOWN LIFE" in gold (the common 16x16 font: 14 = letters, 12 = outline).
+        constexpr bn::color gold_colours[16] = {
+            bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0),
+            bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0),
+            bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(2, 1, 4), bn::color(0, 0, 0), bn::color(31, 26, 11),
+            bn::color(0, 0, 0)
+        };
+
+        constexpr bn::sprite_palette_item gold_palette(bn::span<const bn::color>(gold_colours), bn::bpp_mode::BPP_4);
     }
 
     bool run_title()
@@ -27,18 +38,19 @@ namespace tl
         bn::bg_palettes::set_fade(bn::color(0, 0, 0), 0);
         bn::sprite_palettes::set_fade(bn::color(0, 0, 0), 0);
         bn::bg_palettes::set_transparent_color(bn::color(3, 4, 8));
+        ui::set_night(true);       // the title screen always uses the Night style
 
-        bn::sprite_text_generator text(common::variable_8x8_sprite_font);
         bn::sprite_text_generator big_text(common::variable_16x16_sprite_font);
-        text.set_bg_priority(0);
         big_text.set_bg_priority(0);
         big_text.set_center_alignment();
-        text.set_center_alignment();
+        big_text.set_palette_item(gold_palette);
 
-        bn::vector<bn::sprite_ptr, 40> labels;
-        big_text.generate(0, -50, "TOWN LIFE", labels);
-        text.generate(0, -28, "A story of the city", labels);
-        text.generate(0, 66, "build " __DATE__ " " __TIME__, labels);
+        bn::vector<bn::sprite_ptr, 16> big_sprites;
+        big_text.generate(0, -50, "TOWN LIFE", big_sprites);
+        ui::label subtitle;
+        ui::label version;
+        subtitle.set_centre(ui::font9, 120, 56, "A story of the city", ui::role::hud_clock);
+        version.set_centre(ui::font9, 120, 150, "build " __DATE__ " " __TIME__, ui::role::hint);
 
         save_data existing;
         bool has_save = save_read(existing);
@@ -48,29 +60,38 @@ namespace tl
         const bn::string_view* options = has_save ? both : only_new;
         int options_count = has_save ? 2 : 1;
 
-        panel box;
-        bn::vector<bn::sprite_ptr, 24> option_sprites;
-        bn::vector<bn::sprite_ptr, 2> cursor;
-        dialog confirm(text);
+        ui::panel box;
+        ui::bar highlight;
+        ui::label option_labels[2];
+        dialog confirm;
         int selected = 0;
         bool confirming = false;
+        int box_y = 78;
+        int box_h = 16 + (options_count * 15) < 36 ? 36 : 16 + (options_count * 15);
 
         auto draw = [&]()
         {
-            option_sprites.clear();
-            cursor.clear();
-            text.set_left_alignment();
-
             for(int index = 0; index < options_count; ++index)
             {
-                text.generate(options_x + 22, options_y + 20 + (index * 14), options[index], option_sprites);
+                option_labels[index].set(ui::font9, menu_x + 5 + 12, box_y + 5 + (index * 15) + 10, options[index],
+                                         index == selected ? ui::role::selected : ui::role::text);
             }
 
-            text.generate(options_x + 10, options_y + 20 + (selected * 14), ">", cursor);
-            text.set_center_alignment();
+            highlight.set(menu_x + 5, box_y + 5 + (selected * 15), menu_w - 10);
         };
 
-        box.open(options_x, options_y, 96, 1);
+        auto close_box = [&]()
+        {
+            box.close();
+            highlight.clear();
+
+            for(ui::label& label : option_labels)
+            {
+                label.clear();
+            }
+        };
+
+        box.open(menu_x, box_y, menu_w, box_h, false);
         draw();
         bn::core::update();
 
@@ -89,7 +110,8 @@ namespace tl
                         break;      // New Game confirmed
                     }
 
-                    box.open(options_x, options_y, 96, 1);
+                    box.open(menu_x, box_y, menu_w, box_h, false);
+                    subtitle.set_centre(ui::font9, 120, 56, "A story of the city", ui::role::hud_clock);
                     draw();
                 }
             }
@@ -119,10 +141,9 @@ namespace tl
                         static constexpr bn::string_view lines[] = {
                             "Start a new game?", "Your saved game stays", "until you save again." };
                         static constexpr bn::string_view yes_no[] = { "Yes", "No" };
-                        box.close();
-                        option_sprites.clear();
-                        cursor.clear();
-                        confirm.open(lines, 3, yes_no, 2, 20);
+                        close_box();
+                        subtitle.clear();
+                        confirm.open("New game", lines, 3, yes_no, 2, 40);
                         confirming = true;
                     }
                     else

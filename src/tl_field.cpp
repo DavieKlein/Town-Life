@@ -10,7 +10,6 @@
 #include "bn_blending.h"
 #include "bn_sprite_items_need_bar.h"
 #include "bn_sprite_items_light_pool.h"
-#include "common_variable_8x8_sprite_font.h"
 
 namespace tl
 {
@@ -93,13 +92,9 @@ namespace tl
         }
     }
 
-    field::field(map_id start_map, int start_x, int start_y, direction facing) :
-        _text_generator(common::variable_8x8_sprite_font),
-        _menu(_text_generator),
-        _pause(_text_generator),
-        _dialog(_text_generator)
+    field::field(map_id start_map, int start_x, int start_y, direction facing)
     {
-        _text_generator.set_bg_priority(hud_priority);
+        ui::set_night(is_night(_minutes));
         _set_fade(fade_frames);
 
         // Create the big streamed layers before the HUD so they get the charblock-aligned VRAM.
@@ -109,8 +104,7 @@ namespace tl
         _redraw_hud_text();
 
         // Build date at the top left for a few seconds, so the owner can check which ROM is running.
-        _text_generator.set_left_alignment();
-        _text_generator.generate(-116, -74, "build " __DATE__ " " __TIME__, _version_sprites);
+        _version_label.set(ui::font9, 4, 11, "build " __DATE__ " " __TIME__, ui::role::hud_clock);
 
         // Need bars: one sprite per need over the dark bar slots of the HUD background.
         for(int need = 0; need < needs::count; ++need)
@@ -268,31 +262,33 @@ namespace tl
 
     void field::_redraw_hud_text()
     {
+        ui::set_night(is_night(_minutes));
         int hours = (_minutes / 60) % 24;
         int minutes = _minutes % 60;
         bool pm = hours >= 12;
         int display_hours = hours % 12 == 0 ? 12 : hours % 12;
 
-        bn::string<16> clock;
-        clock.append(bn::to_string<4>(display_hours));
-        clock.append(':');
-
-        if(minutes < 10)
-        {
-            clock.append('0');
-        }
-
-        clock.append(bn::to_string<4>(minutes));
-        clock.append(pm ? " pm" : " am");
-
         bn::string<16> money("$");
         money.append(bn::to_string<10>(_money));
 
-        _clock_sprites.clear();
-        _money_sprites.clear();
-        _text_generator.set_left_alignment();
-        _text_generator.generate(-112, 56, clock, _clock_sprites);
-        _text_generator.generate(-112, 71, money, _money_sprites);
+        // HUD panel: clock on the upper half, money (gold) on the lower half; bold 11 px digits, small am/pm
+        bn::string<8> clock_digits;
+        clock_digits.append(bn::to_string<4>(display_hours));
+        clock_digits.append(':');
+
+        if(minutes < 10)
+        {
+            clock_digits.append('0');
+        }
+
+        clock_digits.append(bn::to_string<4>(minutes));
+        // two-digit hours do not fit the panel at 11 px: use the 9 px digits then
+        const ui::font_data& clock_font = ui::text_width(ui::font11, clock_digits) + 2 +
+                ui::text_width(ui::font9, "am") > 47 ? ui::font9 : ui::font11;
+        _clock_label.set(clock_font, 13, 141, clock_digits, ui::role::hud_clock);
+        _clock_small_label.set(ui::font9, 13 + ui::text_width(clock_font, clock_digits) + 2, 141, pm ? "pm" : "am",
+                               ui::role::hud_clock);
+        _money_label.set(ui::font11, 13, 156, money, ui::role::hud_money);
     }
 
     void field::_tick_minute()
@@ -423,7 +419,7 @@ namespace tl
         }
     }
 
-    void field::_open_interaction_menu()
+    const interactable* field::_find_target() const
     {
         // nearest usable object in reach of the player's feet
         const interactable* best = nullptr;
@@ -458,11 +454,83 @@ namespace tl
             }
         }
 
+        return best;
+    }
+
+    void field::_update_cue()
+    {
+        // The bobbing "A" bubble over the nearest object in reach (only while walking, no menu, no activity).
+        const interactable* target = _find_target();
+
+        if(! target)
+        {
+            _cue.reset();
+            return;
+        }
+
+        int height;
+
+        switch(target->kind)
+        {
+        case interactable_kind::bench:
+            height = 22;
+            break;
+
+        case interactable_kind::seat:
+        case interactable_kind::seat_x:
+            height = 26;
+            break;
+
+        case interactable_kind::fountain:
+            height = 36;
+            break;
+
+        case interactable_kind::bookshelf:
+        case interactable_kind::noticeboard:
+            height = 46;
+            break;
+
+        case interactable_kind::bin:
+        case interactable_kind::sink:
+        case interactable_kind::reception:
+            height = 40;
+            break;
+
+        default:      // toilet, shop counters
+            height = 38;
+            break;
+        }
+
+        static constexpr int bob[4] = { 0, 1, 2, 1 };
+        ++_cue_frame;
+        int sx = _map->to_image_x(target->x, target->y) - _cam_x;
+        int sy = _map->to_image_y(target->x, target->y) - _cam_y - height - bob[(_cue_frame / 8) % 4];
+
+        if(sy < 18)
+        {
+            sy = 18;
+        }
+
+        if(! _cue)
+        {
+            _cue = ui::make_cue(sx, sy);
+        }
+        else
+        {
+            ui::place_cue(*_cue, sx, sy);
+        }
+    }
+
+    void field::_open_interaction_menu()
+    {
+        const interactable* best = _find_target();
+
         if(! best)
         {
             return;
         }
 
+        ui::set_night(is_night(_minutes));
         _menu_target = best;
         _menu_mode = menu_mode::interact;
 
@@ -758,22 +826,20 @@ namespace tl
     {
         if(_player.current_activity() != player::activity::sleeping || ! _rest_target)
         {
-            _zzz_sprites.clear();
+            _zzz_label.clear();
             return;
         }
 
         static int phase = 0;
         ++phase;
 
-        if(_zzz_sprites.empty() || phase % 40 == 0)
+        if(_zzz_label.empty() || phase % 40 == 0)
         {
-            _zzz_sprites.clear();
-            int sx = _map->to_image_x(_rest_target->x, _rest_target->y) - _cam_x - 120;
-            int sy = _map->to_image_y(_rest_target->x, _rest_target->y) - _cam_y - 80;
+            int sx = _map->to_image_x(_rest_target->x, _rest_target->y) - _cam_x;
+            int sy = _map->to_image_y(_rest_target->x, _rest_target->y) - _cam_y;
             int rise = (phase / 40) % 3;
-            _text_generator.set_left_alignment();
-            _text_generator.generate(sx - 18, sy - 34 - (rise * 3), rise == 0 ? "z" : (rise == 1 ? "zZ" : "zZz"),
-                                     _zzz_sprites);
+            _zzz_label.set(ui::font9, sx - 18, sy - 30 - (rise * 3), rise == 0 ? "z" : (rise == 1 ? "zZ" : "zZz"),
+                           ui::role::hud_clock);
         }
     }
 
@@ -797,17 +863,19 @@ namespace tl
 
             if(_version_frames > 0 && --_version_frames == 0)
             {
-                _version_sprites.clear();
+                _version_label.clear();
             }
 
             if(_pause_mode != pause_mode::none)
             {
+                _cue.reset();
                 _update_pause();
                 break;
             }
 
             if(_menu.is_open())
             {
+                _cue.reset();
                 int choice = _menu.update();
 
                 if(choice != menu::open_still)
@@ -823,6 +891,7 @@ namespace tl
 
             if(bn::keypad::start_pressed() && _can_pause())
             {
+                _cue.reset();
                 _open_pause();
                 break;
             }
@@ -833,6 +902,7 @@ namespace tl
 
                 if(_menu.is_open())
                 {
+                    _cue.reset();
                     break;
                 }
             }
@@ -879,6 +949,16 @@ namespace tl
             _update_camera();
             _update_clock();
             _update_lighting(false);
+
+            if(_player.current_activity() == player::activity::walking && ! _act.active && ! _menu.is_open())
+            {
+                _update_cue();
+            }
+            else
+            {
+                _cue.reset();
+            }
+
             _pending_warp = _map->warp_at(_player.x(), _player.y());
 
             if(_pending_warp)
@@ -889,6 +969,7 @@ namespace tl
             break;
 
         case state::fading_out:
+            _cue.reset();
             ++_fade_counter;
             _set_fade(_fade_counter);
 

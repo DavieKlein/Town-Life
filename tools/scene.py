@@ -514,12 +514,41 @@ def newspaper_box(s, x, y, colour="sign_blue"):
     s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 1.2)
 
 
-def trash_can(s, x, y):
-    s.cyl(x, y, 0, 0.85, 0.24, "bin_green", verts=12)
-    s.cyl(x, y, 0.85, 0.92, 0.27, "metal_dark", verts=12)
-    s.box(x - 0.05, y + 0.15, x + 0.12, y + 0.3, 0.92, 1.0, "goods_white")      # litter sticking out
-    s.set_solid(x - 0.25, y - 0.25, x + 0.25, y + 0.25)
+def trash_can(s, x, y, tint="bin_green"):
+    """Litter bin that reads at once (owner feedback): flared body, white band, dark lid, litter on top."""
+    s.cyl(x, y, 0.0, 0.8, 0.27, tint, verts=14, r2=0.32)
+    s.cyl(x, y, 0.45, 0.58, 0.3, "robot_white", verts=14)                                  # band
+    s.cyl(x, y, 0.8, 0.9, 0.35, "metal_dark", verts=14)
+    s.box(x - 0.18, y + 0.2, x + 0.18, y + 0.3, 0.9, 1.02, "goods_yellow")                # bag/litter on top
+    s.set_solid(x - 0.3, y - 0.3, x + 0.3, y + 0.3)
     s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 1.0)
+
+
+def sink_unit(s, x, y, k=1.2):
+    """Obvious wash basin on the back wall (faces +y): big white basin on a pedestal, chrome tap and spout, soap
+    dispenser, mirror with a light frame above it. k = overall size factor (exaggerated for readability)."""
+    X = lambda d: x + d * k
+    Y = lambda d: y + d * k
+    Z = lambda d: d * k
+    s.box(X(-0.34), Y(0.0), X(0.34), Y(0.12), 0.0, Z(1.0), "robot_white")             # pedestal against the wall
+    s.box(X(-0.46), Y(0), X(0.46), Y(0.5), Z(0.84), Z(0.94), "robot_white")             # basin rim
+    s.box(X(-0.36), Y(0.06), X(0.36), Y(0.44), Z(0.9), Z(0.96), "tile_bath")            # basin dip
+    s.cyl(x, Y(0.14), Z(0.94), Z(1.12), 0.035 * k, "chrome", verts=10)                   # tap column
+    s.tube([(x, Y(0.14), Z(1.1)), (x, Y(0.2), Z(1.17)), (x, Y(0.3), Z(1.1))], 0.03 * k, "chrome")   # spout
+    s.box(X(-0.2), Y(0.1), X(-0.1), Y(0.18), Z(0.94), Z(1.06), "chrome")                # tap handles
+    s.box(X(0.1), Y(0.1), X(0.2), Y(0.18), Z(0.94), Z(1.06), "chrome")
+    s.cyl(X(0.5), Y(0.12), Z(0.94), Z(1.1), 0.06 * k, "goods_green", verts=10)           # soap
+    s.box(X(-0.5), Y(0.0), X(0.5), Y(0.07), Z(1.3), Z(2.0), "robot_white")               # mirror frame
+    s.box(X(-0.44), Y(0.07), X(0.44), Y(0.09), Z(1.36), Z(1.94), "steel")                # mirror (silver, not window-blue)
+    s.set_solid(X(-0.5), y, X(0.5), Y(0.55))
+    s.occluder(X(-0.5), y, X(0.5), Y(0.55), Z(1.1))
+
+
+def toilet_unit(s, x, y):
+    """White WC with lid up, tank, flush button, roll holder: nothing in front of it."""
+    s.prop("house/Bathroom_Toilet", x, y + 0.45, rot=0, scale=0.52, colours={"White": "#f6f6f0"}, solid=True)
+    s.box(x + 0.75, y + 0.0, x + 0.88, y + 0.15, 0.85, 0.97, "robot_white")               # paper roll holder
+    s.cyl(x + 0.82, y + 0.16, 0.9, 1.0, 0.07, "paper_cream", axis="y", verts=12)
 
 
 def parking_meter(s, x, y):
@@ -1190,6 +1219,9 @@ class SwapProxy:
     def prop(self, name, x, y, rot=0, **k):
         return self.s.prop(name, y, x, rot=(90 - rot) % 360, **k)
 
+    def tube(self, pts, *a, **k):
+        return self.s.tube([(p[1], p[0], p[2]) for p in pts], *a, **k)
+
 
 
 
@@ -1752,8 +1784,8 @@ def diner():
     # free table with chairs (south), a small one at the east wall
     for (tx, ty) in ((7.0, 7.6),):
         s.prop("house/Table_RoundSmall", tx, ty, h=0.66)
-        s.prop("house/Chair_1", tx, ty - 1.3, rot=0, h=0.9, colours={"Wood": "#b8302c"})
-        s.prop("house/Chair_1", tx, ty + 1.35, rot=180, h=0.9, colours={"Wood": "#b8302c"})
+        s.prop("house/Chair_1", tx, ty - 1.3, rot=0, h=1.05, colours={"Wood": "#e04030"})
+        s.prop("house/Chair_1", tx, ty + 1.35, rot=180, h=1.05, colours={"Wood": "#e04030"})
         s.box(tx - 0.2, ty - 0.2, tx - 0.05, ty - 0.05, 0.7, 0.8, "goods_red")
         s.box(tx + 0.05, ty - 0.2, tx + 0.2, ty - 0.05, 0.7, 0.8, "goods_yellow")
     potted_plant(s, 9.4, 6.6, "bay")
@@ -1820,8 +1852,8 @@ def community_centre():
         s.set_solid(tx, 5.0, tx + 2.999, 6.399)
         s.occluder(tx, 5.0, tx + 3.0, 6.4, 0.85)
         for cx in (tx + 0.8, tx + 2.0):
-            s.prop("house/Chair_1", cx, 4.35, rot=0, h=0.9)
-            s.prop("house/Chair_1", cx, 7.1, rot=180, h=0.9)
+            s.prop("house/Chair_1", cx, 4.35, rot=0, h=0.9, colours={"Wood": "#e6b866"})
+            s.prop("house/Chair_1", cx, 7.1, rot=180, h=0.9, colours={"Wood": "#e6b866"})
     # help desk near the entrance
     counter(s, 12.0, 10.2, 16.99, 11.0, 0.95, "wood_blue", "wood_dark")
     monitor_y(s, 13.3, 10.5, 1.0)
@@ -2044,41 +2076,44 @@ def home_room():
     return s
 
 def public_toilet():
-    """Tiny park toilet: one open WC (half wall), one sink with a mirror, paper towels, a bin; a bit grimy."""
+    """Public park toilet: an open white WC on the back wall (nothing in front of it), a big basin with mirror on
+    the west wall, hand dryer, toilet-roll shelf, 'please keep clean' notice, cleaner's corner (mop, bucket, broom),
+    wet-floor sign, hygiene poster and ONE bin; a bit grimy."""
     W, H = 6, 6
     s = std_room("public_toilet", "Public toilet", W, H, "tile_floor_dirty", "plaster_bare", "tile_dirty", 1.7, 3.0, (2, 5),
                  "city_centre", 3.0, 40.9, mat_cols=("metal_dark", "stain"))
-    # open WC stall: half wall on the right, toilet against the back wall
-    s.box(2.15, 0.0, 2.25, 1.95, 0.2, 1.15, "stall_panel")
-    s.box(2.15, 0.0, 2.25, 1.95, 1.15, 1.2, "chrome")
-    s.set_solid(2.1, 0.0, 2.299, 1.95)
-    s.occluder(2.1, 0.0, 2.3, 1.95, 1.2)
-    s.prop("house/Bathroom_Toilet", 1.2, 0.47, scale=0.44, colours={"White": "#d8d4c4"})
-    s.tube([(0.1, 0.5, 0.8), (0.1, 1.4, 0.8)], 0.025, "chrome")                      # grab rail
-    # sink with mirror, paper towels and a bin on the west wall
-    s.prop("house/Bathroom_Sink", 0.5, 3.4, rot=90, scale=0.5, colours={"White": "#cfc8b4"})
-    s.prop("house/Bathroom_Mirror1", 0.1, 3.4, rot=90, scale=0.7, z=1.3, solid=False, occlude=False)
-    s.box(0.05, 4.1, 0.35, 4.5, 1.0, 1.6, "robot_white")                              # paper towel dispenser
-    s.box(0.35, 4.15, 0.4, 4.45, 1.2, 1.3, "metal_dark")
-    s.set_solid(0.0, 4.0, 0.399, 4.6)
-    s.cyl(0.95, 4.65, 0.0, 0.7, 0.25, "bin_green", verts=12)                           # litter bin
-    s.cyl(0.95, 4.65, 0.7, 0.74, 0.27, "metal_dark", verts=12)
-    s.set_solid(0.7, 4.4, 1.199, 4.899)
-    s.occluder(0.0, 3.0, 0.7, 4.6, 1.7)
-    # signs and window on the back wall
-    s.box(0.5, 0.0, 2.0, 0.06, 2.25, 2.85, "sign_blue")
-    s.text("WC", 1.25, 0.09, 2.55, 0.5, "robot_white", face="left")
-    window_y(s, 3.4, 4.8, 0.0, 1.7, 2.6)
-    for bx in (3.75, 4.1, 4.45):
-        s.box(bx - 0.015, 0.0, bx + 0.015, 0.12, 1.7, 2.6, "metal_dark")
-    # grime: stained wall streaks, a cracked floor tile (no puddles)
-    for (gx, gz0, gz1) in ((2.7, 0.15, 1.4), (3.05, 0.15, 0.7), (5.2, 0.15, 1.1), (1.6, 1.1, 1.65)):
+    toilet_unit(s, 2.9, 0.0)
+    s.box(2.2, 0.0, 3.7, 0.06, 2.3, 2.9, "sign_blue")
+    s.text("WC", 2.95, 0.09, 2.6, 0.5, "robot_white", face="left")
+    # west wall: window, sink with big mirror, hand dryer
+    window_x(s, 1.0, 2.4, 0.0, 1.5, 2.5)
+    sink_unit(SwapProxy(s), 3.5, 0.0)
+    s.box(0.0, 4.4, 0.3, 4.9, 1.1, 1.5, "chrome")                                            # hand dryer
+    s.box(0.3, 4.5, 0.34, 4.8, 1.2, 1.4, "metal_dark")
+    # back wall left: notice + shelf with toilet rolls
+    s.box(0.4, 0.0, 1.7, 0.05, 1.7, 2.5, "paper_cream")
+    s.text("PLEASE KEEP", 1.05, 0.08, 2.3, 0.15, "metal_dark", face="left")
+    s.text("CLEAN", 1.05, 0.08, 2.05, 0.15, "metal_dark", face="left")
+    s.box(0.4, 0.0, 1.7, 0.3, 1.0, 1.05, "wood_dark")
+    for i in range(4):
+        s.cyl(0.65 + i * 0.28, 0.14, 1.05, 1.23, 0.1, "robot_white", verts=12)
+    trash_can(s, 0.75, 1.0)                                                                  # the only bin
+    # mop + bucket + broom in the back-right corner
+    s.cyl(4.55, 0.55, 0.0, 0.38, 0.22, "bucket_yellow", verts=14, r2=0.27)
+    s.cyl(4.55, 0.55, 0.36, 0.38, 0.19, "stain", verts=14)
+    s.tube([(4.5, 0.5, 0.3), (4.18, 0.2, 1.45)], 0.022, "wood")
+    s.sphere(4.5, 0.5, 0.3, 0.1, "robot_white", sz=0.6)
+    s.tube([(4.9, 0.18, 0.05), (4.78, 0.15, 1.45)], 0.022, "wood")
+    s.box(4.72, 0.12, 4.98, 0.34, 0.0, 0.12, "goods_yellow")
+    s.box(4.2, 0.0, 4.75, 0.05, 1.7, 2.3, "poster_yellow")                                    # hygiene poster
+    s.box(4.3, 0.05, 4.65, 0.07, 1.95, 2.05, "metal_dark")
+    s.box(4.3, 0.05, 4.55, 0.07, 1.8, 1.88, "metal_dark")
+    # wet floor A-frame sign
+    s.box(3.8, 1.9, 4.3, 2.0, 0.0, 0.6, "goods_yellow")
+    s.box(3.8, 2.05, 4.3, 2.15, 0.0, 0.6, "goods_yellow")
+    s.set_solid(3.8, 1.9, 4.3, 2.15)
+    for (gx, gz0, gz1) in ((1.9, 0.15, 1.4), (4.1, 0.15, 1.1)):
         s.box(gx, 0.0, gx + 0.1, 0.045, gz0, gz1, "stain")
-    for (sy0, sy1, z) in ((2.0, 2.35, 1.2), (3.2, 3.55, 0.9)):
-        s.box(0.0, sy0, 0.045, sy1, z - 0.9, z + 0.3, "stain")
-    for (x0, y0, x1, y1) in ((3.6, 2.9, 3.8, 2.93), (3.78, 2.9, 3.81, 3.1), (3.6, 3.08, 3.8, 3.11),
-                             (3.45, 3.0, 3.6, 3.03), (3.8, 3.1, 4.0, 3.13)):
-        s.box(x0, y0, x1, y1, 0.0, 0.008, "metal_dark", layer="floor")
     s.point_light(2.5, 2.5, 2.6, 85, colour=(0.9, 0.98, 1.0))
     s.point_light(4.5, 4.0, 2.6, 60, colour=(0.9, 0.98, 1.0))
     return s

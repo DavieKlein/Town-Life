@@ -94,6 +94,11 @@ namespace tl
         return night_light;
     }
 
+    bool is_night(int minutes)
+    {
+        return lighting_at(minutes, true).night >= 128;
+    }
+
     bn::color light_colour(bn::color colour, const light_params& p)
     {
         int r = colour.red();

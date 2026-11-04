@@ -2,103 +2,100 @@
 
 #include "bn_keypad.h"
 #include "bn_string.h"
-#include "bn_sprite_items_menu_left.h"
-#include "bn_sprite_items_menu_right.h"
+#include "bn_sprite_items_need_bar.h"
 
 namespace tl
 {
     namespace
     {
-        constexpr int panel_width = 222;
-        constexpr int panel_x = -111;
-        constexpr int pause_y = -78;
-        constexpr int line_step = 11;
-
         constexpr bn::string_view need_names[] = { "Hunger", "Energy", "Hygiene", "Fun", "Bladder" };
         constexpr bn::string_view pause_options[] = { "Resume", "Save game", "Quit to title" };
-    }
 
-    void panel::open(int x, int y, int width, int rows)
-    {
-        close();
+        constexpr int dialog_w = 212;
+        constexpr int dialog_x = (240 - dialog_w) / 2;
+        constexpr int bar_levels = 16;      // frames of need_bar.bmp
 
-        // The menu sprites are 64 wide with a border only on their left edge (right piece: 32 wide, border on
-        // the right). Left pieces overlap by one column, each lying behind the previous one, which hides its
-        // border; rows overlap by one line for the same reason.
-        int lefts = ((width - 96 + 62) / 63) + 1;      // widths 96 and 222 fit exactly
-
-        for(int row = 0; row < rows; ++row)
+        [[nodiscard]] bn::string<16> clock_text(int total_minutes)
         {
-            int top = y + (row * 63);
+            int hours = (total_minutes / 60) % 24;
+            int minutes = total_minutes % 60;
+            bn::string<16> text;
+            text.append(bn::to_string<4>(hours % 12 == 0 ? 12 : hours % 12));
+            text.append(':');
 
-            for(int index = 0; index < lefts; ++index)
+            if(minutes < 10)
             {
-                bn::sprite_ptr sprite = bn::sprite_items::menu_left.create_sprite(x + (index * 63) + 32, top + 32);
-                sprite.set_bg_priority(0);
-                sprite.set_z_order(20 + index);
-                sprite.set_vertical_flip(row > 0);      // keeps the gradient smooth at the seam
-                _sprites.push_back(bn::move(sprite));
+                text.append('0');
             }
 
-            bn::sprite_ptr right = bn::sprite_items::menu_right.create_sprite(x + width - 16, top + 32);
-            right.set_bg_priority(0);
-            right.set_z_order(19);
-            right.set_vertical_flip(row > 0);
-            _sprites.push_back(bn::move(right));
+            text.append(bn::to_string<4>(minutes));
+            text.append(hours >= 12 ? " pm" : " am");
+            return text;
         }
-    }
-
-    void panel::close()
-    {
-        _sprites.clear();
     }
 
     // ---------------------------------------------------------------------------------------------------------
 
-    dialog::dialog(bn::sprite_text_generator& text_generator) :
-        _text_generator(text_generator)
-    {
-    }
-
-    void dialog::open(const bn::string_view* lines, int lines_count, const bn::string_view* options,
-                      int options_count, int centre_y)
+    void dialog::open(const bn::string_view& title, const bn::string_view* lines, int lines_count,
+                      const bn::string_view* options, int options_count, int top)
     {
         close();
         _options = options;
         _options_count = options_count;
         _selected = 0;
-        _x = panel_x + 12;
-        int top = centre_y - 32;
-        _panel.open(panel_x, top, panel_width, 1);
-        _text_generator.set_left_alignment();
+        int height = 17 + 12 + ((lines_count - 1) * 11) + 8 + (options_count * 15) + 4;
+
+        if(options_count == 1)
+        {
+            height += 15;       // room for the hint row instead of a second option
+        }
+
+        if(top < 0)
+        {
+            top = (128 - height) / 2;
+        }
+
+        _panel.open(dialog_x, top, dialog_w, height, true);
+        _title.set(ui::font9, dialog_x + 7, top + 12, title, ui::role::title);
+        _lines.clear();
 
         for(int index = 0; index < lines_count; ++index)
         {
-            _text_generator.generate(_x, top + 9 + (index * 9), lines[index], _text);
+            _lines.emplace_back();
+            _lines.back().set(ui::font9, dialog_x + 8, top + 17 + 12 + (index * 11), lines[index], ui::role::text);
         }
 
-        _options_y = top + 9 + (lines_count * 9) + 4;
+        _options_y = top + 17 + 12 + ((lines_count - 1) * 11) + 8;
+        _option_labels.clear();
 
         for(int index = 0; index < options_count; ++index)
         {
-            _text_generator.generate(_x + 12, _options_y + (index * 10), options[index], _text);
+            _option_labels.emplace_back();
         }
 
-        _place_cursor();
+        _hint.open(dialog_x + dialog_w - 100, top + height - 17, options_count > 1);
+        _draw_options();
+    }
+
+    void dialog::_draw_options()
+    {
+        for(int index = 0; index < _options_count; ++index)
+        {
+            _option_labels[index].set(ui::font9, dialog_x + 8 + 12, _options_y + (index * 15) + 10, _options[index],
+                                      index == _selected ? ui::role::selected : ui::role::text);
+        }
+
+        _bar.set(dialog_x + 8, _options_y + (_selected * 15), 90);
     }
 
     void dialog::close()
     {
         _panel.close();
-        _text.clear();
-        _cursor.clear();
-    }
-
-    void dialog::_place_cursor()
-    {
-        _cursor.clear();
-        _text_generator.set_left_alignment();
-        _text_generator.generate(_x, _options_y + (_selected * 10), ">", _cursor);
+        _bar.clear();
+        _title.clear();
+        _lines.clear();
+        _option_labels.clear();
+        _hint.close();
     }
 
     int dialog::update()
@@ -111,12 +108,12 @@ namespace tl
         if(bn::keypad::up_pressed() && _selected > 0)
         {
             --_selected;
-            _place_cursor();
+            _draw_options();
         }
         else if(bn::keypad::down_pressed() && _selected < _options_count - 1)
         {
             ++_selected;
-            _place_cursor();
+            _draw_options();
         }
 
         if(bn::keypad::a_pressed())
@@ -137,80 +134,62 @@ namespace tl
 
     // ---------------------------------------------------------------------------------------------------------
 
-    pause_screen::pause_screen(bn::sprite_text_generator& text_generator) :
-        _text_generator(text_generator)
-    {
-    }
-
     void pause_screen::open(const pause_info& info)
     {
         close();
         _selected = 0;
-        _panel.open(panel_x, pause_y, panel_width, 2);
-        _text_generator.set_left_alignment();
+        _panel.open(4, 4, 232, 120, false);
+        _labels.clear();
 
-        int left_x = panel_x + 10;
-        int right_x = panel_x + 118;
-        int y = pause_y + 8;
-
-        bn::string<16> line("Day ");
-        line.append(bn::to_string<8>(info.day));
-        _text_generator.generate(left_x, y, line, _text);
-
-        int hours = (info.minutes / 60) % 24;
-        int minutes = info.minutes % 60;
-        line = bn::string<16>();
-        line.append(bn::to_string<4>(hours % 12 == 0 ? 12 : hours % 12));
-        line.append(':');
-
-        if(minutes < 10)
+        auto add = [&](const ui::font_data& font, int x, int baseline, const bn::string_view& text, ui::role r)
         {
-            line.append('0');
-        }
+            _labels.emplace_back();
+            _labels.back().set(font, x, baseline, text, r);
+        };
 
-        line.append(bn::to_string<4>(minutes));
-        line.append(hours >= 12 ? " pm" : " am");
-        _text_generator.generate(left_x, y + line_step, line, _text);
-
-        line = bn::string<16>("$");
-        line.append(bn::to_string<12>(info.money));
-        _text_generator.generate(left_x, y + (2 * line_step), line, _text);
+        bn::string<16> day("Day ");
+        day.append(bn::to_string<8>(info.day));
+        add(ui::font11, 12, 21, day, ui::role::text);
+        add(ui::font9, 62, 20, clock_text(info.minutes), ui::role::text);
+        bn::string<16> money("$");
+        money.append(bn::to_string<12>(info.money));
+        add(ui::font11, 116, 21, money, ui::role::money);
 
         for(int need = 0; need < 5; ++need)
         {
-            int ny = y + ((4 + need) * line_step);
-            _text_generator.generate(left_x, ny, need_names[need], _text);
-            line = bn::to_string<16>(info.need_values[need]);
-            _text_generator.set_right_alignment();
-            _text_generator.generate(left_x + 92, ny, line, _text);
-            _text_generator.set_left_alignment();
+            int row = 32 + (need * 12);
+            add(ui::font9, 12, row + 8, need_names[need], ui::role::text);
+            _labels.emplace_back();
+            _labels.back().set_right(ui::font9, 128, row + 8, bn::to_string<8>(info.need_values[need]),
+                                     ui::role::text);
+            int level = info.need_values[need] * (bar_levels - 1) / 100;
+            bn::sprite_ptr bar = bn::sprite_items::need_bar.create_sprite(70 + 16 - 120, row + 1 + 4 - 80, level);
+            bar.set_bg_priority(0);
+            _bars.push_back(bn::move(bar));
         }
 
-        for(int option = 0; option < 3; ++option)
-        {
-            _text_generator.generate(right_x + 10, y + (option * line_step), pause_options[option], _text);
-        }
-
-        // objective, wrapped at 11 characters, up to 3 lines
-        _text_generator.generate(right_x, y + (4 * line_step), "Goal:", _text);
+        // objective, wrapped at the panel width (up to 2 lines)
         bn::string_view objective(info.objective);
+        bn::string<64> goal("Goal: ");
+        goal.append(objective);
+        bn::string_view text(goal);
         int pos = 0;
-        int length = objective.size();
+        int length = text.size();
 
-        for(int row = 0; row < 3 && pos < length; ++row)
+        for(int line = 0; line < 2 && pos < length; ++line)
         {
-            while(pos < length && objective[pos] == ' ')
-            {
-                ++pos;
-            }
+            int end = length;
 
-            int end = pos + 11 < length ? pos + 11 : length;
+            while(end > pos + 1 && ui::text_width(ui::font9, text.substr(pos, end - pos)) > 214)
+            {
+                --end;
+            }
 
             if(end < length)
             {
                 int cut = end;
 
-                while(cut > pos && objective[cut] != ' ')
+                while(cut > pos && text[cut] != ' ')
                 {
                     --cut;
                 }
@@ -221,30 +200,42 @@ namespace tl
                 }
             }
 
-            if(end > pos)
-            {
-                _text_generator.generate(right_x, y + ((5 + row) * line_step),
-                                         objective.substr(pos, end - pos), _text);
-            }
-
+            add(ui::font9, 12, 104 + (line * 10), text.substr(pos, end - pos), ui::role::hint);
             pos = end;
+
+            while(pos < length && text[pos] == ' ')
+            {
+                ++pos;
+            }
         }
 
-        _place_cursor();
+        _hint.open(142, 88, true, "OK");
+        _draw_options();
+    }
+
+    void pause_screen::_draw_options()
+    {
+        for(int option = 0; option < 3; ++option)
+        {
+            _option_labels[option].set(ui::font9, 138 + 12, 32 + (option * 16) + 10, pause_options[option],
+                                       option == _selected ? ui::role::selected : ui::role::text);
+        }
+
+        _bar.set(138, 32 + (_selected * 16), 92);
     }
 
     void pause_screen::close()
     {
         _panel.close();
-        _text.clear();
-        _cursor.clear();
-    }
+        _bar.clear();
+        _labels.clear();
+        _bars.clear();
+        _hint.close();
 
-    void pause_screen::_place_cursor()
-    {
-        _cursor.clear();
-        _text_generator.set_left_alignment();
-        _text_generator.generate(panel_x + 118, pause_y + 8 + (_selected * line_step), ">", _cursor);
+        for(ui::label& label : _option_labels)
+        {
+            label.clear();
+        }
     }
 
     int pause_screen::update()
@@ -257,12 +248,12 @@ namespace tl
         if(bn::keypad::up_pressed() && _selected > 0)
         {
             --_selected;
-            _place_cursor();
+            _draw_options();
         }
         else if(bn::keypad::down_pressed() && _selected < 2)
         {
             ++_selected;
-            _place_cursor();
+            _draw_options();
         }
 
         if(bn::keypad::a_pressed())

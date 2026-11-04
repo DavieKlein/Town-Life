@@ -4,29 +4,13 @@
 #include "bn_vector.h"
 #include "bn_sprite_ptr.h"
 #include "bn_string_view.h"
-#include "bn_sprite_text_generator.h"
+
+#include "tl_ui.h"
 
 namespace tl
 {
-    // A dark panel (the menu panel sprites, tiled) at screen position (x, y) = top-left, centre of the screen
-    // is (0, 0). Width 96..222, height 64 (rows = 1) or 127 (rows = 2).
-    class panel
-    {
-
-    public:
-        void open(int x, int y, int width, int rows);
-        void close();
-
-        [[nodiscard]] bool is_open() const
-        {
-            return ! _sprites.empty();
-        }
-
-    private:
-        bn::vector<bn::sprite_ptr, 10> _sprites;
-    };
-
-    // A message with up to 3 text lines and 1-2 options (Yes/No, OK), centred in the play area.
+    // A titled message box with up to 3 text lines and 1-2 options (Yes/No, OK), centred in the play area
+    // (day/night style, see tl_ui.h).
     class dialog
     {
 
@@ -34,12 +18,10 @@ namespace tl
         static constexpr int cancelled = -2;
         static constexpr int open_still = -1;
 
-        explicit dialog(bn::sprite_text_generator& text_generator);
-
         // `lines` and `options` must stay valid while the dialog is open (use static constexpr arrays).
-        // `centre_y` is the vertical middle of the box in screen coordinates.
-        void open(const bn::string_view* lines, int lines_count, const bn::string_view* options,
-                  int options_count, int centre_y = -16);
+        // `top` is the y of the panel top; -1 centres it in the 128 px play area.
+        void open(const bn::string_view& title, const bn::string_view* lines, int lines_count,
+                  const bn::string_view* options, int options_count, int top = -1);
         void close();
 
         [[nodiscard]] bool is_open() const
@@ -51,17 +33,18 @@ namespace tl
         [[nodiscard]] int update();
 
     private:
-        bn::sprite_text_generator& _text_generator;
-        panel _panel;
-        bn::vector<bn::sprite_ptr, 80> _text;
-        bn::vector<bn::sprite_ptr, 2> _cursor;
+        ui::panel _panel;
+        ui::bar _bar;
+        ui::label _title;
+        bn::vector<ui::label, 3> _lines;
+        bn::vector<ui::label, 2> _option_labels;
+        ui::hint_row _hint;
         const bn::string_view* _options = nullptr;
         int _options_count = 0;
         int _selected = 0;
-        int _x = 0;
         int _options_y = 0;
 
-        void _place_cursor();
+        void _draw_options();
     };
 
     // What the pause screen shows.
@@ -84,8 +67,6 @@ namespace tl
         static constexpr int quit = 2;
         static constexpr int open_still = -1;
 
-        explicit pause_screen(bn::sprite_text_generator& text_generator);
-
         void open(const pause_info& info);
         void close();
 
@@ -98,13 +79,15 @@ namespace tl
         [[nodiscard]] int update();
 
     private:
-        bn::sprite_text_generator& _text_generator;
-        panel _panel;
-        bn::vector<bn::sprite_ptr, 104> _text;
-        bn::vector<bn::sprite_ptr, 2> _cursor;
+        ui::panel _panel;
+        ui::bar _bar;
+        bn::vector<ui::label, 20> _labels;
+        ui::label _option_labels[3];
+        bn::vector<bn::sprite_ptr, 5> _bars;
+        ui::hint_row _hint;
         int _selected = 0;
 
-        void _place_cursor();
+        void _draw_options();
     };
 }
 
