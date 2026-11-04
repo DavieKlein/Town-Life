@@ -91,7 +91,9 @@ namespace tl
         bookshelf,
         noticeboard,
         reception,
-        bin
+        bin,
+        seat,           // chair / sofa / booth bench: sit facing +y (screen down-left)
+        seat_x          // same, facing +x (screen down-right, the sit sprite mirrored)
     };
 
     struct interactable

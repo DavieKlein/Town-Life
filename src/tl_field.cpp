@@ -46,6 +46,7 @@ namespace tl
         constexpr bn::string_view bin_options[] = { "Search the bin" };
         constexpr bn::string_view sink_options[] = { "Wash hands" };
         constexpr bn::string_view book_options[] = { "Read a book" };
+        constexpr bn::string_view seat_options[] = { "Sit down" };
 
         // Activities (frames at 60 per second).
         constexpr int wash_hands_frames = 120;
@@ -439,6 +440,10 @@ namespace tl
             {
                 reach = it.radius + fountain_reach;
             }
+            else if(it.kind == interactable_kind::seat || it.kind == interactable_kind::seat_x)
+            {
+                reach = fixture_reach + it.radius;      // radius = extra reach (the player stands beside the seat)
+            }
             else if(it.kind != interactable_kind::bench)
             {
                 reach = fixture_reach;
@@ -481,6 +486,11 @@ namespace tl
         case interactable_kind::shop_market:
         case interactable_kind::shop_diner:
             _open_shop(*best);
+            break;
+
+        case interactable_kind::seat:
+        case interactable_kind::seat_x:
+            _menu.open("Seat", seat_options, 1);
             break;
 
         case interactable_kind::toilet:
@@ -686,6 +696,12 @@ namespace tl
             {
                 _player.sleep_on(target->x, target->y);
             }
+            break;
+
+        case interactable_kind::seat:
+        case interactable_kind::seat_x:
+            _rest_target = target;
+            _player.sit_on(target->x, target->y, target->kind == interactable_kind::seat_x);
             break;
 
         case interactable_kind::fountain:

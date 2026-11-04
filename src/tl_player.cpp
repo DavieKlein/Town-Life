@@ -35,6 +35,8 @@ namespace tl
         // seat point is at (32, 44). player_wash.bmp: 64x64, 8 facings x 4 frames, feet at (32, 54).
         constexpr int rest_origin_y = 44 - 32;
         constexpr int sleep_frame = 4;
+        constexpr int rest_mirror_shift = 6;       // the seated figure is ~3 px right of the frame centre: mirroring moves it
+
         constexpr int act_frames_per_facing = 4;
 
         // Frames each animation step lasts, per action_kind.
@@ -195,8 +197,9 @@ namespace tl
         _update_graphics();
     }
 
-    void player::sit_on(int seat_x, int seat_y)
+    void player::sit_on(int seat_x, int seat_y, bool mirrored)
     {
+        _seat_mirrored = mirrored;
         _activity = activity::sitting;
         _seat_x = seat_x;
         _seat_y = seat_y;
@@ -205,6 +208,7 @@ namespace tl
         _vy = 0;
         _rest_sprite = bn::sprite_items::player_rest.create_sprite(0, 0);
         _rest_sprite->set_bg_priority(2);
+        _rest_sprite->set_horizontal_flip(mirrored);
         _apply_lighting();
         _sprite.set_visible(false);
         _shadow.set_visible(false);
@@ -316,6 +320,10 @@ namespace tl
             {
                 _action_finished = true;
                 _stand_up();
+            }
+            else if(bn::keypad::b_pressed())
+            {
+                _stand_up();        // interrupted: the field keeps the part of the gains done so far
             }
 
             return;
@@ -449,7 +457,7 @@ namespace tl
         {
             int seat_image_x = _map->to_image_x(_seat_x, _seat_y);
             int seat_image_y = _map->to_image_y(_seat_x, _seat_y);
-            _rest_sprite->set_position(seat_image_x - cam_x - 120, seat_image_y - cam_y - 80 - rest_origin_y);
+            _rest_sprite->set_position(seat_image_x - cam_x - 120 + (_seat_mirrored ? rest_mirror_shift : 0), seat_image_y - cam_y - 80 - rest_origin_y);
             _rest_sprite->set_bg_priority(2);       // on top of the bench
             return;
         }

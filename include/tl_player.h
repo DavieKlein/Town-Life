@@ -35,7 +35,7 @@ namespace tl
         player();
 
         // Interactions (positions in world units).
-        void sit_on(int seat_x, int seat_y);
+        void sit_on(int seat_x, int seat_y, bool mirrored = false);   // mirrored: faces +x instead of +y
         void sleep_on(int seat_x, int seat_y);
         void sit_for(int seat_x, int seat_y, int frames);     // sits on a toilet, stands up after `frames`
 
@@ -133,6 +133,7 @@ namespace tl
         light_params _light;
         int _seat_x = 0;
         int _seat_y = 0;
+        bool _seat_mirrored = false;
         bool _action_finished = false;
         const map_info* _map = nullptr;
         bn::fixed _x;

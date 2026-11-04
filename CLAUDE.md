@@ -242,8 +242,9 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
   (5th tuple element in interactions.py, `interactable::quality`).
   - **Timed activities with animation** (`field::_begin_activity` + `activity_state`): every action
     lasts ~2.5-6 s, plays an animation (`player::start_action(kind, target, frames)`) and spreads its
-    need gains evenly over the frames, so the HUD bars fill gradually. B/D-pad cancels only the
-    toilet (sitting); partial gains stay. Time runs normally during activities (reading adds 30 game
+    need gains evenly over the frames, so the HUD bars fill gradually. **B interrupts every timed activity**
+    (wash, eat, drink, read, bin search; B/D-pad also gets up from the toilet, bench and seats); partial
+    gains stay (a cancelled bin search finds nothing but the bin's cooldown is still used). Time runs normally during activities (reading adds 30 game
     minutes).
   - **Food** (market checkout / Mia, diner counter): buying pays and the player eats at once (eat
     animation). Table `market_items` / `diner_items` in tl_field.cpp (price, quality 1-3, Hunger, Energy,
@@ -260,6 +261,11 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
     shelves are quality 2, a future luxury library should be 3). Sink = wash hands (Hygiene +15,
     2 s), fountain = Wash face (+35, 2.5 s) or Drink water (Hygiene -6, Energy +3, Bladder -15, 3 s).
     The player slides to the fountain rim / bin first (`player::approach`).
+  - **Indoor seats** (`seat` = sit facing +y, `seat_x` = facing +x with the sit sprite mirrored; 4th tuple
+    element = extra reach in cells because the player stands beside solid furniture): diner booth benches
+    + a chair, community-centre sofa + two reading chairs, VaultTech lobby benches + sofa. One option "Sit down"
+    (Fun + small Energy +, like the park bench); D-pad or B stands up where he sat down. Not every chair is a
+    seat: only ones that face +y or +x (the sit pose has a single facing).
   - **Trash bins** (`bin`, every `trash_can()` in the City Centre plus the public toilet bin): "Search
     the bin", 3.5 s rummaging, random result (`bn::random` mixed with frame timing): 35 % half a
     sandwich (Hunger +12, Hygiene -12), 20 % $1-3 (Hygiene -5), else "Nothing useful." (Hygiene -5).
