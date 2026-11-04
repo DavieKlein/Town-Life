@@ -173,6 +173,7 @@ namespace tl
         bn::string<64> goal("Goal: ");
         goal.append(objective);
         bn::string_view text(goal);
+        int lines_used = 0;
         int pos = 0;
         int length = text.size();
 
@@ -201,12 +202,23 @@ namespace tl
             }
 
             add(ui::font9, 12, 104 + (line * 10), text.substr(pos, end - pos), ui::role::hint);
+            lines_used = line + 1;
             pos = end;
 
             while(pos < length && text[pos] == ' ')
             {
                 ++pos;
             }
+        }
+
+        if(lines_used < 2)
+        {
+            bn::string<32> bag("Bag ");
+            bag.append(bn::to_string<8>(info.bag));
+            bag.append("/10   Credit ");
+            bag.append(bn::to_string<8>(info.credit));
+            bag.append("/2");
+            add(ui::font9, 12, 116, bag, ui::role::hint);
         }
 
         _hint.open(142, 88, true, "OK");

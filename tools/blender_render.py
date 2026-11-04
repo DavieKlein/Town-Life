@@ -544,6 +544,25 @@ MATERIALS = {
     "floor_bare": dict(kind="brick", c="#8c6c48", c2="#76593a", mortar="#2e2016", bw=1.0, bh=0.12,
                        mortar_size=0.03, offset=0.37, rough=0.8),
     "stain": dict(c="#4a3a28", rough=1.0),
+    "bin_steel_green": dict(c="#2f7a56", rough=0.38, metal=0.55),       # powder-coated dark green steel
+    "bin_galv": dict(c="#aeb6c0", rough=0.3, metal=0.8),                # galvanised bands and lid
+    "bin_hole": dict(c="#101418", rough=0.9),
+    "bin_label": dict(c="#f4f0e0", rough=0.6),
+    "bin_plastic_white": dict(c="#f1f1ea", rough=0.35),                 # indoor plastic pedal bin
+    "bin_plastic_blue": dict(c="#4f86c6", rough=0.35),
+    "rvm_green": dict(c="#1d8a5e", rough=0.35, metal=0.3),             # machine body
+    "rvm_dark": dict(c="#1a2a24", rough=0.5, metal=0.5),
+    "rvm_screen": dict(c="#5fe8d0", emit=1.4, emit_c="#6ff0d8"),
+    "rvm_lamp_g": dict(c="#4cff7a", emit=2.5, emit_c="#5cff88"),
+    "rvm_lamp_y": dict(c="#ffd23a", emit=2.5, emit_c="#ffd860"),
+    "rvm_sign": dict(c="#f6fff6", emit=1.1, emit_c="#f6fff6"),                   # lit sign panel
+    "mirror_sheen": dict(c="#cfe8f6", emit=0.5, emit_c="#dff0fa"),
+    "tile_grime": dict(c="#6f7870", rough=0.9),
+    "rust": dict(c="#7a4a2c", rough=1.0),
+    "mould": dict(c="#56664a", rough=1.0),
+    "floor_grime": dict(c="#93a09e", rough=0.95),
+    "puddle": dict(c="#4d6c7a", rough=0.35),
+    "puddle_hi": dict(c="#c6dce4", rough=0.3),
     "tile_dirty": dict(kind="brick", c="#bcc4c0", c2="#a8b2b0", mortar="#5a6260", bw=0.25, bh=0.25,
                        mortar_size=0.05, offset=0.0, rough=0.5),
     "tile_floor_dirty": dict(kind="brick", c="#b0bcbc", c2="#9aa8a8", mortar="#4a5252", bw=0.3, bh=0.3,
@@ -831,6 +850,8 @@ def add_prop(p, layer_visible):
         c.matrix_parent_inverse = Matrix.Identity(4)
         c.matrix_basis = worlds[o]
         c.visible_camera = (p["layer"] == layer_visible)
+        if any(k in p["name"] for k in THIN_PROPS):
+            c["tl_thin"] = True
         bpy.context.scene.collection.objects.link(c)
     cx, cy = (mn.x + mx.x) / 2, (mn.y + mx.y) / 2
     x, y, _ = bl(p["x"], p["y"])
@@ -857,9 +878,9 @@ def build(scene_obj, layer_visible):
     for p in scene_obj.prims:
         if p["type"] in ("text", "model", "kit", "prop"):
             continue
-        groups.setdefault((p["layer"], p["mat"]), []).append(p)
+        groups.setdefault((p["layer"], p["mat"], prim_thin(p)), []).append(p)
 
-    for (layer, mname), prims in groups.items():
+    for (layer, mname, thin_g), prims in groups.items():
         bm = bmesh.new()
         smooth = False
         for p in prims:
@@ -887,6 +908,8 @@ def build(scene_obj, layer_visible):
                 poly.use_smooth = True
         me.materials.append(mat(mname))
         ob = bpy.data.objects.new(me.name, me)
+        if thin_g:
+            ob["tl_thin"] = True
         bpy.context.scene.collection.objects.link(ob)
         ob.visible_camera = (layer == layer_visible)
 
@@ -1002,14 +1025,68 @@ def add_grime(m):
     nt.links.new(mul.outputs[2], bsdf.inputs["Base Color"])
 
 
+def _base_colour(m):
+    """Linear RGB of a material's base colour (unlinked value, or the first colour node feeding it)."""
+    if not m.use_nodes or "Principled BSDF" not in m.node_tree.nodes:
+        return None
+    sock = m.node_tree.nodes["Principled BSDF"].inputs["Base Color"]
+    if not sock.is_linked:
+        return tuple(sock.default_value)[:3]
+    n = sock.links[0].from_node
+    for key in ("Color1", "Color"):
+        if key in n.inputs and not n.inputs[key].is_linked:
+            return tuple(n.inputs[key].default_value)[:3]
+    if n.bl_idname == "ShaderNodeValToRGB":
+        return tuple(n.color_ramp.elements[0].color)[:3]
+    return None
+
+
+# Sharp style (owner-approved variant C): crisp 1.25 px near-black outlines on the OBJECTS layer. Thin parts (rods,
+# chair legs, rails, slats, text, thin panels) would turn completely black under such a line, so they get their own
+# lineset: silhouette + border only (no creases), thinner, and the outline colour is a darkened version of the
+# object's own material colour. The floor layer keeps the old soft outline.
+THIN_B = 0.12          # metres: the two smaller bbox dimensions below this = a rod / leg / rail
+THIN_A = 0.045         # metres: the smallest dimension below this = a thin panel / sheet / text
+
+
+THIN_PROPS = ("Chair", "Table", "Stool", "Light_")      # imported props made of thin legs / rods
+
+
+def prim_thin(p):
+    """True for scene primitives that a 1.25 px black outline would swallow: rods, legs, slats, thin sheets."""
+    t = p["type"]
+    if t == "box":
+        d = sorted((abs(p["x1"] - p["x0"]) * CELL_M, abs(p["y1"] - p["y0"]) * CELL_M, abs(p["z1"] - p["z0"])))
+    elif t == "cyl":
+        h = abs(p["z1"] - p["z0"]) if p.get("axis", "z") == "z" else 0.2
+        r = max(p["r"], p.get("r2", p["r"]))
+        d = sorted((2 * r, 2 * r, h))
+    elif t in ("tube", "sphere"):
+        return p["r"] < THIN_B / 2
+    else:
+        return False
+    return d[1] < THIN_B or d[0] < THIN_A
+
+
+def is_thin(o):
+    return o.type == "FONT" or bool(o.get("tl_thin"))
+
+
 def stylize(layer_visible):
     """Outlines (Freestyle) on the visible layer + grime on every material."""
     sc = bpy.context.scene
-    col = bpy.data.collections.new("tl_visible")
-    sc.collection.children.link(col)
+    sharp = layer_visible == "objects"
+    for m in bpy.data.materials:                # outline colour of thin parts: the material colour, darkened
+        c = _base_colour(m)
+        if c is not None:
+            m.diffuse_color = (c[0] * 0.5, c[1] * 0.48, c[2] * 0.55, 1.0)
+    big = bpy.data.collections.new("tl_visible")
+    thin = bpy.data.collections.new("tl_visible_thin")
+    sc.collection.children.link(big)
+    sc.collection.children.link(thin)
     for o in list(sc.objects):
         if o.type in ("MESH", "FONT") and o.visible_camera:
-            col.objects.link(o)
+            (thin if sharp and is_thin(o) else big).objects.link(o)
     for m in bpy.data.materials:
         add_grime(m)
     sc.render.use_freestyle = True
@@ -1019,19 +1096,31 @@ def stylize(layer_visible):
     vl.use_freestyle = True
     fs = vl.freestyle_settings
     fs.crease_angle = math.radians(120)
-    ls = fs.linesets[0] if len(fs.linesets) else fs.linesets.new("tl")
-    ls.select_by_collection = True
-    ls.collection = col
-    ls.select_by_visibility = True
-    ls.select_silhouette = True
-    ls.select_border = True
-    ls.select_crease = True
-    if ls.linestyle is None:
-        ls.linestyle = bpy.data.linestyles.new("tl_lines")
-    style = ls.linestyle
-    style.color = (0.07, 0.05, 0.09)
-    style.thickness = 1.6
-    style.alpha = 0.85
+    while len(fs.linesets) < (2 if sharp else 1):
+        fs.linesets.new("tl_thin" if len(fs.linesets) else "tl")
+    for i, (ls, col) in enumerate(zip(fs.linesets, (big, thin))):
+        ls.select_by_collection = True
+        ls.collection = col
+        ls.select_by_visibility = True
+        ls.select_silhouette = True
+        ls.select_border = True
+        ls.select_crease = i == 0
+        if ls.linestyle is None:
+            ls.linestyle = bpy.data.linestyles.new(f"tl_lines{i}")
+        style = ls.linestyle
+        if not sharp:
+            style.color = (0.07, 0.05, 0.09)
+            style.thickness = 1.6
+            style.alpha = 0.85
+        elif i == 0:
+            style.color = (0.03, 0.02, 0.05)
+            style.thickness = 2.5               # 1.25 px in the final image (renders are 2x)
+            style.alpha = 1.0
+        else:
+            style.thickness = 1.0
+            style.alpha = 1.0
+            mod = style.color_modifiers.new("mat", "MATERIAL")
+            mod.material_attribute = "DIFF"
 
 
 # Material classes for the ID pass (special palette entries in the game): 1 window glass (lit at
@@ -1107,7 +1196,7 @@ def main():
     sc.cycles.max_bounces = 4
     sc.cycles.seed = 1
     sc.render.film_transparent = True
-    sc.render.filter_size = 1.2
+    sc.render.filter_size = 0.5
     sc.view_settings.view_transform = "Standard"
     sc.render.image_settings.file_format = "PNG"
     sc.render.image_settings.color_mode = "RGBA"

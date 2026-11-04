@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Pixel-art pickup sprites for the can & bottle deposit proposal (own design, 16x16 frames, one shared 15-colour
-palette, index 0 = transparent). Six items x 2 sparkle frames. Writes pickups_sheet.png (8x) and graphics-ready
-pickups.bmp (16x16 frames stacked vertically; NOT added to the game yet)."""
+"""Pixel-art pickup sprites for the can & bottle deposit feature (own design, 16x16 frames, one shared palette,
+index 0 = transparent). Six items x 2 sparkle frames; frame index = item * 2 + twinkle (items: can red / blue /
+silver, bottle green / brown / clear). build_assets.build_pickups() writes graphics/pickups.bmp from frames_list()."""
 import os
 import sys
 from PIL import Image
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else "/tmp/claude-0/s49"
+OUT = sys.argv[1] if len(sys.argv) > 1 else "/tmp/claude-0/s50"
 P = {
     ".": None,
     "o": (30, 28, 40),        # outline
@@ -95,6 +95,21 @@ def frames():
     for k, rows in ITEMS.items():
         out[k] = [render(spark(rows, f, (12, 3) if k.startswith("can") else (11, 3))) for f in (0, 1)]
     return out
+
+def frames_list():
+    """12 frames in game order (item * 2 + twinkle) and the palette (index 0 = transparent) as (r, g, b) tuples."""
+    fr = frames()
+    keys = ["can_red", "can_blue", "can_silver", "bottle_green", "bottle_brown", "bottle_clear"]
+    colours = [c for c in P.values() if c]
+    pal = [(255, 0, 255)] + colours
+    lut = {c: i + 1 for i, c in enumerate(colours)}
+    out = []
+    for k in keys:
+        for f in (0, 1):
+            im = fr[k][f]
+            out.append([[lut[im.getpixel((x, y))[:3]] if im.getpixel((x, y))[3] else 0 for x in range(16)] for y in range(16)])
+    return out, pal
+
 
 if __name__ == "__main__":
     fr = frames()

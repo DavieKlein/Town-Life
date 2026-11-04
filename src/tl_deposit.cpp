@@ -1,0 +1,218 @@
+#include "tl_deposit.h"
+
+#include "bn_sprite_palette_ptr.h"
+#include "bn_sprite_items_pickups.h"
+
+#include "tl_deposit_spots.h"
+
+namespace tl
+{
+    namespace
+    {
+        static_assert(pickup_spots_count <= deposit::max_spots);
+
+        constexpr int twinkle_frames = 24;
+        constexpr int centre_offset = 3;        // the 16x16 frame is drawn 3 px above the spot, so the item lies on it
+    }
+
+    void deposit::load(const map_info& map)
+    {
+        clear();
+        _city = &map == &get_map(map_id::city_centre);
+
+        if(_city)
+        {
+            _rebuild();
+        }
+    }
+
+    void deposit::clear()
+    {
+        _sprites.clear();
+        _sprite_spot.clear();
+        _city = false;
+    }
+
+    void deposit::set_lighting(const light_params& params)
+    {
+        _light = params;
+
+        if(! _sprites.empty())
+        {
+            bn::color colours[16];
+            light_colours(bn::sprite_items::pickups.palette_item().colors_ref().data(), colours, 16, _light);
+            bn::sprite_palette_ptr palette = _sprites[0].palette();
+            palette.set_colors(bn::span<const bn::color>(colours, 16));
+        }
+    }
+
+    void deposit::_rebuild()
+    {
+        _sprites.clear();
+        _sprite_spot.clear();
+
+        for(int index = 0; index < pickup_spots_count && ! _sprites.full(); ++index)
+        {
+            if(spot[index])
+            {
+                bn::sprite_ptr sprite = bn::sprite_items::pickups.create_sprite(0, 0);
+                sprite.set_bg_priority(3);          // behind the objects layer (under benches), above the floor
+                sprite.set_z_order(3);
+                sprite.set_visible(false);
+                _sprites.push_back(bn::move(sprite));
+                _sprite_spot.push_back(index);
+            }
+        }
+
+        set_lighting(_light);
+    }
+
+    int deposit::loose_credits() const
+    {
+        int total = 0;
+
+        for(int index = 0; index < pickup_spots_count; ++index)
+        {
+            if(spot[index])
+            {
+                total += (spot[index] & 3) == 2 ? 2 : 1;
+            }
+        }
+
+        return total;
+    }
+
+    void deposit::top_up(bn::random& rng)
+    {
+        for(int attempt = 0; attempt < 80; ++attempt)
+        {
+            int missing = max_loose_credits - loose_credits();
+
+            if(missing <= 0)
+            {
+                break;
+            }
+
+            int index = rng.get_unbiased_int(pickup_spots_count);
+
+            if(spot[index])
+            {
+                continue;
+            }
+
+            const pickup_spot& place = pickup_spots[index];
+            bool bottle = missing >= 2 && rng.get_unbiased_int(100) < 40;
+
+            if(bottle && ! place.bottle_ok)
+            {
+                bottle = false;
+            }
+
+            if(! bottle && ! place.can_ok)
+            {
+                if(missing >= 2 && place.bottle_ok)
+                {
+                    bottle = true;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            spot[index] = uint8_t((bottle ? 2 : 1) | (rng.get_unbiased_int(3) << 2));
+        }
+
+        if(_city)
+        {
+            _rebuild();
+        }
+    }
+
+    int deposit::find(int x, int y, int reach, int& d2) const
+    {
+        int best = -1;
+        int best_d2 = reach * reach + 1;
+
+        if(! _city)
+        {
+            return -1;
+        }
+
+        for(int index = 0; index < pickup_spots_count; ++index)
+        {
+            if(spot[index])
+            {
+                int dx = pickup_spots[index].x - x;
+                int dy = pickup_spots[index].y - y;
+                int distance = (dx * dx) + (dy * dy);
+
+                if(distance < best_d2)
+                {
+                    best_d2 = distance;
+                    best = index;
+                }
+            }
+        }
+
+        d2 = best_d2;
+        return best;
+    }
+
+    void deposit::collect(int index)
+    {
+        if(index < 0 || index >= pickup_spots_count || ! spot[index])
+        {
+            return;
+        }
+
+        if((spot[index] & 3) == 2)
+        {
+            ++bag_bottles;
+        }
+        else
+        {
+            ++bag_cans;
+        }
+
+        spot[index] = 0;
+
+        if(_city)
+        {
+            _rebuild();
+        }
+    }
+
+    int deposit::return_all()
+    {
+        int credits = bag_credits() + credit;
+        bag_cans = 0;
+        bag_bottles = 0;
+        credit = credits % 2;
+        return credits / 2;
+    }
+
+    void deposit::update(const map_info& map, int cam_x, int cam_y)
+    {
+        ++_frame;
+
+        for(int i = 0; i < _sprites.size(); ++i)
+        {
+            int index = _sprite_spot[i];
+            const pickup_spot& place = pickup_spots[index];
+            int sx = map.to_image_x(place.x, place.y) - cam_x;
+            int sy = map.to_image_y(place.x, place.y) - cam_y;
+            bool visible = sx > -16 && sx < 256 && sy > -8 && sy < 128 + 16;
+            bn::sprite_ptr& sprite = _sprites[i];
+            sprite.set_visible(visible);
+
+            if(visible)
+            {
+                int item = ((spot[index] & 3) == 2 ? 3 : 0) + ((spot[index] >> 2) % 3);
+                int twinkle = ((_frame + (index * 7)) / twinkle_frames) % 2;
+                sprite.set_position(sx - 120, sy - centre_offset - 80);
+                sprite.set_tiles(bn::sprite_items::pickups.tiles_item(), (item * 2) + twinkle);
+            }
+        }
+    }
+}

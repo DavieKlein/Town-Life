@@ -281,6 +281,29 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
   - **Clearer objects (owner feedback):** `trash_can()` is the flared green bin with a white band, dark lid and litter
     (street bins and the toilet bin); `sink_unit`, `toilet_unit` in scene.py; library chairs are light oak
     (`#e6b866`), diner chairs bigger (h 1.05) and bright red (`#e04030`).
+  - **Bins (owner-approved, s50):** street bins are `street_bin_v2` (`trash_can()` in scene.py: dark-green perforated steel
+    drum, galvanised bands, yellow band, domed lid with a dark mouth); indoor bins are `indoor_bin` (small white pedal bin with
+    a blue lid; the public toilet has one at (0.75, 1.15)). Interactions unchanged (`bin`).
+  - **Public toilet (s50):** `sink_unit` is now the v3 design (white pedestal, chrome mixer tap, round chrome-framed mirror,
+    dark bowl inside, built through `SwapFix` because it stands on the west wall). The wet-floor sign stands in the mop corner
+    (back-right) so the WC has free floor. The hut is dirtier (dull dirty-tile patches, rust streaks, mould under the ceiling,
+    dirt blobs in corners, old stains) and has one small natural puddle near the mop (`puddle` material, overlapping flat
+    discs with different heights, **never coplanar**). Floor-layer details must have distinct tops (coplanar faces render black).
+  - **Can & bottle deposit "RETURN & EARN" (s50, owner-approved):** `tl_deposit.h/.cpp` (`deposit`), spawn spots in
+    `tools/deposit.py` (26 spots, generated into `include/tl_deposit_spots.h` by build_assets), art `tools/pickups.py`
+    (6 items x 2 twinkle frames, 16x16, `graphics/pickups.bmp`). The machine (`deposit_machine()` in scene.py, green steel,
+    round rubber port, lit sign) stands against the east wall of the park toilet; interactable kind `deposit` at (6.2, 37.9).
+    **The park bench next to the hut was removed** (it stood where the machine is); the sleeping bench is the one at
+    (15.3, 39.4) (plus the four fountain-square benches).
+    Rules: can = 1 credit ($0.50), bottle = 2 credits ($1.00); 2 credits pay $1, the remainder (0/1) stays as credit.
+    **Loose pickups in the district never exceed 7 credits ($3.50)**; `deposit::top_up` fills free spots (about 40 % bottles)
+    at game start and at 6:00 each day (`field::_tick_minute`). Bag max 10 items. A on a pickup (reach 20 units, the nearest
+    object or pickup wins): ~1.2 s bend-down (`search` action, B cancels, partial need change stays), Energy -0.5, Hygiene -1
+    (-2 at spots flagged `bush`), toast "Picked up a can. / Bag 5/10"; full bag: "Bag full" info. Machine menu: Return all (N) /
+    Check credit / Leave; result text shows the exact value and the new credit. Pickup sprites use bg priority 3 (under the
+    objects layer) and the day/night palette transform. A cue over pickups (12 px) and the machine (54 px). Pause screen line
+    "Bag N/10   Credit x/2". Save: `deposit_init/cans/bottles/credit/spot[32]` carved out of `spare` (size unchanged, version
+    unchanged; a save without `deposit_init` gets a fresh top-up). Numbers: docs/story_chapter1.md section 4.7a.
   - **"A" cue:** `field::_update_cue` draws a bobbing gold bubble (`ui_icons` frame 2, bob 0/1/2/1 px per 8 frames)
     above the nearest interactable in reach (same reach rules as the menu, `field::_find_target`) while walking;
     hidden during menus, activities, pause and fades. Per-kind height offsets (bench 22, seat 26, fountain 36,
@@ -372,6 +395,7 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
 │   ├── tl_player.cpp            player: iso movement, collision, depth priority, animation, shadow
 │   ├── tl_critters.cpp          ambient pigeons + squirrels (behaviour, sprites, depth)
 │   ├── tl_npcs.cpp              standing NPCs (Mia), tl_menu.cpp pop-up menu, tl_ui.cpp UI toolkit
+│   ├── tl_deposit.cpp           can & bottle pickups, bag, credit (RETURN & EARN)
 │   ├── tl_save.cpp, tl_title.cpp, tl_pause.cpp, tl_field_pause.cpp   save format, title screen, pause screen
 │   └── tl_world_data.cpp        GENERATED: palettes per layer, collision, warps, occluders, map table
 ├── data/                        GENERATED binary layer data (Butano DATA rule): <map>_<layer>_tiles.bin
@@ -397,6 +421,7 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
     ├── critters.py              animal spawn points per map
     ├── npcs.py                  NPC spawn points + looks per map (Mia)
     ├── interactions.py          interactable objects per map
+    ├── deposit.py, pickups.py   can & bottle pickup spots + sprite art (RETURN & EARN)
     ├── blender_critter.py       poses + renders the animal models into sprite frames
     └── headless_run.py          headless emulator test runner (screenshots + scripted input)
 ```
@@ -408,7 +433,7 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 1. **Art (only when scenes change, in the Claude container):**
    `apt-get install -y blender python3-numpy` (once per container; numpy is needed by Blender's
    FBX importer), then `python3 tools/build_assets.py`
-   (~10 min at full quality; `--fast` for quick low-quality tests; `--preview DIR` writes PNGs of the
+   (~45 min at full quality (192 spp); `--fast` for quick low-quality tests; `--preview DIR` writes PNGs of the
    converted layers; `--rerender` ignores the cache). Commit the generated files:
    `src/tl_world_data.cpp`, `data/*.bin`, `include/tl_map_id.h`, `graphics/*.bmp|json`.
 2. `make` (Butano) converts `graphics/` (+ butano/common fonts) and compiles `src/` into `town-life.gba`.
@@ -450,12 +475,20 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
     `produce_display`, `a_frame_sign`, `street_tree`.
   - Keep door cells and the paths around interactables walkable: `set_solid` rounds to whole
     cells.
-  **Style pass** (`stylize()` in blender_render.py, always on): Freestyle outlines (silhouette,
-  border, crease; only on the layer being rendered, via the `tl_visible` collection) and
-  `add_grime()` which multiplies every material's base colour with an ambient-occlusion term
-  (dark, slightly purple corners). Worn ground materials: kinds `asphalt_grit` / `paving_grit`
-  (materials `asphalt`, `paving`, `slabs`) with grain, dirt patches, Voronoi cracks and weeds.
-  `grade()` in build_assets.py adds saturation, contrast and cool shadows before quantization.
+  **Style pass** (`stylize()` in blender_render.py, always on) = **sharp style "variant C" (owner-approved, s49/s50)**:
+  Cycles 192 samples, pixel filter 0.5 (`RENDER_SAMPLES` in build_assets.py), then an unsharp mask (`sharpen()`, before
+  quantization) and `grade()` (saturation 1.3, contrast 1.22, cool shadows). `stylize()` adds Freestyle outlines: on the
+  **objects layer** crisp, opaque, near-black 1.25 px lines (silhouette + border + crease); the **floor layer** keeps the old
+  soft 0.8 px outline (alpha 0.85). **Outline rules for thin parts:** a thick black line swallows rods and legs (the library
+  chairs and tables turned black in the first test). `build()` therefore splits primitives per material into thin and normal
+  mesh objects (`prim_thin`: box/cyl with the two smaller dimensions < 0.12 m or the smallest < 0.045 m, thin tubes/spheres,
+  text) and imported props whose name contains Chair / Table / Stool / Light_ (`THIN_PROPS`). Thin objects go into a second
+  lineset: silhouette + border only (no crease), 0.5 px, outline colour = **the material's own colour darkened** (material
+  `diffuse_color` = base colour x 0.5, Freestyle "Material" colour modifier). Keep new thin furniture readable by building it
+  from separate thin primitives (or add the prop name to `THIN_PROPS`). Check new furniture with
+  `python3 tools/proposals/s50/crop_check.py OUTDIR name:scene:x0,y0,x1,y1 ...` (renders crops with the real renderer and
+  runs the real quantizer; 4x zoom PNGs). Actors (player, NPCs, animals) keep their own outline style.
+  (`grade()` / `sharpen()` in build_assets.py run before quantization.)
   Quick look at a small area: `blender -b --python tools/blender_render.py -- <scene> <layer>
   <out.png> 2 32 "x0,y0,x1,y1"` (crop in image pixels). Tall buildings are simply cut off at the image
   top (the camera never shows more than `origin_y` px above the back corner), like the classic games.

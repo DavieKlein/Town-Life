@@ -514,34 +514,64 @@ def newspaper_box(s, x, y, colour="sign_blue"):
     s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 1.2)
 
 
-def trash_can(s, x, y, tint="bin_green"):
-    """Litter bin that reads at once (owner feedback): flared body, white band, dark lid, litter on top."""
-    s.cyl(x, y, 0.0, 0.8, 0.27, tint, verts=14, r2=0.32)
-    s.cyl(x, y, 0.45, 0.58, 0.3, "robot_white", verts=14)                                  # band
-    s.cyl(x, y, 0.8, 0.9, 0.35, "metal_dark", verts=14)
-    s.box(x - 0.18, y + 0.2, x + 0.18, y + 0.3, 0.9, 1.02, "goods_yellow")                # bag/litter on top
+def trash_can(s, x, y, tint=None):
+    """Street litter bin (street_bin_v2, owner-approved): urban steel dark green powder-coated drum on a dark plinth, galvanised bands, rows of dark
+    perforation slots, galvanised domed lid with a dark mouth on the two visible sides, small label, ash plate.
+    (cyl radii are in metres, x / y offsets in cells = metres / 0.75)"""
+    C = 1 / 0.75
+    R = 0.27 * C                                                                           # drum radius in cells
+    s.cyl(x, y, 0.0, 0.1, 0.31, "metal_dark", verts=16)                                     # plinth ring
+    s.cyl(x, y, 0.1, 0.94, 0.27, "bin_steel_green", verts=16)                               # drum
+    for z, m in ((0.13, "bin_galv"), (0.49, "goods_yellow"), (0.89, "bin_galv")):
+        s.cyl(x, y, z, z + 0.055, 0.285, m, verts=16)                                       # bands (middle one: yellow)
+    for z0, offs in ((0.22, 0), (0.6, 1)):                                                  # perforation slots
+        for k in range(5):
+            th = math.radians(10 + k * 17.5 + offs * 8.5)
+            px, py = x + R * math.cos(th), y + R * math.sin(th)
+            s.box(px - 0.04, py - 0.04, px + 0.04, py + 0.04, z0, z0 + 0.2, "bin_hole")
+    s.cyl(x, y, 0.94, 1.02, 0.31, "bin_galv", verts=16)                                      # lid rim
+    s.cyl(x, y, 1.02, 1.14, 0.28, "bin_galv", verts=16, r2=0.17)                             # dome
+    s.box(x - 0.14, y + R - 0.03, x + 0.14, y + R + 0.07, 0.96, 1.07, "bin_hole")            # mouth (+y side)
+    s.box(x + R - 0.03, y - 0.14, x + R + 0.07, y + 0.14, 0.96, 1.07, "bin_hole")            # mouth (+x side)
     s.set_solid(x - 0.3, y - 0.3, x + 0.3, y + 0.3)
-    s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 1.0)
+    s.occluder(x - 0.4, y - 0.4, x + 0.4, y + 0.4, 1.15)
 
 
-def sink_unit(s, x, y, k=1.2):
-    """Obvious wash basin on the back wall (faces +y): big white basin on a pedestal, chrome tap and spout, soap
-    dispenser, mirror with a light frame above it. k = overall size factor (exaggerated for readability)."""
+def indoor_bin(s, x, y, tint=None):
+    """Small indoor pedal bin: off-white plastic body, blue lid with a white knob, chrome pedal, chrome band."""
+    s.cyl(x, y, 0.03, 0.5, 0.17, "bin_plastic_white", verts=16, r2=0.19)
+    s.cyl(x, y, 0.36, 0.4, 0.185, "chrome", verts=16)
+    s.cyl(x, y, 0.5, 0.56, 0.205, "bin_plastic_blue", verts=16)
+    s.cyl(x, y, 0.56, 0.62, 0.18, "bin_plastic_blue", verts=16, r2=0.12)
+    s.cyl(x, y, 0.62, 0.66, 0.04, "bin_plastic_white", verts=8)
+    s.box(x - 0.07, y + 0.2, x + 0.07, y + 0.36, 0.0, 0.05, "chrome")                      # pedal
+    s.box(x - 0.02, y + 0.18, x + 0.02, y + 0.22, 0.04, 0.3, "chrome")
+    s.set_solid(x - 0.22, y - 0.22, x + 0.22, y + 0.22)
+    s.occluder(x - 0.3, y - 0.3, x + 0.3, y + 0.3, 0.7)
+
+
+def sink_unit(s, x, y, k=1.25):
+    """Wash basin on the back wall (faces +y), readable at 1 px per cm: white pedestal and bowl with a DARK
+    inside, big chrome mixer tap, soap dispenser, mirror with a thick white frame, a light-blue face and two
+    diagonal white sheen strips. k = size factor."""
     X = lambda d: x + d * k
     Y = lambda d: y + d * k
     Z = lambda d: d * k
-    s.box(X(-0.34), Y(0.0), X(0.34), Y(0.12), 0.0, Z(1.0), "robot_white")             # pedestal against the wall
-    s.box(X(-0.46), Y(0), X(0.46), Y(0.5), Z(0.84), Z(0.94), "robot_white")             # basin rim
-    s.box(X(-0.36), Y(0.06), X(0.36), Y(0.44), Z(0.9), Z(0.96), "tile_bath")            # basin dip
-    s.cyl(x, Y(0.14), Z(0.94), Z(1.12), 0.035 * k, "chrome", verts=10)                   # tap column
-    s.tube([(x, Y(0.14), Z(1.1)), (x, Y(0.2), Z(1.17)), (x, Y(0.3), Z(1.1))], 0.03 * k, "chrome")   # spout
-    s.box(X(-0.2), Y(0.1), X(-0.1), Y(0.18), Z(0.94), Z(1.06), "chrome")                # tap handles
-    s.box(X(0.1), Y(0.1), X(0.2), Y(0.18), Z(0.94), Z(1.06), "chrome")
-    s.cyl(X(0.5), Y(0.12), Z(0.94), Z(1.1), 0.06 * k, "goods_green", verts=10)           # soap
-    s.box(X(-0.5), Y(0.0), X(0.5), Y(0.07), Z(1.3), Z(2.0), "robot_white")               # mirror frame
-    s.box(X(-0.44), Y(0.07), X(0.44), Y(0.09), Z(1.36), Z(1.94), "steel")                # mirror (silver, not window-blue)
-    s.set_solid(X(-0.5), y, X(0.5), Y(0.55))
-    s.occluder(X(-0.5), y, X(0.5), Y(0.55), Z(1.1))
+    s.cyl(x, Y(0.2), 0.0, Z(0.8), 0.12 * k, "bin_plastic_white", verts=12)                 # round pedestal
+    s.box(X(-0.5), Y(0.0), X(0.5), Y(0.56), Z(0.78), Z(0.96), "robot_white")                # bowl body (thick)
+    s.box(X(-0.38), Y(0.1), X(0.38), Y(0.48), Z(0.95), Z(0.99), "metal_dark")               # dark inside of the bowl
+    s.cyl(x, Y(0.3), Z(0.95), Z(0.97), 0.05 * k, "chrome", verts=8)                         # drain
+    s.cyl(x, Y(0.12), Z(0.96), Z(1.2), 0.04 * k, "chrome", verts=10)                        # tap column
+    s.tube([(x, Y(0.12), Z(1.18)), (x, Y(0.22), Z(1.27)), (x, Y(0.36), Z(1.2))], 0.035 * k, "chrome")
+    s.box(X(0.06), Y(0.08), X(0.22), Y(0.16), Z(1.1), Z(1.15), "chrome")                    # lever
+    s.box(X(0.56), Y(0.0), X(0.74), Y(0.12), Z(0.95), Z(1.2), "goods_green")               # wall soap dispenser
+    s.box(X(0.58), Y(0.12), X(0.72), Y(0.15), Z(1.1), Z(1.14), "metal_dark")
+    s.cyl(x, Y(0.02), Z(1.72), Z(1.78), 0.42, "chrome", axis="y", verts=28)             # round mirror: chrome ring
+    s.cyl(x, Y(0.05), Z(1.72), Z(1.76), 0.36, "mirror_sheen", axis="y", verts=28)       # light-blue glass
+    s.cyl(x, Y(0.08), Z(1.72), Z(1.75), 0.17, "robot_white", axis="y", verts=20)         # sheen blob (reflected light)
+    s.cyl(x - 0.1 * k, Y(0.08), Z(1.9), Z(1.93), 0.06, "robot_white", axis="y", verts=12)
+    s.set_solid(X(-0.56), y, X(0.56), Y(0.6))
+    s.occluder(X(-0.56), y, X(0.56), Y(0.6), Z(1.15))
 
 
 def toilet_unit(s, x, y):
@@ -747,7 +777,7 @@ def city_centre():
     s.box(10, P0, 12, P1, 0.0, 0.08, "path_dirt", layer="floor")
     s.box(1, 40, 10, 42, 0.0, 0.08, "path_dirt", layer="floor")
     s.box(12, 40, CS0 - 4, 42, 0.0, 0.08, "path_dirt", layer="floor")
-    bench_along_x(s, 6.0, 8.6, 39.4)
+    # (the bench at x 6.0..8.6 was removed: the deposit machine stands there; the sleeping bench is at x 14.0..16.6)
     bench_along_x(s, 14.0, 16.6, 39.4)
     s.box(14.5, 43.5, 20.5, 46.8, -0.1, 0.09, "pond_edge", layer="floor")
     s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "pond_surface", layer="floor")
@@ -935,6 +965,7 @@ def park_toilet(s, x0, y0, x1, y1):
     s.set_solid(xm - 0.6, y1 - 0.8, xm + 0.6, y1, False)                                 # doorway
     s.occluder(x0, y0, x1, y1, h + 0.3)
     s.warp(xm - 0.6, y1 - 0.5, xm + 0.6, y1, "public_toilet", 3.5, 4.3, "up")
+    deposit_machine(s, x1 + 0.12, y0 + 2.3, "x")                                          # RETURN & EARN, east wall
 
 
 def arched_door(s, xm, y_face, hw=0.58, hz=1.65, r=0.44):
@@ -2087,7 +2118,7 @@ def public_toilet():
     s.text("WC", 2.95, 0.09, 2.6, 0.5, "robot_white", face="left")
     # west wall: window, sink with big mirror, hand dryer
     window_x(s, 1.0, 2.4, 0.0, 1.5, 2.5)
-    sink_unit(SwapProxy(s), 3.5, 0.0)
+    sink_unit(SwapFix(s), 3.5, 0.0)
     s.box(0.0, 4.4, 0.3, 4.9, 1.1, 1.5, "chrome")                                            # hand dryer
     s.box(0.3, 4.5, 0.34, 4.8, 1.2, 1.4, "metal_dark")
     # back wall left: notice + shelf with toilet rolls
@@ -2097,7 +2128,7 @@ def public_toilet():
     s.box(0.4, 0.0, 1.7, 0.3, 1.0, 1.05, "wood_dark")
     for i in range(4):
         s.cyl(0.65 + i * 0.28, 0.14, 1.05, 1.23, 0.1, "robot_white", verts=12)
-    trash_can(s, 0.75, 1.0)                                                                  # the only bin
+    indoor_bin(s, 0.75, 1.15)                                                                # the only bin (small pedal bin)
     # mop + bucket + broom in the back-right corner
     s.cyl(4.55, 0.55, 0.0, 0.38, 0.22, "bucket_yellow", verts=14, r2=0.27)
     s.cyl(4.55, 0.55, 0.36, 0.38, 0.19, "stain", verts=14)
@@ -2108,15 +2139,122 @@ def public_toilet():
     s.box(4.2, 0.0, 4.75, 0.05, 1.7, 2.3, "poster_yellow")                                    # hygiene poster
     s.box(4.3, 0.05, 4.65, 0.07, 1.95, 2.05, "metal_dark")
     s.box(4.3, 0.05, 4.55, 0.07, 1.8, 1.88, "metal_dark")
-    # wet floor A-frame sign
-    s.box(3.8, 1.9, 4.3, 2.0, 0.0, 0.6, "goods_yellow")
-    s.box(3.8, 2.05, 4.3, 2.15, 0.0, 0.6, "goods_yellow")
-    s.set_solid(3.8, 1.9, 4.3, 2.15)
+    # wet floor A-frame sign: in the mop corner (back wall, right of the bucket), the WC has free floor in front
+    s.box(5.2, 0.3, 5.75, 0.38, 0.0, 0.6, "goods_yellow")
+    s.box(5.2, 0.5, 5.75, 0.58, 0.0, 0.6, "goods_yellow")
+    s.set_solid(5.2, 0.3, 5.75, 0.58)
     for (gx, gz0, gz1) in ((1.9, 0.15, 1.4), (4.1, 0.15, 1.1)):
         s.box(gx, 0.0, gx + 0.1, 0.045, gz0, gz1, "stain")
+    # ---- grime (a bit dirtier): dirty tile patches, rust under the taps, mould in the corners, stains on the floor ----
+    for (gx0, gx1, gz0, gz1) in ((0.2, 0.9, 0.2, 0.9), (2.0, 2.9, 1.9, 2.6), (3.2, 3.9, 0.0, 0.5), (5.0, 5.9, 1.0, 1.9),
+                                  (1.6, 2.2, 0.6, 1.3), (4.3, 5.0, 2.1, 2.7)):
+        if gz1 < 1.9 or gx0 < 4:
+            s.box(gx0, 0.0, gx1, 0.012, gz0, gz1, "tile_grime")                           # back wall: dull, dirty patches
+    for (gy0, gy1, gz0, gz1) in ((0.9, 1.7, 0.3, 1.2), (2.5, 3.4, 1.0, 1.7), (5.0, 5.8, 0.2, 0.8)):
+        s.box(0.0, gy0, 0.012, gy1, gz0, gz1, "tile_grime")                               # west wall
+    s.box(3.35, 0.0, 3.5, 0.014, 0.4, 0.95, "rust")                                        # rust streak under the basin
+    s.box(2.75, 0.0, 2.85, 0.014, 0.2, 0.85, "rust")                                       # drip marks behind the WC
+    s.box(0.0, 3.3, 0.014, 3.45, 0.35, 0.85, "rust")
+    for (mx0, mx1, mz0, mz1) in ((0.0, 0.9, 2.55, 2.95), (5.0, 6.0, 2.6, 2.95), (3.9, 4.2, 2.7, 2.95)):
+        s.box(mx0, 0.0, mx1, 0.012, mz0, mz1, "mould")                                     # damp patches under the ceiling
+    s.box(0.0, 0.0, 0.012, 0.9, 2.5, 2.95, "mould")
+    for (fx, fy, fr) in ((0.3, 2.5, 0.2), (0.55, 2.8, 0.15), (0.25, 3.0, 0.12), (4.3, 4.0, 0.18), (4.55, 4.2, 0.13), (2.1, 5.2, 0.17),
+                         (2.4, 5.35, 0.12), (5.35, 1.0, 0.16), (5.2, 1.3, 0.11), (1.4, 1.7, 0.12), (3.0, 4.6, 0.1), (5.4, 3.7, 0.12)):
+        s.cyl(fx, fy, 0.0, 0.0022 + 0.0002 * fr * 10, fr, "floor_grime", layer="floor", verts=10)   # dirt in corners / edges
+    for (cx, cy, cr) in ((3.2, 2.6, 0.2), (0.9, 5.2, 0.15), (2.3, 3.9, 0.13), (5.3, 3.2, 0.17)):
+        s.cyl(cx, cy, 0.0, 0.004, cr, "stain", layer="floor", verts=10)                    # old stains
+    # small, natural puddle near the mop (a few overlapping wet patches, glossy, no hard outline)
+    for k, (px, py, pr) in enumerate(((4.15, 1.25, 0.24), (4.42, 1.2, 0.2), (4.3, 1.42, 0.14), (3.95, 1.4, 0.1))):
+        s.cyl(px, py, 0.0, 0.0055 + 0.0003 * k, pr, "puddle", layer="floor", verts=14)
+    s.cyl(4.1, 1.2, 0.0, 0.0075, 0.05, "puddle_hi", layer="floor", verts=8)                  # a glint on the water
+    for (px, py) in ((3.8, 1.55), (4.7, 1.55)):
+        s.cyl(px, py, 0.0, 0.005, 0.04, "puddle", layer="floor", verts=8)                  # drips on the way to the bucket
     s.point_light(2.5, 2.5, 2.6, 85, colour=(0.9, 0.98, 1.0))
     s.point_light(4.5, 4.0, 2.6, 60, colour=(0.9, 0.98, 1.0))
     return s
+
+
+class SwapFix(SwapProxy):
+    """SwapProxy plus poly() and the right cylinder axis (a disc against the wall keeps facing the room)."""
+
+    def poly(self, pts, mat, layer="objects"):
+        return self.s.poly([(p[1], p[0], p[2]) for p in pts], mat, layer)
+
+    def cyl(self, x, y, *a, axis="z", **k):
+        return self.s.cyl(y, x, *a, axis={"x": "y", "y": "x"}.get(axis, axis), **k)
+
+
+class O:
+    """Orientation helper: build an object facing +y (face='y', `a` runs along +x = screen right) or +x (face='x',
+    `a` runs along -y = screen right) from one description. Origin (ox, oy) = the left end of the front line."""
+
+    def __init__(self, s, ox, oy, face="y", ka=1.0, kz=1.0, kr=1.0):
+        self.s, self.ox, self.oy, self.face = s, ox, oy, face
+        self.ka, self.kz, self.kr = ka, kz, kr           # scale of a / d (cells), of heights, of radii and text
+
+    def pt(self, a, d):
+        a, d = a * self.ka, d * self.ka
+        return (self.ox + a, self.oy + d) if self.face == "y" else (self.ox + d, self.oy - a)
+
+    def box(self, a0, d0, a1, d1, z0, z1, mat, **k):
+        (x0, y0), (x1, y1) = self.pt(a0, d0), self.pt(a1, d1)
+        self.s.box(min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1), z0 * self.kz, z1 * self.kz, mat, **k)
+
+    def cyl(self, a, d, z0, z1, r, mat, axis="z", **k):
+        x, y = self.pt(a, d)
+        if axis == "d":
+            axis = "y" if self.face == "y" else "x"
+            self.s.cyl(x, y, z0 * self.kz, z0 * self.kz + (z1 - z0) * self.kr, r * self.kr, mat, axis=axis, **k)
+        else:
+            self.s.cyl(x, y, z0 * self.kz, z1 * self.kz, r * self.kr, mat, axis=axis, **k)
+
+    def text(self, t, a, d, z, size, mat):
+        x, y = self.pt(a, d)
+        self.s.text(t, x, y, z * self.kz, size * self.kr, mat, face="left" if self.face == "y" else "right")
+
+    def solid(self, a0, d0, a1, d1):
+        (x0, y0), (x1, y1) = self.pt(a0, d0), self.pt(a1, d1)
+        self.s.set_solid(min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
+
+    def occ(self, a0, d0, a1, d1, h):
+        (x0, y0), (x1, y1) = self.pt(a0, d0), self.pt(a1, d1)
+        self.s.occluder(min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1), h * self.kz)
+
+
+def deposit_machine(s, ox, oy, face="x", ka=1.6, kz=1.15, kr=1.35):
+    """RETURN & EARN: reverse-vending machine, 1.5 x 0.9 cells (1.1 x 0.68 m), 2.0 m tall, green steel body with a
+    steel hood, round rubber loading port, a screen, a receipt slot, a lit sign with a recycling mark and two
+    status lamps. (ox, oy) = left end of the front line, front facing `face`."""
+    o = O(s, ox, oy, face, ka, kz, kr)
+    o.box(0.0, 0.0, 1.5, 0.9, 0.0, 0.16, "rvm_dark")                                       # plinth (flush, dark)
+    o.box(0.02, 0.02, 1.48, 0.88, 0.16, 1.84, "rvm_green")                                  # body
+    o.box(-0.04, -0.04, 1.54, 0.96, 1.84, 1.95, "steel")                                    # hood
+    o.box(0.1, 0.9, 1.4, 0.94, 1.44, 1.8, "rvm_sign")                                    # sign panel
+    o.box(0.1, 0.9, 1.4, 0.93, 1.44, 1.47, "rvm_green")
+    o.text("RETURN", 0.95, 0.95, 1.7, 0.2, "rvm_green")
+    o.text("& EARN", 0.95, 0.95, 1.52, 0.17, "rvm_green")
+    o.cyl(0.3, 0.93, 1.62, 1.66, 0.14, "rvm_green", axis="d", verts=20)                     # recycling mark: ring ...
+    o.cyl(0.3, 0.945, 1.62, 1.66, 0.085, "robot_white", axis="d", verts=20)
+    for k in range(3):                                                                      # ... with three arrows
+        th = math.radians(90 + 120 * k)
+        ca, cz = 0.3 + 0.17 * math.cos(th), 1.64 + 0.115 * math.sin(th)
+        o.box(ca - 0.045, 0.95, ca + 0.045, 0.97, cz - 0.03, cz + 0.03, "robot_white")
+    o.cyl(0.4, 0.9, 1.15, 1.2, 0.22, "rvm_dark", axis="d", verts=24)                          # loading port (rubber ring)
+    o.cyl(0.4, 0.93, 1.15, 1.2, 0.15, "metal_dark", axis="d", verts=24)                       # dark opening
+    o.box(0.88, 0.9, 1.34, 0.95, 0.96, 1.36, "rvm_dark")                                     # screen bezel
+    o.box(0.91, 0.95, 1.31, 0.97, 1.0, 1.32, "rvm_screen")                                   # screen
+    o.text("0.00", 1.11, 0.98, 1.2, 0.14, "rvm_dark")
+    o.box(0.95, 0.97, 1.27, 0.98, 1.04, 1.08, "rvm_dark")
+    o.box(0.9, 0.9, 1.3, 0.97, 0.7, 0.86, "goods_yellow")                                    # receipt slot panel
+    o.box(0.96, 0.97, 1.24, 0.99, 0.76, 0.8, "rvm_dark")                                     # slot
+    o.box(0.1, 0.9, 0.76, 0.93, 0.26, 0.5, "robot_white")                                    # instructions label
+    o.text("CANS+BOTTLES", 0.43, 0.94, 0.38, 0.1, "rvm_green")
+    o.box(0.02, 0.9, 1.48, 0.93, 0.16, 0.24, "goods_yellow")                                 # hazard stripe at the foot
+    o.cyl(0.35, 0.5, 1.95, 2.07, 0.07, "rvm_lamp_g", verts=10)                               # beacon lights on the hood
+    o.cyl(1.15, 0.5, 1.95, 2.07, 0.07, "rvm_lamp_y", verts=10)
+    o.solid(-0.02, -0.02, 1.52, 0.94)
+    o.occ(-0.04, -0.04, 1.54, 0.96, 2.1)
+    s.point_light(*o.pt(0.7, 1.7), 1.5, 60, colour=(0.8, 1.0, 0.9))
 
 
 SCENES = [city_centre, market_v2, diner, community_centre, vaulttech_lobby, public_toilet]

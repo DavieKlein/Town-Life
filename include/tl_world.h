@@ -93,7 +93,8 @@ namespace tl
         reception,
         bin,
         seat,           // chair / sofa / booth bench: sit facing +y (screen down-left)
-        seat_x          // same, facing +x (screen down-right, the sit sprite mirrored)
+        seat_x,         // same, facing +x (screen down-right, the sit sprite mirrored)
+        deposit         // RETURN & EARN machine
     };
 
     struct interactable

@@ -51,7 +51,13 @@ namespace tl
         uint16_t mission_id = 0;
         uint16_t pad_mission = 0;
         uint8_t friendship[16] = {};
-        uint8_t spare[64] = {};
+        // can & bottle deposit (carved out of the former spare bytes, so the layout size is unchanged)
+        uint8_t deposit_init = 0;               // 1 once the pickup state below is valid (else the field tops up)
+        uint8_t deposit_cans = 0;               // bag
+        uint8_t deposit_bottles = 0;
+        uint8_t deposit_credit = 0;             // 0 or 1
+        uint8_t deposit_spot[32] = {};          // per pickup spot: 0 = none, kind (1 can, 2 bottle) | variant << 2
+        uint8_t spare[28] = {};
     };
 
     static_assert(maps_count <= save_data::max_maps, "raise save_data::max_maps (and the save version)");

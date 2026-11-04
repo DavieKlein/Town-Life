@@ -54,6 +54,8 @@ namespace tl
         int minutes = 0;                // time of day
         int money = 0;
         int need_values[5] = {};        // Hunger, Energy, Hygiene, Fun, Bladder, 0..100
+        int bag = 0;                    // cans + bottles in the bag (max 10)
+        int credit = 0;                 // deposit credit 0 or 1 (of 2)
         const char* objective = "";
     };
 

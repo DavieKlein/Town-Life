@@ -18,6 +18,7 @@
 #include "tl_npcs.h"
 #include "tl_streamed_bg.h"
 #include "tl_lighting.h"
+#include "tl_deposit.h"
 
 namespace tl
 {
@@ -61,6 +62,7 @@ namespace tl
         player _player;
         critters _critters;
         npcs _npcs;
+        deposit _deposit;
         menu _menu;
         needs _needs;
         bn::vector<bn::sprite_ptr, needs::count> _bar_sprites;
@@ -99,6 +101,8 @@ namespace tl
         int _bin_emptied[maps_count * 16] = {};      // _total_minutes + 1 when a bin was last searched, 0 = never
         bn::string<24> _info_line_a;
         bn::string<24> _info_line_b;
+        bn::string<24> _info_line_c;
+        bn::string<24> _deposit_label;
 
         // The running timed activity: need gains are spread over its frames, bars fill gradually.
         struct activity_state
@@ -112,6 +116,8 @@ namespace tl
             int extra_done = 0;
             int money = 0;                      // found at the end (bins)
             bool message = false;               // show _info_line_a / _info_line_b at the end
+            const char* title = "Trash bin";      // title of that message
+            int pickup = -1;                    // deposit pickup spot collected at the end
         };
 
         activity_state _act;
@@ -146,6 +152,7 @@ namespace tl
         void _redraw_hud_text();
         void _update_bars();
         [[nodiscard]] const interactable* _find_target() const;
+        [[nodiscard]] int _find_pickup(int& d2) const;
         void _update_cue();
         void _open_interaction_menu();
         void _handle_menu_choice(int choice);
@@ -156,6 +163,10 @@ namespace tl
         void _tick_minute();
         void _use_toilet(const interactable& target);
         void _search_bin(const interactable& target);
+        void _pick_up(int spot);
+        void _open_deposit_menu();
+        void _deposit_choice(int choice);
+        void _topup_pickups();
         void _handle_accident();
         void _show_info(const char* title, const char* line_a, const char* line_b, const char* line_c);
         void _update_zzz();

@@ -43,6 +43,8 @@ namespace tl
             info.need_values[need] = _needs.values[need].round_integer();
         }
 
+        info.bag = _deposit.bag_total();
+        info.credit = _deposit.credit;
         info.objective = _objective.c_str();
         ui::set_night(is_night(_minutes));
         _pause.open(info);
@@ -209,6 +211,16 @@ namespace tl
         {
             out.bin_emptied[index] = _bin_emptied[index];
         }
+
+        out.deposit_init = 1;
+        out.deposit_cans = uint8_t(_deposit.bag_cans);
+        out.deposit_bottles = uint8_t(_deposit.bag_bottles);
+        out.deposit_credit = uint8_t(_deposit.credit);
+
+        for(int index = 0; index < deposit::max_spots; ++index)
+        {
+            out.deposit_spot[index] = _deposit.spot[index];
+        }
     }
 
     void field::_apply_save(const save_data& in)
@@ -230,6 +242,22 @@ namespace tl
         for(int index = 0; index < maps_count * 16; ++index)
         {
             _bin_emptied[index] = in.bin_emptied[index];
+        }
+
+        if(in.deposit_init)
+        {
+            int cans = in.deposit_cans > deposit::bag_max ? deposit::bag_max : in.deposit_cans;
+            int bottles = in.deposit_bottles > deposit::bag_max - cans ? deposit::bag_max - cans : in.deposit_bottles;
+            _deposit.bag_cans = cans;
+            _deposit.bag_bottles = bottles;
+            _deposit.credit = in.deposit_credit ? 1 : 0;
+
+            for(int index = 0; index < deposit::max_spots; ++index)
+            {
+                _deposit.spot[index] = in.deposit_spot[index] & 0x0F;
+            }
+
+            _deposit.load(*_map);
         }
 
         _player.set_facing_index(in.facing);

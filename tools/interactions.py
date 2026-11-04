@@ -6,6 +6,7 @@ Blender re-render). Positions in cells. The player must stand within reach of th
   ("bench", seat_x, seat_y)       a bench along x with its backrest towards -y; you sit facing +y
                                    (screen down-left). Options: Sit, Sleep.
   ("fountain", centre_x, centre_y, radius)   Options: Wash face, Drink water.
+  ("deposit", x, y)               RETURN & EARN machine (cans $0.50, bottles $1.00): Return all / Check credit / Leave.
   ("bin", x, y)                   trash can: Search the bin (random find, once per game hour per bin).
 
 Optional 5th element = quality 1..3 (activities: toilet = speed of emptying the bladder, bookshelf =
@@ -27,7 +28,8 @@ how fast Fun fills); the 4th element (radius) is 0 for everything but the founta
 INTERACTABLES = {
     "city_centre": [
         # City Park
-        ("bench", 7.3, 39.4), ("bench", 15.3, 39.4),
+        ("bench", 15.3, 39.4),
+        ("deposit", 6.2, 37.9),         # RETURN & EARN machine against the east wall of the toilet hut
         # fountain square
         ("bench", 48.3, 38.0), ("bench", 57.7, 38.0), ("bench", 48.3, 45.0), ("bench", 57.7, 45.0),
         ("fountain", 53.0, 41.0, 2.2),

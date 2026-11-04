@@ -11,6 +11,8 @@
 #include "bn_sprite_items_need_bar.h"
 #include "bn_sprite_items_light_pool.h"
 
+#include "tl_deposit_spots.h"
+
 namespace tl
 {
     namespace
@@ -22,6 +24,9 @@ namespace tl
         constexpr int interact_reach = 26;             // world units from a bench seat
         constexpr int fountain_reach = 32;             // world units beyond the fountain radius
         constexpr int fixture_reach = 28;              // counters, toilets, sinks, shelves, ...
+        constexpr int pickup_reach = 20;               // cans and bottles lying on the ground
+        constexpr int pickup_frames = 72;              // ~1.2 s bend-down
+        constexpr int topup_minute = 6 * 60;           // pickups are topped up at 6:00 every day
 
         // Food: price, quality (1-3), gains over the meal; the meal lasts 100 + 5 * (Hunger + Energy) + 20 * quality
         // frames (max 360): better food is both worth more and takes a bit longer.
@@ -99,6 +104,7 @@ namespace tl
 
         // Create the big streamed layers before the HUD so they get the charblock-aligned VRAM.
         _load_map(start_map, start_x, start_y, facing);
+        _deposit.top_up(_rng);          // new game (Continue overwrites this from the save)
         _hud_bg = bn::regular_bg_items::hud.create_bg(0, 0);
         _hud_bg->set_priority(hud_priority);
         _redraw_hud_text();
@@ -137,6 +143,7 @@ namespace tl
         _player.place(*_map, x, y, facing);
         _critters.load(*_map);
         _npcs.load(*_map);
+        _deposit.load(*_map);
         _pool_sprites.clear();
         _update_lighting(true);
         _update_camera();
@@ -171,6 +178,7 @@ namespace tl
         _player.update_sprite(_cam_x, _cam_y);
         _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
         _npcs.update(_cam_x, _cam_y);
+        _deposit.update(*_map, _cam_x, _cam_y);
 
         int x0, y0, x1, y1, depth;
         _player.mask_area(x0, y0, x1, y1, depth);
@@ -193,6 +201,7 @@ namespace tl
             _light = lighting_at(_minutes, _map->outdoor);
             _player.set_lighting(_light);
             _critters.set_lighting(_light);
+            _deposit.set_lighting(_light);
 
             bool lamps_on = _map->outdoor && _light.night >= 128;
 
@@ -303,6 +312,11 @@ namespace tl
         ++_total_minutes;
         _needs.minute_passed();
 
+        if(_minutes == topup_minute)
+        {
+            _topup_pickups();
+        }
+
         if(_needs.values[needs::bladder] < 1 && ! _accident_pending)
         {
             _handle_accident();
@@ -397,10 +411,15 @@ namespace tl
                 _redraw_hud_text();
             }
 
+            if(finished && _act.pickup >= 0)
+            {
+                _deposit.collect(_act.pickup);
+            }
+
             if(finished && _act.message)
             {
                 _menu_mode = menu_mode::none;
-                _show_info("Trash bin", _info_line_a.c_str(), _info_line_b.c_str(), "");
+                _show_info(_act.title, _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
             }
         }
     }
@@ -457,54 +476,85 @@ namespace tl
         return best;
     }
 
+    int field::_find_pickup(int& d2) const
+    {
+        return _deposit.find(_player.x(), _player.y(), pickup_reach, d2);
+    }
+
     void field::_update_cue()
     {
-        // The bobbing "A" bubble over the nearest object in reach (only while walking, no menu, no activity).
+        // The bobbing "A" bubble over the nearest object or pickup in reach (only while walking, no menu, no activity).
         const interactable* target = _find_target();
+        int pickup_d2 = 0;
+        int pickup = _find_pickup(pickup_d2);
 
-        if(! target)
+        if(pickup >= 0 && target && distance2(_player.x(), _player.y(), target->x, target->y) <= pickup_d2)
+        {
+            pickup = -1;        // the fixture is closer
+        }
+
+        if(! target && pickup < 0)
         {
             _cue.reset();
             return;
         }
 
         int height;
+        int cue_x = 0;
+        int cue_y = 0;
 
-        switch(target->kind)
+        if(pickup >= 0)
         {
-        case interactable_kind::bench:
-            height = 22;
-            break;
-
-        case interactable_kind::seat:
-        case interactable_kind::seat_x:
-            height = 26;
-            break;
-
-        case interactable_kind::fountain:
-            height = 36;
-            break;
-
-        case interactable_kind::bookshelf:
-        case interactable_kind::noticeboard:
-            height = 46;
-            break;
-
-        case interactable_kind::bin:
-        case interactable_kind::sink:
-        case interactable_kind::reception:
-            height = 40;
-            break;
-
-        default:      // toilet, shop counters
+            height = 12;
+            cue_x = pickup_spots[pickup].x;
+            cue_y = pickup_spots[pickup].y;
+        }
+        else
+        {
+            cue_x = target->x;
+            cue_y = target->y;
             height = 38;
-            break;
+
+            switch(target->kind)
+            {
+            case interactable_kind::bench:
+                height = 22;
+                break;
+
+            case interactable_kind::seat:
+            case interactable_kind::seat_x:
+                height = 26;
+                break;
+
+            case interactable_kind::fountain:
+                height = 36;
+                break;
+
+            case interactable_kind::bookshelf:
+            case interactable_kind::noticeboard:
+                height = 46;
+                break;
+
+            case interactable_kind::bin:
+            case interactable_kind::sink:
+            case interactable_kind::reception:
+                height = 40;
+                break;
+
+            case interactable_kind::deposit:
+                height = 54;
+                break;
+
+            default:      // toilet, shop counters
+                height = 38;
+                break;
+            }
         }
 
         static constexpr int bob[4] = { 0, 1, 2, 1 };
         ++_cue_frame;
-        int sx = _map->to_image_x(target->x, target->y) - _cam_x;
-        int sy = _map->to_image_y(target->x, target->y) - _cam_y - height - bob[(_cue_frame / 8) % 4];
+        int sx = _map->to_image_x(cue_x, cue_y) - _cam_x;
+        int sy = _map->to_image_y(cue_x, cue_y) - _cam_y - height - bob[(_cue_frame / 8) % 4];
 
         if(sy < 18)
         {
@@ -524,6 +574,14 @@ namespace tl
     void field::_open_interaction_menu()
     {
         const interactable* best = _find_target();
+        int pickup_d2 = 0;
+        int pickup = _find_pickup(pickup_d2);
+
+        if(pickup >= 0 && (! best || pickup_d2 < distance2(_player.x(), _player.y(), best->x, best->y)))
+        {
+            _pick_up(pickup);
+            return;
+        }
 
         if(! best)
         {
@@ -575,6 +633,10 @@ namespace tl
 
         case interactable_kind::bin:
             _menu.open("Trash bin", bin_options, 1);
+            break;
+
+        case interactable_kind::deposit:
+            _open_deposit_menu();
             break;
 
         case interactable_kind::noticeboard:
@@ -685,6 +747,7 @@ namespace tl
         }
 
         _bin_emptied[slot] = _total_minutes + 1;
+        _info_line_c = "";
         _player.approach(target.x, target.y, 13);
         _begin_activity(search_frames);
         int roll = _rng.get_unbiased_int(100);
@@ -717,6 +780,137 @@ namespace tl
         _player.start_action(player::action_kind::search, target.x, target.y, _act.frames);
     }
 
+    namespace
+    {
+        // "$2" or "$2.50" for a number of credits (2 credits = $1).
+        void append_dollars(bn::string<24>& text, int credits)
+        {
+            text.append('$');
+            text.append(bn::to_string<8>(credits / 2));
+
+            if(credits % 2)
+            {
+                text.append(".50");
+            }
+            else if(credits == 0)
+            {
+                text.append(".00");
+            }
+        }
+
+        void append_items(bn::string<24>& text, int cans, int bottles)
+        {
+            text.append(bn::to_string<4>(cans));
+            text.append(cans == 1 ? " can, " : " cans, ");
+            text.append(bn::to_string<4>(bottles));
+            text.append(bottles == 1 ? " bottle" : " bottles");
+        }
+    }
+
+    void field::_topup_pickups()
+    {
+        _deposit.top_up(_rng);
+    }
+
+    void field::_pick_up(int spot)
+    {
+        if(_deposit.bag_total() >= deposit::bag_max)
+        {
+            _info_line_a = "You can't carry any";
+            _info_line_b = "more (";
+            _info_line_b.append(bn::to_string<4>(_deposit.bag_total()));
+            _info_line_b.append("/");
+            _info_line_b.append(bn::to_string<4>(deposit::bag_max));
+            _info_line_b.append("). Take it");
+            _info_line_c = "to the machine.";
+            _show_info("Bag full", _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
+            return;
+        }
+
+        const pickup_spot& place = pickup_spots[spot];
+        bool bottle = _deposit.is_bottle(spot);
+        _player.approach(place.x, place.y, 12);
+        _begin_activity(pickup_frames);
+        _act.pickup = spot;
+        _act.gain[needs::energy] = bn::fixed(-0.5);
+        _act.gain[needs::hygiene] = place.bush ? -2 : -1;
+        _act.message = true;
+        _act.title = "Picked up";
+        _info_line_a = bottle ? "Picked up a bottle." : "Picked up a can.";
+        _info_line_b = "Bag ";
+        _info_line_b.append(bn::to_string<4>(_deposit.bag_total() + 1));
+        _info_line_b.append("/");
+        _info_line_b.append(bn::to_string<4>(deposit::bag_max));
+        _info_line_c = "";
+        _player.start_action(player::action_kind::search, place.x, place.y, _act.frames);
+    }
+
+    void field::_open_deposit_menu()
+    {
+        static bn::string_view options[3];
+        _deposit_label = "Return all (";
+        _deposit_label.append(bn::to_string<4>(_deposit.bag_total()));
+        _deposit_label.append(")");
+        options[0] = _deposit_label;
+        options[1] = "Check credit";
+        options[2] = "Leave";
+        _menu.open("Return & Earn", options, 3);
+    }
+
+    void field::_deposit_choice(int choice)
+    {
+        if(choice == 0)
+        {
+            if(_deposit.bag_total() == 0 && _deposit.credit == 0)
+            {
+                _show_info("Return & Earn", "Your bag is empty.", "Collect cans and", "bottles around town.");
+                return;
+            }
+
+            int cans = _deposit.bag_cans;
+            int bottles = _deposit.bag_bottles;
+            int credits = _deposit.bag_credits() + _deposit.credit;
+            int paid = _deposit.return_all();
+            _money += paid;
+            _redraw_hud_text();
+            _info_line_a = "";
+            append_items(_info_line_a, cans, bottles);
+            _info_line_a.append(":");
+            _info_line_b = "";
+
+            if(credits % 2)
+            {
+                append_dollars(_info_line_b, credits);
+                _info_line_b.append(" -> $");
+                _info_line_b.append(bn::to_string<8>(paid));
+                _info_line_b.append(" paid,");
+                _info_line_c = "credit 1/2. Thanks!";
+            }
+            else
+            {
+                _info_line_b.append("$");
+                _info_line_b.append(bn::to_string<8>(paid));
+                _info_line_b.append(" paid.");
+                _info_line_c = "Thanks!";
+            }
+
+            _show_info("Return & Earn", _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
+        }
+        else if(choice == 1)
+        {
+            _info_line_a = "In the bag: ";
+            _info_line_a.append(bn::to_string<4>(_deposit.bag_total()));
+            _info_line_a.append("/");
+            _info_line_a.append(bn::to_string<4>(deposit::bag_max));
+            _info_line_b = "Worth ";
+            append_dollars(_info_line_b, _deposit.bag_credits());
+            _info_line_c = "Credit saved: ";
+            _info_line_c.append(bn::to_string<4>(_deposit.credit));
+            _info_line_c.append("/2");
+            _show_info("Return & Earn", _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
+        }
+    }
+
     void field::_handle_menu_choice(int choice)
     {
         const interactable* target = _menu_target;
@@ -747,6 +941,12 @@ namespace tl
         if(mode == menu_mode::shop)
         {
             _buy(*target, choice);
+            return;
+        }
+
+        if(target->kind == interactable_kind::deposit)
+        {
+            _deposit_choice(choice);
             return;
         }
 

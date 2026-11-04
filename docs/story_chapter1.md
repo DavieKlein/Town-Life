@@ -709,6 +709,25 @@ Cooldown 60 game minutes per bin (unchanged). Result odds (**changed**: still 35
 Expected value per search: about $0.65 plus ~2.7 Hunger, at the cost of ~7 Hygiene. A search is not a way to get rich, only to
 bridge a bad evening (Day 1).
 
+### 4.7a Can and bottle deposit (RETURN & EARN)
+
+A small side income that is always available in the City Centre, built (approved) after the bins. **Owner-approved numbers:**
+
+| Item | Credit | Value |
+|------|--------|-------|
+| Can | 1 credit | $0.50 |
+| Bottle | 2 credits | $1.00 |
+
+- The money stays in whole dollars: **2 credits pay $1**, the remainder (0 or 1 credit) stays on the machine as credit.
+- **At most $3.50 worth of loose cans and bottles lie in the district at once** (7 credits; 26 spawn spots in the City Centre).
+  The pickups are topped up at **6:00 every day** (only up to the cap, so uncollected ones are not doubled), mix about 60 % cans / 40 % bottles.
+- The bag holds **10 items**; "Bag full" until the player returns them at the machine (against the east wall of the park toilet).
+- Cost per pick-up (~1.2 s bend-down): **Energy -0.5, Hygiene -1** (-2 in bushes and hedges). B cancels.
+- Daily value: the cap is $3.50, so a full sweep plus return takes about 40 game minutes and earns up to $3.50 (only the first day
+  after a long break; on a normal day roughly $2-3). Comparable to one cheap meal, never a replacement for a job (odd jobs ~$9/h).
+- Story hook: Mr. Pimm grumbles that "the park machine pays more than your cousin's allowance"; Mia (Day 2) shows the player how it
+  works as an optional tip ("Cans are fifty cents. The green machine by the toilets."). It is a bridge on bad evenings, like the bins.
+
 ### 4.8 Skills and reputation
 
 - Skills 0-100 points. Chapter 1 targets by Day 7: Strength ~12, Fitness ~8, Logic ~7, Charm ~6, Creativity ~4.
