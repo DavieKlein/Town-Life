@@ -212,6 +212,7 @@ namespace tl
         int _topic = 0;
         int _used_mask = 0;
         int _menu_topics = 0;
+        int _story_node = -1;
         int _pending_leave = 0;     // 0 = continue, 1 = enough, 2 = annoyed
         bool _first_today = false;
         bool _after_script_talk = false;

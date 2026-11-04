@@ -76,7 +76,7 @@ PLACEMENTS = [
     ("mia", "diner", 9.3, 4.7, "sw", "7:00", "12:00", 2, 255),              # waitress shift
     ("mia", "city_centre", 50.4, 38.9, "w", "12:00", "12:30", 2, 255),     # lunch break at the fountain square bench
     ("mia", "diner", 9.3, 4.7, "sw", "12:30", "15:00", 2, 255),
-    ("lou", "diner", 6.4, 3.4, "sw", "6:00", "22:00", 1, 255),             # behind the counter
-    ("pimm", "community_centre", 6.1, 6.2, "n", "10:00", "15:30", 1, 255),  # library reading table
-    ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "18:00", 1, 255),   # City Park pond, feeding the pigeons
+    ("lou", "diner", 6.4, 2.6, "sw", "6:00", "22:00", 1, 255),             # behind the counter (counter y 3.2..4.1)
+    ("pimm", "community_centre", 4.9, 7.4, "ne", "8:00", "16:00", 1, 255),   # library, beside the reading table
+    ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "19:30", 1, 255),   # City Park pond, feeding the pigeons
 ]

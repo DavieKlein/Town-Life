@@ -125,6 +125,12 @@ node intro_lou_work
 LOU:surprised| Work? You? Come back when you smell less like a bench, hah!
 LOU:surprised| Wash up, then we talk. Plates are life!
 goto hint_talk
+node ask_lou_work
+PLAYER| Do you still need a hand, Lou?
+LOU:happy| Hah! Come by tomorrow at eleven. I'll show you the sink.
+! flag asked_lou_job, friend lou +1
+LOU| Bring clean hands. Plates are life!
+
 node intro_lou_look
 LOU| Look all you like. Looking is free. Pancakes are not.
 goto hint_talk

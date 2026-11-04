@@ -44,7 +44,7 @@ TALKERS = ["mia", "rosa", "dex", "pimm", "lou", "halloran"]       # have small t
 FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "met_lou", "met_halloran", "hint_talk_seen",
          "left_room", "shelves_stocked", "rye_delivered", "left_shop", "slept_on_bench", "read_newspaper", "diner_job",
          "odd_jobs_3", "old_block_open", "rosa_stall_done", "vaultmart_visited", "pimm_library_met", "meeting_attended",
-         "certificate_found", "bridge_open", "docks_job", "first_night_off_bench", "prologue_started"]
+         "certificate_found", "bridge_open", "docks_job", "first_night_off_bench", "prologue_started", "asked_lou_job"]
 
 # ---------------------------------------------------------------------------------------------------- missions
 # cond: None (finished by a `done <id>` effect), ("talk", npc), ("map", map), ("money", n), ("flag", name),
@@ -54,7 +54,7 @@ FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "
 MISSIONS = [
     ("P1", "Say hello", "Say hello to Mia.", ("talk", "mia"), "P2", 0),
     ("P2", "Find the library", "Find the library (the community centre).", ("map", "community_centre"), "P3", 0),
-    ("P3", "The regular", "Talk to Mr. Pimm.", ("talk", "pimm"), "P4", 0),
+    ("P3", "The regular", "Talk to Mr. Pimm. He reads in the library at the community centre.", ("talk", "pimm"), "P4", 0),
     ("P4", "Lunch at Lou's", "Talk to Big Lou at the diner.", ("talk", "lou"), "P5", 0),
     ("P5", "Pocket money", "Collect $30 for a rainy day.", ("money", 30), None, 0),
     ("M01", "Open Up", "Get ready for work.", ("flag", "left_room"), "M02", 0),

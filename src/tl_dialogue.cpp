@@ -1040,7 +1040,17 @@ namespace tl
             }
         }
 
-        while(chosen < 3)
+        // a persistent story question (never lost after small talk): Lou's job offer until it was asked
+        _story_node = -1;
+        int topic_limit = 3;
+
+        if(_npc == int(npc_id::lou) && ! story().flag(story_flag::asked_lou_job))
+        {
+            _story_node = dlg::ask_lou_work;
+            topic_limit = 2;
+        }
+
+        while(chosen < topic_limit)
         {
             int topic = pick(false);
 
@@ -1069,9 +1079,18 @@ namespace tl
             _topic_views[index] = _topic_labels[index];
         }
 
-        _topic_labels[chosen] = "Bye";
-        _topic_views[chosen] = _topic_labels[chosen];
-        _box.choose(_topic_views, chosen + 1);
+        int rows = chosen;
+
+        if(_story_node >= 0)
+        {
+            _topic_labels[rows] = "Ask about work";
+            _topic_views[rows] = _topic_labels[rows];
+            ++rows;
+        }
+
+        _topic_labels[rows] = "Bye";
+        _topic_views[rows] = _topic_labels[rows];
+        _box.choose(_topic_views, rows + 1);
         _step = step::topic_menu;
     }
 
@@ -1214,7 +1233,13 @@ namespace tl
 
                 if(choice >= 0)
                 {
-                    if(choice >= _menu_topics)
+                    if(_story_node >= 0 && choice == _menu_topics)
+                    {
+                        _phase = phase::script;
+                        _after_script_talk = true;
+                        _show_node(_story_node);
+                    }
+                    else if(choice >= _menu_topics)
                     {
                         _phase = phase::leave;
                         int bye = dialogue_bye_nodes[_npc];

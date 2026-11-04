@@ -694,6 +694,12 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
 - Roadmap 1.3 / 1.4: dialogue, NPC talking, friendship meter, mission data, flags, mission log are done; still to do: NPC wandering, gifts, barks,
   prologue scenes, the Chapter 1 mission scripts, Old Block NPCs.
 
+- **s60 fixes:** Lou stands behind the diner counter at (6.4, 2.6) (counter covers his legs; "Talk to Big Lou" still in the counter menu).
+  Sinks have "Wash hands" / "Drink water" (Energy +3, Bladder -15, no hygiene loss). Pimm: library 8:00-16:00 at (4.9, 7.4), park pond
+  16:00-19:30; P3 objective names the library. Talk menu has a persistent story row (`conversation::_story_node`, now Lou's
+  "Ask about work" -> node `ask_lou_work`, sets `asked_lou_job`, shown until asked; with it only 2 small-talk topics). After editing
+  `cast.py` placements without Blender runs: `cd tools; python3 -c "import build_assets as b; b.write_cast_header()"`.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

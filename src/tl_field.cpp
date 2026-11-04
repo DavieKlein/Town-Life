@@ -52,7 +52,7 @@ namespace tl
             { 2, 2, 0, 15, 5, -10 }, { 4, 2, 25, 8, 0, 0 }, { 6, 3, 40, 12, 0, 0 } };
         constexpr bn::string_view toilet_options[] = { "Use toilet" };
         constexpr bn::string_view bin_options[] = { "Search the bin" };
-        constexpr bn::string_view sink_options[] = { "Wash hands" };
+        constexpr bn::string_view sink_options[] = { "Wash hands", "Drink water" };
         constexpr bn::string_view book_options[] = { "Read a book" };
         constexpr bn::string_view seat_options[] = { "Sit down" };
         constexpr bn::string_view bed_options[] = { "Sleep", "Take a nap", "Leave" };
@@ -710,7 +710,7 @@ namespace tl
             break;
 
         case interactable_kind::sink:
-            _menu.open("Sink", sink_options, 1);
+            _menu.open("Sink", sink_options, 2);
             break;
 
         case interactable_kind::bookshelf:
@@ -1163,9 +1163,21 @@ namespace tl
 
         case interactable_kind::sink:
             _player.approach(target->x, target->y, 12);        // stand at the basin, facing it
-            _begin_activity(wash_hands_frames);
-            _act.gain[needs::hygiene] = wash_hands_hygiene;
-            _player.start_action(player::action_kind::wash, target->x, target->y, _act.frames);
+
+            if(choice == 0)
+            {
+                _begin_activity(wash_hands_frames);
+                _act.gain[needs::hygiene] = wash_hands_hygiene;
+                _player.start_action(player::action_kind::wash, target->x, target->y, _act.frames);
+            }
+            else
+            {
+                _begin_activity(drink_frames);
+                _act.gain[needs::energy] = 3;
+                _act.gain[needs::bladder] = -15;
+                _needs.bladder_boost = bladder_boost_minutes;
+                _player.start_action(player::action_kind::drink, target->x, target->y, _act.frames);
+            }
             break;
 
         case interactable_kind::bookshelf:

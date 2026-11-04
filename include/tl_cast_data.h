@@ -41,9 +41,9 @@ namespace tl
         { npc_id::mia, map_id::diner, 1, 2, 255, 148, 75, 420, 720 },
         { npc_id::mia, map_id::city_centre, 2, 2, 255, 806, 622, 720, 750 },
         { npc_id::mia, map_id::diner, 1, 2, 255, 148, 75, 750, 900 },
-        { npc_id::lou, map_id::diner, 1, 1, 255, 102, 54, 360, 1320 },
-        { npc_id::pimm, map_id::community_centre, 4, 1, 255, 97, 99, 600, 930 },
-        { npc_id::pimm, map_id::city_centre, 5, 1, 255, 320, 675, 960, 1080 },
+        { npc_id::lou, map_id::diner, 1, 1, 255, 102, 41, 360, 1320 },
+        { npc_id::pimm, map_id::community_centre, 5, 1, 255, 78, 118, 480, 960 },
+        { npc_id::pimm, map_id::city_centre, 5, 1, 255, 320, 675, 960, 1170 },
     };
 
     constexpr int npc_placements_count = int(sizeof(npc_placements) / sizeof(npc_placement));
