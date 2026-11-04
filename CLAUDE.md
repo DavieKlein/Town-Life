@@ -508,6 +508,37 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   order s, sw, w, nw, n, ne, e, se), 4x supersampled; build_assets adds a 1 px dark outline and
   quantizes to one 15-colour palette. Frame 32x64, feet at (16, 54); sheet = 72 frames.
 
+### Character faces (option B, owner-approved) and the player V2 look
+
+- **Proportions:** head 1.28x and hands 1.38x on every character sprite (`face_kit.apply_proportions()` scales the keyframes of the
+  `Head` / `Palm.L/R` bones - the actions key them, so pose-bone scale alone is overwritten); the player also gets broader shoulders
+  (`player_pose_tweaks`, Torso scale 1.14, must be re-applied after every `frame_set`). Head props from `cast.py` (z > 1.55 m: caps, hats,
+  bun, glasses) are glued to the Head bone so they scale with the head; Rosa's / Victor's glasses are replaced by fitted ones.
+- **Blender side** (`tools/face_kit.py`, `tools/face_cfg.py` = per-character iris / brow / lips / hair colours): small 3D features
+  (eyes, brows, nose shade, mouth, blush, hair strands) glued to the Head bone, plus anchor empties (eyes, brows, mouth, nose, cheeks,
+  crown) projected per frame with the sprite camera and a ray visibility test -> `anchors.json` next to the PNGs
+  (`{frame: {anchor: [x, y, visible]}}`). Used by `blender_actor.py` (player idle + walk + sit/lie), `blender_acts.py` (eat, drink, read,
+  search, wash, pickup; props set `hide_viewport` too so the visibility test ignores hidden ones) and `blender_cast.py`.
+- **Cast:** `build_cast` runs `blender_cast.py` twice per member: `portrait` (unchanged look, portraits are NOT touched until a new portrait
+  proposal is approved) and `sprites` (faces). The Valet robot has no face.
+- **Pixel pass** (`tools/face_pass.py`, `write_face_sheet` in build_assets.py): sprite sheets use 11 free k-means colours + 3 RESERVED
+  entries (12 eye white, 13 mouth, 14 blush) + 15 outline; the reserved colours are never used by normal quantisation. After
+  quantisation `paint_face` draws, per frame, from the anchors: eye 1x2 dark + white corner (front / 3/4 views), brow, 1-2 px mouth,
+  blush, a nose-shade pixel (3/4) and a hair highlight; only for facings s, sw, se (both eyes) and e, w (profile eye); frames whose eyes
+  are not visible (bent over the sink, back views, lying) are left alone; sunglasses pixels are not overpainted.
+  New characters need an entry in `face_cfg.FACE`.
+- **Player V2 look** (`tools/player_look.py`, done): cream collar / cuffs / zip, belt with gold buckle, chunky red sneakers with white
+  soles (the FBX "Eyes" material below knee height is the shoes). `PLAYER_COLOURS` now #2c5fb8 sweater, #a98655 trousers, #4a2a18 hair.
+  The cast.py player entry (portrait only) still has the old colours.
+- Proposal scripts: `tools/proposals/s54/`.
+
+### Corner Market storeroom stairs (s52, approved)
+
+14-step wooden flight with handrail and PRIVATE plaque along the east wall of the storeroom (x 15.0-16.25, y 4.0 up to 0.9; `stairs_flight`
+in scene.py, applied inside `market_v2`; staff table moved to (13.4, 2.4), red poster removed). The flight is solid; the foot (15.0-16.25 x
+3.5-4.0) is walkable and has an interactable `stairs` at (15.6, 3.75): A shows "Your room is upstairs. (Coming soon)". There is no warp
+yet because the room above (`room_attic` / `room_plain`, proposals/s52/rooms52.py) and the VaultMart gate are not approved.
+
 ### UI style system (tl_ui, tools/ui_assets.py)
 
 - **Two styles, switched by the game clock** (`ui::set_night(is_night(minutes))`, `is_night` = lamps-on time
@@ -750,7 +781,7 @@ and `reset` commands for save tests.
 five enterable buildings, shops, fixtures, Mia, fine collision, fountain with water in the basin.
 **Postponed fine-tuning (do when the owner asks):** water is now realistic with sparse glints (see
 Day/night lighting; check it on the phone), fountain detail, eye-level street details (commit `c3aaccc`),
-the shabby first home entrance (`home_room`), the player V2 look, and a tree in City Park at
+the shabby first home entrance (`home_room`), and a tree in City Park at
 (4.0, 45.5) that covers the player on the path in front of the toilet. Next big steps: dialogue
 box with portraits + friendship meter, missions, Old Block.
 
