@@ -66,7 +66,7 @@ FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "
          "woke_up", "briefed", "stock_react_done", "pimm_scene", "has_rye", "pimm_left", "lunch_given", "vault_scene",
          "corner_market_cold", "has_coffee_voucher", "voucher_used", "ate_evening", "washed_evening", "news_due", "deposit_tip",
          "hint_hunger", "hint_hygiene", "hint_energy", "hint_bladder", "hint_fun", "lou_shift_go", "hyg_ok", "stock_rank",
-         "diner_shift_day", "rosa_comforted", "vowed", "mia_goodbye", "gate_hint_seen",
+         "skip_pimm", "skip_lunch", "lunch_hint", "diner_shift_day", "rosa_comforted", "vowed", "mia_goodbye", "gate_hint_seen",
          # s64: clinic
          "met_okafor", "faint_told", "sick_told", "clinic_paid"]
 assert len(FLAGS) <= 64
@@ -79,14 +79,14 @@ assert len(FLAGS) <= 64
 MISSIONS = [
     ("P1", "Say hello", "Say hello to Mia.", ("talk", "mia"), "P2", 0),
     ("P2", "Find the library", "Find the library (the community centre).", ("map", "community_centre"), "P3", 0),
-    ("P3", "The regular", "Talk to Mr. Pimm. He reads in the library at the community centre.", ("talk", "pimm"), "P4", 0),
+    ("P3", "The regular", "Talk to Mr. Pimm in the library.", ("talk", "pimm"), "P4", 0),
     ("P4", "Lunch at Lou's", "Talk to Big Lou at the diner.", ("talk", "lou"), "P5", 0),
     ("P5", "Pocket money", "Collect $30 for a rainy day.", ("money", 30), None, 0),
     ("M01", "Open Up", "Get ready for work.", ("flag", "left_room"), "M02", 0),
     ("M02", "Stock the Shelves", "Stock the shelves for Rosa.", ("flag", "shelves_stocked"), "M03", 0),
-    ("M03", "The Regular", "Fetch Mr. Pimm's rye loaf.", ("flag", "rye_delivered"), "M04", 0),
-    ("M04", "Vault Day", "Leave the shop.", ("flag", "left_shop"), "M05", 0),
-    ("M05", "Survive the Night", "Eat, freshen up, sleep on the bench.", ("flag", "slept_on_bench"), "M06", 0),
+    ("M03", "The Regular", "Fetch Mr. Pimm's rye loaf (he comes at 9).", ("flag", "rye_delivered"), "M04", 0),
+    ("M04", "Vault Day", "Help in the shop until lunch at noon.", ("flag", "left_shop"), "M05", 0),
+    ("M05", "Survive the Night", "Eat, wash up, then sleep on the bench.", ("flag", "slept_on_bench"), "M06", 0),
     ("M06", "Yesterday's News", "Find out what Smart City means.", ("flag", "read_newspaper"), "M07", 0),
     ("M07", "Plate Spinner", "Get a job at Lou's Diner.", ("flag", "diner_job"), "X1", 0),
     # the chain stops here for now (Old Block, the notice board and the Docks are not built yet)
@@ -97,7 +97,7 @@ MISSIONS = [
     ("M11", "Cold Shelves", "Visit VaultMart and see how Dex is doing.", ("flag", "vaultmart_visited"), "M12", 0),
     ("M12", "Old Friends", "Find Mr. Pimm in the library.", ("flag", "pimm_library_met"), "M13", 0),
     ("M13", "Notice Served", "Attend Rosa's meeting in Old Block.", ("flag", "meeting_attended"), "M14", 0),
-    ("M14", "Paper Trail", "Find the bridge certificate in the library archive.", ("flag", "certificate_found"), "M15", 0),
+    ("M14", "Paper Trail", "Find the bridge certificate in the archive.", ("flag", "certificate_found"), "M15", 0),
     ("M15", "Open Sesame", "Show the certificate at the bridge.", ("flag", "bridge_open"), "M16", 0),
     ("M16", "Dock Hand", "Meet Foreman Halloran at the Docks.", ("flag", "docks_job"), "M17", 12),
     ("M17", "A Roof for the Night", "Meet Mia at the bridge after your shift.", ("flag", "first_night_off_bench"), None, 0),

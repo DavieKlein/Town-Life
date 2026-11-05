@@ -73,14 +73,18 @@ Needs and sickness (Okafor, the faint), Social (parties, Repair Café), friendsh
 gossip (each chapter adds rules), phone texts (one nudge per mission), collectibles (coins = Co-op lore, postcards = Mia's family, flyers =
 resistance), events (Saturday market, march, Block Party, Repair Café, Lantern Night, Silent Protest, Cup Match, Gala, Hearing).
 
-## Open questions for the owner (max 10)
-1. **Housing:** is Ines's laundromat back room the right "lent space"? (Alternative: Lou's diner storeroom.)
-2. **Penthouse:** OK that it sits on top of the rebuilt Co-op Hall in Old Block (open, shared, key on a hook) and is the last step of the ladder?
-3. **Co-op Charter of 1931** as the legal key to save Old Block (made from the Ch.1 coin and ledger lore): keep it?
-4. **Victor's backstory twist** ("Vic", Rosa's fired delivery boy): add it or keep him a pure villain? And is "stocking shelves at Corner Market" the right fate?
-5. **Dex:** three possible endings (redeemed / grey / cold) or always redeemed?
-6. **Valet turns honest at the Gala:** fine, or should he stay with Vault until the end?
-7. **Gossip and phone-message caps:** raise from 8 and 8 to ~48 gossip rules and ~60 messages (a 32-bit mask is needed). OK?
-8. **Odd job #15 "The Tester"** (VaultMart pays you $20 for your face, Mia and Rosa disapprove): keep as a moral choice, or cut?
-9. **Mentor casting:** names/looks for Bo-Ra, Wren, Nadia, Gus, Odette (portraits need proposals): approve or change?
-10. **Scale:** Chapter 2 is 23 days and Chapters 3-5 about 60 more. Keep the soft demolition timer (never ends the game), or remove the countdown?
+## Owner decisions on the ten open questions (s66)
+1. **Lent space = Ines's laundromat back room: YES.**
+2. **Co-op Hall / penthouse: kept as planned.** What is the Co-op Hall? In 1931 the people of Old Block (bakers, dockers, seamstresses, a bridge crew) founded a
+   cooperative and built a shared hall: a market hall with stalls on the ground floor, a meeting room and flats above, owned by nobody and everybody under the
+   Co-op Charter. Over the decades it fell into disrepair and now stands as the empty building on the demolition site that Victor Vault wants to clear for glass
+   towers. At the end of the story the hall is rebuilt as a market hall (stalls, flats) and its top floor becomes the **penthouse**, the last step of the housing
+   ladder: open, shared, a door without a lock, a key on a hook, a long table with mismatched chairs. It echoes Vault's golden tower, but is the opposite.
+3. **Co-op Charter of 1931 as the legal key to save Old Block: OK.**
+4. **Victor = Rosa's fired delivery boy "Vic" twist, and stocking shelves at Corner Market as his fate: OK.**
+5. **Dex's endings (redeemed / grey / cold): NOT answered yet, stays open.**
+6. **Valet turns to the good side at the Gala: YES.**
+7. **Raise gossip rules to ~48 and phone messages to ~60 (32-bit message mask): OK, NOT implemented yet** (record only; build when the content needs it).
+8. **Odd job "The Tester" stays as a moral choice: YES.**
+9. **Mentor casting (Bo-Ra, Wren, Nadia, Gus, Odette): approved as characters;** looks still need design proposals before any art is built.
+10. **Soft demolition countdown (Day 86, never ends the game): keep, YES.**

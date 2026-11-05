@@ -12,11 +12,14 @@ namespace tl
         constexpr int pimm_arrives = 3;
         constexpr int pimm_leaves = 4;
         constexpr int staff_lunch = 5;
-        constexpr int vault_day = 6;
-        constexpr int news_day2 = 7;
-        constexpr int mia_tip = 8;
-        constexpr int faint = 9;
-        constexpr int count = 10;
+        constexpr int skip_pimm = 6;
+        constexpr int skip_lunch = 7;
+        constexpr int back_for_lunch = 8;
+        constexpr int vault_day = 9;
+        constexpr int news_day2 = 10;
+        constexpr int mia_tip = 11;
+        constexpr int faint = 12;
+        constexpr int count = 13;
     }
 }
 

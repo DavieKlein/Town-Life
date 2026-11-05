@@ -81,7 +81,35 @@ script staff_lunch
   pan_player
   info "Mia gave you Bread."
   eat 15 3 0
+  fade_out 14
+  scene_begin
+  card "Two hours later..."
+  time 14 0
+  needs -8 -6 -4 -5 -4
+  fade_in 14
 trigger staff_lunch when map=corner_market flag=rye_delivered !flag=lunch_given !flag=vault_scene day=1 time>=12:00
+
+script skip_pimm
+  flag skip_pimm 0
+  fade_out 14
+  card "Later..."
+  time 9 0
+  fade_in 14
+trigger skip_pimm when flag=skip_pimm
+
+script skip_lunch
+  flag skip_lunch 0
+  fade_out 14
+  card "Later..."
+  time 12 0
+  fade_in 14
+trigger skip_lunch when flag=skip_lunch
+
+# outside after noon: lunch is waiting
+script back_for_lunch
+  flag lunch_hint
+  info "It is noon. Lunch at the Corner Market!"
+trigger back_for_lunch when flag=rye_delivered !flag=lunch_given !flag=lunch_hint !flag=vault_scene day=1 time>=12:00
 
 # ------------------------------------------------------------------------------------------------ Scenes 6-8: Victor Vault (14:00)
 script vault_day
@@ -204,7 +232,7 @@ script vault_day
   fade_in 14
   wait 30
   say pro_vaultmart
-trigger vault_day when day=1 time>=14:00 flag=briefed !flag=vault_scene
+trigger vault_day when day=1 time>=14:00 flag=lunch_given !flag=vault_scene
 
 # ------------------------------------------------------------------------------------------------ Scene 10: Day 2
 script news_day2

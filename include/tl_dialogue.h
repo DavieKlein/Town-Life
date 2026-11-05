@@ -216,6 +216,7 @@ namespace tl
         int _used_mask = 0;
         int _menu_topics = 0;
         int _story_node = -1;
+        const char* _story_label = "Ask about work";
         int _pending_leave = 0;     // 0 = continue, 1 = enough, 2 = annoyed
         bool _first_today = false;
         bool _after_script_talk = false;

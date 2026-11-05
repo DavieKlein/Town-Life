@@ -1116,10 +1116,29 @@ namespace tl
         _story_node = -1;
         int topic_limit = 3;
 
+        _story_label = "Ask about work";
+
         if(_npc == int(npc_id::lou) && ! story().flag(story_flag::asked_lou_job))
         {
             _story_node = dlg::ask_lou_work;
             --topic_limit;
+        }
+        else if(_npc == int(npc_id::rosa) || _npc == int(npc_id::mia))
+        {
+            const story_state& st = story();
+
+            if(st.flag(story_flag::stock_react_done) && ! st.flag(story_flag::pimm_scene) && ! st.flag(story_flag::vault_scene))
+            {
+                _story_node = dlg::ask_skip_pimm;
+                _story_label = "What's next?";
+                --topic_limit;
+            }
+            else if(st.flag(story_flag::rye_delivered) && ! st.flag(story_flag::lunch_given) && ! st.flag(story_flag::vault_scene))
+            {
+                _story_node = dlg::ask_skip_lunch;
+                _story_label = "What's next?";
+                --topic_limit;
+            }
         }
 
         // gifts: offered while the player carries one and has not given this NPC one today
@@ -1166,7 +1185,7 @@ namespace tl
         if(_story_node >= 0)
         {
             _story_row = rows;
-            _topic_labels[rows] = "Ask about work";
+            _topic_labels[rows] = _story_label;
             _topic_views[rows] = _topic_labels[rows];
             ++rows;
         }

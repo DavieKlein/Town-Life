@@ -125,6 +125,18 @@ node intro_lou_work
 LOU:surprised| Work? You? Come back when you smell less like a bench, hah!
 LOU:surprised| Wash up, then we talk. Plates are life!
 goto hint_talk
+node ask_skip_pimm
+PLAYER| Shelves are done. What's next?
+ROSA| Mr. Pimm comes by at nine for his rye loaf. Sit tight, have a look around.
+ROSA| Or go and make coffee, time passes fast then. Nine o'clock it is.
+! flag skip_pimm
+
+node ask_skip_lunch
+PLAYER| Pimm has his loaf. What's next?
+ROSA| Odd bits until lunch at noon. Straighten a shelf, hum a tune.
+ROSA| Fine, fine. Let's say it's noon already.
+! flag skip_lunch
+
 node ask_lou_work
 PLAYER| Do you still need a hand, Lou?
 ifnot hyg_ok -> lou_wash_first

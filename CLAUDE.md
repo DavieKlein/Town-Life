@@ -925,6 +925,14 @@ blender_render.py code is in commit `c3aaccc` (WIP). It adds projecting shop sig
 lamps, a café table, a mailbox, etc. It was reverted from main until the owner wants details.
 
 **Owner decisions (latest):**
+- **Story answers (s66, details in docs/story_overview.md):** lent space = Ines's laundromat back room; Co-op Hall + penthouse as planned; Co-op Charter of 1931 as
+  the legal key; Victor = Rosa's fired delivery boy "Vic" (fate: stocking shelves at Corner Market); Valet turns good at the Gala; odd job "The Tester" stays;
+  mentors Bo-Ra, Wren, Nadia, Gus, Odette approved as characters (looks need proposals); soft demolition countdown (Day 86) kept; later raise gossip
+  rules to ~48 and phone messages to ~60 (32-bit mask, NOT built yet); Dex's endings still OPEN.
+- **Prologue pacing (s66):** every objective must be completable by doing what it says. After the rye loaf the objective is "Help in the shop until lunch at noon";
+  Rosa/Mia get a story row "What's next?" (`ask_skip_pimm` / `ask_skip_lunch`, flags `skip_pimm` / `skip_lunch`) that skips the clock to 9:00 / 12:00 ("Later..." card).
+  Outside after noon, `back_for_lunch` tells you to return. `staff_lunch` ends with "Two hours later..." (14:00) and `vault_day` starts at once (trigger needs `lunch_given`).
+  Objective strings must be <= 48 characters (bn::string crash otherwise).
 - **VaultTech staff gate = variant B** (roll-down shutter with a big red STAFF ONLY sign): built into the `vaultmart` map (s62).
 - **VaultMart = variant A, golden car = compact 0.75x (owner, s62):** built (see "Minigames, cutscenes and the prologue"); proposal sources in `tools/proposals/s62/`.
 - **Player bed (s58, s59):** `bed_cosy` is soft: bevelled mattress, puffy duvet (hangs 0.07 over the sides), turned-back sheet, ONE round pillow, no

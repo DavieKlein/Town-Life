@@ -72,7 +72,28 @@ namespace tl
         { cs_op::pan_player, 0, 0, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::info, 0, 0, 0, 0, 0, "Mia gave you Bread." },  // staff_lunch
         { cs_op::eat, 15, 3, 0, 0, 0, nullptr },  // staff_lunch
+        { cs_op::fade_out, 14, 0, 0, 0, 0, nullptr },  // staff_lunch
+        { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // staff_lunch
+        { cs_op::card, 0, 0, 0, 0, 0, "Two hours later..." },  // staff_lunch
+        { cs_op::time, 14, 0, 0, 0, 0, nullptr },  // staff_lunch
+        { cs_op::needs, -8, -6, -4, -5, -4, nullptr },  // staff_lunch
+        { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // staff_lunch
+        { cs_op::flag, story_flag::skip_pimm, 0, 0, 0, 0, nullptr },  // skip_pimm
+        { cs_op::fade_out, 14, 0, 0, 0, 0, nullptr },  // skip_pimm
+        { cs_op::card, 0, 0, 0, 0, 0, "Later..." },  // skip_pimm
+        { cs_op::time, 9, 0, 0, 0, 0, nullptr },  // skip_pimm
+        { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // skip_pimm
+        { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // skip_pimm
+        { cs_op::flag, story_flag::skip_lunch, 0, 0, 0, 0, nullptr },  // skip_lunch
+        { cs_op::fade_out, 14, 0, 0, 0, 0, nullptr },  // skip_lunch
+        { cs_op::card, 0, 0, 0, 0, 0, "Later..." },  // skip_lunch
+        { cs_op::time, 12, 0, 0, 0, 0, nullptr },  // skip_lunch
+        { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // skip_lunch
+        { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // skip_lunch
+        { cs_op::flag, story_flag::lunch_hint, 1, 0, 0, 0, nullptr },  // back_for_lunch
+        { cs_op::info, 0, 0, 0, 0, 0, "It is noon. Lunch at the Corner Market!" },  // back_for_lunch
+        { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // back_for_lunch
         { cs_op::fade_out, 12, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::warp, int(map_id::city_centre), 650, 314, 3, 0, nullptr },  // vault_day
         { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // vault_day
@@ -205,9 +226,9 @@ namespace tl
         { cs_op::say, dlg::faint_wake, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::get_up, 0, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::wait, 10, 0, 0, 0, 0, nullptr },  // faint
-        { cs_op::ifflag, story_flag::clinic_paid, 1, 199, 0, 0, nullptr },  // faint
+        { cs_op::ifflag, story_flag::clinic_paid, 1, 220, 0, 0, nullptr },  // faint
         { cs_op::say, dlg::faint_debt, 0, 0, 0, 0, nullptr },  // faint
-        { cs_op::jump, 200, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::jump, 221, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::say, dlg::faint_pay, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::actor_face_player, int(npc_id::okafor), 0, 0, 0, 0, nullptr },  // faint
         { cs_op::scene_end, 0, 0, 0, 0, 0, nullptr },  // faint
@@ -220,11 +241,14 @@ namespace tl
             { 22, 7 },
             { 29, 15 },
             { 44, 13 },
-            { 57, 7 },
-            { 64, 114 },
-            { 178, 3 },
-            { 181, 2 },
-            { 183, 21 },
+            { 57, 13 },
+            { 70, 6 },
+            { 76, 6 },
+            { 82, 3 },
+            { 85, 114 },
+            { 199, 3 },
+            { 202, 2 },
+            { 204, 21 },
         };
         constexpr cs_cond all_conds[] = {
             { cs_cond_kind::map, int(map_id::player_room), 0 },
@@ -251,9 +275,17 @@ namespace tl
             { cs_cond_kind::noflag, story_flag::vault_scene, 0 },
             { cs_cond_kind::day_eq, 1, 0 },
             { cs_cond_kind::time_ge, 720, 0 },
+            { cs_cond_kind::flag, story_flag::skip_pimm, 0 },
+            { cs_cond_kind::flag, story_flag::skip_lunch, 0 },
+            { cs_cond_kind::flag, story_flag::rye_delivered, 0 },
+            { cs_cond_kind::noflag, story_flag::lunch_given, 0 },
+            { cs_cond_kind::noflag, story_flag::lunch_hint, 0 },
+            { cs_cond_kind::noflag, story_flag::vault_scene, 0 },
+            { cs_cond_kind::day_eq, 1, 0 },
+            { cs_cond_kind::time_ge, 720, 0 },
             { cs_cond_kind::day_eq, 1, 0 },
             { cs_cond_kind::time_ge, 840, 0 },
-            { cs_cond_kind::flag, story_flag::briefed, 0 },
+            { cs_cond_kind::flag, story_flag::lunch_given, 0 },
             { cs_cond_kind::noflag, story_flag::vault_scene, 0 },
             { cs_cond_kind::flag, story_flag::news_due, 0 },
             { cs_cond_kind::noflag, story_flag::read_newspaper, 0 },
@@ -277,10 +309,13 @@ namespace tl
             { 3, 9, 6 },
             { 4, 15, 3 },
             { 5, 18, 6 },
-            { 6, 24, 4 },
-            { 7, 28, 2 },
-            { 8, 30, 6 },
-            { 8, 36, 6 },
+            { 6, 24, 1 },
+            { 7, 25, 1 },
+            { 8, 26, 6 },
+            { 9, 32, 4 },
+            { 10, 36, 2 },
+            { 11, 38, 6 },
+            { 11, 44, 6 },
         };
     }
 
@@ -288,5 +323,5 @@ namespace tl
     const cs_script* cutscene_scripts() { return all_scripts; }
     const cs_cond* cutscene_conds() { return all_conds; }
     const cs_trigger* cutscene_triggers() { return all_triggers; }
-    int cutscene_triggers_count() { return 10; }
+    int cutscene_triggers_count() { return 13; }
 }
