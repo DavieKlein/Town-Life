@@ -148,3 +148,11 @@ HUD budget: seven bars do not fit the 240 px bar (variant A uses 28 px slots at 
 NPCs currently **slide with idle frames** (`npcs::wander` uses the idle sheet with a 1 px bob; script `move_to` also slides). To do: render **proper walk cycles for the cast** (Mia, Rosa, Dex, Pimm, Lou, Okafor, Ines, Teo, later mentors; 8 facings x 4-6 frames each),
 through `blender_cast.py` like the player walk. Budget: each NPC sheet is 8 facings x 32x64 = 8 x 8 tiles... with walk frames about 6x as many tiles in ROM; sprite VRAM allows only about three NPC sprites on screen at once during talks, so load walk
 frames per NPC only while that NPC moves (stream the frame like the player) and keep idle-only sheets for standing NPCs. Also needed for scripted moves in cutscenes and for the Old Block residents who wander. Priority: Mia, Rosa, Dex (most moves in the cutscenes). Not built.
+
+### 2a. Owner answer on the needs list (s68, final)
+
+"Showering" and "hygiene" are the **same** need: **Hygiene, shown with a clear shower icon**. **Bladder (WC) stays.** The planned HUD therefore has **seven needs**:
+Hunger (food icon), Energy (bed or "Zzz" icon), Hygiene (shower icon), Bladder (toilet icon), Social, Fun, and the new **Home** (house/cosy icon). The earlier "does Bladder stay?" question is closed.
+- **HUD budget:** seven slots do not fit variant A (28 px slots, pitch 30, 6 slots). Needs a HUD proposal: 7 slots at about 26 px pitch 28 (bars thin, icons larger), or two compact rows; decide with a mock-up in a real screenshot. The Home need design above stands.
+- **Icon redesign (future proposal):** all need icons must be **clearer and more readable** than the current ones: sleep = bed or Zzz, Hygiene = shower head with drops, Bladder = toilet, Hunger = a recognisable food item (bread or fork and plate), Fun = smiley or ball, Social = two speech bubbles or two heads, Home = a small house. Test them at real GBA size (16x16 or 14x14) on the phone-size screenshot; keep the green/orange/red bar colours.
+  Same icon set later feeds the Status screen, the phone and hint texts. NEEDS PROPOSAL (show the redesigned set in an in-game screenshot before building).
