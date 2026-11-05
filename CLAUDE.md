@@ -116,8 +116,8 @@ Mentors (one per type) and other named characters are still to be designed; keep
   permanent perks (higher pay, slower need decay, faster walking, ...).
 - **Housing ladder (owner decision):** room above Corner Market (only briefly, Day 1) → park bench → **a back room / storeroom in a commercial
   building that someone lets you use** (cheap inside: bare walls, mattress, crates, hot plate; story: Ines's laundromat back room, Chapter 2) →
-  **studio** → **loft** → **apartment** → **penthouse** (the top step; NOT a house; it echoes Victor Vault's golden tower but is open, shared and
-  communal). Each home has a bills-by-post envelope at its entrance and is furnished from the furniture catalog. Plan: docs/story_overview.md.
+  **studio** → **loft** → **apartment** → **penthouse** (the top step; NOT a house; the player's own **private** home - owner s67; it still sits atop the rebuilt Co-op Hall).
+  Each home has a bills-by-post envelope at its entrance and is furnished from the furniture catalog. Plan: docs/story_overview.md.
 - **Furniture rule (owner):** all furniture in rooms where you live (also temporarily) must later be buyable in a furniture store
   or online; some furniture in commercial buildings is for sale too. So furniture is never drawn ad hoc: it is a named piece of the
   **furniture catalog** (`tools/furniture.py`, `FURNITURE`: id, display name, placeholder price, category, footprint, interaction kind,
@@ -928,7 +928,7 @@ lamps, a café table, a mailbox, etc. It was reverted from main until the owner 
 - **Story answers (s66, details in docs/story_overview.md):** lent space = Ines's laundromat back room; Co-op Hall + penthouse as planned; Co-op Charter of 1931 as
   the legal key; Victor = Rosa's fired delivery boy "Vic" (fate: stocking shelves at Corner Market); Valet turns good at the Gala; odd job "The Tester" stays;
   mentors Bo-Ra, Wren, Nadia, Gus, Odette approved as characters (looks need proposals); soft demolition countdown (Day 86) kept; later raise gossip
-  rules to ~48 and phone messages to ~60 (32-bit mask, NOT built yet); Dex's endings still OPEN.
+  rules to ~48 and phone messages to ~60 (32-bit mask, NOT built yet); Dex's endings: three endings (redeemed / grey / cold) approved (s67); the penthouse is the player's private home (s67).
 - **Prologue pacing (s66):** every objective must be completable by doing what it says. After the rye loaf the objective is "Help in the shop until lunch at noon";
   Rosa/Mia get a story row "What's next?" (`ask_skip_pimm` / `ask_skip_lunch`, flags `skip_pimm` / `skip_lunch`) that skips the clock to 9:00 / 12:00 ("Later..." card).
   Outside after noon, `back_for_lunch` tells you to return. `staff_lunch` ends with "Two hours later..." (14:00) and `vault_day` starts at once (trigger needs `lunch_given`).

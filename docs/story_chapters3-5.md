@@ -33,6 +33,8 @@ at 14 days a "visit" from Valet's Collections arm: a nuisance scene, never homel
 | 4 Apartment | **Marchand Mews**, Hilltop edge | **Odette Marchand** signs as guarantor | M58 (Ch.5) | $120/wk | proper rooms, balcony, a doorman who judges you | **Hilltop Estates** (crisp, expensive) | dining set, bookcase, bed_cosy |
 | 5 Penthouse | top floor of the **rebuilt Co-op Hall**, Old Block | **the community** (the Co-op votes you in) | epilogue | co-op dues (a token, "pay later") | big windows over both rivers, roof garden, bread oven, door with no lock | a child's drawing | everything; guests' gifts become furniture |
 
+**Owner decision (s67): the penthouse is the player's own, private home** (not shared or communal; no key on a hook for everyone). Where this text says otherwise, this decision wins.
+
 **Penthouse vs. the golden tower:** Victor Vault's tower is a lonely peak: locked, gilded, mirrors, nobody on the top floor. The penthouse
 is the same height but open: the staircase is public, the roof garden is shared on Sundays, the key hangs on a hook in the stairwell and the
 neighbours' kids use the lift. The last scene of the game is the player sitting there, the city lit warm below, with a chair for everyone.
@@ -506,6 +508,8 @@ Card montage, each 3 s with a small scene:
 - **Teo:** dropped one orange, picked up a skateboarding club.
 
 ### The penthouse (final scene)
+
+**Owner decision (s67): the penthouse is the player's own, private home** (not shared or communal; no key on a hook for everyone). Where this text says otherwise, this decision wins.
 *Evening, the top of the Co-op Hall. A door without a lock. A brass key hangs on a hook in the stairwell. Inside: a big room, a long table with many mismatched chairs, a roof garden with a bread oven, the city shining warm below.*
 - ROSA| Forty years. Forty- / one. It's still bread.
 - MIA| You have a lift. Do you / know how fancy that is? / Teo's using it as a ride.

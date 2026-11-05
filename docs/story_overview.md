@@ -82,7 +82,9 @@ resistance), events (Saturday market, march, Block Party, Repair Café, Lantern 
    ladder: open, shared, a door without a lock, a key on a hook, a long table with mismatched chairs. It echoes Vault's golden tower, but is the opposite.
 3. **Co-op Charter of 1931 as the legal key to save Old Block: OK.**
 4. **Victor = Rosa's fired delivery boy "Vic" twist, and stocking shelves at Corner Market as his fate: OK.**
-5. **Dex's endings (redeemed / grey / cold): NOT answered yet, stays open.**
+5. **Dex's endings: approved (s67)** - three endings (redeemed / grey / cold) depending on how the player treats him.
+
+**Owner decision (s67): the penthouse is the player's own, private home** (not shared or communal; no key on a hook for everyone). Where this text says otherwise, this decision wins.
 6. **Valet turns to the good side at the Gala: YES.**
 7. **Raise gossip rules to ~48 and phone messages to ~60 (32-bit message mask): OK, NOT implemented yet** (record only; build when the content needs it).
 8. **Odd job "The Tester" stays as a moral choice: YES.**
