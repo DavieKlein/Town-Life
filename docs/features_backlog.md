@@ -101,3 +101,10 @@ Status: **now** = built in s63 (code/text only), **proposal** = mock-up made in 
     **8 hours of sleep** (bench or bed).
   - **Bills by post (pending)**: once the player has a home an envelope should lie at its entrance; until then the bill is paid at the
     reception desk and reminded by message / pop-up.
+
+## Progression, secrets, free play (s68, docs only)
+
+Design in **docs/progression.md**: tiered upgrades (skills I-V, 13 City Coin perks, type-star passives, buffs, caps), skill sweets from the sewer seller Mothball (secret 1 of 12), free play after the credits
+(exclusive shops, vintage vehicles, Legend title, daily errands, the penthouse showcase), the pause-menu Status screen (reputation, skills, People with friendship and bios, perks, Doors) and skill gates.
+Nothing is built; all new art/UI is NEEDS PROPOSAL. Also new in s68: the VaultLink cable works at the Old Block arch (`docs/story_chapter1.md` 3B.2a) and the story-driven Demolition Countdown (`docs/story_overview.md` decision 13).
+

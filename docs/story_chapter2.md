@@ -10,7 +10,7 @@ Overview of the whole game: `docs/story_overview.md`.
 | | |
 |---|---|
 | **Theme** | Getting by is not the same as getting ahead. You learn to ask for help, to take it, and to give it back. |
-| **Days** | Day 8 (Mon) - Day 30 (Tue). About 3 game weeks; 2.5-3 hours of play. |
+| **Length** | Starts when `ch1_done` is set and ends with M30; about 3 game weeks and 2.5-3 hours of typical play. No calendar: every mission waits for its trigger (owner decision s68). |
 | **Districts** | **Docks** (Grafters, opens at the end of Ch.1) and **Old Factory** (Makers, opens in M24). Old Block is fully open. |
 | **Big moment** | **A key in the door** (M30): the first place of your own, a back room behind Ines's laundromat that she lets you use. |
 | **Housing step** | Bench / Mia's couch -> **the lent back room** (bare walls, mattress, crates, hot plate). See section 6. |
@@ -69,30 +69,30 @@ are in Chapter 1 section 5.6; new topic answers for Ines and Teo are in section 
 
 ## 3. Mission chain
 
-IDs M18-M30. "Earliest" days are guides; the story waits for the player. Each row also lists the phone text that nudges it.
+IDs M18-M30. The "Starts when" column gives the trigger; the story waits for the player at any pace (no fixed days). Each row also lists the phone text that nudges it.
 
-| ID | Day | Title | Log text | Done when | Rewards | Next |
+| ID | Starts when | Title | Log text | Done when | Rewards | Next |
 |----|-----|-------|----------|-----------|---------|------|
-| M18 | 8 | Monday on the Dock | Work your first full week at the Docks (0/3 shifts). | `ch2_shifts_3` | Halloran +5, Stitch/Bo-Ra intro | M19 |
-| M19 | 8-10 | Box Clever | Pass Halloran's stacking test (rank B or better). | `boxclever_b` | Strength +3, Grafters +1 point | M20 |
-| M20 | 10-13 | Forklift Fever | Learn to drive Gerald the forklift with Bo-Ra. | `forklift_licence` | **Forklift driver** (pay $9/h), Grafters 2 stars | M21 |
-| M21 | 14 | Couch Expires | Find somewhere to sleep. Mia's cousin is coming. | `bench_again` | Mia +3, Okafor check-up offer | M22 |
-| M22 | 15-17 | The Robot on Pier 4 | See what Dex is bringing to the Docks. | `autoport_seen` | `dex_doubt` +1 | M23 |
-| M23 | 17-19 | Race the Machine | Beat the AutoPort crane with Halloran's crew. | `race_won` | Docks warm, Grafters +, Bo-Ra +10 | M24 |
-| M24 | 18-20 | A Light in the Factory | Find where the night music comes from (Old Factory). | `factory_entered` | Old Factory opens | M25 |
-| M25 | 20-22 | Busker | Play for tips on Wren's steps (BEAT STREET). | `busker_done` | Makers 1 star, +$8-20 tips | M26 |
-| M26 | 22-24 | Big Wall | Paint a mural over the VaultTech billboard (BIG WALL). | `mural_done` | Makers 2 stars, Creativity +4 | M27 |
-| M27 | 24-25 | Two Wheels | Get a bike (Teo says he knows a guy). | `has_bike` | Bike (faster), Teo +10 | M28 |
-| M28 | 26 Sat | Bread Not Barcodes | March on VaultMart with Old Block. | `march_done` | Old Block warm, Rosa +10 | M29 |
-| M29 | 27 Sun | Block Party | Help set up the Block Party. | `blockparty_done` | **City Coins perks** shop opens, Social +30 | M30 |
-| M30 | 28-30 | A Key in the Door | Move into the back room behind the laundromat. | `home_1` | **First home**, chapter end | Chapter 3 |
+| M18 | `ch1_done`; first shift at 6:00 | Monday on the Dock | Work your first full week at the Docks (0/3 shifts). | `ch2_shifts_3` | Halloran +5, Stitch/Bo-Ra intro | M19 |
+| M19 | during M18 | Box Clever | Pass Halloran's stacking test (rank B or better). | `boxclever_b` | Strength +3, Grafters +1 point | M20 |
+| M20 | M19 done | Forklift Fever | Learn to drive Gerald the forklift with Bo-Ra. | `forklift_licence` | **Forklift driver** (pay $9/h), Grafters 2 stars | M21 |
+| M21 | M20 done; the next evening Mia's cousin arrives | Couch Expires | Find somewhere to sleep. Mia's cousin is coming. | `bench_again` | Mia +3, Okafor check-up offer | M22 |
+| M22 | M21 done; the next Docks shift | The Robot on Pier 4 | See what Dex is bringing to the Docks. | `autoport_seen` | `dex_doubt` +1 | M23 |
+| M23 | M22 done | Race the Machine | Beat the AutoPort crane with Halloran's crew. | `race_won` | Docks warm, Grafters +, Bo-Ra +10 | M24 |
+| M24 | M22 done; at night (22:00-2:00) in Old Block | A Light in the Factory | Find where the night music comes from (Old Factory). | `factory_entered` | Old Factory opens | M25 |
+| M25 | M24 done | Busker | Play for tips on Wren's steps (BEAT STREET). | `busker_done` | Makers 1 star, +$8-20 tips | M26 |
+| M26 | M25 done | Big Wall | Paint a mural over the VaultTech billboard (BIG WALL). | `mural_done` | Makers 2 stars, Creativity +4 | M27 |
+| M27 | M26 done | Two Wheels | Get a bike (Teo says he knows a guy). | `has_bike` | Bike (faster), Teo +10 | M28 |
+| M28 | M27 done; talk to Rosa at a market morning (staged on request) | Bread Not Barcodes | March on VaultMart with Old Block. | `march_done` | Old Block warm, Rosa +10 | M29 |
+| M29 | M28 done; the same evening | Block Party | Help set up the Block Party. | `blockparty_done` | **City Coins perks** shop opens, Social +30 | M30 |
+| M30 | M29 done; Ines's offer, accepted when ready | A Key in the Door | Move into the back room behind the laundromat. | `home_1` | **First home**, chapter end | Chapter 3 |
 
 Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1 each), **S8 The Debt** (pay the clinic bill if you owe it),
 **S9 Rust Choir Fan** (give Wren's band chocolate x2 for a rare "shout-out" line), **S10 Ines's Boxes** (Old Block odd jobs).
 
 ## 4. Key scenes
 
-### M18 Monday on the Dock (Day 8) - NEEDS PROPOSAL (Docks map)
+### M18 Monday on the Dock - NEEDS PROPOSAL (Docks map)
 *The Docks, 6:00. Grey water, orange cranes, the smell of diesel and fish. The bridge behind you is open; the levy booth blinks.*
 - HALLORAN| You're early. Good. / Start with the pallets. / Stitch will show you.
 - STITCH| Pallets! Ah, yes. Let / me tell you about the / pallets of '98.
@@ -103,7 +103,7 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
 - **Shift mechanics:** the plain Dock hand shift (6 h, $36) plus the new minigame **BOX CLEVER** each day (optional; rank adds a bonus, see 5).
 - **Rewards after 3 shifts:** Halloran +5, `ch2_shifts_3`. Phone: "halloran_week" (section 7).
 
-### M19 Box Clever (Day 8-10) - the stacking test
+### M19 Box Clever - the stacking test
 - HALLORAN| Test. Stack twelve / crates on the truck. No / drops. No tilts.
 - *Minigame result pages:*
   - Rank S| HALLORAN| ...Huh. Fast. Neat. / You stacked like you / meant it.
@@ -111,7 +111,7 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
   - Rank C| HALLORAN| Again. Slower. Crates / don't care about speed. / They care about tilt.
 - **Rewards:** Strength +3; the Docks now offer BOX CLEVER as a repeat job. Stitch tells the "pallets of '98" story as a one-off small-talk bonus.
 
-### M20 Forklift Fever (Day 10-13) - LIFT & LOAD
+### M20 Forklift Fever - LIFT & LOAD
 - *Bo-Ra introduces Gerald, a yellow forklift with a sticker on the mast reading "I LIFT YOU UP".*
 - BO-RA| Gerald, meet {NAME}. / {NAME}, meet Gerald. / He likes slow hands.
 - BO-RA| Two rules. Never / carry people. Never / race Beyonce.
@@ -124,7 +124,7 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
 - **Rewards:** `forklift_licence`, pay $9/h (6 h shift = $54), Grafters 2 stars (+20 rep), Fitness +2.
 - **Note:** Halloran does not praise people. She raises the pay and says "Don't be late." That is praise.
 
-### M21 Couch Expires (Day 14) - the low point
+### M21 Couch Expires - the low point
 *Mia's flat. Mia is on the phone, hanging up. She does not look happy.*
 - MIA| That was my cousin. / Dina. She's coming for / a month. Tomorrow.
 - MIA| The couch is hers. / ...I'm so sorry, {NAME}. / I wish the flat had a room.
@@ -140,7 +140,8 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
 - **Mechanics:** `bench_again`. Okafor texts the next day ("okafor_cold": "It's getting cold. Sleep indoors if you can. - Dr. O."). A short *sick* risk is real this week (the clinic can fix it).
 - **Alternatives:** If the player already has $40+ and asks Lou, Lou offers the diner couch for 3 nights ("Don't tell Health & Safety, hah!"), cheaper than rent, no home yet.
 
-### M22 The Robot on Pier 4 (Day 15-17) - Dex returns
+### M22 The Robot on Pier 4 - Dex returns
+*Cable works callback:* at Pier 4 an orange cable with a gold tag "TRUNK 7 / BRANCH D" runs into the AutoPort crane base. BO-RA| Same cable as in your / street. Funny, that. (`trunk_branch_seen`)
 *The Docks, 10:00. A sleek white truck arrives. A pole of gold flags. Banner: "AUTOPORT: LOADING THE FUTURE".*
 - DEX| Buddy! Look at you! / Forklift licence! / Fast learner. Scary.
 - DEX| I am Regional Manager / now. Docks, Old Block, / and nearly Narnia.
@@ -159,7 +160,7 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
   - OPT| Do you sleep at all?  (Dex +3: DEX| In my car. Don't tell / Bert.)
   - OPT| You're a traitor.  (Dex -3: DEX| I'm a manager. Say it / with me.)
 
-### M23 Race the Machine (Day 17-19) - the human crew vs AutoPort
+### M23 Race the Machine - the human crew vs AutoPort
 - *Halloran, arms crossed, in front of the whole crew:* HALLORAN| Mr. Corbin. A bet. / Our crew against your / machine. One truck.
 - DEX| And if the machine wins?
 - HALLORAN| We leave. All forty- / one. Quietly.
@@ -175,12 +176,12 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
   - DEX| (too loud) Sensor dust! / ...Totally sensor dust. / Two weeks, Bert!
   - *Halloran extends a hand to Dex. He stares. Shakes it. Quick.* HALLORAN| Fair race. Thanks.
   - STITCH| Tell the pier lights / we said hello.
-- **If lost (Strength/Logic too low, the player may choose to retry once per day):** the crew works at half hours, wages drop 25 % for a week, but the race
-  can be run again after 3 days; the story continues (no hard fail). Dex does not smirk.
+- **If lost (Strength/Logic too low, the player may choose to retry after the next shift):** the crew works at half hours, wages drop 25 % for the next 6 shifts, but the race
+  can be run again after 3 more shifts; the story continues (no hard fail). Dex does not smirk.
 - **Rewards:** `race_won`, Docks district turns **warm** (flag `docks_warm`: ships' lamps, laundry on the cranes, bunting), Grafters +10 rep, Bo-Ra +10, Halloran +10.
   Phone: Stitch "stitch_tale", Dex "dex_sensor" (section 7).
 
-### M24 A Light in the Factory (Day 18-20) - Old Factory opens
+### M24 A Light in the Factory - Old Factory opens
 - *Night, 22:00, on the quay. Faint bass and bells float across the water. A glow behind a high fence. Teo is sitting on the pier with his legs dangling.*
 - TEO| Boss! You hear that? / Music from the factory! / Nobody's allowed in!
 - {NAME}| So why is it playing?
@@ -199,7 +200,7 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
 - **Rewards:** `factory_entered`, Old Factory opens (a map: **NEEDS PROPOSAL**), Wren +5 friendship, Makers intro, first `Rust Choir` rehearsal listened.
 - **Warm/cold:** the Factory is "cold outside the fence" (grey fence, DataVault signs) and "warm inside" (string lights). Both states exist from the start.
 
-### M25 Busker (Day 20-22) - BEAT STREET
+### M25 Busker - BEAT STREET
 - WREN| Everyone starts on the / steps. Rhythm first. / Feel it in your knees.
 - *She gives the player a battered tambourine and a cardboard sign: "TIPS KEEP US LOUD".*
 - *Minigame:* four-lane rhythm on the factory steps and then the Old Block fountain; tips from passers-by (A/B/L/R). Rank adds tips; busking costs Energy -10 and Fun +8.
@@ -209,7 +210,7 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
   - *Makers reputation 1 star.*
 - **Rewards:** `busker_done`, Makers 1 star, Creativity +3, Charm +1. Street music becomes a repeatable job ("Busker").
 
-### M26 Big Wall (Day 22-24) - the mural over the billboard
+### M26 Big Wall - the mural over the billboard
 - *Old Block, the entrance arch. A huge VaultTech billboard: "OLD BLOCK? OLD NEWS."*
 - WREN| That wall. Tonight. / We paint over every / letter.
 - INES| (leaning out of her window) / I'll bring the soup. / The ladder is Teo's.
@@ -220,14 +221,15 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
 - **Rewards:** `mural_done`, Makers 2 stars, Creativity +4, Old Block warm (flag `ob_arch_warm`), Rosa +3, a newspaper headline ("BILLBOARD BECOMES BREAD").
 - **Cost:** VaultTech notices the mural (Dex receives the report, files it under "weather").
 
-### M27 Two Wheels (Day 24-25) - the bike
+### M27 Two Wheels - the bike
 - TEO| Boss, I know a guy. / The guy is my cousin. / The bike is... borrowed.
 - *Choice:* OPT| Where is it from?  /  OPT| Is it stolen?  /  OPT| How much?
   - Truth: the bike belonged to Grigor's son. Grigor sells it for $45 with a sigh ("The sea is faster, but fine"). If the player asks "Where from?" Teo admits it and takes the player to Grigor.
   - If the player takes it from Teo for free, a gossip rule (Grigor -4) triggers; the "good" path is to pay Grigor.
 - **Reward:** `has_bike` (+30 % walking speed, new cue in the pause screen), $45 spent, Grigor +8, Teo +10, **Fitness +2**.
 
-### M28 Bread Not Barcodes (Day 26, Saturday) - the march
+### M28 Bread Not Barcodes - the march
+*Cable works callback:* the march leaves Old Block over Teo's door bridge in single file (the barriers were moved after M13) and hangs the BREAD NOT BARCODES banner on the cable-works fence.
 - *Saturday market in Old Block turns into a march. Teo's drum, Wren's band, Ines with a soup pot on wheels, Rosa in front with the cart.*
 - ROSA| Forty years. And here / I am marching. With / oranges.
 - MIA| I made signs. I spelled / "BARCODES" right on / the third try.
@@ -243,9 +245,9 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
 - *Valet rolls in:* VALET| Manager Corbin. Smile / level: 12 percent. Please / increase.
 - DEX| (to the crowd) ...Please / disperse. Thank you. / (and, quietly) Thank you.
 - **Rewards:** `march_done`, Old Block turns fully warm (flag `old_block_warm`), Rosa +10, Mia +5, Dex +/- as above, Techies -1 rep (VaultTech notes the player).
-- **Consequence:** VaultTech decrees a "noise curfew" in Old Block after 22:00 for a week (flavour: Teo's drum is hidden under a bed).
+- **Consequence:** VaultTech decrees a "noise curfew" in Old Block after 22:00 until M30 (flavour: Teo's drum is hidden under a bed).
 
-### M29 Block Party (Day 27, Sunday) - the first big event
+### M29 Block Party - the first big event
 - *Setup:* the player, Mia, Lou (grill), Ines (soup), Wren (stage), Bo-Ra (crane lights, Docks sends a truck of crates for the stage), Okafor (first-aid tent with cookies).
 - Mini-tasks (free order, each 20-40 game minutes): carry crates (Strength), hang lights (Creativity), cook for Lou (Hunger bonus), tune the stage (Logic).
 - *The party, 18:00-24:00:* all friends present, music from the Rust Choir. Big dialogue-light scene; the player talks to everyone (extra Social +30).
@@ -259,10 +261,10 @@ Side threads (log "Also"): **S7 Pimm's Fridays** (talk to Pimm Fridays, Logic +1
   - INES| Empty since my husband. / It needs a person who / snores quietly.
   - {NAME}| Ines... I can't pay.
   - INES| Nobody pays for / kindness. Rosa's rule. / You work. We trade.
-- *Fade out.* The trigger for M30 is Ines's offer, accepted or **deferred** (one can say "Not yet" - the offer stays 7 days).
+- *Fade out.* The trigger for M30 is Ines's offer, accepted or **deferred** (one can say "Not yet" - the offer stays open as long as the player likes; Ines asks again, kindly, each time the player sleeps outside).
 - **Rewards:** `blockparty_done`, City Coins perks shop opens (section 8), Social +30, Fun +20, a Polaroid (collectible #1 of a new set: Party Photos, later).
 
-### M30 A Key in the Door (Day 28-30) - the big moment
+### M30 A Key in the Door - the big moment
 - *The back lot behind the laundromat. A door the colour of an old tea bag. Ines gives the player a brass key on a loaf-shaped keyring.*
 - INES| Home sweet... beige.
 - *Inside (NEEDS PROPOSAL, see section 6): bare walls, a stained mattress on a pallet, three crates, a hot plate on a milk crate, one bulb. A pipe hums.*
@@ -314,7 +316,7 @@ Shared rule: all four follow the established pattern: scene-in-a-loop, `minigame
 |----|--------|-----------|------|
 | halloran_week | Halloran | after M18 | Good week. Same time Monday. Don't think it means I like you. |
 | boracheer | Bo-Ra | M19 done | Gerald asked about you. I said you're nice. He didn't believe me. |
-| mia_cousin | Mia | Day 13 | Dina lands tomorrow. I'm so sorry. Ask someone for help? Please. |
+| mia_cousin | Mia | M20 done (evening) | Dina lands tomorrow. I'm so sorry. Ask someone for help? Please. |
 | okafor_cold | Okafor | `bench_again` | It's getting cold. Sleep indoors if you can. Also socks. - Dr. O. |
 | lou_couch | Lou | `bench_again` | The diner has a couch. Three nights. Hah! Don't tell the inspector. |
 | stitch_tale | Stitch | M22 | Come to the netting bench. I have a tale about robots. It ends badly. |
@@ -324,16 +326,16 @@ Shared rule: all four follow the established pattern: scene-in-a-loop, `minigame
 | rosa_march | Rosa | M27 done | Saturday. March. Wear sturdy shoes and a warm heart. Oranges provided. |
 | ines_room | Ines | `blockparty_done` | The back room is empty. The key is on the hook. Think about it. |
 | kessler_moon | Kessler | M24 done | If asked: I was looking at the moon. I am always looking at the moon. |
-| vault_spam3 | VaultTech | Day 20 | New: AutoPort. Your cargo, our arms. Opt out? (There is no opt out.) |
+| vault_spam3 | VaultTech | M22 started | New: AutoPort. Your cargo, our arms. Opt out? (There is no opt out.) |
 | nella_pie | Nella | `home_1` | Pie is in the oven. Collect at six. Bring a fork and good manners. |
 
 ## 8. Systems introduced in Chapter 2
 
-- **City Coins perks** (shop at Ines's laundromat counter "Coin Box", opens at M29): Strong Back (+10 % pay, 8 coins), Light Sleeper (Energy decay -10 %, 6), Quick Feet (+10 % walking, 5), Thick Skin (Hygiene decay -15 %, 6), Early Bird (daily pay bonus $1, 10), Good Neighbour (+1 friendship on the first daily talk, 12), Hot Meal (staff meal +10 %, 9). Prices 5-15 as in Chapter 1 (4.5). Lore: "A token, pay later." (see 3B.5).
-- **Skills and reputation:** full display in the pause menu (Strength, Creativity, Logic, Charm, Fitness; five type stars). Rival rule (half speed while the rival type is higher) is active and explained by Stitch in M22: "The owners laugh at us dockers. Remember: they pay for the dock, we run it." Posh and Grafters is the first pair that matters; it triggers when the player later meets Posh in Ch.5.
+- **City Coins perks** (shop at Ines's laundromat counter "Coin Box", opens at M29): now a **tiered ladder (I-III)** of 13 perks (Quick Feet, Strong Back, Light Sleeper, Thick Skin, Iron Stomach, Night Owl, Silver Tongue, Good Neighbour, Early Bird, Hot Meal, Bargain Hunter, Lucky Hand, Deep Pockets) with prices 4-15 coins; the old single values (Strong Back +10 %, Light Sleeper -10 %, Quick Feet +10 %, Thick Skin -15 %, ...) are tier II. Full table, caps and pause screen: `docs/progression.md` section 1. Lore: "A token, pay later." (see 3B.5).
+- **Skills and reputation:** full display in the pause menu (Strength, Creativity, Logic, Charm, Fitness; five type stars; design in `docs/progression.md` section 4). Rival rule (half speed while the rival type is higher) is active and explained by Stitch in M22: "The owners laugh at us dockers. Remember: they pay for the dock, we run it." Posh and Grafters is the first pair that matters; it triggers when the player later meets Posh in Ch.5.
 - **Warm/cold:** Docks start cold (levy booth, gates, grey cranes), turn warm at M23; Old Factory is cold outside the fence and warm inside; Old Block arch warm at M26; Old Block fully warm at M28.
-- **Events:** the Saturday market continues every week (Days 13, 20, 27); Block Party (Day 27 evening); march (Day 26).
-- **Bike:** +30 % walking speed, slower Fun decay? No: only speed. Shown as a new player sprite (**NEEDS PROPOSAL**: bike sprite 8 facings).
+- **Events:** the Saturday market continues every week (a recurring world event, never required); the march (M28) and the Block Party (M29) are staged on request when the player talks to Rosa and are not tied to a weekday.
+- **Bike:** +30 % speed while riding (a mounted speed of its own, not part of the +25 % walking cap in `docs/progression.md`), slower Fun decay? No: only speed. Shown as a new player sprite (**NEEDS PROPOSAL**: bike sprite 8 facings).
 
 ## 9. Small-talk additions
 
@@ -369,9 +371,9 @@ Dex remains the villain's public face. Nobody forgives him yet, but a "hidden de
 
 | Item | Value |
 |------|-------|
-| Days | 8-30 (23 days) |
+| Length | about 3 game weeks of typical play (no calendar) |
 | Dock hand shift (6 h) | $36 (till M20), forklift $54 |
-| AutoPort trial (M22-M23) | shifts shortened to 3 h ($27 / $27 forklift) for up to 6 days |
+| AutoPort trial (M22-M23) | shifts shortened to 3 h ($27 / $27 forklift) for up to 6 shifts |
 | Busker tips | $8-20 per 60 s act (Energy -10) |
 | Bike | $45 |
 | Rent (lent room) | $10 / week + 1 hour of help |

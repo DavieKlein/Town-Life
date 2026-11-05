@@ -1,6 +1,6 @@
 # Town Life - Story Overview (one page)
 
-Status: writing proposal for the owner. Details: `docs/story_chapter1.md` (incl. section 3B), `docs/story_chapter2.md`,
+Status: writing proposal for the owner. Progression (upgrades, secrets, free play, status screen, skill gates): `docs/progression.md`. Details: `docs/story_chapter1.md` (incl. section 3B), `docs/story_chapter2.md`,
 `docs/story_chapters3-5.md`. Own characters only; light and funny, with serious moments.
 
 ## The arc in one paragraph
@@ -12,15 +12,15 @@ old co-op charter and Vault's own recorded words undo it. Rich, in the end, mean
 
 ## Chapters
 
-| # | Title | Days | District(s) | Big moment | Home | Villain move |
+| # | Title | Missions (no fixed days) | District(s) | Big moment | Home | Villain move |
 |---|-------|------|-------------|------------|------|--------------|
-| 1 | Survive | 1-7 | City Centre, Old Block, Docks gate | First steady job (Docks) + first night off the bench | bench -> Mia's couch | Buys Corner Market, closes the bridge, demolition notice #1 |
-| 2 | Get By | 8-30 | Docks, Old Factory | A key in the door: the lent back room | back room (Ines) | AutoPort robots, DataVault fence |
-| 3 | Build Up | 31-56 | Station Quarter | First business and first employee (Sal) | studio (Nadia) | VaultPass, HealthPods, Smile Index, notice #2 by AURUM |
-| 4 | Break Through | 57-70 | Sports Park | The Night the Lights Came On (cup match) | loft (Wren) | VaultFit Arena, council vote, rigging |
-| 5 | Legacy | 71-86 | Hilltop, golden tower | Vault's downfall, Old Block saved, epilogue | apartment -> penthouse | The Smart City Switch at the Gala |
+| 1 | Survive | M01-M17 | City Centre, Old Block, Docks gate | First steady job (Docks) + first night off the bench | bench -> Mia's couch | Buys Corner Market, closes the bridge, digs the VaultLink cable trench at the Old Block arch, demolition notice #1 |
+| 2 | Get By | M18-M30 | Docks, Old Factory | A key in the door: the lent back room | back room (Ines) | AutoPort robots, DataVault fence |
+| 3 | Build Up | M31-M42 | Station Quarter | First business and first employee (Sal) | studio (Nadia) | VaultPass, HealthPods, Smile Index, notice #2 by AURUM |
+| 4 | Break Through | M43-M54 | Sports Park | The Night the Lights Came On (cup match) | loft (Wren) | VaultFit Arena, council vote, rigging |
+| 5 | Legacy | M55-M70 | Hilltop, golden tower | Vault's downfall, Old Block saved, epilogue | apartment -> penthouse | The Smart City Switch at the Gala |
 
-Housing ladder: room above Corner Market (Day 1) -> bench -> lent back room -> studio -> loft -> apartment -> **penthouse** (top step;
+Housing ladder: room above Corner Market (prologue) -> bench -> lent back room -> studio -> loft -> apartment -> **penthouse** (top step;
 open and shared, the opposite of the locked golden tower). Bills by post at every home (Ines's note -> VaultTech Utilities -> Co-op dues ->
 Hilltop Estates -> a child's drawing).
 
@@ -56,7 +56,7 @@ Manager, brings AutoPort, quietly sabotages the race ("sensor dust"), eats Rosa'
 (joins the chain, works at Quill & Solder), grey (small shop), cold (leaves; a postcard).
 
 ## Villain (Vault) arc
-Buys the shop -> closes the bridge -> void demolition notice -> AutoPort -> DataVault -> VaultPass/HealthPods -> machine-signed notice #2
+Buys the shop -> closes the bridge -> digs the VaultLink cable trench (AURUM Trunk 7) at Old Block -> void demolition notice -> AutoPort -> DataVault -> VaultPass/HealthPods -> machine-signed notice #2
 -> buys the football club and a council vote -> the Gala and the AURUM Switch. Downfall: the 1931 Co-op Charter makes the sale void; the
 Co-op tokens (Ch.1 collectibles) are the proof; Vault's own recording ("People are furniture") plays at the Gala; Valet, who cannot lie,
 testifies; the hearing voids the notice; the human chain stops the digger; at the end his gold card fails at a self-checkout and Rosa
@@ -89,4 +89,25 @@ resistance), events (Saturday market, march, Block Party, Repair Café, Lantern 
 7. **Raise gossip rules to ~48 and phone messages to ~60 (32-bit message mask): OK, NOT implemented yet** (record only; build when the content needs it).
 8. **Odd job "The Tester" stays as a moral choice: YES.**
 9. **Mentor casting (Bo-Ra, Wren, Nadia, Gus, Odette): approved as characters;** looks still need design proposals before any art is built.
-10. **Soft demolition countdown (Day 86, never ends the game): keep, YES.**
+10. **Soft demolition countdown (never ends the game): keep, YES** - since s68 it no longer counts calendar days (see below).
+
+## Owner decisions, s68
+
+11. **Why Old Block is closed at first (option B): the VaultLink cable works.** VaultTech is "laying underground hyperspeed cables" (public name **VaultLink HyperFibre**,
+    "The future, four metres down"; in truth **AURUM Trunk 7**, the nerve line from the golden tower to a hatch called NODE 7 under the demolition site). Orange barriers, a trench, cable drums,
+    the sign "SURVEY IN PROGRESS - NO ENTRY", the work robot TRENCH-E 3 and the bored guard Pruitt block the arch from the start, so the player sees the closed route.
+    **Opening (owner: sneak route):** in M09 Mia shows **a bent-open hole in the VaultTech fence and a one-cell path between overgrown bushes** behind the barriers (squeeze animation, leaves rustle,
+    "You didn't see me") that leads into Old Block. After the meeting (M13) the neighbours move the barriers aside, hang laundry on them and Teo lays his door across the trench as "Teo's Bridge"
+    (the front entrance is open for good). The trench foreshadows Vault's plan: Pier 4 cable (M22), Nadia explains it (Ch3), the cup-match blackout is a Trunk 7 test pulse (M52), the Gala key wakes
+    Trunk 7 (M65). Full scene, lines, map note and art list: `docs/story_chapter1.md` section 3B.2a.
+12. **No fixed days.** The story is never tied to calendar days; Day 1 (the prologue) is the only fixed day. Missions are driven by triggers: a previous mission, a flag, a phone text, money, a number
+    of shifts, "the next morning after X", and natural times of day (shop hours, a meeting at 15:00, night scenes). Weekly events (Saturday market, Repair Cafe) are optional recurring world events and
+    staged on request when a story beat needs them. All tables in the four story documents now use "Starts when" triggers instead of day numbers; newspaper headlines carry triggers, not days.
+13. **Demolition Countdown ("Afteltijd") rule.** Notice #1 (Ch1, void) has no counter. **Notice #2 (M42) starts "Demolition in 30 days".** The number drops by 1 at 6:00 every in-game day but never below the
+    **floor of the current stage**; stages are set by story beats (A: M42 cap 30 floor 20 -> B: M52 cap 20 floor 12 -> C: M56 cap 12 floor 6 -> D: M61 cap 6 floor 3 -> E: M64 cap 2 floor 2), and each stage
+    sets the counter to the smaller of its value and the cap. A slow player simply rests at the floor (Valet: "Rescheduled. Awaiting protagonist."); nothing bad happens. The only way to 0 is the
+    scripted finale chain: Gala (starts when the player says "I'm ready" to Odette, 20:00, counter 2) -> Hearing the next morning 9:00 (counter 1) -> Demolition Morning the morning after at 7:00 (counter 0, the human chain).
+    Each step requires the previous story step to be won, so 0 can never come early and the player can never lose. The counter disappears after the downfall. Details: `docs/story_chapters3-5.md` section 0.
+14. **Progression design (docs/progression.md):** one upgrade ladder (skills with ranks I-V, 13 tiered City Coin perks with caps, type-star passives, temporary buffs), 12 secrets (including the sewer
+    sweet seller Mothball at 00:00, whose cheap sweets give buffs and whose expensive sweets, $40 rising to $150, give permanent skill points up to a cap), free play after the credits (exclusive shops, vintage
+    vehicles, Legend titles, the penthouse as showcase), a pause-menu Status screen (reputation stars, skills, People list, perks, Doors) and skill gates (e.g. Charm for a club, Logic for a lab) that never block the critical path.

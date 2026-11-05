@@ -4,18 +4,39 @@ Status: writing proposal for the owner (outline-plus-key-scenes depth; Chapter 3
 Conventions as in `docs/story_chapter1.md` section 0 (dialogue: `SPEAKER| line / line / line`, max 3 lines x 28 characters, `{NAME}` = 8).
 Previous: `docs/story_chapter2.md`. Whole-game view: `docs/story_overview.md`. **NEEDS PROPOSAL** = new art/map, show the owner first.
 
-## 0. Timeline and the demolition clock
+## 0. Timeline and the demolition countdown
 
-| Chapter | Days | Notes |
-|---------|------|-------|
-| 1 Survive | 1-7 | Notice #1 (Day 5) is void: no city engineer signed it (Pimm). |
-| 2 Get By | 8-30 | |
-| 3 Build Up | 31-56 | End: **Notice #2** arrives, signed by "Chief Engineer AURUM" (a machine). Demolition: **Day 86, 7:00**. |
-| 4 Break Through | 57-70 | The date is moved earlier by "efficiency": Day 86 stays, but the council vote is **Day 72**. |
-| 5 Legacy | 71-86+ | Gala Day 84, hearing Day 85, demolition morning Day 86. Epilogue "one year later". |
+No fixed calendar days (owner decision s68): every mission waits for its trigger (previous mission, a flag, a phone text, money, shifts, "the next morning after X").
 
-**Soft timer:** the log shows "Demolition in N days" from Chapter 3 end. The story waits for the player; the timer moves with the missions,
-never ends the game early (the player cannot lose by being slow). Weekdays: Day 1 = Monday, so Saturdays are Day 6, 13, 20 ... (market days).
+| Chapter | Missions | Notes |
+|---------|----------|-------|
+| 1 Survive | M01-M17 | Notice #1 is void: no city engineer signed it (Pimm). **No counter** (static log line "in 30 days, unsigned"). |
+| 2 Get By | M18-M30 | The cable works (VaultLink HyperFibre) keep digging; no countdown yet. |
+| 3 Build Up | M31-M42 | End: **Notice #2** arrives, signed by "Chief Engineer AURUM" (a machine): "Demolition in 30 days". **The countdown starts.** |
+| 4 Break Through | M43-M54 | The council vote on AURUM's authority is held the morning after the cup match (M52); Vault buys one vote (M54). |
+| 5 Legacy | M55-M70 | Gala (when the player says "ready"), hearing the next morning, demolition morning the one after. Epilogue "one year later". |
+
+### The Demolition Countdown (rule, s68; replaces the fixed "Day 86")
+
+A gentle, story-driven clock ("Afteltijd") that adds pressure but never ends the game and never punishes a slow player.
+1. **Start:** reading Notice #2 (M42) shows **"Demolition in 30 days"** in the mission log and on the pause screen (first line under the objective).
+2. **Ticking:** the number drops by 1 at 6:00 each in-game day, but only down to the **stage floor** below. It never reaches 0 by ticking alone.
+3. **Stages** are set by story beats. When a stage starts, the counter becomes the smaller of its current value and the stage cap:
+
+| Stage | Starts when | Cap | Floor | What it means in the story |
+|-------|-------------|-----|-------|----------------------------|
+| A Notice | M42 done | 30 | 20 | Vault wants "thirty days of nobody noticing" |
+| B Match | M52 done | 20 | 12 | the cup match scared him; AURUM "optimises the schedule" |
+| C Hilltop | M56 done (Hilltop open) | 12 | 6 | the digger is delivered |
+| D Invited | M61 done | 6 | 3 | the Gala is announced |
+| E Gala set | M64 done | 2 | 2 | everything waits for the Gala |
+
+4. **Resting at the floor:** a slow player sees the number stop at the floor. Nothing happens. The text turns into a running gag: VALET| Rescheduled. Awaiting / protagonist. (one VaultTech spam text per stage after 3 days at the floor:
+   "Your demolition has been delayed by circumstances (you).") The player can play sandbox, jobs, free play, for as long as they like.
+5. **The only way to 0 is the finale chain** (all scripted, the player cannot lose it): the Gala starts when the player tells Odette "I'm ready" after M64 (evening, 20:00; counter 2) ->
+   the Hearing the next morning at 9:00 (counter 1) -> Demolition Morning the morning after at 7:00 (counter 0). Demolition Morning requires `hearing_won`, the Hearing requires `switch_stopped`,
+   so the counter can never hit 0 before the story has been won. At 0 nothing is permanent: the scene is the human chain; the demolition never happens.
+6. **After the downfall** the counter disappears for good.
 
 ## 1. The housing ladder (owner decision) - all chapters
 
@@ -48,7 +69,7 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 | | |
 |---|---|
 | **Theme** | Building something that is yours: skills, a business, a first employee. Learning that tools can serve people. |
-| **Days / districts** | Days 31-56. **Station Quarter** (Techies) opens; Old Factory continues (Makers). Old Block, Docks, City Centre as hubs. |
+| **Length / districts** | Missions M31-M42, no fixed days. **Station Quarter** (Techies) opens; Old Factory continues (Makers). Old Block, Docks, City Centre as hubs. |
 | **Big moment** | **First business and first employee** (M40): "Hand-Me-Up", with **Little Sal** on the payroll. |
 | **Housing** | Studio above Quill & Solder (M41). Bills from VaultTech Utilities. |
 | **Careers** | Techies: **Phone repair -> Web shops** (-> app developer in Ch.4). Makers: **Studio (Wren's) assistant**. Grafters: **Shift lead** (Halloran offers). Own business starts. |
@@ -76,20 +97,20 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 
 ## 3.2 Mission chain (M31-M42)
 
-| ID | Day | Title | Log text | Done when | Rewards |
+| ID | Starts when |
 |----|-----|-------|----------|-----------|---------|
-| M31 | 31 | Pass Denied | Try to enter the Station Quarter. | `sq_blocked` | VaultPass lock explained |
-| M32 | 31-34 | Weekly Pass | Earn $25 for the VaultPass (or ask around). | `vaultpass` | Station Quarter opens (cold) |
-| M33 | 34-36 | Quill & Solder | Meet the repair shop owner. | `met_nadia` | Nadia +5 |
-| M34 | 36-39 | Broken Heart | Repair five phones (WIRE IT). | `phones_5` | Techies 1 star |
-| M35 | 39-41 | Smile Index | See what the Smile Index does at VaultMart. | `smile_seen` | Dex beat |
-| M36 | 41-44 | Repair Café | Run the first Repair Café. | `repair_cafe_1` | Councilwoman Ruiz seen, Warm spot |
-| M37 | 44-46 | Web Shop | Build a web shop for Old Block's goods (CODE PATTERN). | `shop_online` | Techies 2 stars |
-| M38 | 46-48 | Hand Me Up | Name the shop, find the stock. | `shop_named` | Teo, Ines, Rosa stock |
-| M39 | 48-50 | Slow Day | Join the Slow Day strike. | `slow_day_done` | Docks +, VaultMart empties |
-| M40 | 50-52 | First Employee | Hire Little Sal. | `hired_sal` | **Business income** + employee |
-| M41 | 52-54 | A Studio of One's Own | Move into the studio above Quill & Solder. | `home_2` | **Studio** |
-| M42 | 54-56 | Notice #2 | Read the new notice. Fight it. | `notice2` | **Chapter end cliff** |
+| M31 | M30 done (chapter start) | Pass Denied | Try to enter the Station Quarter. | `sq_blocked` | VaultPass lock explained |
+| M32 | M31 done | Weekly Pass | Earn $25 for the VaultPass (or ask around). | `vaultpass` | Station Quarter opens (cold) |
+| M33 | M32 done | Quill & Solder | Meet the repair shop owner. | `met_nadia` | Nadia +5 |
+| M34 | M33 done | Broken Heart | Repair five phones (WIRE IT). | `phones_5` | Techies 1 star |
+| M35 | M34 done | Smile Index | See what the Smile Index does at VaultMart. | `smile_seen` | Dex beat |
+| M36 | M35 done | Repair Café | Run the first Repair Café. | `repair_cafe_1` | Councilwoman Ruiz seen, Warm spot |
+| M37 | M36 done | Web Shop | Build a web shop for Old Block's goods (CODE PATTERN). | `shop_online` | Techies 2 stars |
+| M38 | M37 done | Hand Me Up | Name the shop, find the stock. | `shop_named` | Teo, Ines, Rosa stock |
+| M39 | M38 done; on Halloran's signal | Slow Day | Join the Slow Day strike. | `slow_day_done` | Docks +, VaultMart empties |
+| M40 | M39 done | First Employee | Hire Little Sal. | `hired_sal` | **Business income** + employee |
+| M41 | M40 done | A Studio of One's Own | Move into the studio above Quill & Solder. | `home_2` | **Studio** |
+| M42 | M41 done; next morning | Notice #2 | Read the new notice. Fight it. | `notice2` | **Chapter end cliff** |
 
 ## 3.3 Key scenes
 
@@ -179,7 +200,8 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 - PIMM| I fear it is *legal.* / A machine counts as an / engineer, as of Tuesday.
 - ROSA| Who made that law?
 - NADIA| (arrives) Probably / the guy who made the / machine.
-- *Notice text:* NOTICE| DEMOLITION: DAY 86. / BY ORDER OF AURUM. / HAVE A NICE DAY.
+- *Notice text:* NOTICE| DEMOLITION: IN 30 DAYS. / BY ORDER OF AURUM. / HAVE A NICE DAY.
+  (The countdown starts here, see section 0. The projector lamps are fed by Trunk 7, `trunk_explained`: NADIA| Those lamps run on Trunk / Seven. The cable in your / street. It is not internet.)
 - *Teo tears one down. Another instantly replaces it, projected by a small VaultTech lamp.*
 - **Chapter end card:** CARD| CHAPTER 3: BUILD UP / complete. Chapter 4: / BREAK THROUGH.
 - **Epilogue stinger:** Vault with a golden stopwatch: VAULT| Thirty days! A person / needs thirty days to / notice nothing. Bert!
@@ -208,7 +230,7 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 | | |
 |---|---|
 | **Theme** | Stepping out where everyone can see you. Winning is easy; winning *together* is the point. Pressure rises. |
-| **Days / districts** | Days 57-70. **Sports Park** (Ballers) opens; Station Quarter/Old Factory/Docks are the allies' homes. |
+| **Length / districts** | Missions M43-M54, no fixed days. **Sports Park** (Ballers) opens; Station Quarter/Old Factory/Docks are the allies' homes. |
 | **Big moment** | **"The Night the Lights Came On"** (M52): the Old Block Rovers' cup match, Vault cuts the power, all five types light the pitch. |
 | **Housing** | **Loft** in the Old Factory (M52 end). Bills: Co-op dues. |
 | **Careers** | Ballers: **Amateur club -> Semi-pro**. Techies: **App developer** (optional). Makers: **Own studio** (shared). Grafters: **Shift lead**, transport company plan. |
@@ -235,20 +257,20 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 
 ## 4.2 Mission chain (M43-M54)
 
-| ID | Day | Title | Log text | Done when | Rewards |
+| ID | Starts when |
 |----|-----|-------|----------|-----------|---------|
-| M43 | 57 | Members Only | Try to enter the Sports Park. | `sp_blocked` | Gate guard + $40 membership |
-| M44 | 57-59 | The Side Gate | Find the side gate (Teo/Gus). | `sp_open` | Sports Park opens |
-| M45 | 59-61 | Old Block Rovers | Meet Coach Gus and Captain Zoe. | `met_gus` | Gus +5 |
-| M46 | 61-62 | Fit for Purpose | Pass the FIT-O-METER circuit. | `fit_pass` | Fitness +4, Ballers 1 star |
-| M47 | 62-63 | Penalties | Learn to take a penalty. | `pen_pass` | Ballers 2 stars |
-| M48 | 63-64 | Dex Is Fired | Find out why Dex is on the pitch with a box. | `dex_fired` | **Dex turning point** |
-| M49 | 64-65 | Truce | Host a dinner so Nadia and Gus stop sniping. | `truce_1` | **Removes the Ballers/Techies half-speed** |
-| M50 | 65-67 | The Vote | Rally support before the council vote. | `rally_done` | Allies pledge |
-| M51 | 67-69 | Silent Protest | Join the candle protest in Old Block. | `silent_protest` | Okafor +, Ruiz impressed |
-| M52 | 70 | The Night the Lights Came On | Play in the cup match. | `match_done` | **Chapter big moment**, loft |
-| M53 | 70 | A Loft in the Rafters | Move into the Boiler Room loft. | `home_3` | **Loft** |
-| M54 | 70 | The Clock Is Moving | Read Vault's new move. | `ch4_done` | Chapter end |
+| M43 | M42 done (chapter start) | Members Only | Try to enter the Sports Park. | `sp_blocked` | Gate guard + $40 membership |
+| M44 | M43 done | The Side Gate | Find the side gate (Teo/Gus). | `sp_open` | Sports Park opens |
+| M45 | M44 done | Old Block Rovers | Meet Coach Gus and Captain Zoe. | `met_gus` | Gus +5 |
+| M46 | M45 done | Fit for Purpose | Pass the FIT-O-METER circuit. | `fit_pass` | Fitness +4, Ballers 1 star |
+| M47 | M46 done | Penalties | Learn to take a penalty. | `pen_pass` | Ballers 2 stars |
+| M48 | M47 done | Dex Is Fired | Find out why Dex is on the pitch with a box. | `dex_fired` | **Dex turning point** |
+| M49 | M48 done | Truce | Host a dinner so Nadia and Gus stop sniping. | `truce_1` | **Removes the Ballers/Techies half-speed** |
+| M50 | M49 done | The Vote | Rally support before the council vote. | `rally_done` | Allies pledge |
+| M51 | M50 done; after dark | Silent Protest | Join the candle protest in Old Block. | `silent_protest` | Okafor +, Ruiz impressed |
+| M52 | M51 done; evening | The Night the Lights Came On | Play in the cup match. | `match_done` | **Chapter big moment**, loft |
+| M53 | M52 done | A Loft in the Rafters | Move into the Boiler Room loft. | `home_3` | **Loft** |
+| M54 | M53 done; next morning (the vote) | The Clock Is Moving | Read Vault's new move. | `ch4_done` | Chapter end |
 
 ## 4.3 Key scenes
 
@@ -291,7 +313,7 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 - **Reward:** `truce_1`: the Ballers/Techies half-speed rule is permanently off; Ballers +1, Techies +1.
 
 ### M50 The Vote / M51 Silent Protest
-- *The council vote on "AURUM's authority" is Day 72. The player visits each ally to promise support: Halloran (the crews), Wren (the Choir), Nadia (the Quarter), Gus (the Rovers), Rosa (Old Block). Each pledge = a flag.*
+- *The council vote on "AURUM's authority" is held at City Hall the morning after the cup match (M52; the player sees it as a short card). The player visits each ally to promise support: Halloran (the crews), Wren (the Choir), Nadia (the Quarter), Gus (the Rovers), Rosa (Old Block). Each pledge = a flag.*
 - **Silent protest night:** Old Block, every window has a single candle. No talking. Rosa leads the player down the street; the camera is silent, with a soft music line. Dr. Okafor stands at her clinic door with a candle. Kessler watches from the fence and, unexpectedly, puts down his thermos and lights a match.
 
 ### M52 The Night the Lights Came On - the big moment
@@ -300,6 +322,7 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 - COMMENTATOR| It's a hard-fought / match! And... what? / The lights...!
 - *All the stadium lights die. A beat of darkness, then voices.*
 - VAULT (on the screens)| Match suspended! / Power maintenance! Sorry!
+- *Nadia, on the radio from the Quarter:* NADIA| That was no power cut. / That was a rehearsal. / He just tested the Switch.  (`trunk_test`, Trunk 7 pulse; see story_chapter1.md 3B.2a)
 - *The Rovers stand in the dark. A faint sound, then:*
   - Bo-Ra's crane lamp turns on from the Docks, aimed at the pitch.
   - Wren's Rust Choir marches in with lanterns and bells.
@@ -319,7 +342,9 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 ### M54 The Clock Is Moving
 *Vault's tower: a gold hammer on a model of Old Block.*
 - VAULT| They are LAUGHING. In / MY stadium. I want the / hearing early.
-- VALET| Council vote: day 72. / Probability of success: / 61 percent.
+- VALET| Council vote: tomorrow. / Probability of success: / 61 percent.
+- VAULT| And Trunk Seven?
+- VALET| Ready. Awaiting the Gala.
 - VAULT| Not good enough, Bert. / Raise it. By whatever / means.
 - VALET| Query: "whatever". / Please define.
 - VAULT| I'll buy a vote.
@@ -339,14 +364,14 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 | | |
 |---|---|
 | **Theme** | What you leave behind. Money and gold versus a street that remembers your name. Finally, who you became. |
-| **Days / districts** | Days 71-86 (+ epilogue). **Hilltop** (Posh) opens; the golden tower; Old Block for the finale. |
+| **Length / districts** | Missions M55-M70 (+ epilogue), no fixed days. **Hilltop** (Posh) opens; the golden tower; Old Block for the finale. |
 | **Big moment** | **Victor Vault's downfall** (M66-M68) and **Old Block saved**; epilogue "one year later". |
 | **Housing** | **Apartment** at Marchand Mews (M58), then the **penthouse** atop the Co-op Hall (epilogue). |
 | **Careers** | Posh: **Waiter -> Real estate agent -> Investor -> Property empire** (compressed). Grafters/Makers/Techies/Ballers: **own transport company, own gallery, own startup, own club** (the "top jobs", shown as epilogue options and optional late-game tasks). |
 | **Minigames** | TRAY BALANCE (waiter), TWO-FACED (bluffing) and TERMS (negotiating), PORTFOLIO (investing), CARDS-AT-THE-GALA (conversation puzzle). |
 | **Events** | **Odette's Gala** (Hilltop), **Council Hearing** (City Hall), **Demolition Morning** (human chain), **Reopening Day** (Corner Market). |
 | **Reputation** | Posh 0 -> 3; the player can finish with up to 5 stars in every type. Rival: Grafters/Posh (half speed) until the **Table for Two** truce. |
-| **Villain** | **The Smart City Switch**: at the Gala, Vault will switch on AURUM, which runs the whole city (lights, traffic, shops, the demolition). It also authorises Day 86. |
+| **Villain** | **The Smart City Switch**: at the Gala, Vault will switch on AURUM, which runs the whole city (lights, traffic, shops, the demolition). It also authorises the demolition (the countdown ends only in the finale chain, section 0). |
 
 ## 5.1 New characters
 
@@ -364,24 +389,24 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 
 ## 5.2 Mission chain (M55-M70)
 
-| ID | Day | Title | Log text | Done when | Rewards |
+| ID | Starts when |
 |----|-----|-------|----------|-----------|---------|
-| M55 | 71 | Private Road | Try the Hilltop road. | `ht_blocked` | Security gate explained |
-| M56 | 71-73 | A Waiter's Pass | Get a waiter job at the Gilded Spoon (via Odette's test). | `ht_open`, `waiter` | Hilltop opens, Posh 1 star |
-| M57 | 73-75 | Tray and Tact | Pass the waiter test (TRAY BALANCE). | `tray_pass` | Charm +4 |
-| M58 | 75-76 | Marchand Mews | Move into an apartment (guarantor Odette). | `home_4` | **Apartment** |
-| M59 | 76-77 | Table for Two | Make Halloran and Odette share a table. | `truce_2` | **Removes Grafters/Posh half-speed** |
-| M60 | 77-78 | Selling Houses | Sell a flat to a skeptic (TERMS). | `agent_pass` | Real estate agent, Posh 2 |
-| M61 | 78-79 | The Invitation | Get an invitation to Vault's Gala. | `invited` | Vault sees the player |
-| M62 | 79-80 | The Charter | Prove the Co-op owns Old Block. | `charter_read` | Pimm, Wren, Nadia |
-| M63 | 80-82 | Four Keys | Collect the help of each type (stars decide scope). | `keys_n` | Ally flags |
-| M64 | 82-83 | Dress Rehearsal | Practice the plan at the Gilded Spoon. | `rehearsal` | Posh 3 |
-| M65 | 84 | The Gala | Go to Vault's Gala. | `gala` | the confrontation |
-| M66 | 84-85 | The Switch | Stop the Smart City Switch. | `switch_stopped` | Valet's turn |
-| M67 | 85 | The Hearing | Argue Old Block's case at City Hall. | `hearing_won` | **Downfall begins** |
-| M68 | 86 | Demolition Morning | Stand with Old Block at 7:00. | `old_block_saved` | **Old Block saved** |
-| M69 | 86 | The Last Receipt | Watch Victor Vault check out. | `vault_down` | Epilogue unlocked |
-| M70 | after | One Year Later | Epilogue. | `epilogue` | Penthouse, endings |
+| M55 | M54 done (chapter start) | Private Road | Try the Hilltop road. | `ht_blocked` | Security gate explained |
+| M56 | M55 done | A Waiter's Pass | Get a waiter job at the Gilded Spoon (via Odette's test). | `ht_open`, `waiter` | Hilltop opens, Posh 1 star |
+| M57 | M56 done | Tray and Tact | Pass the waiter test (TRAY BALANCE). | `tray_pass` | Charm +4 |
+| M58 | M57 done | Marchand Mews | Move into an apartment (guarantor Odette). | `home_4` | **Apartment** |
+| M59 | M58 done | Table for Two | Make Halloran and Odette share a table. | `truce_2` | **Removes Grafters/Posh half-speed** |
+| M60 | M59 done | Selling Houses | Sell a flat to a skeptic (TERMS). | `agent_pass` | Real estate agent, Posh 2 |
+| M61 | M60 done | The Invitation | Get an invitation to Vault's Gala. | `invited` | Vault sees the player |
+| M62 | M61 done | The Charter | Prove the Co-op owns Old Block. | `charter_read` | Pimm, Wren, Nadia |
+| M63 | M62 done | Four Keys | Collect the help of each type (stars decide scope). | `keys_n` | Ally flags |
+| M64 | M63 done | Dress Rehearsal | Practice the plan at the Gilded Spoon. | `rehearsal` | Posh 3 |
+| M65 | M64 done; you tell Odette "I'm ready"; 20:00 | The Gala | Go to Vault's Gala. | `gala` | the confrontation |
+| M66 | during M65 | The Switch | Stop the Smart City Switch. | `switch_stopped` | Valet's turn |
+| M67 | M66 done; next morning 9:00 | The Hearing | Argue Old Block's case at City Hall. | `hearing_won` | **Downfall begins** |
+| M68 | M67 done; next morning 7:00 | Demolition Morning | Stand with Old Block at 7:00. | `old_block_saved` | **Old Block saved** |
+| M69 | M68 done; same afternoon | The Last Receipt | Watch Victor Vault check out. | `vault_down` | Epilogue unlocked |
+| M70 | M69 done; after the credits | One Year Later | Epilogue. | `epilogue` | Penthouse, endings |
 
 ## 5.3 Key scenes
 
@@ -437,10 +462,11 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 - **Scope:** each key with >= 3 stars = full help; with 1-2 stars = partial help (a weaker version of the scene, e.g. only one crane), with 0 = no help. The game never blocks the finale. Max (5 keys, 5 stars each) unlocks the "Everyone" epilogue.
 
 ### M65 The Gala - Hilltop, Vault's mansion-tower terrace
+*Start rule: after M64 Odette says "The car is yours when you are ready." The Gala begins at 20:00 on the evening the player chooses "I'm ready" (the countdown stays at 2 until then).*
 *Gold chandeliers, a string quartet of robot violins, a champagne tower. The guests are investors, VaultTech staff and the press. The player arrives as Odette's "plus one". Dex stands by the buffet in a rented tux (if redeemed) or is absent.*
 - VAULT| Friends! Neighbours! / Customers! Tonight I / gift you silence!
 - VAULT| Behold: AURUM. A city / without traffic, queues, / or arguments.
-- *He holds up a golden key.* VAULT| When I turn this, / everything runs itself.
+- *He holds up a golden key.* VAULT| This wakes Trunk Seven. / Every light, lock and / machine in the city.
   Even demolition. Ha ha!
 - *Nadia (in the staff corridor):* NADIA| (earpiece) I'm in. / Whenever you want, / the PA is yours.
 - *The player walks up to the stage, holding the Charter. Valet scans.*
@@ -464,7 +490,7 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 - *Valet rolls down from the stage and turns to the player.* VALET| Correction: Efficiency / is a form of love. / I have been wrong.
 - *He opens the AURUM panel and holds out a claw: the golden key. The player turns it back. The city's lights flicker, then come back warm.*
 
-### M67 The Hearing - Day 85, City Hall
+### M67 The Hearing - City Hall (9:00, the morning after the Gala; counter 1)
 - *Chairwoman Ruiz, a full hall, Pettigrew shrinking.*
 - RUIZ| The Charter is valid. / The tokens are valid. / The sale is void.
 - RUIZ| Furthermore, an AI is / not an engineer. The / notice is void.
@@ -472,7 +498,7 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 - *Applause. Pimm, in his old inspector's badge, steps up.* PIMM| I should like to say / one thing. A bridge / is a promise.
 - RUIZ| Noted. Adjourned.
 
-### M68 Demolition Morning - Day 86, 7:00
+### M68 Demolition Morning - 7:00, the morning after the hearing (counter 0)
 *Old Block at dawn. The digger waits. The human chain: Ines, Rosa, Mia, Grigor, Teo, Mrs. Valdez, Pimm, Lou, Okafor, Halloran, Wren, Gus, Odette... Hand in hand across the street. Dex comes last, from the VaultTech side, carries his lanyard in his hand, and takes Teo's hand.*
 - *The digger driver (a quiet man) reads the notice on his phone: void. He switches off the engine.*
 - ROSA| Forty years. And this / street is still here.
@@ -481,7 +507,7 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 - *Everyone laughs. Bells. The sun lifts over the rooftops: Old Block goes fully warm.* `old_block_saved`.
 
 ### M69 The Last Receipt - Victor Vault's downfall (comic and quiet)
-*Day 86, afternoon. VaultMart (still cold at this point). Vault in sunglasses and a plain jacket, with a basket. The gold car is gone (repossessed). Only one self-checkout works.*
+*The same afternoon. VaultMart (still cold at this point). Vault in sunglasses and a plain jacket, with a basket. The gold car is gone (repossessed). Only one self-checkout works.*
 - VAULT| I'll pay with gold.
 - KIOSK| Unexpected item in the / bagging area. Please / remove the item.
 - VAULT| It's a *gold card.*
@@ -548,4 +574,4 @@ Card montage, each 3 s with a small scene:
 
 ## S3. Warm/cold per area (target)
 
-Corner Market/VaultMart: cold from Day 1 evening, warm in the epilogue. Docks: cold -> warm at M23. Old Block: warm (arch M26, full M28). Old Factory: warm inside the fence, cold outside; fully warm after M52. Station Quarter: cold -> warm in steps (Repair Café M36, Slow Day M39, final Ch.4). Sports Park: cold (VaultFit) -> warm after the match. Hilltop: neutral-cold (marble) -> warm after the Gala. Golden tower: gold, cold, public library in the epilogue.
+Corner Market/VaultMart: cold from the evening of the firing, warm in the epilogue. Docks: cold -> warm at M23. Old Block: warm (arch M26, full M28). Old Factory: warm inside the fence, cold outside; fully warm after M52. Station Quarter: cold -> warm in steps (Repair Café M36, Slow Day M39, final Ch.4). Sports Park: cold (VaultFit) -> warm after the match. Hilltop: neutral-cold (marble) -> warm after the Gala. Golden tower: gold, cold, public library in the epilogue.
