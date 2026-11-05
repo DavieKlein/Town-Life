@@ -59,7 +59,7 @@ story pays out (about 60-80 by the ending), so the player has to choose, and fre
 | **Deep Pockets** | 5 c, deposit bag 10 -> 14 | 8 c, bag 20 | - | storage |
 
 **Hard caps (so numbers stay sane):**
-- Vehicles (bike, scooter, car) are a mounted speed of their own and do not stack with the walking cap.
+- Vehicles (kick scooter +15 %, skateboard +20 %, fatbike +30 %, motor scooter +45 %, hoverboard +60 %, post-game car +60 % on roads; see `docs/features_backlog.md`) are a mounted speed of their own, the best owned counts, and they do not stack with the walking cap.
 - Walk/run speed from skills + perks + stars: **+25 %** at most (Fitness 10 + Quick Feet 15 = the full cap; type stars add speed only through Fitness).
   Temporary buffs may exceed the cap by up to +25 % (see 1.4), so the absolute maximum is +50 % while a sweet is active.
 - Pay bonuses (Strength/Creativity/Charm tips, Strong Back, Early Bird, Overtime) add up; the total job-pay bonus is capped at **+35 %**.
@@ -196,9 +196,8 @@ The story ends at M70 "One Year Later" with the credits. Then the game **saves a
   - *Marchand Atelier* (Hilltop): the **Marchand Collection**, a luxury furniture line (quality 3, about 3x the price of normal pieces): velvet sofa $450,
     marble bath $600, grand piano $1,800, chandelier $350, library wall $900, aquarium $520. Each is a catalog entry with a use point like all furniture.
   - *Co-op Market Hall*: stalls with seasonal goods and **clothes sets** per type (star 4 sets, star 5 exclusive hats), prices $40-$250.
-  - *Vintage garage* (Docks): the **vintage scooter "Bella"** ($900, +30 % speed on roads, cosmetic stripes) and the **car "Greenie"**: Vault's repossessed golden car,
-    bought back at auction and repainted ($6,000, +60 % speed on roads, parks only where the map allows it). The car's SW/NE facings are a NEEDS PROPOSAL.
-    Vehicles replace the old plan of vehicles as story rewards; the bike (M27) stays the early one.
+  - *Vintage garage* (Docks): the story's small-vehicle ladder (kick scooter, skateboard, fatbike, motor scooter "Bella", hoverboard; `docs/features_backlog.md` "Vehicles ladder") is earned in the story. Free play adds only cosmetics for them (paint, stripes, bells, $30-$120) and
+    the one big luxury, the **car "Greenie"**: Vault's repossessed golden car, bought back at auction and repainted ($6,000, +60 % speed on roads, roads only). The car's SW/NE facings are a NEEDS PROPOSAL.
   - *Legend Licorice* in the sewer (see 2.1).
 - **Titles ("Legend" ladder)**: a **Legacy** score shown in the pause header as a title: Newcomer -> Local -> Neighbour -> Pillar -> **Legend**.
   Legacy points come from: friendship 70+ with each NPC (3 each), type stars (2 per star), collectible sets (5 each), secrets (2 each), Co-op fund projects (see below, 5 each).
@@ -235,7 +234,7 @@ The penthouse is the player's **private home** (owner s67) atop the rebuilt Co-o
 - **Trophy shelf**: Rovers Cup, mural miniatures, star-5 items, the Legend plaque.
 - **Guest book**: signed by every NPC who visits; friends with 70+ can be invited ("Come over") and visit for an evening (Social +, a short chat, a gift sometimes).
 - **Window view**: a day/night panorama with changes for every Co-op fund project (a bridge, new lamps, lights in Old Block), so the room visibly grows with the player's deeds.
-- **Garage door** (if a vehicle is owned): the vehicle is parked at the Hall; Bella and Greenie appear in the scene.
+- **Garage door** (if a vehicle is owned): the owned vehicles are parked at the Hall; Bella, the hoverboard and Greenie appear in the scene.
 All penthouse pieces use the furniture catalog rule; the room itself NEEDS PROPOSAL (already planned for the epilogue).
 
 ### 3.4 What stays out

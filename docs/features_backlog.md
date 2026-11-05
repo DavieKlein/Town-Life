@@ -108,3 +108,43 @@ Design in **docs/progression.md**: tiered upgrades (skills I-V, 13 City Coin per
 (exclusive shops, vintage vehicles, Legend title, daily errands, the penthouse showcase), the pause-menu Status screen (reputation, skills, People with friendship and bios, perks, Doors) and skill gates.
 Nothing is built; all new art/UI is NEEDS PROPOSAL. Also new in s68: the VaultLink cable works at the Old Block arch (`docs/story_chapter1.md` 3B.2a) and the story-driven Demolition Countdown (`docs/story_overview.md` decision 13).
 
+## Owner notes to record (s68, not built)
+
+### 1. Vehicles ladder (small vehicles gained through the story)
+
+Owner list: kick scooter -> skateboard -> fatbike/bike -> motor scooter -> hoverboard. The old "car" idea is out of the story; it survives only as a post-game luxury (`docs/progression.md` 3.1, "Greenie").
+Speed bonuses are relative to base walking speed, are a mounted speed of their own (they do not stack with the +25 % walking cap, the best owned vehicle counts) and replace the old plan of "bike -> scooter -> car".
+
+| # | Vehicle | Story placement | How you get it | Speed | Notes |
+|---|---------|-----------------|----------------|-------|-------|
+| 1 | **Kick scooter (step)** | Chapter 2, after M19 Box Clever | Bo-Ra lends you the Docks' battered kick scooter ("Gerald's little brother") as a work tool; it becomes yours when you finish M20 | +15 % | the Docks are big; also used on the avenue |
+| 2 | **Skateboard** | Chapter 2, M26 Big Wall reward | Teo gives you a board he re-glued, "boss, don't skate on the mural" | +20 % | Teo's ramp door is the same door as Teo's Bridge; a few trick animations as joke only |
+| 3 | **Fatbike / bike** | Chapter 2, M27 Two Wheels | Teo's guy sells it for $45 (existing plan) | +30 % | the existing bike sprite proposal becomes the fatbike |
+| 4 | **Motor scooter "Bella"** | Chapter 4, after M49 Truce (Sal fixes it at the Docks bike shed with Gus's ex-club funds) | buy for $120 (or free for Techies star 3 + Ballers star 2); sells again if the player wants | +45 % | the vintage scooter of the earlier free-play idea is this one now |
+| 5 | **Hoverboard** | Chapter 5, after M63 Four Keys (Nadia and Pip build it for the Gala getaway), or Techies star 4 | reward, not for sale | +60 % | hovers 4 cm, silent, pigeons are suspicious; the top of the ladder |
+
+Rules: **cannot ride indoors** (auto-dismount at every door; the vehicle waits outside), nor on the bush sneak path, stairs, crowded events (Saturday market, march, Block Party: walk only), in the sewer, on the Docks' narrow
+planks and during cutscenes. Vehicles are shown as a rider sprite per facing (NEEDS PROPOSAL for each: 5 vehicles x 8 facings, riding idle + ride cycle; one shared palette per vehicle). A quick-switch (hold L) picks the vehicle if more than one is owned.
+Energy: riding costs 30 % less Energy per distance than walking (a reward for getting one); the hoverboard 50 % less. Running (B) still works on top: ride speed x run factor. The earlier Chapter 2 note "Bike: +30 %" stands.
+
+### 2. Needs the owner wants on the HUD (recorded as given)
+
+Owner list: **Hunger (food), Energy (shown with a bed icon), Hygiene / showering, Social, Fun, and a new need "Home" (being at home / comfort).**
+Current game: Hunger, Energy, Hygiene, Fun, **Bladder**, plus Social (not a bar yet; HUD variant A shows six slots). The owner's list mentions both "showering" and "hygiene" (read here as one need: Hygiene, icon = shower head) and does not mention Bladder.
+**Open question for the owner (the main session asks):** does **Bladder stay** as a need (toilet, accident, park WC, drink penalties are built and tied to story/clinic text), or does it go and become hidden (only an occasional "need to go" nudge)?
+HUD budget: seven bars do not fit the 240 px bar (variant A uses 28 px slots at pitch 30); options: keep six slots (Hunger, Energy-bed, Hygiene, Fun, Social, Home) and fold Bladder in as a hidden need with a warning icon, or shrink the slots to 26 px / two thin rows. NEEDS PROPOSAL (HUD mock-up) before building.
+
+**How a "Home" need could work (design idea):**
+- 0-100 like the others (100 = fine). It measures "I have a place that is mine". Decays slowly **away from home** (about -0.08 per game minute, roughly 38 points in 8 hours), faster at night away from any bed.
+- **Fills at home** at a rate that depends on **comfort**: `comfort = home step (bench 0, Mia's couch 1, lent room 2, studio 3, loft 4, apartment 5, penthouse 6) + sum of furniture quality of the pieces in the room (each 1-3, only pieces with a use point count once)`;
+  rate = 0.10 + 0.05 x comfort per game minute, capped at 0.6 (an empty lent room barely holds the need, a furnished penthouse fills it fast). Sleeping and sitting at home fill it at x2.
+- The **park bench** gives almost nothing (+0.02/min while sitting), a friend's couch a little (+0.1), a hotel-like place none. Visiting a friend's home (invite in free play) gives a small boost.
+- Effects: **Home < 25**: Fun gains halved and Social decays faster ("You miss your own walls."); **Home > 80**: buff "Cosy" (Fun gains +10 %, Energy +5 % faster when sleeping at home). Never causes a faint or debt.
+- Story use: the prologue room above the shop gives a first taste (full Home), the bench makes it fall (gentle push to find a home, M30), bills by post and decoration have a feeling reward. It also gives furniture a clear job: better furniture raises the fill rate, shown on the Status screen.
+- Save: one `u8` in the spare bytes. Pause screen: one more line. Balance: it never blocks anything; it nudges.
+
+### 3. To-do: NPC walk animations
+
+NPCs currently **slide with idle frames** (`npcs::wander` uses the idle sheet with a 1 px bob; script `move_to` also slides). To do: render **proper walk cycles for the cast** (Mia, Rosa, Dex, Pimm, Lou, Okafor, Ines, Teo, later mentors; 8 facings x 4-6 frames each),
+through `blender_cast.py` like the player walk. Budget: each NPC sheet is 8 facings x 32x64 = 8 x 8 tiles... with walk frames about 6x as many tiles in ROM; sprite VRAM allows only about three NPC sprites on screen at once during talks, so load walk
+frames per NPC only while that NPC moves (stream the frame like the player) and keep idle-only sheets for standing NPCs. Also needed for scripted moves in cutscenes and for the Old Block residents who wander. Priority: Mia, Rosa, Dex (most moves in the cutscenes). Not built.
