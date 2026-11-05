@@ -76,6 +76,10 @@ namespace tl
             return _scripted;
         }
 
+        // Wandering (s63): NPCs with a route in their placement pace between its points while the player walks free. They wait at each
+        // point, stop for a player or another NPC in the way and when `talk_index` (the NPC being talked to, or -1) is theirs.
+        void wander(int player_x, int player_y, int talk_index);
+
         // Back to the placement's own facing (after a conversation).
         void reset_facings();
 
@@ -100,6 +104,10 @@ namespace tl
             int bob = 0;
             bn::fixed fx = 0;
             bn::fixed fy = 0;
+            int route = -1;         // wander route index, -1 = stands still
+            int route_pos = 0;
+            int wait = 0;           // frames to wait at a route point
+            bool walking = false;
         };
 
         bn::vector<npc, max_npcs> _npcs;
@@ -111,6 +119,7 @@ namespace tl
         int _last_cam_y = 0;
         bool _scripted = false;         // actors exist / NPCs were hidden: the schedule is frozen
         bool _suppress = false;
+        unsigned _wander_seed = 12345;
 
         [[nodiscard]] int _index_of(npc_id who) const;
         void _add_actor(npc_id who, int x, int y, int facing);

@@ -104,6 +104,8 @@ namespace tl
             none,
             interact,       // the object's own menu (bench, fountain, toilet, ...)
             shop,           // buying food
+            gifts,          // gift list of a shop
+            kiosk,          // scratch cards / newspaper at the newspaper boxes
             info            // a message; reopens the shop afterwards if shop_return is set
         };
 
@@ -257,6 +259,16 @@ namespace tl
         int _car_mode = 0;
         bool _shop_has_shift = false;
         int _shop_items = 4;
+        int _shop_talk_index = -1;          // option index of "Talk to ..." in the shop menu
+        int _shop_gift_index = -1;          // option index of "Gifts"
+        int _gift_ids[4] = {};              // gifts offered by the open gift list
+        int _gift_offer = 0;
+        bn::string<24> _gift_labels[5];
+        void _open_gift_shop(const interactable& target);
+        void _buy_gift(const interactable& target, int choice);
+        void _open_kiosk(const interactable& target);
+        void _kiosk_choice(const interactable& target, int choice);
+        void _scratch_card(const interactable& target);
         int _hint_cooldown = 0;
 
         [[nodiscard]] bool _cond_ok(const cs_cond& cond) const;

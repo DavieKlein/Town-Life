@@ -17,6 +17,8 @@ namespace tl
 {
     constexpr int npc_count = int(npc_id::count);
     constexpr int topic_count = 8;
+    constexpr int gift_count = 5;               // see tools/story_data.py GIFTS
+    constexpr int gossip_count = 8;             // see tools/story_data.py GOSSIP
     constexpr int mission_count = 23;           // see tools/story_data.py MISSIONS
 
     // ---------------------------------------------------------------------------------------------------- dialogue data
@@ -91,7 +93,28 @@ namespace tl
         const char* likes;          // per topic: 'L' likes, 'N' neutral, 'D' dislikes
         uint8_t start_friendship;
         bool talks;                 // has small talk
+        const char* gifts;          // per gift: 'F' favourite (+10), 'L' likes (+4), 'N' neutral (+1), 'D' dislikes (-3)
     };
+
+    // Gift items (bought at the market / diner / kiosk, given in a conversation) and gossip rules (tools/story_data.py).
+    struct gift_def
+    {
+        const char* name;
+        int price;
+    };
+
+    struct gossip_rule
+    {
+        uint8_t kind;               // 0 = after a small-talk topic with `npc`, 1 = after a gift to `npc`
+        uint8_t npc;
+        uint8_t arg;                // topic or gift index
+        uint8_t hearer;             // the NPC who brings it up
+        int16_t node;               // dialogue page (its effects apply)
+    };
+
+    extern const gift_def gift_defs[gift_count];
+    extern const gossip_rule gossip_rules[gossip_count];
+    extern const int16_t dialogue_gift_fav_nodes[npc_count];
 
     extern const npc_info npc_infos[npc_count];
 
@@ -235,6 +258,41 @@ namespace tl
             return id;
         }
 
+        // ---- gifts, gossip, scratch cards, Social (s63)
+        [[nodiscard]] int item_count(int gift) const
+        {
+            return _items[gift];
+        }
+
+        [[nodiscard]] int items_total() const;
+        void add_item(int gift, int count = 1);
+        bool take_item(int gift);
+        [[nodiscard]] bool gift_given_today(int npc, int day) const;
+        void note_gift(int npc, int day);
+
+        // Gossip: note_* remember a topic / gift; pending_gossip returns the rule index to tell `hearer` now (or -1).
+        void note_gossip_topic(int npc, int topic, int day);
+        void note_gossip_gift(int npc, int gift, int day);
+        [[nodiscard]] int pending_gossip(int hearer, int day) const;
+        void gossip_told(int rule);
+
+        // Scratch cards: at most 3 per day.
+        [[nodiscard]] int scratch_left(int day) const;
+        void note_scratch(int day);
+
+        // Social need changes made by conversations, collected for the field (like take_money).
+        void add_social(int delta)
+        {
+            _social_delta += delta;
+        }
+
+        [[nodiscard]] int take_social()
+        {
+            int value = _social_delta;
+            _social_delta = 0;
+            return value;
+        }
+
         void fill_save(save_data& out) const;
         void apply_save(const save_data& in);
 
@@ -252,6 +310,12 @@ namespace tl
         uint16_t _mission = 0;
         uint32_t _done_mask = 0;
         int _money_delta = 0;
+        int _social_delta = 0;
+        uint8_t _items[gift_count] = {};
+        uint8_t _gift_day[save_data::talk_slots] = {};
+        uint8_t _gossip[gossip_count] = {};         // 0 = none, 1..250 = day marker when noted, 255 = told
+        uint8_t _scratch_day = 0;
+        uint8_t _scratch_count = 0;
         int _completed = 0;
         int _started = 0;
     };

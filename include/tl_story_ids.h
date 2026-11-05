@@ -227,7 +227,27 @@ namespace tl
         constexpr int bark_dex_vault = 185;
         constexpr int bark_victor = 186;
         constexpr int bark_robot = 187;
-        constexpr int count = 188;
+        constexpr int gift_ask = 188;
+        constexpr int gift_fav = 189;
+        constexpr int gift_like = 190;
+        constexpr int gift_neutral = 191;
+        constexpr int gift_dislike = 192;
+        constexpr int gift_none = 193;
+        constexpr int gift_done = 194;
+        constexpr int gift_fav_mia = 195;
+        constexpr int gift_fav_rosa = 196;
+        constexpr int gift_fav_dex = 197;
+        constexpr int gift_fav_pimm = 198;
+        constexpr int gift_fav_lou = 199;
+        constexpr int gossip_complain_mia = 200;
+        constexpr int gossip_compliment_mia = 201;
+        constexpr int gossip_joke_lou = 202;
+        constexpr int gossip_gossip_pimm = 203;
+        constexpr int gossip_flowers_rosa = 204;
+        constexpr int gossip_choc_mia = 205;
+        constexpr int gossip_music_rosa = 206;
+        constexpr int gossip_work_lou = 207;
+        constexpr int count = 208;
     }
 
 }

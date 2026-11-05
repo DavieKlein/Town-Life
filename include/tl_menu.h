@@ -8,14 +8,14 @@
 
 namespace tl
 {
-    // Pop-up menu at the top right (see tl_ui.h for the two day/night styles): title band, up to 5 option rows with a
+    // Pop-up menu at the top right (see tl_ui.h for the two day/night styles): title band, up to 6 option rows with a
     // rounded highlight bar, "A Choose / B Back" hint. up/down choose, A confirms, B cancels. open_info() shows up to
     // 3 lines of text instead of options (A or B closes).
     class menu
     {
 
     public:
-        static constexpr int max_options = 5;
+        static constexpr int max_options = 6;
         static constexpr int cancelled = -2;
         static constexpr int open_still = -1;
 

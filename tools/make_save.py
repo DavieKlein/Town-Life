@@ -31,7 +31,9 @@ class Save(ct.Structure):
                 ("story_flags", ct.c_uint8 * 64), ("mission_id", ct.c_uint16), ("pad_mission", ct.c_uint16),
                 ("friendship", ct.c_uint8 * 16),
                 ("deposit_init", ct.c_uint8), ("deposit_cans", ct.c_uint8), ("deposit_bottles", ct.c_uint8),
-                ("deposit_credit", ct.c_uint8), ("deposit_spot", ct.c_uint8 * 32), ("spare", ct.c_uint8 * 28),
+                ("deposit_credit", ct.c_uint8), ("deposit_spot", ct.c_uint8 * 32), ("social_valid", ct.c_uint8), ("social", ct.c_uint8), ("items", ct.c_uint8 * 5),
+                ("gift_day", ct.c_uint8 * 8), ("gossip", ct.c_uint8 * 8), ("scratch_day", ct.c_uint8), ("scratch_count", ct.c_uint8),
+                ("spare", ct.c_uint8 * 3),
                 ("topic_mem", (ct.c_uint8 * 8) * 8), ("talk_day", ct.c_uint8 * 8), ("gain_day", ct.c_uint8 * 8),
                 ("gained", ct.c_uint8 * 8), ("coin_day", ct.c_uint8 * 8), ("coin70", ct.c_uint8),
                 ("pad_story", ct.c_uint8), ("coins", ct.c_uint16), ("missions_done", ct.c_uint32)]
@@ -66,6 +68,13 @@ def make(path, a):
     for kv in filter(None, a.friend.split(",")):
         k, v = kv.split("=")
         s.friendship[cast.IDS.index(k)] = int(v)
+    s.social_valid = 1
+    s.social = a.social
+    for i, v in enumerate(filter(None, a.items.split(","))):
+        s.items[i] = int(v)
+    for kv in filter(None, a.gossip.split(",")):       # rule index=day marker (1..250), e.g. 0=1
+        k, v = kv.split("=")
+        s.gossip[int(k)] = int(v)
     raw = bytes(s)
     x, y = 1, 0
     for byte in raw[12:]:
@@ -92,6 +101,9 @@ if __name__ == "__main__":
     p.add_argument("--friend", default="")
     p.add_argument("--flag", default="")
     p.add_argument("--done", default="")
+    p.add_argument("--social", type=int, default=60)
+    p.add_argument("--items", default="", help="gift counts: flowers,chocolate,hot sauce,cookies,newspaper")
+    p.add_argument("--gossip", default="", help="rule=day marker, e.g. 0=1 (rule 0 noted on day 1)")
     a = p.parse_args()
     a.needs = [int(v) for v in a.needs.split(",")] if a.needs else [50, 50, 50, 50, a.bladder]
     make(a.out, a)

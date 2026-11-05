@@ -743,6 +743,24 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
   SW/NE facings are not built (the car only drives along the avenue).
 - Hooks `CAR_ARRIVAL` (`hook car_arrival`, unused fade) and `VAULTMART_SWAP` are now real (see above).
 
+## Feature backlog and s63 systems (gifts, gossip, wandering, scratch cards, Social)
+
+Owner-approved feature list with district-1 / later status: **docs/features_backlog.md** (Social need, showers, sickness + doctor +
+bills by post, clothing, wandering NPCs, pets later, gifts, phone, gossip, furniture store/online, collectibles, scratch cards, weather,
+events). Visual parts (HUD with 6 needs, phone UI, collectibles, shower, doctor's practice) are PROPOSALS only (mock-ups in
+/tmp/claude-0/s63/proposals.png; no art built, no ROM release until the owner approves). Built in s63 (code/text only):
+- **Social** (`needs::social`, not a HUD bar; `social_valid/social` in `save_data`, carved from the spare bytes; pause screen 6th line).
+  Small talk +3/+5/+1, hello +2, gifts +5/+8 (`story().add_social`, applied in `field::_end_conversation`); < 20: Fun gains halved.
+- **Gifts**: `GIFTS`/`NPC_INFO[..][4]` in tools/story_data.py (F +10, L +4, N +1, D -3, once per NPC per day), inventory in `story_state`
+  (`item_count/add_item/take_item`, saved in `save_data::items/gift_day`), "Gifts" row in the market/diner shop menu (`field::_open_gift_shop`;
+  `menu::max_options` is now 6), "Give a gift" row in the small-talk menu (`conversation::_open_gift_menu/_give_gift`).
+- **Gossip**: `GOSSIP` rules (8) in story_data.py, pages `gossip_*` in dialogue_src.txt; noted in `_begin_answer` / `_give_gift`, told one day
+  later after the greeting (`conversation::_try_gossip`), state in `save_data::gossip`.
+- **Wandering**: `cast.ROUTES` + 12th element of a PLACEMENTS row -> `npc_routes`; `npcs::wander` (idle frames, 1 px bob; no walk frames yet).
+- **Scratch cards**: interactable kind `kiosk` (tools/interactions.py, newspaper boxes at the bus stop): $1, 70/20/8/2 % (nothing/$2/$5/$20),
+  max 3 per day (`save_data::scratch_*`); the kiosk also sells newspapers (gift).
+- Test helpers: `tools/make_save.py --items --social --gossip`; debug flag `-DTL_DEBUG_AUTO_GIFT` (auto-picks "Give a gift" like AUTO_TALK).
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

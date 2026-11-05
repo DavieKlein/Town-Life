@@ -79,8 +79,22 @@ namespace tl
             _gain_day[npc] = 0;
             _gained[npc] = 0;
             _coin_day[npc] = 0;
+            _gift_day[npc] = 0;
         }
 
+        for(uint8_t& item : _items)
+        {
+            item = 0;
+        }
+
+        for(uint8_t& g : _gossip)
+        {
+            g = 0;
+        }
+
+        _scratch_day = 0;
+        _scratch_count = 0;
+        _social_delta = 0;
         _coin70 = 0;
         _coins = 0;
         _done_mask = 0;
@@ -376,6 +390,23 @@ namespace tl
             out.coin_day[npc] = _coin_day[npc];
         }
 
+        for(int gift = 0; gift < gift_count; ++gift)
+        {
+            out.items[gift] = _items[gift];
+        }
+
+        for(int npc = 0; npc < save_data::talk_slots; ++npc)
+        {
+            out.gift_day[npc] = _gift_day[npc];
+        }
+
+        for(int rule = 0; rule < gossip_count; ++rule)
+        {
+            out.gossip[rule] = _gossip[rule];
+        }
+
+        out.scratch_day = _scratch_day;
+        out.scratch_count = _scratch_count;
         out.coin70 = _coin70;
         out.coins = _coins;
         out.mission_id = _mission;
@@ -422,6 +453,24 @@ namespace tl
             _coin_day[npc] = in.coin_day[npc];
         }
 
+        for(int gift = 0; gift < gift_count; ++gift)
+        {
+            _items[gift] = in.items[gift] > 9 ? 9 : in.items[gift];
+        }
+
+        for(int npc = 0; npc < save_data::talk_slots; ++npc)
+        {
+            _gift_day[npc] = in.gift_day[npc];
+        }
+
+        for(int rule = 0; rule < gossip_count; ++rule)
+        {
+            _gossip[rule] = in.gossip[rule];
+        }
+
+        _scratch_day = in.scratch_day;
+        _scratch_count = in.scratch_count > 3 ? 3 : in.scratch_count;
+        _social_delta = 0;
         _coin70 = in.coin70;
         _coins = in.coins;
         _mission = in.mission_id <= mission_count ? in.mission_id : 0;
@@ -429,5 +478,116 @@ namespace tl
         _money_delta = 0;
         _completed = 0;
         _started = 0;
+    }
+
+    // ---------------------------------------------------------------------------------------------------- gifts, gossip, scratch cards
+    namespace
+    {
+        [[nodiscard]] uint8_t day_marker(int day)
+        {
+            return uint8_t((day % 250) + 1);
+        }
+    }
+
+    int story_state::items_total() const
+    {
+        int total = 0;
+
+        for(int gift = 0; gift < gift_count; ++gift)
+        {
+            total += _items[gift];
+        }
+
+        return total;
+    }
+
+    void story_state::add_item(int gift, int count)
+    {
+        int value = _items[gift] + count;
+        _items[gift] = uint8_t(value > 9 ? 9 : value);
+    }
+
+    bool story_state::take_item(int gift)
+    {
+        if(! _items[gift])
+        {
+            return false;
+        }
+
+        --_items[gift];
+        return true;
+    }
+
+    bool story_state::gift_given_today(int npc, int day) const
+    {
+        return npc < save_data::talk_slots && _gift_day[npc] == uint8_t(day & 255) && day != 0;
+    }
+
+    void story_state::note_gift(int npc, int day)
+    {
+        if(npc < save_data::talk_slots)
+        {
+            _gift_day[npc] = uint8_t(day & 255);
+        }
+    }
+
+    void story_state::note_gossip_topic(int npc, int topic, int day)
+    {
+        for(int rule = 0; rule < gossip_count; ++rule)
+        {
+            const gossip_rule& r = gossip_rules[rule];
+
+            if(r.kind == 0 && r.npc == npc && r.arg == topic && ! _gossip[rule])
+            {
+                _gossip[rule] = day_marker(day);
+            }
+        }
+    }
+
+    void story_state::note_gossip_gift(int npc, int gift, int day)
+    {
+        for(int rule = 0; rule < gossip_count; ++rule)
+        {
+            const gossip_rule& r = gossip_rules[rule];
+
+            if(r.kind == 1 && r.npc == npc && r.arg == gift && ! _gossip[rule])
+            {
+                _gossip[rule] = day_marker(day);
+            }
+        }
+    }
+
+    int story_state::pending_gossip(int hearer, int day) const
+    {
+        for(int rule = 0; rule < gossip_count; ++rule)
+        {
+            if(gossip_rules[rule].hearer == hearer && _gossip[rule] && _gossip[rule] != 255 && _gossip[rule] != day_marker(day))
+            {
+                return rule;
+            }
+        }
+
+        return -1;
+    }
+
+    void story_state::gossip_told(int rule)
+    {
+        _gossip[rule] = 255;
+    }
+
+    int story_state::scratch_left(int day) const
+    {
+        return _scratch_day == uint8_t(day & 255) ? 3 - _scratch_count : 3;
+    }
+
+    void story_state::note_scratch(int day)
+    {
+        if(_scratch_day != uint8_t(day & 255))
+        {
+            _scratch_day = uint8_t(day & 255);
+            _scratch_count = 0;
+        }
+
+        ++_scratch_count;
     }
 }

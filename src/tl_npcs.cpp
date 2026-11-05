@@ -92,7 +92,8 @@ namespace tl
 
             bn::sprite_ptr sprite = item->create_sprite(0, 0, p.facing);
             sprite.set_bg_priority(_map->player_hidden(p.x, p.y, 12, 56) ? 3 : 2);
-            _npcs.push_back(npc{ bn::move(sprite), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y) });
+            _npcs.push_back(npc{ bn::move(sprite), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
+                                 120 + int(index * 37 % 90), false });
             _blockers[_npcs.size() - 1] = { p.x, p.y };
         }
 
@@ -219,6 +220,109 @@ namespace tl
         _npcs[index].sprite.set_tiles(item_of(_npcs[index].who)->tiles_item(), facing);
     }
 
+    void npcs::wander(int player_x, int player_y, int talk_index)
+    {
+        if(! _map || _scripted || _suppress)
+        {
+            return;
+        }
+
+        bool moved = false;
+
+        for(int index = 0; index < _npcs.size(); ++index)
+        {
+            npc& n = _npcs[index];
+
+            if(n.route < 0 || n.placement < 0 || index == talk_index)
+            {
+                continue;
+            }
+
+            const npc_route& route = npc_routes[n.route];
+
+            if(! n.walking)
+            {
+                if(n.wait > 0)
+                {
+                    --n.wait;
+                    continue;
+                }
+
+                n.route_pos = (n.route_pos + 1) % route.count;
+                n.target_x = route.x[n.route_pos];
+                n.target_y = route.y[n.route_pos];
+                n.walking = true;
+                face_towards(index, n.target_x, n.target_y);
+            }
+
+            int dx = n.target_x - n.x;
+            int dy = n.target_y - n.y;
+            int length = bn::sqrt((dx * dx) + (dy * dy));
+            bn::fixed step = bn::fixed(0.7);
+
+            if(length <= step)
+            {
+                n.x = n.target_x;
+                n.y = n.target_y;
+                n.fx = n.x;
+                n.fy = n.y;
+                n.walking = false;
+                n.bob = 0;
+                _wander_seed = (_wander_seed * 1103515245u) + 12345u;
+                n.wait = 180 + int((_wander_seed >> 16) % 300);
+                _blockers[index] = { n.x, n.y };
+                moved = true;
+                continue;
+            }
+
+            bn::fixed nfx = n.fx + (bn::fixed(dx) * step / length);
+            bn::fixed nfy = n.fy + (bn::fixed(dy) * step / length);
+            int nx = nfx.round_integer();
+            int ny = nfy.round_integer();
+            bool blocked = _map->solid_around(nx, ny, 4);
+            int pdx = nx - player_x;
+            int pdy = ny - player_y;
+
+            if(pdx * pdx + pdy * pdy < 18 * 18)
+            {
+                // the player is in the way: wait (his position is checked against the NPC's next step)
+                continue;
+            }
+
+            for(int other = 0; other < _npcs.size() && ! blocked; ++other)
+            {
+                if(other != index)
+                {
+                    int odx = nx - _npcs[other].x;
+                    int ody = ny - _npcs[other].y;
+                    blocked = odx * odx + ody * ody < 14 * 14;
+                }
+            }
+
+            if(blocked)
+            {
+                // give up on this leg: wait, then try the next point
+                n.walking = false;
+                n.wait = 90;
+                continue;
+            }
+
+            n.fx = nfx;
+            n.fy = nfy;
+            n.x = nx;
+            n.y = ny;
+            ++n.bob;
+            _blockers[index] = { n.x, n.y };
+            n.sprite.set_bg_priority(_map->player_hidden(n.x, n.y, 12, 56) ? 3 : 2);
+            moved = true;
+        }
+
+        if(moved)
+        {
+            update(_last_cam_x, _last_cam_y);
+        }
+    }
+
     void npcs::reset_facings()
     {
         for(npc& n : _npcs)
@@ -266,7 +370,7 @@ namespace tl
 
         bn::sprite_ptr sprite = item->create_sprite(0, 0, facing);
         sprite.set_bg_priority(_map->player_hidden(x, y, 12, 56) ? 3 : 2);
-        _npcs.push_back(npc{ bn::move(sprite), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y) });
+        _npcs.push_back(npc{ bn::move(sprite), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y), -1, 0, 0, false });
         _blockers[_npcs.size() - 1] = { x, y };
         _apply_palettes();
         update(_last_cam_x, _last_cam_y);

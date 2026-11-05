@@ -681,6 +681,12 @@ namespace tl
                 {
                     chosen = index;     // headless tests take the job offer
                 }
+#ifdef TL_DEBUG_AUTO_GIFT
+                if(_options[index] == "Give a gift")
+                {
+                    chosen = index;     // headless gift tests
+                }
+#endif
             }
 #endif
             _choosing = false;
@@ -837,6 +843,7 @@ namespace tl
         _dislikes = 0;
         _used_mask = 0;
         _pending_leave = 0;
+        _gossip_done = false;
         _first_today = story().first_talk_today(npc, day);
         _box.open(npc, true, story().friendship(npc), npc);
         story().note_talk(npc, day);
@@ -851,6 +858,7 @@ namespace tl
         if(_first_today)
         {
             story().add_friendship(npc, 1);       // just for saying hi
+            story().add_social(2);
             _box.set_friendship(story().friendship(npc));
         }
 
@@ -874,11 +882,38 @@ namespace tl
 
         if(node < 0)
         {
-            _open_topic_menu();
+            if(! _try_gossip())
+            {
+                _open_topic_menu();
+            }
+
             return;
         }
 
         _show_node(node);
+    }
+
+    // Something the player said or gave earlier reaches this NPC (one game day later); plays once per conversation.
+    bool conversation::_try_gossip()
+    {
+        if(_gossip_done)
+        {
+            return false;
+        }
+
+        _gossip_done = true;
+        int rule = story().pending_gossip(_npc, _day);
+
+        if(rule < 0)
+        {
+            return false;
+        }
+
+        story().gossip_told(rule);
+        _phase = phase::script;
+        _after_script_talk = true;
+        _show_node(gossip_rules[rule].node);
+        return true;
     }
 
     void conversation::_show_node(int node)
@@ -976,7 +1011,11 @@ namespace tl
             else if(_small_talk && _after_script_talk)
             {
                 _after_script_talk = false;
-                _open_topic_menu();
+
+                if(! _try_gossip())
+                {
+                    _open_topic_menu();
+                }
             }
             else
             {
@@ -985,6 +1024,17 @@ namespace tl
             break;
 
         case phase::greeting:
+            if(! _try_gossip())
+            {
+                _open_topic_menu();
+            }
+            break;
+
+        case phase::gift_ask:
+            _open_gift_menu();
+            break;
+
+        case phase::gift_react:
             _open_topic_menu();
             break;
 
@@ -1067,7 +1117,15 @@ namespace tl
         if(_npc == int(npc_id::lou) && ! story().flag(story_flag::asked_lou_job))
         {
             _story_node = dlg::ask_lou_work;
-            topic_limit = 2;
+            --topic_limit;
+        }
+
+        // gifts: offered while the player carries one and has not given this NPC one today
+        bool gift_row = npc_infos[_npc].talks && story().items_total() > 0 && ! story().gift_given_today(_npc, _day);
+
+        if(gift_row)
+        {
+            --topic_limit;
         }
 
         while(chosen < topic_limit)
@@ -1100,10 +1158,21 @@ namespace tl
         }
 
         int rows = chosen;
+        _story_row = -1;
+        _gift_row = -1;
 
         if(_story_node >= 0)
         {
+            _story_row = rows;
             _topic_labels[rows] = "Ask about work";
+            _topic_views[rows] = _topic_labels[rows];
+            ++rows;
+        }
+
+        if(gift_row)
+        {
+            _gift_row = rows;
+            _topic_labels[rows] = "Give a gift";
             _topic_views[rows] = _topic_labels[rows];
             ++rows;
         }
@@ -1112,6 +1181,66 @@ namespace tl
         _topic_views[rows] = _topic_labels[rows];
         _box.choose(_topic_views, rows + 1);
         _step = step::topic_menu;
+    }
+
+    // One page of up to 3 owned gifts; the last row is "More..." (next page) or "Never mind".
+    void conversation::_open_gift_menu()
+    {
+        int owned[gift_count];
+        int count = 0;
+
+        for(int gift = 0; gift < gift_count; ++gift)
+        {
+            if(story().item_count(gift) > 0)
+            {
+                owned[count++] = gift;
+            }
+        }
+
+        if(_gift_page * 3 >= count)
+        {
+            _gift_page = 0;
+        }
+
+        int start = _gift_page * 3;
+        _gift_shown = count - start < 3 ? count - start : 3;
+
+        for(int index = 0; index < _gift_shown; ++index)
+        {
+            int gift = owned[start + index];
+            _gift_ids[index] = gift;
+            _gift_labels[index] = gift_defs[gift].name;
+            _gift_labels[index].append(" x");
+            _gift_labels[index].append(bn::to_string<4>(story().item_count(gift)));
+            _gift_views[index] = _gift_labels[index];
+        }
+
+        _gift_labels[_gift_shown] = start + 3 < count ? "More..." : "Never mind";
+        _gift_views[_gift_shown] = _gift_labels[_gift_shown];
+        _box.choose(_gift_views, _gift_shown + 1);
+        _step = step::gift_pick;
+    }
+
+    // Favourite +10, likes +4, neutral +1, dislikes -3 friendship (docs/features_backlog.md); one gift per NPC and day.
+    void conversation::_give_gift(int gift)
+    {
+        story_state& s = story();
+        char kind = npc_infos[_npc].gifts[gift];
+        int delta = kind == 'F' ? 10 : (kind == 'L' ? 4 : (kind == 'D' ? -3 : 1));
+        int node = kind == 'F' ? dialogue_gift_fav_nodes[_npc] : -1;
+
+        if(node < 0)
+        {
+            node = kind == 'F' ? dlg::gift_fav : (kind == 'L' ? dlg::gift_like : (kind == 'D' ? dlg::gift_dislike : dlg::gift_neutral));
+        }
+
+        s.take_item(gift);
+        s.note_gift(_npc, _day);
+        s.add_friendship(_npc, delta);
+        s.add_social(kind == 'F' ? 8 : (kind == 'D' ? 1 : 5));
+        s.note_gossip_gift(_npc, gift, _day);
+        _phase = phase::gift_react;
+        _show_node(node);       // also moves the meter
     }
 
     void conversation::_begin_topic(int topic)
@@ -1170,6 +1299,8 @@ namespace tl
             s.note_gain(_npc, _day, delta);
         }
 
+        story().add_social(kind == 'L' ? 5 : (kind == 'D' ? 1 : 3));
+        story().note_gossip_topic(_npc, _topic, _day);
         _answer_expr = kind == 'D' ? (delta <= -6 ? int(expr_angry) : int(expr_sad)) : (delta >= 4 ? int(expr_happy) : 0);
         s.note_topic(_npc, _topic, _day);
         ++_topics_done;
@@ -1253,11 +1384,17 @@ namespace tl
 
                 if(choice >= 0)
                 {
-                    if(_story_node >= 0 && choice == _menu_topics)
+                    if(choice == _story_row && _story_node >= 0)
                     {
                         _phase = phase::script;
                         _after_script_talk = true;
                         _show_node(_story_node);
+                    }
+                    else if(choice == _gift_row)
+                    {
+                        _gift_page = 0;
+                        _phase = phase::gift_ask;
+                        _show_node(dlg::gift_ask);
                     }
                     else if(choice >= _menu_topics)
                     {
@@ -1276,6 +1413,29 @@ namespace tl
                     else
                     {
                         _begin_topic(_topic_ids[choice]);
+                    }
+                }
+            }
+            break;
+
+        case step::gift_pick:
+            {
+                int choice = _box.update_choice();
+
+                if(choice >= 0)
+                {
+                    if(choice < _gift_shown)
+                    {
+                        _give_gift(_gift_ids[choice]);
+                    }
+                    else if(_gift_labels[choice] == "More...")
+                    {
+                        ++_gift_page;
+                        _open_gift_menu();
+                    }
+                    else
+                    {
+                        _open_topic_menu();         // Never mind
                     }
                 }
             }

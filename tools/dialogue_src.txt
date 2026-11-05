@@ -424,3 +424,55 @@ node bark_victor
 VICTOR| Cashiers? Shelves? People? So last century.
 node bark_robot
 VALET| Have a nice day. Next customer.
+
+# ---------------------------------------------------------------- gifts (s63): generic reactions, plus a favourite line per NPC
+node gift_ask
+SYSTEM| Which gift?
+node gift_fav
+NPC:happy| This is exactly what I wanted! How did you know? Thank you, {NAME}!
+node gift_like
+NPC:happy| Oh, that is nice of you. Thank you!
+node gift_neutral
+NPC| Oh. Thanks, I suppose. That is kind.
+node gift_dislike
+NPC:sad| Hm. Not really my thing... but the thought counts.
+node gift_none
+SYSTEM| You have nothing to give. Gifts are sold at the market and the diner.
+node gift_done
+SYSTEM| You already gave a gift today.
+node gift_fav_mia
+MIA:happy| Chocolate! You remembered! I will hide it from Rosa.
+node gift_fav_rosa
+ROSA:happy| Flowers, for an old stallkeeper? Well! Put them where I can see them, dear.
+node gift_fav_dex
+DEX:happy| Cookies! Bro, you get me. Respect.
+node gift_fav_pimm
+PIMM:happy| The paper! Splendid. Nobody brings a man the paper any more.
+node gift_fav_lou
+LOU:happy| Hot sauce! The good stuff! Now we are talking, hah!
+
+# ---------------------------------------------------------------- gossip (s63): told one game day after you said or did something
+node gossip_complain_mia
+LOU:angry| Heard you have been grumbling about my coffee. To Mia, of all people.
+! friend lou -3
+node gossip_compliment_mia
+ROSA| Mia says you have a kind word for everybody. Keep it up, {NAME}.
+! friend rosa 3
+node gossip_joke_lou
+MIA:happy| Lou is telling everyone your joke. It was terrible. I laughed anyway.
+! friend mia 2
+node gossip_gossip_pimm
+ROSA| Pimm says you like to talk. Careful. He tells everyone everything.
+! friend rosa 1
+node gossip_flowers_rosa
+MIA:happy| Flowers for Rosa? She has not stopped smiling all morning.
+! friend mia 3
+node gossip_choc_mia
+PIMM| Chocolate for young Mia, eh? Good for you. Kindness is scarce.
+! friend pimm 2
+node gossip_music_rosa
+LOU| Rosa says you like music. I should put a record on in here sometime.
+! friend lou 2
+node gossip_work_lou
+PIMM:happy| Lou says you are keen on work. That is a rare thing these days.
+! friend pimm 2

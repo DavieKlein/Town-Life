@@ -60,7 +60,15 @@ namespace tl
         uint8_t deposit_bottles = 0;
         uint8_t deposit_credit = 0;             // 0 or 1
         uint8_t deposit_spot[32] = {};          // per pickup spot: 0 = none, kind (1 can, 2 bottle) | variant << 2
-        uint8_t spare[28] = {};
+        // s63 (carved out of the spare bytes): Social need, gift inventory, gifts given, gossip state, scratch cards
+        uint8_t social_valid = 0;               // 1 once `social` is valid (old saves start at 60)
+        uint8_t social = 0;
+        uint8_t items[5] = {};                  // gift_count
+        uint8_t gift_day[talk_slots] = {};      // day (mod 256) of the last gift to each NPC
+        uint8_t gossip[8] = {};                 // gossip_count
+        uint8_t scratch_day = 0;
+        uint8_t scratch_count = 0;
+        uint8_t spare[3] = {};
         // story (version 2): small talk memory per NPC (per topic: day mod 64 << 2 | uses), last talk day, daily gain,
         // City Coins, finished missions
         uint8_t topic_mem[talk_slots][8] = {};

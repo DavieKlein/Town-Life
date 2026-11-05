@@ -25,6 +25,7 @@ how fast Fun fills); the 4th element (radius) is 0 for everything but the founta
   ("wardrobe", x, y, reach)       info text.
   The room's entries are generated from the furniture catalog (tools/furniture.py, scene.ROOM_FURNITURE + use_point()).
   ("crate", x, y)                 storeroom crate: "Take the rye loaf" while Mr. Pimm waits (story).
+  ("kiosk", x, y)                 newspaper boxes at the bus stop: scratch cards ($1, 3 a day) and newspapers (gift).
   ("gate", x, y)                  VaultTech staff gate in front of the stairs (only usable after the firing): info text.
   ("seat", x, y, reach)           indoor chair / sofa / booth bench; you sit facing +y (screen down-left).
   ("seat_x", x, y, reach)         same but facing +x (screen down-right: the sit sprite is mirrored).
@@ -55,6 +56,7 @@ INTERACTABLES = {
         ("bench", 48.3, 38.0), ("bench", 57.7, 38.0), ("bench", 48.3, 45.0), ("bench", 57.7, 45.0),
         ("fountain", 53.0, 41.0, 2.2),
         # trash cans along the avenue (scene.py city_centre)
+        ("kiosk", 45.5, 32.4),          # the two newspaper boxes at the bus stop
         ("bin", 5.0, 21.1), ("bin", 17.0, 21.1), ("bin", 53.0, 21.1), ("bin", 68.0, 21.1), ("bin", 38.5, 31.0),
     ],
     "corner_market": [

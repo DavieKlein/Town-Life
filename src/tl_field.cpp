@@ -461,7 +461,14 @@ namespace tl
             if(_act.gain[need] != 0)
             {
                 bn::fixed target = _act.gain[need] * _act.done / _act.frames;
-                _needs.add(need, target - _act.applied[need]);
+                bn::fixed change = target - _act.applied[need];
+
+                if(need == needs::fun && change > 0 && _needs.social < 20)
+                {
+                    change /= 2;        // lonely: Fun comes slower
+                }
+
+                _needs.add(need, change);
                 _act.applied[need] = target;
             }
         }
@@ -766,6 +773,10 @@ namespace tl
             }
             break;
 
+        case interactable_kind::kiosk:
+            _open_kiosk(*best);
+            break;
+
         case interactable_kind::seat:
         case interactable_kind::seat_x:
             _menu.open("Seat", seat_options, 1);
@@ -850,7 +861,7 @@ namespace tl
         _menu_mode = menu_mode::shop;
 
         // The shop menu also offers a chat with the person behind the counter (if somebody is in reach), and at the diner the job.
-        static bn::string_view options[5];
+        static bn::string_view options[menu::max_options];
         static bn::string_view voucher_label = "Coffee (voucher)";
         static bn::string_view shift_label = "Work a shift";
         bool market = target.kind == interactable_kind::shop_market;
@@ -876,16 +887,27 @@ namespace tl
 
         int d2 = 0;
         _shop_npc = _npcs.find(_player.x(), _player.y(), 48, d2);
+        _shop_talk_index = -1;
+        _shop_gift_index = -1;
+        int limit = (cold ? menu::max_options : menu::max_options - 1);
 
-        if(_shop_npc >= 0 && count < 5)
+        if(_shop_npc >= 0 && count < limit)
         {
             _talk_label = "Talk to ";
             _talk_label.append(npc_infos[int(_npcs.id_of(_shop_npc))].name);
+            _shop_talk_index = count;
             options[count++] = _talk_label;
         }
         else
         {
             _shop_npc = -1;
+        }
+
+        if(! cold)
+        {
+            static bn::string_view gifts_label = "Gifts";
+            _shop_gift_index = count;
+            options[count++] = gifts_label;
         }
 
         _shop_items = market ? (cold ? 5 : 4) : 3;
@@ -904,6 +926,165 @@ namespace tl
         int count = line_c[0] ? 3 : (line_b[0] ? 2 : 1);
         _menu.open_info(heading, lines, count);
         _menu_mode = menu_mode::info;
+    }
+
+    // Gifts sold per shop (docs/features_backlog.md): gift index into gift_defs (Flowers, Chocolate, Hot sauce, Cookies, Newspaper).
+    void field::_open_gift_shop(const interactable& target)
+    {
+        static constexpr int market_gifts[] = { 0, 1, 3, 4 };
+        static constexpr int diner_gifts[] = { 2, 3 };
+        static bn::string_view options[4];
+        bool market = target.kind == interactable_kind::shop_market;
+        const int* ids = market ? market_gifts : diner_gifts;
+        _gift_offer = market ? 4 : 2;
+
+        for(int index = 0; index < _gift_offer; ++index)
+        {
+            _gift_ids[index] = ids[index];
+            _gift_labels[index] = gift_defs[ids[index]].name;
+            _gift_labels[index].append(" $");
+            _gift_labels[index].append(bn::to_string<4>(gift_defs[ids[index]].price));
+            options[index] = _gift_labels[index];
+        }
+
+        _menu_target = &target;
+        _menu_mode = menu_mode::gifts;
+        _menu.open("Gifts", options, _gift_offer);
+    }
+
+    void field::_buy_gift(const interactable& target, int choice)
+    {
+        _shop_return = &target;
+
+        if(choice < 0 || choice >= _gift_offer)
+        {
+            _shop_return = nullptr;
+            _open_shop(target);
+            return;
+        }
+
+        int gift = _gift_ids[choice];
+
+        if(_money < gift_defs[gift].price)
+        {
+            _show_info("Gifts", "Not enough", "money.", "");
+            return;
+        }
+
+        if(story().item_count(gift) >= 9)
+        {
+            _show_info("Gifts", "You cannot carry", "any more of those.", "");
+            return;
+        }
+
+        _money -= gift_defs[gift].price;
+        story().add_item(gift);
+        _redraw_hud_text();
+        _info_line_a = "You bought ";
+        _info_line_a.append(gift_defs[gift].name);
+        _info_line_a.append(".");
+        _show_info("Gifts", _info_line_a.c_str(), "Give it in a chat:", "\"Give a gift\".");
+    }
+
+    void field::_open_kiosk(const interactable& target)
+    {
+        static constexpr bn::string_view options[] = { "Scratch card $1", "Newspaper $1" };
+        _menu_target = &target;
+        _menu_mode = menu_mode::kiosk;
+        _menu.open("Newsagent", options, 2);
+    }
+
+    void field::_kiosk_choice(const interactable& target, int choice)
+    {
+        _shop_return = nullptr;
+
+        if(choice == 0)
+        {
+            _scratch_card(target);
+        }
+        else if(choice == 1)
+        {
+            if(_money < 1)
+            {
+                _show_info("Newsagent", "Not enough", "money.", "");
+            }
+            else if(story().item_count(4) >= 9)
+            {
+                _show_info("Newsagent", "You cannot carry", "any more papers.", "");
+            }
+            else
+            {
+                _money -= 1;
+                story().add_item(4);
+                _redraw_hud_text();
+                _show_info("Newsagent", "You bought a", "newspaper.", "A gift for Mr. Pimm?");
+            }
+        }
+    }
+
+    // Scratch card: $1, three symbols; 70 % nothing, 20 % $2, 8 % $5, 2 % $20; at most 3 a day.
+    void field::_scratch_card(const interactable&)
+    {
+        if(story().scratch_left(_day) <= 0)
+        {
+            _show_info("Scratch card", "Sold out for today.", "Come back tomorrow.", "");
+            return;
+        }
+
+        if(_money < 1)
+        {
+            _show_info("Scratch card", "Not enough", "money.", "");
+            return;
+        }
+
+        _money -= 1;
+        story().note_scratch(_day);
+        int roll = _rng.get_unbiased_int(100);
+        int prize = roll < 70 ? 0 : (roll < 90 ? 2 : (roll < 98 ? 5 : 20));
+        static constexpr char symbols[] = { '*', '$', '7', '#', '+' };
+        int win_symbol = prize == 2 ? 0 : (prize == 5 ? 1 : 2);
+        char s[3];
+
+        if(prize)
+        {
+            s[0] = s[1] = s[2] = symbols[win_symbol];
+        }
+        else
+        {
+            s[0] = symbols[_rng.get_unbiased_int(5)];
+            s[1] = symbols[_rng.get_unbiased_int(5)];
+            s[2] = symbols[_rng.get_unbiased_int(5)];
+
+            if(s[0] == s[1] && s[1] == s[2])
+            {
+                s[2] = symbols[(win_symbol + 3) % 5 == 0 ? 1 : 3];
+            }
+        }
+
+        _info_line_a = "[ ";
+        _info_line_a.append(s[0]);
+        _info_line_a.append(" ]  [ ");
+        _info_line_a.append(s[1]);
+        _info_line_a.append(" ]  [ ");
+        _info_line_a.append(s[2]);
+        _info_line_a.append(" ]");
+
+        if(prize)
+        {
+            _money += prize;
+            _info_line_b = "Three of a kind!";
+            _info_line_c = "You win $";
+            _info_line_c.append(bn::to_string<4>(prize));
+            _info_line_c.append("!");
+        }
+        else
+        {
+            _info_line_b = "No luck this time.";
+            _info_line_c = "";
+        }
+
+        _redraw_hud_text();
+        _show_info("Scratch card", _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
     }
 
     void field::_buy(const interactable& target, int choice)
@@ -1177,8 +1358,26 @@ namespace tl
 
         _menu_target = nullptr;
 
+        if(target && choice < 0 && mode == menu_mode::gifts)
+        {
+            _open_shop(*target);        // B in the gift list goes back to the shop
+            return;
+        }
+
         if(! target || choice < 0)
         {
+            return;
+        }
+
+        if(mode == menu_mode::gifts)
+        {
+            _buy_gift(*target, choice);
+            return;
+        }
+
+        if(mode == menu_mode::kiosk)
+        {
+            _kiosk_choice(*target, choice);
             return;
         }
 
@@ -1192,9 +1391,15 @@ namespace tl
                 return;
             }
 
+            if(choice == _shop_gift_index)
+            {
+                _open_gift_shop(*target);
+                return;
+            }
+
             if(choice >= items)
             {
-                if(_shop_npc >= 0 && _shop_npc < _npcs.count())
+                if(choice == _shop_talk_index && _shop_npc >= 0 && _shop_npc < _npcs.count())
                 {
                     _start_conversation(_shop_npc);
                 }
@@ -1524,6 +1729,7 @@ namespace tl
         _npcs.reset_facings();
         _set_hud_hidden(false);
         _money += story().take_money();
+        _needs.add_social(story().take_social());
         _redraw_hud_text();
         _npcs.refresh(_day, _minutes);
         _player.set_blockers(_npcs.blockers(), _npcs.count());
@@ -1742,6 +1948,8 @@ namespace tl
                     break;
                 }
             }
+
+            _npcs.wander(_player.x(), _player.y(), -1);
 
             if(bn::keypad::start_pressed() && _can_pause())
             {

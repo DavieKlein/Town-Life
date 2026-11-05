@@ -44,6 +44,7 @@ namespace tl
             info.need_values[need] = _needs.values[need].round_integer();
         }
 
+        info.social = _needs.social.round_integer();
         info.bag = _deposit.bag_total();
         info.credit = _deposit.credit;
         info.coins = story().coins();
@@ -279,6 +280,8 @@ namespace tl
         }
 
         out.bladder_boost = int16_t(_needs.bladder_boost);
+        out.social_valid = 1;
+        out.social = uint8_t(_needs.social.round_integer());
 
         for(int index = 0; index < bin_slots && index < maps_count * 16; ++index)
         {
@@ -314,6 +317,7 @@ namespace tl
         }
 
         _needs.bladder_boost = in.bladder_boost;
+        _needs.social = in.social_valid ? bn::fixed(in.social > 100 ? 100 : in.social) : bn::fixed(60);
 
         for(int index = 0; index < maps_count * 16; ++index)
         {

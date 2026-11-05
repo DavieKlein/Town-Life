@@ -9,7 +9,7 @@ namespace tl
 {
     namespace
     {
-        constexpr bn::string_view need_names[] = { "Hunger", "Energy", "Hygiene", "Fun", "Bladder" };
+        constexpr bn::string_view need_names[] = { "Hunger", "Energy", "Hygiene", "Fun", "Bladder", "Social" };
         constexpr bn::string_view pause_options[] = { "Resume", "Mission log", "Save game", "Quit to title" };
 
         constexpr int dialog_w = 212;
@@ -158,14 +158,15 @@ namespace tl
         _labels.emplace_back();
         _labels.back().set_right(ui::font11, 228, 21, money, ui::role::money);
 
-        for(int need = 0; need < 5; ++need)
+        for(int need = 0; need < 6; ++need)
         {
-            int row = 32 + (need * 12);
+            int row = 31 + (need * 11);
+            int value = need < 5 ? info.need_values[need] : info.social;
             add(ui::font9, 12, row + 8, need_names[need], ui::role::text);
             _labels.emplace_back();
-            _labels.back().set_right(ui::font9, 128, row + 8, bn::to_string<8>(info.need_values[need]),
+            _labels.back().set_right(ui::font9, 128, row + 8, bn::to_string<8>(value),
                                      ui::role::text);
-            int level = info.need_values[need] * (bar_levels - 1) / 100;
+            int level = value * (bar_levels - 1) / 100;
             bn::sprite_ptr bar = bn::sprite_items::need_bar.create_sprite(70 + 16 - 120, row + 1 + 4 - 80, level);
             bar.set_bg_priority(0);
             _bars.push_back(bn::move(bar));

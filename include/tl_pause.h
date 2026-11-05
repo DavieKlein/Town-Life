@@ -54,6 +54,7 @@ namespace tl
         int minutes = 0;                // time of day
         int money = 0;
         int need_values[5] = {};        // Hunger, Energy, Hygiene, Fun, Bladder, 0..100
+        int social = 0;                 // Social need 0..100 (6th line)
         int bag = 0;                    // cans + bottles in the bag (max 10)
         int credit = 0;                 // deposit credit 0 or 1 (of 2)
         int coins = 0;                  // City Coins
@@ -88,7 +89,7 @@ namespace tl
         ui::bar _bar;
         bn::vector<ui::label, 20> _labels;
         ui::label _option_labels[options_count];
-        bn::vector<bn::sprite_ptr, 5> _bars;
+        bn::vector<bn::sprite_ptr, 6> _bars;
         ui::hint_row _hint;
         int _selected = 0;
 

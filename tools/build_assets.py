@@ -921,14 +921,24 @@ def write_cast_header():
             "    struct npc_placement", "    {", "        npc_id who;", "        map_id map;", "        uint8_t facing;",
             "        uint8_t day_min;", "        uint8_t day_max;", "        int16_t x;", "        int16_t y;",
             "        uint16_t from_minute;", "        uint16_t to_minute;", "        int8_t flag_on;      // story flag that must be set (-1 = none)",
-            "        int8_t flag_off;     // story flag that must be clear (-1 = none)", "    };", "",
-            "    constexpr npc_placement npc_placements[] = {"]
+            "        int8_t flag_off;     // story flag that must be clear (-1 = none)",
+            "        int8_t route;        // index in npc_routes (-1 = stands still)", "    };", "",
+            "    // Wander routes: up to 4 points (world units) visited in a loop; the NPC starts at its placement.",
+            "    struct npc_route", "    {", "        int count;", "        int16_t x[4];", "        int16_t y[4];", "    };", "",
+            "    constexpr npc_route npc_routes[] = {"]
+    names = list(cast.ROUTES)
+    for n in names:
+        pts = cast.ROUTES[n]
+        assert 2 <= len(pts) <= 4
+        pad = pts + [(0, 0)] * (4 - len(pts))
+        out.append(f"        {{ {len(pts)}, {{ {', '.join(str(int(p[0] * 16)) for p in pad)} }}, {{ {', '.join(str(int(p[1] * 16)) for p in pad)} }} }},   // {n}")
+    out += ["    };", "", "    constexpr npc_placement npc_placements[] = {"]
     for row in cast.PLACEMENTS:
         (who, mp, x, y, face, t0, t1, d0, d1) = row[:9]
         fon, foff = (row[9] if len(row) > 9 else None), (row[10] if len(row) > 10 else None)
         out.append(f"        {{ npc_id::{who}, map_id::{mp}, {FACINGS.index(face)}, {d0}, {d1}, {int(x * 16)}, {int(y * 16)}, "
                    f"{mins(t0)}, {mins(t1)}, {story_data.FLAGS.index(fon) if fon else -1}, "
-                   f"{story_data.FLAGS.index(foff) if foff else -1} }},")
+                   f"{story_data.FLAGS.index(foff) if foff else -1}, {names.index(row[11]) if len(row) > 11 and row[11] else -1} }},")
     out += ["    };", "", "    constexpr int npc_placements_count = int(sizeof(npc_placements) / sizeof(npc_placement));",
             "}", "", "#endif", ""]
     write_text(os.path.join(ROOT, "include", "tl_cast_data.h"), "\n".join(out))

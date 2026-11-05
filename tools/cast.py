@@ -71,6 +71,14 @@ IDS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "dex_vault", "victor", "
 # Placements: (npc, map, x, y, facing, from, to, first day, last day) - cells, 24 h clock, days 1..255.
 # Daily whereabouts follow docs/story_chapter1.md section 1.11. Rosa, Dex, Victor and Valet only appear in story scenes
 # later, so they are not placed freely yet. Facing names: s, sw, w, nw, n, ne, e, se ("sw" looks towards +y).
+# Wander routes (s63): an NPC with a route paces between these points (cells, up to 4, looping) while the placement is active, waiting
+# a few seconds at each; it stops when you talk to it and waits for the player to pass. Points must be walkable (checked at runtime).
+ROUTES = {
+    "pimm_pond": [(20.0, 42.2), (24.0, 42.2), (24.0, 40.2), (18.5, 40.2)],       # City Park, round the pond path
+    "pimm_library": [(4.9, 7.4), (4.9, 4.4), (3.2, 4.4), (3.2, 7.4)],            # community centre, between the shelves
+    "mia_diner": [(9.3, 4.7), (9.3, 7.6)],                                       # diner, along the east wall of the dining room
+}
+
 PLACEMENTS = [
     # Day 1 at the old Corner Market: Rosa and Mia work from 7:00 once the player is awake, until the firing (flag vault_scene).
     # Dex is only placed by the cutscenes (briefing, firing): sprite VRAM allows only ~2 extra actors beside a 128 px dialogue portrait.
@@ -80,11 +88,11 @@ PLACEMENTS = [
     ("pimm", "corner_market", 7.0, 6.9, "ne", "9:00", "13:00", 1, 1, "pimm_scene", "pimm_left"),
     # VaultMart: Dex in the grey blazer paces the aisles (a static figure for now), nobody at the checkout
     ("dex_vault", "vaultmart", 9.6, 11.4, "sw", "6:00", "22:00", 1, 255, "vault_scene", None),
-    ("mia", "diner", 9.3, 4.7, "sw", "7:00", "12:00", 2, 255),              # waitress shift
+    ("mia", "diner", 9.3, 4.7, "sw", "7:00", "12:00", 2, 255, None, None, "mia_diner"),              # waitress shift
     ("mia", "city_centre", 50.4, 38.9, "w", "12:00", "12:30", 2, 255),     # lunch break at the fountain square bench
-    ("mia", "diner", 9.3, 4.7, "sw", "12:30", "15:00", 2, 255),
+    ("mia", "diner", 9.3, 4.7, "sw", "12:30", "15:00", 2, 255, None, None, "mia_diner"),
     ("lou", "diner", 6.4, 2.6, "sw", "6:00", "22:00", 1, 255),             # behind the counter (counter y 3.2..4.1)
-    ("pimm", "community_centre", 4.9, 7.4, "ne", "13:00", "16:00", 1, 1),   # library, beside the reading table (Day 1 after the shop)
-    ("pimm", "community_centre", 4.9, 7.4, "ne", "8:00", "16:00", 2, 255),
-    ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "19:30", 1, 255),   # City Park pond, feeding the pigeons
+    ("pimm", "community_centre", 4.9, 7.4, "ne", "13:00", "16:00", 1, 1, None, None, "pimm_library"),   # library, beside the reading table (Day 1 after the shop)
+    ("pimm", "community_centre", 4.9, 7.4, "ne", "8:00", "16:00", 2, 255, None, None, "pimm_library"),
+    ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "19:30", 1, 255, None, None, "pimm_pond"),   # City Park pond, feeding the pigeons
 ]

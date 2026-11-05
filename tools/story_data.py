@@ -28,16 +28,32 @@ TOPIC_OPENERS = ["Nice weather today.", "How's work going?", "Heard any good mus
 # ---------------------------------------------------------------------------------------------------- NPC talk profiles
 # id: (display name, base mood: neutral|good|grumpy, likes per topic: L like / N neutral / D dislike, start friendship)
 NPC_INFO = {
-    "mia": ("Mia", "neutral", "NDLNLDLN", 40),
-    "rosa": ("Rosa", "neutral", "NLLDNLND", 30),
-    "dex": ("Dex", "neutral", "NLDLNLND", 5),
-    "pimm": ("Mr. Pimm", "neutral", "LLNNDNLD", 25),
-    "lou": ("Big Lou", "neutral", "NLNLLNND", 0),
-    "halloran": ("Halloran", "neutral", "LLNLDDND", 0),
-    "dex_vault": ("Dex", "neutral", "NLDLNLND", 0),
-    "victor": ("Victor Vault", "neutral", "NNNNNNNN", 0),
-    "robot": ("Valet", "neutral", "NNNNNNNN", 0),
+    "mia": ("Mia", "neutral", "NDLNLDLN", 40, "NFDLN"),
+    "rosa": ("Rosa", "neutral", "NLLDNLND", 30, "FLDLN"),
+    "dex": ("Dex", "neutral", "NLDLNLND", 5, "NLLFN"),
+    "pimm": ("Mr. Pimm", "neutral", "LLNNDNLD", 25, "LNDLF"),
+    "lou": ("Big Lou", "neutral", "NLNLLNND", 0, "NLFLD"),
+    "halloran": ("Halloran", "neutral", "LLNLDDND", 0, "NNNNN"),
+    "dex_vault": ("Dex", "neutral", "NLDLNLND", 0, "NNNNN"),
+    "victor": ("Victor Vault", "neutral", "NNNNNNNN", 0, "NNNNN"),
+    "robot": ("Valet", "neutral", "NNNNNNNN", 0, "NNNNN"),
 }
+# Gifts (docs/features_backlog.md): name, price. The NPC string above has one letter per gift in this order:
+# F favourite (+10 friendship), L likes (+4), N neutral (+1), D dislikes (-3). One gift per NPC and day.
+GIFTS = [("Flowers", 3), ("Chocolate", 2), ("Hot sauce", 2), ("Cookies", 2), ("Newspaper", 1)]
+# Gossip: what the player said or did is remembered and told to somebody else, one game day later.
+# (id, trigger, hearer, dialogue node): trigger = ("topic", npc, topic) after that small-talk topic, or ("gift", npc, gift index)
+GOSSIP = [
+    ("complain_mia", ("topic", "mia", "complain"), "lou", "gossip_complain_mia"),
+    ("compliment_mia", ("topic", "mia", "compliment"), "rosa", "gossip_compliment_mia"),
+    ("joke_lou", ("topic", "lou", "joke"), "mia", "gossip_joke_lou"),
+    ("gossip_pimm", ("topic", "pimm", "gossip"), "rosa", "gossip_gossip_pimm"),
+    ("flowers_rosa", ("gift", "rosa", "Flowers"), "mia", "gossip_flowers_rosa"),
+    ("choc_mia", ("gift", "mia", "Chocolate"), "pimm", "gossip_choc_mia"),
+    ("music_rosa", ("topic", "rosa", "music"), "lou", "gossip_music_rosa"),
+    ("work_lou", ("topic", "lou", "work"), "pimm", "gossip_work_lou"),
+]
+assert len(GOSSIP) <= 8
 TALKERS = ["mia", "rosa", "dex", "pimm", "lou", "halloran"]       # have small talk
 
 # ---------------------------------------------------------------------------------------------------- story flags
@@ -242,12 +258,25 @@ def main():
     c.append("")
     c.append("    const npc_info npc_infos[npc_count] = {")
     for n in cast.IDS:
-        name, mood, likes, friend = NPC_INFO[n]
-        c.append(f"        {{ {cstr(name)}, npc_mood::{mood}, {cstr(likes)}, {friend}, {'true' if n in TALKERS else 'false'} }},")
+        name, mood, likes, friend, gifts = NPC_INFO[n]
+        c.append(f"        {{ {cstr(name)}, npc_mood::{mood}, {cstr(likes)}, {friend}, {'true' if n in TALKERS else 'false'}, {cstr(gifts)} }},")
     c.append("    };")
     c.append("")
     c.append("    const char* const topic_names[topic_count] = { " + ", ".join(cstr(t) for t in TOPIC_LABELS) + " };")
     c.append("    const char* const topic_openers[topic_count] = { " + ", ".join(cstr(t) for t in TOPIC_OPENERS) + " };")
+    c.append("")
+    c.append("    const gift_def gift_defs[gift_count] = {")
+    for (name, price) in GIFTS:
+        c.append(f"        {{ {cstr(name)}, {price} }},")
+    c.append("    };")
+    c.append("    const int16_t dialogue_gift_fav_nodes[npc_count] = { " + ", ".join(str(look(f"gift_fav_{n}")) for n in cast.IDS) + " };")
+    c.append("    const gossip_rule gossip_rules[gossip_count] = {")
+    for (gid, trig, hearer, node) in GOSSIP:
+        assert node in first, node
+        kind, npc, arg = trig
+        argi = TOPICS.index(arg) if kind == "topic" else [g[0] for g in GIFTS].index(arg)
+        c.append(f"        {{ {0 if kind == 'topic' else 1}, {cast.IDS.index(npc)}, {argi}, {cast.IDS.index(hearer)}, {first[node]} }},")
+    c.append("    };")
     c.append("")
     code_index = {m[0]: i + 1 for i, m in enumerate(MISSIONS)}
     c.append("    const mission_def mission_defs[mission_count] = {")

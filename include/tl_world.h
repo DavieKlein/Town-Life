@@ -100,7 +100,8 @@ namespace tl
         window,         // look outside (info text)
         wardrobe,       // info text
         gate,           // VaultTech staff gate at the foot of the storeroom stairs (after the firing)
-        crate           // storeroom crate with Mr. Pimm's rye loaf (Day 1)
+        crate,          // storeroom crate with Mr. Pimm's rye loaf (Day 1)
+        kiosk           // newspaper boxes at the bus stop: scratch cards and newspapers (s63)
     };
 
     struct interactable

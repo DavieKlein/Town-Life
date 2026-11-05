@@ -428,6 +428,7 @@ namespace
         { interactable_kind::bench, 772, 720, 0, 0 },
         { interactable_kind::bench, 923, 720, 0, 0 },
         { interactable_kind::fountain, 848, 656, 35, 0 },
+        { interactable_kind::kiosk, 728, 518, 0, 0 },
         { interactable_kind::bin, 80, 337, 0, 0 },
         { interactable_kind::bin, 272, 337, 0, 0 },
         { interactable_kind::bin, 848, 337, 0, 0 },

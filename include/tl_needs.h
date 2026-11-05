@@ -23,6 +23,17 @@ namespace tl
         // Change per game minute when just walking around (tunable).
         static constexpr bn::fixed decay[count] = { -0.07, -0.05, -0.04, -0.06, -0.1 };
 
+        // Social (s63): talking, small talk and gifts fill it, it decays slowly. It is NOT one of the five HUD bars yet (a sixth slot
+        // needs the approved HUD proposal): shown as a line in the pause screen. Below 20 (lonely) Fun gains are halved.
+        bn::fixed social = 60;
+        static constexpr bn::fixed social_decay = -0.05;
+
+        void add_social(bn::fixed amount)
+        {
+            bn::fixed v = social + amount;
+            social = v < 0 ? bn::fixed(0) : (v > 100 ? bn::fixed(100) : v);
+        }
+
         // After drinking the bladder fills faster for a while (game minutes left).
         int bladder_boost = 0;
 
@@ -45,6 +56,8 @@ namespace tl
 
                 add(need, change);
             }
+
+            add_social(social_decay);
 
             if(bladder_boost > 0)
             {

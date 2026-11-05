@@ -54,6 +54,14 @@ namespace tl
             { dlg_op::set_flag, 14, 1 },
             { dlg_op::set_flag, 42, 1 },
             { dlg_op::friend_delta, 0, 2 },
+            { dlg_op::friend_delta, 4, -3 },
+            { dlg_op::friend_delta, 1, 3 },
+            { dlg_op::friend_delta, 0, 2 },
+            { dlg_op::friend_delta, 1, 1 },
+            { dlg_op::friend_delta, 0, 3 },
+            { dlg_op::friend_delta, 3, 2 },
+            { dlg_op::friend_delta, 4, 2 },
+            { dlg_op::friend_delta, 3, 2 },
         };
         constexpr dlg_choice all_choices[] = {
             { "Maybe. Tell me more.", 30, 0, 2 },
@@ -264,11 +272,31 @@ namespace tl
             { "Not now, buddy. Efficiency audit. I'm very efficient.", 6, 0, 46, -1, 0, 18, 0, -1, 0, -1 },
             { "Cashiers? Shelves? People? So last century.", 7, 0, 46, -1, 0, 18, 0, -1, 0, -1 },
             { "Have a nice day. Next customer.", 8, 0, 46, -1, 0, 18, 0, -1, 0, -1 },
+            { "Which gift?", 254, 0, 46, -1, 0, 18, 0, -1, 0, -1 },
+            { "This is exactly what I wanted! How did you know? Thank you, {NAME}!", 252, 0, 46, -1, 0, 18, 1, -1, 0, -1 },
+            { "Oh, that is nice of you. Thank you!", 252, 0, 46, -1, 0, 18, 1, -1, 0, -1 },
+            { "Oh. Thanks, I suppose. That is kind.", 252, 0, 46, -1, 0, 18, 0, -1, 0, -1 },
+            { "Hm. Not really my thing... but the thought counts.", 252, 0, 46, -1, 0, 18, 3, -1, 0, -1 },
+            { "You have nothing to give. Gifts are sold at the market and the diner.", 254, 0, 46, -1, 0, 18, 0, -1, 0, -1 },
+            { "You already gave a gift today.", 254, 0, 46, -1, 0, 18, 0, -1, 0, -1 },
+            { "Chocolate! You remembered! I will hide it from Rosa.", 0, 0, 46, -1, 0, 18, 1, -1, 0, -1 },
+            { "Flowers, for an old stallkeeper? Well! Put them where I can see them, dear.", 1, 0, 46, -1, 0, 18, 1, -1, 0, -1 },
+            { "Cookies! Bro, you get me. Respect.", 2, 0, 46, -1, 0, 18, 1, -1, 0, -1 },
+            { "The paper! Splendid. Nobody brings a man the paper any more.", 3, 0, 46, -1, 0, 18, 1, -1, 0, -1 },
+            { "Hot sauce! The good stuff! Now we are talking, hah!", 4, 0, 46, -1, 0, 18, 1, -1, 0, -1 },
+            { "Heard you have been grumbling about my coffee. To Mia, of all people.", 4, 1, 46, -1, 0, 18, 2, -1, 0, -1 },
+            { "Mia says you have a kind word for everybody. Keep it up, {NAME}.", 1, 1, 47, -1, 0, 18, 0, -1, 0, -1 },
+            { "Lou is telling everyone your joke. It was terrible. I laughed anyway.", 0, 1, 48, -1, 0, 18, 1, -1, 0, -1 },
+            { "Pimm says you like to talk. Careful. He tells everyone everything.", 1, 1, 49, -1, 0, 18, 0, -1, 0, -1 },
+            { "Flowers for Rosa? She has not stopped smiling all morning.", 0, 1, 50, -1, 0, 18, 1, -1, 0, -1 },
+            { "Chocolate for young Mia, eh? Good for you. Kindness is scarce.", 3, 1, 51, -1, 0, 18, 0, -1, 0, -1 },
+            { "Rosa says you like music. I should put a record on in here sometime.", 4, 1, 52, -1, 0, 18, 0, -1, 0, -1 },
+            { "Lou says you are keen on work. That is a rare thing these days.", 3, 1, 53, -1, 0, 18, 1, -1, 0, -1 },
         };
     }
 
     const dlg_node* dialogue_nodes() { return all_nodes; }
-    int dialogue_nodes_count() { return 188; }
+    int dialogue_nodes_count() { return 208; }
     const dlg_effect* dialogue_effects() { return all_effects; }
     const dlg_choice* dialogue_choices() { return all_choices; }
 
@@ -298,19 +326,38 @@ namespace tl
     const int16_t dialogue_intro_nodes[npc_count] = { 28, 53, 55, 33, 38, 57, -1, -1, -1 };
 
     const npc_info npc_infos[npc_count] = {
-        { "Mia", npc_mood::neutral, "NDLNLDLN", 40, true },
-        { "Rosa", npc_mood::neutral, "NLLDNLND", 30, true },
-        { "Dex", npc_mood::neutral, "NLDLNLND", 5, true },
-        { "Mr. Pimm", npc_mood::neutral, "LLNNDNLD", 25, true },
-        { "Big Lou", npc_mood::neutral, "NLNLLNND", 0, true },
-        { "Halloran", npc_mood::neutral, "LLNLDDND", 0, true },
-        { "Dex", npc_mood::neutral, "NLDLNLND", 0, false },
-        { "Victor Vault", npc_mood::neutral, "NNNNNNNN", 0, false },
-        { "Valet", npc_mood::neutral, "NNNNNNNN", 0, false },
+        { "Mia", npc_mood::neutral, "NDLNLDLN", 40, true, "NFDLN" },
+        { "Rosa", npc_mood::neutral, "NLLDNLND", 30, true, "FLDLN" },
+        { "Dex", npc_mood::neutral, "NLDLNLND", 5, true, "NLLFN" },
+        { "Mr. Pimm", npc_mood::neutral, "LLNNDNLD", 25, true, "LNDLF" },
+        { "Big Lou", npc_mood::neutral, "NLNLLNND", 0, true, "NLFLD" },
+        { "Halloran", npc_mood::neutral, "LLNLDDND", 0, true, "NNNNN" },
+        { "Dex", npc_mood::neutral, "NLDLNLND", 0, false, "NNNNN" },
+        { "Victor Vault", npc_mood::neutral, "NNNNNNNN", 0, false, "NNNNN" },
+        { "Valet", npc_mood::neutral, "NNNNNNNN", 0, false, "NNNNN" },
     };
 
     const char* const topic_names[topic_count] = { "Weather", "Work", "Music", "Sports", "Gossip", "Compliment", "Joke", "Complain" };
     const char* const topic_openers[topic_count] = { "Nice weather today.", "How's work going?", "Heard any good music?", "Did you see the game?", "Heard anything juicy?", "You look great today.", "Want to hear a joke?", "Can I complain a bit?" };
+
+    const gift_def gift_defs[gift_count] = {
+        { "Flowers", 3 },
+        { "Chocolate", 2 },
+        { "Hot sauce", 2 },
+        { "Cookies", 2 },
+        { "Newspaper", 1 },
+    };
+    const int16_t dialogue_gift_fav_nodes[npc_count] = { 195, 196, 197, 198, 199, -1, -1, -1, -1 };
+    const gossip_rule gossip_rules[gossip_count] = {
+        { 0, 0, 7, 4, 200 },
+        { 0, 0, 5, 1, 201 },
+        { 0, 4, 6, 0, 202 },
+        { 0, 3, 4, 1, 203 },
+        { 1, 1, 0, 0, 204 },
+        { 1, 0, 1, 3, 205 },
+        { 0, 1, 2, 4, 206 },
+        { 0, 4, 1, 3, 207 },
+    };
 
     const mission_def mission_defs[mission_count] = {
         { "P1", "Say hello", "Say hello to Mia.", mission_cond::talk, int(npc_id::mia), 0, 2, 0 },

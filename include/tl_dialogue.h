@@ -180,6 +180,7 @@ namespace tl
             page,               // a page is being shown
             choice,             // choices of a page
             topic_menu,         // small talk: pick a topic
+            gift_pick,          // small talk: pick a gift to give
             end
         };
 
@@ -191,6 +192,8 @@ namespace tl
             answer,             // the NPC's answer
             leave,              // farewell
             coins,
+            gift_ask,           // "Which gift?"
+            gift_react,         // the NPC's reaction to a gift
             tail
         };
 
@@ -217,6 +220,14 @@ namespace tl
         bool _first_today = false;
         bool _after_script_talk = false;
         int _coin_node = -1;
+        int _story_row = -1;        // option index of the story question in the topic menu (-1 = none)
+        int _gift_row = -1;         // option index of "Give a gift" (-1 = not offered)
+        int _gift_page = 0;
+        int _gift_ids[3] = {};
+        int _gift_shown = 0;
+        bool _gossip_done = false;
+        bn::string<24> _gift_labels[4];
+        bn::string_view _gift_views[4];
         int _answer_expr = -1;      // expression of the NPC's answer page (set from the topic result)
 
         void _show_node(int node);
@@ -225,6 +236,9 @@ namespace tl
         void _after_page();
         void _start_greeting();
         void _open_topic_menu();
+        void _open_gift_menu();
+        void _give_gift(int gift);
+        [[nodiscard]] bool _try_gossip();
         void _begin_topic(int topic);
         void _begin_answer();
         void _finish_small_talk();
