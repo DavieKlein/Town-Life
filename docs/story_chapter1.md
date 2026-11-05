@@ -1,6 +1,7 @@
 # Town Life - Chapter 1 "Survive": Story, Missions, Balance and Text
 
-Status: writing proposal for the owner. Nothing here is implemented. It is meant to be turned into game data later
+Status: writing proposal for the owner. Sections 1-2 and M01-M07 are built; **section 3B (Days 3-7) is the current plan for the rest of Chapter 1**.
+Later chapters: docs/story_chapter2.md, docs/story_chapters3-5.md, overview in docs/story_overview.md. It is meant to be turned into game data later
 (dialogue table, mission table, shop tables, text lists). Canon decisions from the owner are marked as such.
 
 ## 0. Conventions used in this document
@@ -386,6 +387,9 @@ Scripted in section 2. Summary of data: M01 ends when the player leaves the room
 - **Voucher:** the Coffee voucher (from Mia) works at the counter once as a free Coffee (price $0).
 - **Rewards:** wage, Lou +10 (first time), Mia +5. (flags: job_diner, met_barney). **Next:** M08.
 
+> **Superseded by section 3B** (written after the built game reached Day 2). Sections 3.5 - 3.14 are the original draft; their dialogue pages are
+> reused by 3B where it says "keep the pages of 3.x".
+
 ### 3.5 M08 - Odd Jobs (Days 2-3)
 - **Trigger/Where:** Notice board in the community centre. **Objective:** "Do three odd jobs (0/3)."
 - The board shows 4-5 jobs per day out of the pool in section 5.1 (random but seeded per day). A job is 45-120 game minutes with a
@@ -579,7 +583,7 @@ Scripted in section 2. Summary of data: M01 ends when the player leaves the room
   flat (cutscene only, no map): a couch, a lamp, a plant. Mia hands over a blanket.*
 - {NAME}| Thanks, Mia. For / everything.
 - MIA| Sleep. It's a big / day tomorrow.
-- *Fade. Text card: "Day 7, 23:30. First night not on the bench."* Needs: energy and hunger refill with "couch" rules (as a rented
+- *Fade. Text card: "Day 7, 23:30. First night not on the bench."* Needs: energy and hunger refill with "couch" rules (as a lent
   room later: sleep_energy 0.5, hygiene unaffected).
 - *Chapter end card (scrolling):*
   - CARD| CHAPTER 1: SURVIVE / complete.
@@ -589,7 +593,392 @@ Scripted in section 2. Summary of data: M01 ends when the player leaves the room
   - VAULT| Open? Who opened my / bridge?! Bert!
   - Valet| Unknown. A retired / inspector and a person.
   - VAULT| Find the person. / Smart City does not / wait for people.
-- **Rewards:** flags: night_off_bench, ch1_done, docks_open. Mia +5. Unlocks Chapter 2 (Docks, Grafters, rented room).
+- **Rewards:** flags: night_off_bench, ch1_done, docks_open. Mia +5. Unlocks Chapter 2 (Docks, Grafters, the lent back room).
+
+---
+
+## 3B. Revised Chapter 1 after Day 2 (supersedes sections 3.5 - 3.14)
+
+Status: writing proposal. Written after the game reached "Explore the city (Old Block coming soon)" (mission X1). Sections 3.5-3.14 above stay
+as the first draft; **where 3B and 3.5-3.14 disagree, 3B wins.** Pages that 3B does not repeat ("keep 3.8 pages") are reused unchanged.
+Mission ids, flag names and titles follow `MISSIONS` / `FLAGS` in `tools/story_data.py` so the data can be dropped in. Anything that needs
+new art or a new map is marked **NEEDS PROPOSAL** (owner rule: design first, no ROM until approved). Everything else is text, data and
+scripts on art that already exists.
+
+### 3B.0 What changed against the first draft, and why
+
+| Topic | First draft | Now |
+|-------|-------------|-----|
+| Interim chain P1-P5, X1 | n/a | X1 "Explore the city" is replaced by **M08** (Mia's phone text on the morning of Day 3, or earlier if the player opens the notice board). P1-P5 stay for old saves only. |
+| Odd jobs (M08) | pool of 15, several in Old Block | Before M09 only **City Centre jobs** appear; Old Block jobs join the board after `old_block_open`. RETURN & EARN counts as one job. |
+| Collectibles | not in the story | The three sets carry the **lore of Old Block** (co-op tokens, postcards from the Docks, VaultTech flyers). They pay small rewards and feed M12, M13, M16 and the finale. |
+| Clinic / sickness | not in the story | Dr. Okafor is a **resident of the story**: she is at Rosa's meeting (evening beat), her clinic gets a notice too, and fainting never blocks a mission (a faint just skips a few hours; see 3B.6). |
+| Phone | not in the story | Every mission now has 1 text before it (3B.7). The phone is how the game nudges a slow player. |
+| Gossip | 8 rules, all small | 8 more rules tied to story choices (3B.8). |
+| Meeting (M13) | morning, all in Old Block | Same morning, but the **Saturday market** is now planned there, and Okafor's notice follows in the evening. |
+| Dex | 3 doubt beats | **Five beats** and one silent act of kindness at the bridge (3B.4). |
+| Archive box 2 | "Photos of a duck" | Holds the **Old Block Co-operative ledger of 1931**: the seed of the finale (Chapter 5). |
+| Chapter end | Mia's couch | Same, but with the epilogue stinger that pays off Dex's silence and Valet's literal honesty. |
+
+### 3B.1 Revised mission table (Days 2-7)
+
+"Earliest" = the story never forces a day, it only waits. A slow player keeps playing sandbox between missions.
+**Soft timer:** after M13 the log shows "Demolition notice: 30 days". It is flavour only in Chapter 1 (Pimm shows it is void, see M13).
+
+| ID | Day (earliest) | Title | Log text | Done when (flag) | Reward | Next |
+|----|----------------|-------|----------|------------------|--------|------|
+| M07 | 2 Tue | Plate Spinner | Get a job at Lou's Diner. | `diner_job` (built) | Lou +10, Mia +5 | M08 |
+| M08 | 2-3 | Odd Jobs | Do three odd jobs (0/3). | `odd_jobs_3` | +$5 community bonus | M09 |
+| M09 | 3 Wed | Old Block Calling | Follow Mia to Old Block. | `old_block_open` | Mia +5, Old Block opens | M10 |
+| M10 | 3 | Rosa's Stall | Carry three crates to Rosa's stall (0/3). | `rosa_stall_done` | +$10, Rosa +10, stall shop | M11 |
+| M11 | 4 Thu | Cold Shelves | Visit VaultMart and see how Dex is doing. | `vaultmart_visited` | Dex doubt seed (optional) | M12 |
+| M12 | 4 | Old Friends | Find Mr. Pimm in the library. | `pimm_library_met` | Pimm +8 | M13 |
+| M13 | 5 Fri | Notice Served | Attend Rosa's meeting in Old Block. | `meeting_attended` | flag `committed` | M14 |
+| M14 | 5 | Paper Trail | Find the bridge certificate in the library archive. | `certificate_found` | Pimm +8, Logic +3 | M15 |
+| M15 | 6 Sat | Open Sesame | Show the certificate at the bridge (3 pm). | `bridge_open` | Pimm +5, Charm +1 | M16 |
+| M16 | 6-7 | Dock Hand | Meet Foreman Halloran at the Docks (levy $12). | `docks_job` | +$12 refund, Grafters 1 star | M17 |
+| M17 | 7 Sun | A Roof for the Night | Meet Mia at the bridge after your shift. | `first_night_off_bench` | Mia +5, chapter end | Chapter 2 |
+
+**Side tasks** (never the main log line; the pause screen "Mission log" shows them under "Also"):
+
+| ID | Title | Starts | Done when | Reward |
+|----|-------|--------|-----------|--------|
+| S1 | Doctor's Orders | first visit to the City Clinic | check-up paid once | Okafor +5, cookies tip |
+| S2 | Old Coins | first coin found | all 4 coins | $10, Pimm +6, Co-op lore (3B.5) |
+| S3 | Lost Postcards | first postcard found | all 4 postcards | $5, 1 City Coin, Mia +5 |
+| S4 | Down With The Flyers | first flyer found | all 4 flyers torn down | $8, Rosa +6 |
+| S5 | Find Biscuit | notice board card (Day 2-6) | cat found | $14, Mrs. Valdez thanks you |
+| S6 | The Tester | notice board card #15 (Day 4+) | job done | $20, Mia -5, Rosa -3, Dex +5 (a real choice, may be cut) |
+
+### 3B.2 Old Block (introduction) - NEEDS PROPOSAL
+
+Old Block does not exist as a map yet. Minimal Chapter 1 version (the owner approved "minimal, no interiors", section 7 answer 3):
+- **Entrance arch** at the east end of the avenue, iron sign **OLD BLOCK - EST. 1931**, pasted over with VaultTech posters (poster 6, 11).
+- **Main street** (cobbles, patched asphalt, laundry lines, murals with peeling paint) with row houses, window boxes, stoops.
+- **Ines's laundromat** (exterior, big front window with machines turning, "TWO DOLLARS" chalkboard); Mia's flat is the window above it.
+- **Rosa's stall spot** at the end of the street: an old handcart, sun-faded striped awning, crates, scale, hand-written price cards.
+- **Chess table** under a plane tree (Grigor and a second player), **parrot window** (Mrs. Valdez's balcony, the parrot Captain).
+- **Fenced demolition site** at the far end: orange VaultTech notices, a yellow digger parked "for later", Teo's skateboard ramp built from a door.
+- **The laundromat back lot and back room** (where the M10 crates stand): the future first home, a lent room (Chapter 2). Exterior only now.
+- Palette: warm, crowded, lived-in. Cold/VaultTech touches are posters, one security camera and the fence only.
+- Unlock: map warp from the avenue; before M09 the info reads "You don't know the way. Mia can show you." (kept).
+
+**Residents of Old Block** (Chapter 1 cast additions; all NEEDS PROPOSAL for sprites/portraits; ids for `cast.py` later):
+
+| Who | Role | Look | Personality / one-liners | Talks? |
+|-----|------|------|--------------------------|--------|
+| **Ines Okoro** | laundromat owner, 50s | wide smile, curler scarf, yellow rubber gloves | Shouts in two languages, adopts people. "Clean shirts, clean souls!" Likes Gossip, Music, Compliment (L); dislikes Sports (D). Favourite gift: Cookies | small talk from M09 (needs an NPC slot: the cast table currently has 8) |
+| **Teo** | 10-year-old, Old Block's messenger | oversize cap, scraped knees, skateboard | Delivers notes, "borrows" oranges, calls everyone "boss". Likes Joke, Sports; dislikes Work ("That's a bad word") | barks only in Ch.1, small talk from Ch.2 |
+| **Duchess** | Ines's corgi | round, fawn, short legs | Walks like she owns the road, hates self-checkouts (barks at them) | odd job, no talk |
+| **Grigor** | retired ferry captain at the chess table, 70 | white beard, captain's cap, never wins | Talks about the sea, loses chess to the same pigeon every Friday. Hints at the Docks. | barks + 1 scripted chat (M13) |
+| **Mrs. Valdez** and **Captain** (parrot) | balcony neighbour, 60s | purple shawl, giant earrings | Captain repeats VaultMart: "NEXT CUSTOMER!" and Dex's "buddy!" | S5 reward scene |
+| **Nella Bellini** | Rosa's sister, never seen in Ch.1 | - | only mentioned ("my sister's flat"); Rosa sleeps there | no |
+| **Kessler** | VaultTech guard, bridge barrier | stiff cap, oversized badge | afraid of Valet, loves rules, hates his job | M15 + barks |
+
+**Dr. Ngozi Okafor** (already in the game, profile completed for the story): late 40s, calm, deadpan, gold-rimmed round glasses, white coat
+over a cardigan, the cookie tin in the third drawer. Treats every problem as "a symptom". Likes Weather, Work, Joke (L); dislikes Gossip,
+Complain (D) (as in `NPC_INFO`). Lives in Old Block (a flat above the bakery, never shown), so her clinic's VaultTech lease is personal.
+Favourite gift: Cookies. Voice: short, dry, kind. She is the game's voice for needs and health ("Eat, sleep, wash.").
+
+### 3B.3 Missions in detail
+
+#### M07 Plate Spinner - addendum (built; what happens after the first shift)
+The game already ends the day at Lou's; add this hook so the player is never left in a void:
+- *After the first PLATE RUSH shift, once the player leaves the diner, the phone buzzes (message "mia_oldblock", see 3B.7). Mission X1 is replaced by M08.*
+- MIA| Nice work, dishwasher! / Tomorrow I show you / my part of town.
+
+#### M08 Odd Jobs (Days 2-3)
+- **Trigger:** automatic after M07, or the first A press at the notice board. **Objective:** "Do three odd jobs (0/3)."
+- **Board before Old Block opens (City Centre jobs only):** Flyer Hand-out, Window Cleaner, Paper Round, Pigeon Patrol, Recycling Duty
+  (**= return 10 cans/bottles at RETURN & EARN**, no extra animation needed), Book Sorter, Lamp Painter, Tulip Planter, Find Biscuit (S5).
+  Each job is 45-120 game minutes with a short animation and one story page below. Old Block jobs (Dog Walker, Box Mover, Sofa Carrier,
+  Take-away Runner) join the pool after M09. Table 5.1 stays the numbers source.
+- First time at the board (info): NOTICE| JOBS WANTED. / Take a card. / Do the work. Get paid.
+- If Pimm is in the library: PIMM| Ah, {NAME}. The notice / board. A good place / for honest work.
+- **Job vignettes** (shown after the animation as one or two pages; makes odd jobs feel like the city, not like a list):
+  - *Flyer Hand-out (Lou).* A VaultTech roller-bot stands on the opposite kerb handing out gold flyers.
+    - BOT| Thank you for your / interest in the future. / Next customer.
+    - LOU| (from the doorway) / Eat here! We have / actual onions!
+    - {NAME}| (Flyers: 12 given, / 11 on the pavement. / One in a pigeon.)
+  - *Window Cleaner (library).* Pimm reads at a table and shouts encouragement.
+    - PIMM| Left a little. Up. / No, up. Ah, a streak. / I love a streak.
+    - {NAME}| (Forty windows. Forty / years of fingerprints. / Mostly Pimm's.)
+  - *Paper Round.* Each paper is a headline from 5.2 shown as a one-line toast. The last house is a locked VaultTech office.
+    - {NAME}| (A sign: "NO PAPERS. / NO PEOPLE. NO POINT.") / (I delivered it anyway.)
+  - *Pigeon Patrol.* A pigeon watches you scrub the bench, then sits on it again.
+    - {NAME}| (We both know / who owns this bench.)
+  - *Book Sorter.* In the donation box: a tiny book "Bridges of the World", margin notes in Pimm's handwriting (Logic +1 extra, flag `saw_pimm_book`).
+  - *Find Biscuit (S5).* Card text: "MISSING: BISCUIT, a ginger cat. Reward $14. Ask for Mrs. V." Three search spots in the park
+    (hedge, pond edge, tree). Found at the third. The card's address is in Old Block, so the reward scene waits for M09.
+    - {NAME}| Found you! Easy, / easy... ow. Gently, he / said. Not me. Him.
+    - *Info: "You found Biscuit! He bites. Gently."*
+- **Rewards:** wages of the three jobs + **$5 community bonus** ("Three jobs! Here's a little extra."). Skills per table 5.1.
+  Phone message "lou_flyers" if the player did the flyer job. (flag: `odd_jobs_3`) **Next:** M09.
+
+#### M09 Old Block Calling (Day 3) - NEEDS PROPOSAL (Old Block map)
+- **Trigger:** `odd_jobs_3` and Day >= 3, or the phone text "mia_oldblock" has been read. Mia waits at the diner door 15:30. **Objective:** "Follow Mia to Old Block."
+- Keep the pages of 3.6 (Mia's intro, Ines, Teo's orange). New and changed pages:
+  - *Under the entrance arch the camera tilts up to the sign.*
+  - MIA| "Est. 1931." My great- / grandma helped build / this street. Brick by brick.
+  - *They walk. A parrot shouts from a balcony.*
+  - CAPTAIN| NEXT CUSTOMER! / NEXT CUSTOMER! BUDDY!
+  - MIA| That's Captain. Learned / it in VaultMart. Now he / won't stop.
+  - MRS. V| (calling down) Is that / the one who found my / Biscuit?! Come up!
+  - *If S5 is done:* MRS. V| Biscuit! You monster! / Thank you, dear. Here, / for your trouble. ($14, flag `biscuit_thanked`, Valdez +1 friendship for a future talk)
+  - *If S5 is not done:* MRS. V| Oh, a new face. Keep / an eye out for a ginger / cat, will you?
+  - *Chess table.* GRIGOR| Check! ...Oh, it's a / pigeon move. Again. Hm.
+  - MIA| Rosa is at the end of / the street. Come on.
+- *Mia's flat window above the laundromat: Mia points at it.* MIA| That's mine. Third floor, / no lift, one couch. / Remember that.  (seed for M17)
+- **Rewards:** `old_block_open`, Mia +5, Old Block jobs join the board, phone contact "Ines" appears later (Ch.2). **Next:** M10.
+
+#### M10 Rosa's Stall (Day 3)
+- Keep the pages of 3.7. Changed/added:
+  - *The stall: striped awning, scales, crates, a hand-lettered sign BREAD NOT BARCODES (Teo painted the O as a smiley).*
+  - ROSA| Saturday, I will make / a proper market. Every / street has one. Ours!
+  - *After the crates (3/3):* ROSA| Take ten dollars. And / this is my rule: / nobody pays for kindness.
+  - *If the player has found at least one **flyer**:* ROSA| Those gold things? Give / them here. Good paper. / For wrapping fish.
+    (flyers still count for S4; Rosa uses them as wrapping paper, a recurring gag)
+- **Stall shop** (menu `shop_stall`, prices 4.2): Rosa's loaf, Orange, Rye loaf; "Gifts" row (Flowers $3).
+- **Rewards:** +$10, Rosa +10, `rosa_stall_done`, Strength +3. Phone: "pimm_library" (3B.7) the next morning. **Next:** M11.
+
+#### M11 Cold Shelves (Day 4) - Dex beat 2
+- Keep the pages of 3.8. VaultMart is the real map `vaultmart` (cold, kiosks, restock arm, Dex in the aisle). Added/changed:
+  - *Booth sign by the door, SPEAKER voice:* SIGN| Please scan your / VaultCard. / Humans: please queue.
+  - *Valet audits Dex with a clipboard. Dex whispers when Valet rolls away:*
+  - DEX| (quietly) Is Rosa OK? / ...Not that I care. / Efficiency question.
+  - *If the player picked "You look tired":* DEX| Slept two hours. The / lights hum at night. / Don't tell Bert.   (flag `dex_seed`, +2)
+  - *Rye bread gag:* Dex has stuck a sticker on the empty rye shelf: "DISCONTINUED (BY DATA)". Pimm will find it in M12.
+  - **Optional job (S6 "The Tester", card #15, from Day 4):** Dex offers $20 to stand in front of the self-checkouts for an hour so the
+    machines "learn faces". Yes: Dex +5, Techies +2, $20, **Mia -5 and Rosa -3** (spread by gossip, rule `tester_mia`, 3B.8); No: nothing.
+    Hint line if refused: DEX| Your loss. I'd tell / you the $ is great, but / you can't see it. (cut if the owner prefers)
+- **Rewards:** `vaultmart_visited`, Fun -3 (cold shop). **Next:** M12.
+
+#### M12 Old Friends (Day 4) - the coins, the bridge
+- Keep the pages of 3.9 (Pimm, bridges, the certificate). Added/changed:
+  - *Pimm sees the rye sticker in the carrier bag the player brought, or just remarks on it:*
+  - PIMM| "Discontinued by data." / My dear. I am a person. / I am not discontinued.
+  - *If the player owns at least 1 old coin (S2):* PIMM| Is that a Co-op penny? / Oh, my. Do you have / more?
+    (Pimm's lecture plays once, at the **4th coin** or here, whichever first. Pages in 3B.5.)
+  - *If the player owns a Lost Postcard:* PIMM| A Docks postcard. Ships, / sweethearts and bad / handwriting. Splendid.
+- **Rewards:** Pimm +8, `pimm_bridge`, `pimm_library_met`. Phone "pimm_notice" is held until Day 5. **Next:** M13.
+
+#### M13 Notice Served (Day 5, 9:00) - the meeting
+- **Trigger:** M12 done and Day >= 5, 9:00. **Objective:** "Attend Rosa's meeting in Old Block."
+- *Old Block, morning. Orange notices on every wall; Teo's counter-posters ("SAVE OLD BLOCK", "OLD BLOCK HAS NAMES") already hang next to
+  them. A crowd around the stall: Mia, Ines, Teo, Grigor, Mrs. Valdez, Pimm.*
+- Keep the pages of 3.10 from INES (notice) to ROSA ("Then we open the bridge."). Added after PIMM's "retired one":
+  - GRIGOR| The old ferry slip is / under that fence. Sound / as a rock. Not Vault's.
+  - INES| My grandma's token paid / the first rent on this / laundromat. Pay later!
+  - PIMM| Ah. The Co-operative. / There is a charter in / the archive somewhere...
+  - ROSA| Later, Albert. First / the bridge.
+- *Rosa's plan (3 pages):*
+  - ROSA| Saturday market. Here. / Loud. So the whole city / sees we are not leaving.
+  - ROSA| Mia, posters. Ines, / soup. Teo, messenger. / Albert, certificate.
+  - ROSA| And {NAME} goes to the / bridge with the paper. / Everybody has a job.
+- Keep the 3-option choice (I'm in / What do I get / Too big). Added reaction for the 2nd option:
+  - ROSA| A reason to wake up. / Also, free bread. Do not / tell the others.
+- *Teo hands the player a hand-drawn map:* TEO| Secret shortcut to the / bridge! Don't tell! / (It's the avenue.)
+- **Evening beat (clinic, Day 5 18:00-20:00, optional but the log pings it):** *Dr. Okafor holds up an orange notice at her door.*
+  - OKAFOR| This was on my door. / The clinic's lease is / VaultTech's.
+  - OKAFOR| I fix people for a / living. I did not / expect to be a tenant.
+  - {NAME}| Can I help?
+  - OKAFOR| Stay healthy. That / is the best protest / there is.   (flag `okafor_notice`, Okafor +4)
+- **Rewards:** `meeting_attended`, `committed`, `demolition_known`; HUD log shows "Demolition notice: 30 days" (soft, see 3B.1). **Next:** M14.
+
+#### M14 Paper Trail (Day 5, afternoon) - Dex beat 3
+- Keep the pages of 3.11 (the key, the three boxes, Dex in the library). Changes:
+  - **Box 2 is no longer a joke box.** First line stays a joke, then:
+    - {NAME}| "Photos of a duck." / ...Under them, a green / ledger. Old Block Co-op.
+    - {NAME}| "Charter of 1931. All / land held in common by / the token holders."
+    - {NAME}| Interesting. Boring. / ...Interesting. (flag `saw_coop_ledger`) *(seed for Chapter 5; the item "Co-op ledger" goes into the inventory)*
+  - Box 3 certificate (unchanged).
+  - **Dex (15:00)** changes by what the player holds:
+    - *With the ledger visible:* DEX| Buddy? Is that... / ...no. Not my / department.
+    - *If the player chooses "A bridge certificate":* Dex +3, `dex_saw_cert`, and Dex says nothing to Valet. (This is what saves the player in the epilogue.)
+    - *If the player has torn down at least one flyer (S4) and Dex saw it:* DEX| Those flyers cost / four hundred a sheet. / ...Nice aim, though.
+  - Either way he lingers: *Dex stands in front of a wall of children's books for a moment, takes out a crumpled photo (Dex as a kid
+    behind the Corner Market counter), puts it back.* (`dex_doubt` = 1; the photo is canon: Dex used to hang around the shop as a kid.)
+- **Rewards:** Pimm +8, `has_certificate`, `certificate_found`, Logic +3. Pimm's text for the next morning. **Next:** M15.
+
+#### M15 Open Sesame (Day 6 Saturday) - the bridge
+- **Morning, optional: the first Saturday market** in Old Block (NEEDS PROPOSAL: stall props + crowd NPCs). Rosa's stall, Ines's soup, Mia's
+  poster wall, Teo's "tricks". Event rules: stalls are open 9:00-15:00; every stall gives one small bonus (soup Hunger +25 free once, Rosa a
+  free orange per friendship 40+); the crowd NPCs are anonymous reskins. First of a weekly event (Chapter 2 expands it).
+- Keep the pages of 3.12 from the arrival of Pimm to the barrier opening. Changes:
+  - Pimm walks from the library at 14:30 (placement override: flag `pimm_bridge_walk`), arrives 15:00.
+  - Behind the barrier, **Dex** stands under a lamp on the VaultTech plaza side with a protein bar. He sees the whole scene and does not call anyone.
+    If `dex_saw_cert`: *he nods once and walks away.* If not: he just walks away. (Valet's later "Unknown" depends on this.)
+  - After the barrier opens: Rosa, Mia, Teo arrive running (they followed the crowd). *Rosa, Mia and Teo arrive running (they followed the crowd).* Pages: ROSA| Albert! You did it! / Forty years, and I still / cry at bridges. - MIA| He did it. We held / the paper. Mostly. - TEO| Can I stand on it?!
+  - KESSLER| (low) Just so you know... / I hated that order. / Don't tell Bert.
+- **Gate rule (kept):** Docks levy $12 at the Docks end of the bridge (`levy_known`). **Rewards:** `bridge_open`, `halloran_aware`, Pimm +5, Charm +1. **Next:** M16.
+
+#### M16 Dock Hand (Day 6-7) - NEEDS PROPOSAL (Docks gate + dock floor)
+- Keep the pages of 3.13. Added: at the gate, **Stitch** (docker, 58, mends nets, gossips) cameo: STITCH| New hand? Mind the / boss. She bites. Like / a wet rope. Nicely.
+  Stitch has no small talk in Chapter 1 (he becomes a talker in Chapter 2).
+- The 4-crate trial is a placeholder for the Chapter 2 minigame "BOX CLEVER"; for now a simple carry-and-drop timer (Strength matters).
+- **First shift** (6 h, $36, see 4.3), then Halloran: HALLORAN| Good. Same time / tomorrow. Don't be / late. Late is rude.
+- **Rewards:** +$12 refund, Grafters 1 star, Strength +2, `docks_job`. **Next:** M17.
+
+#### M17 A Roof for the Night (Day 7) - chapter end
+- Keep the pages of 3.14 (Mia at the bridge, choice, Mia's flat, text card). Additions:
+  - *Mia hands over a paper bag.* MIA| Lou's leftovers. And / Rosa sent a jar. Don't / ask what is in it.
+  - *If the player saved the postcards (S3) and has them:* MIA| ...Wait. Is that my / grandpa's handwriting?! (Mia reads one aloud: "Dear Lena, the sea is
+    loud, the soup is bad, I miss you. - Nico, Pier 4." She cries and laughs. +5 more Mia. This is Mia's family link to the Docks.)
+  - **Epilogue stinger (3 pages, kept from 3.14, changed):** Vault in his tower watches the bridge on a screen.
+    - VAULT| Open?! Who opened / my bridge?! Bert!
+    - VALET| Unknown. A retired / inspector and a person.
+    - VAULT| Find the person. / Smart City does not / wait for people.
+    - *(New, one more page.)* VALET| Query to Manager Corbin: / who was at the bridge? / ...Reply: "No idea."
+    - *Dex, alone on the plaza at night, looks up at the golden tower, then at the lit window of Old Block far away.* DEX| (to himself) / ...Efficiency, / buddy.
+- **Rewards:** `first_night_off_bench`, `ch1_done` (flag), Mia +5, Chapter 2 unlock, auto save prompt. The couch gives Energy +0.5/min (4.6).
+
+### 3B.4 Dex's arc in Chapter 1 (five beats)
+
+| # | When | Beat | Player choice |
+|---|------|------|---------------|
+| 1 | Day 1 firing | "Sorry, guys. Business is business!" Looks back at the door. | none |
+| 2 | M11 | Tired smile under Valet's audit. "Is Rosa OK?" | Good for you / You look tired / You sold us out |
+| 3 | M14 | Sees the certificate, says nothing, looks at his childhood photo. | Just reading / A bridge certificate |
+| 4 | M15 | Watches from the plaza; does not report. | none (silent beat) |
+| 5 | M17 | Valet asks him who was at the bridge. "No idea." | none (epilogue) |
+
+Rule: Dex friendship at the end of Chapter 1 is 12 (cold) to 25 (kind). **Dex never helps openly in Chapter 1.** He is still the rival: he
+brags, he sells Vault's dream, and he turns a cold shoulder in public. The reader (player) sees only what Dex lets slip.
+
+### 3B.5 Collectibles lore (info pages, 3 lines x 28)
+
+Shown as the "found" toast (item name) plus one info page. All 12 props already exist; this is text only. They twinkle at fixed City
+Centre spots. The set rewards stay as built (`tl_collect`: Coins $10 + Pimm +6, Postcards $5 + 1 City Coin + Mia +5, Flyers $8 + Rosa +6).
+
+**Old City Coins (the Old Block Co-op tokens of 1931)**
+- Copper penny| Copper penny. Stamped / "OLD BLOCK CO-OP 1931". / Who minted this?
+- Silver crown| Silver crown. "ONE FOR / ALL, AND ALL FOR / ONE LOAF."
+- Brass ring coin| Brass ring coin. "GOOD / FOR ONE HOUR OF HELP." / Money for neighbours.
+- Pewter token| Pewter token. "GOOD FOR / ONE LOAF. PAY LATER." / Pay later?!
+- **Set complete (S2), Pimm's lecture (once, in the library or at the pond):**
+  - PIMM| The Co-op token. In / 1931 nobody had money. / So they made their own.
+  - PIMM| An hour of help for a / loaf. A loaf for an hour / of help. Pay later.
+  - PIMM| Old Block kept it alive / for 90 years, quietly. / Rosa still does it.
+  - PIMM| Keep these. They are not / money. They are a promise. / Like a bridge.
+  - *Flag:* `coins_lore`. **The City Coin currency (friendship perks) is named after this tradition**: "City Coins" are the modern Co-op tokens (Rosa at 70: "A token. Pay later.").
+
+**Lost Postcards (the Post Office closed last year and its sorting bin was thrown out; the cards blew all over town)**
+- Mountain lake| "Wish you were here. / The lake is cold. The / coffee is worse. - N."
+- Sunset beach| "Dear Lena, the sea is / loud, the soup is bad. / I miss you. - Nico"
+- Night skyline| "From the ship I see / the tower lights. Ugly. / Home is dark and warm."
+- Lighthouse| "Pier 4 lighthouse. / Come when you can. / I'll keep the lamp lit."
+- *Set complete (S3):* {NAME}| (All from Pier 4, / the Docks. To Old / Block. To Lena F.)
+  - Mia explains (next talk): MIA| Lena Ferro. My grandma. / Nico was her husband, / a ship's cook.
+    MIA| I never knew he wrote. / ...I'm fine. It's dust. / In my eyes. Dust.
+
+**VaultTech Flyers (tear them down, small acts of resistance)**
+- Gold header| "SMART CITY: YOUR LIFE, / SIMPLIFIED." (Torn. Quietly satisfying.)
+- Black header| "WARNING: HUMANS ARE / SLOW. UPGRADE TODAY."
+- Crumpled| "COUPON: 10% OFF / NOTHING. TERMS APPLY."
+- Folded| "OLD BLOCK? REIMAGINE / IT. (WE ALREADY DID.)"
+- *Set complete (S4):* {NAME}| (Four fewer lies on / the walls. The wall looks / better. A bit.)
+  Rosa takes them as wrapping paper: ROSA| Waterproof! Gold! Good / for fish. Finally VaultTech / is useful.
+
+### 3B.6 Clinic, sickness and fainting in the story
+
+- **Rule (kept from s64):** faint = a few hours skipped + care fee $20 (debt if broke); sick = slow walking until cured.
+  **Fainting never fails a mission and never skips a scripted scene.** Scripted scenes pause the need counters.
+- **Tone:** Okafor lectures lightly, never shames. One fixed joke per faint (rotate): "You are the third fainter today. The bench is
+  full." / "My couch has a better sleep record than you." / "I have a medal for people like you. It's a bandage."
+- **S1 Doctor's Orders:** after the first visit Okafor texts (3B.7 "okafor_welcome") and gives a once-only "welcome" $3 discount on the
+  next check-up (flag `okafor_discount`). Paying a bill the same day: Okafor +3.
+- **Plot link:** Okafor's notice (M13 evening) sets up **Chapter 3**: VaultTech opens "HealthPods" (vending clinics with a smiling
+  screen) and wants the clinic's room; Okafor becomes a loud ally and a hospital shelter in the finale.
+- **Hard cases:** if the player faints on the bench at night while a main mission is waiting, the next morning the log says "Catch up:
+  <objective>" and Mia/Lou text a gentle nudge; nothing is lost.
+
+### 3B.7 Phone messages for the Chapter 1 missions (new)
+
+Existing 8 messages stay. Format: id | sender | when delivered (after 8:00) | text. Phone text: word-wrapped, keep **<= 90 characters**.
+(The message mask in the save is 16 bit wide today; this list needs a 32 bit mask, a code note for later.)
+
+| id | Sender | Condition | Text |
+|----|--------|-----------|------|
+| mia_oldblock | Mia | Day >= 3 and `diner_job` and not `old_block_open` | Come to the diner door at 3:30. I want to show you my block. Bring shoes. |
+| lou_flyers | Lou | `odd_jobs_3` or flyer job done | You handed out 12 flyers and ONE came back with a customer. I'll take it, hah! |
+| pimm_library | Pimm | `rosa_stall_done` and Day >= 4 | Do drop by the library this afternoon. I have bridges to discuss. - A. Pimm |
+| rosa_stall | Rosa | `rosa_stall_done` | Bread is on the cart, oranges are in the sun, you are in my debt. Come eat. |
+| teo_note | Teo | `old_block_open` and Day >= 4 | boss i found a secret way into the demolition site dont tell ines |
+| dex_badges | Dex | `vaultmart_visited` (replaces existing "dex") | Bro. VaultMart pays me in badges. Send help. Or a burger. - D. |
+| dex_tired | Dex | M14 done | Hey. If you hear Bert asks about the library, you were never there. - D. |
+| pimm_notice | Pimm | M12 done, Day 5 | Rosa is calling a meeting at nine. I shall bring my stick and my opinions. |
+| okafor_welcome | Okafor | `met_okafor` | Good to meet you. Next time, please come before you faint. - Dr. O. |
+| okafor_notice | Okafor | `okafor_notice` | The clinic has until the 30th. I have booked every patient for the 31st. - Dr. O. |
+| pimm_bridge | Pimm | M14 done, Day 6 | Bridge. Three o'clock. Wear something respectable. I shall bring my badge. |
+| mia_postcards | Mia | S3 done | Whatever you found, bring it by. I'll make tea. Don't make it weird. |
+| vault_spam2 | VaultTech | Day >= 4 | Smart City update: your neighbourhood may be reimagined. No action needed. |
+| halloran | Halloran | `bridge_open` and not `docks_job` | Gate opens at six. Levy is twelve. Boots, not talk. |
+| mia_couch | Mia | `docks_job` | Shift over? Meet me at the bridge. I have soup, a blanket and a question. |
+
+### 3B.8 Gossip rules for Chapter 1 (new; the table in `story_data.py` holds 8 today, raise the cap to 16)
+
+Trigger noted -> the hearer brings it up one day later, right after the greeting (existing mechanism). Friendship effects are on the
+hearer's friendship with the player. Lines are one page each (3 lines).
+
+| id | Trigger | Hearer | Effect |
+|----|---------|--------|--------|
+| tester_mia | job S6 done | Mia | Mia -5 |
+| tester_rosa | job S6 done | Rosa | Rosa -3 |
+| flyers_teo | S4 set complete | Teo | Teo +3 |
+| okafor_pimm | topic work with Okafor | Pimm | Pimm +2 |
+| coins_ines | S2 set complete | Ines | Ines +4 |
+| deposit_lou | 30 items returned | Lou | Lou +2 |
+| dex_rosa | Dex choice "You sold us out" | Rosa | Rosa +2 |
+| faint_mia | player fainted | Mia | Mia +3 |
+| tired_dex | choice "You look tired" | Mia | Mia +2 |
+| bridge_lou | M15 done | Lou | Lou +3 |
+| ledger_pimm | `saw_coop_ledger` | Pimm | Pimm +3 |
+| hotsauce_lou | gift Hot sauce to Lou | Mia | Mia +2 |
+
+Pages (one per rule, shown after the hearer's greeting):
+- tester_mia: MIA| Dex told me. $20 for / your face? Wow. Hope it / was a nice face.
+- tester_rosa: ROSA| I heard about the / machines. Hmph. Whatever / pays for oranges.
+- flyers_teo: TEO| Boss! You tore the / flyers! Legend! Can I / have one for my ramp?
+- okafor_pimm: PIMM| Dr. Okafor says you / ask good questions. / A rare virtue.
+- coins_ines: INES| Pimm told me! You / found Grandma's tokens! / I cry now. Two dollars!
+- deposit_lou: LOU| Heard you recycle for / a living! Respect. I / compost, hah!
+- dex_rosa: ROSA| You were hard on Dex. / Good. But sit with him / one day. He is lost.
+- faint_mia: MIA| Okafor told... no, she / didn't, I saw. Eat! / That is an order.
+- tired_dex: MIA| You told Dex he looks / tired? Ha. He slept in / his car. I know.
+- bridge_lou: LOU| The bridge! Free fries / for the bridge-opener / (nobody else knows).
+- ledger_pimm: PIMM| You read the green / ledger? Good eyes. We / may need it later.
+- hotsauce_lou: MIA| Lou got hot sauce and / cried. Happy tears. / I think.
+
+### 3B.9 New newspaper headlines (Daily Ledger, Days 3-7)
+
+Added to 5.2 as items 16-24 (format: two lines | subline).
+16. PIGEON DEFEATS MAN / AT CHESS, AGAIN | Grigor, 70: "It cheats." (Day 3)
+17. CLINIC WAITING ROOM / FULL OF FAINTERS | "Eat lunch," says doctor. (Day 4)
+18. FLYERS APPEAR ON / WALLS. FLYERS VANISH. | Mystery tidy-up continues. (Day 4)
+19. OLD BLOCK CO-OP / TOKENS FOUND IN PARK | Historian: "A promise, in metal." (Day 5, after S2)
+20. SATURDAY MARKET / RETURNS TO OLD BLOCK | Soup, bread, a parrot. (Day 6)
+21. MYSTERY WRITER OF / POSTCARDS FOUND | "Dear Lena..." (Day 6, after S3)
+22. VAULT: "I DON'T DO / BRIDGES" | Engineer position unfilled. (Day 5)
+23. GUARD LIFTS BARRIER, / WEEPS WITH JOY | Kessler: "Don't tell Bert." (Day 7)
+24. DOCK CRANES CREAK / BACK TO LIFE | Foreman: "Late is rude." (Day 7)
+
+### 3B.10 New flags (add to `FLAGS`)
+
+`odd_jobs_3` (exists), `biscuit_found`, `biscuit_thanked`, `saw_pimm_book`, `coins_lore`, `postcards_done`, `flyers_done`, `tester_done`,
+`dex_saw_cert`, `dex_doubt`, `dex_seed`, `okafor_discount`, `okafor_notice`, `saw_coop_ledger`, `has_certificate`, `committed`,
+`demolition_known`, `levy_known`, `halloran_aware`, `pimm_bridge_walk`, `ch1_done`, `docks_open`, `night_off_bench` (alias of
+`first_night_off_bench`). Items: `Co-op ledger`, `Bridge certificate`.
+
+### 3B.11 NEEDS PROPOSAL list for Chapter 1 (owner rule: show first, then build)
+
+1. Old Block map (entrance arch, main street, laundromat exterior, stall spot, demolition site fence, laundromat back lot).
+2. Rosa's stall and the Saturday market props (stalls, awnings, bunting, crowd reskins).
+3. Residents: sprites + portraits for Ines, Teo, Grigor, Mrs. Valdez and Captain (parrot), Kessler, Stitch; Duchess the corgi (critter-style sprite).
+4. Docks gate: levy booth, the bridge end, a dock floor strip for the trial, crates and a truck.
+5. Notice board job cards (UI only) and 6 "Docks" cut-in vignettes if wanted.
+6. Co-op ledger and bridge certificate as inventory icons.
+7. Counter-posters ("SAVE OLD BLOCK") as wall props (cheap).
+8. Optional: Dr. Okafor in Old Block at the meeting (a portrait only; the evening beat happens at the clinic and needs no new art).
 
 ---
 
@@ -689,7 +1078,7 @@ Keeping the bar over 50 needs about **$4-6 of food per day** (less on diner shif
 |-------|-------------------------------|-------|
 | Park bench (changed) | **+0.3** (was +0.5) | Hygiene extra -0.03/min, Hunger decay halves (as now), after 5 h asleep Fun -10 ("stiff back") |
 | Mia's couch (M17) | +0.5 | no penalties |
-| Rented room (Chapter 2) | +0.6 | Hygiene normal |
+| Lent back room (Chapter 2) | +0.6 | Hygiene normal |
 
 Sleep ends when Energy reaches 100, or at 7:30, whichever comes first, but never before 4 hours (so a short nap needs the "Sit"
 option). Asleep time runs at 4 frames per game minute (15 min per real second, as now). Example: sleeping from 22:30 with Energy 35
@@ -751,8 +1140,8 @@ A small side income that is always available in the City Centre, built (approved
 | 6 Sat | Bridge | - | $6 food + $12 levy | $71 |
 | 7 Sun | Docks, Mia's couch | $36 wage + $12 refund | $5 | $114 |
 
-Target at the end of Chapter 1: **~$100** (range $50 sloppy to $140 frugal). The first rented room in Chapter 2 should cost about
-$60 deposit + $30/week, so $100 makes it a stretch rather than a gift.
+Target at the end of Chapter 1: **~$100** (range $50 sloppy to $140 frugal). The first home in Chapter 2 (lent room) costs about
+$25 deposit-in-kind (an hour of help, co-op style) + $10/week for power, so $100 is comfortable but not luxurious (revised: the home is lent, not rented).
 
 ### 4.10 Changes to current code (checklist for the programmer)
 

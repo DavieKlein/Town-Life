@@ -114,8 +114,10 @@ Mentors (one per type) and other named characters are still to be designed; keep
   - Maxing every type is possible but takes much longer.
 - **Friendship:** per NPC, 0–100. At **70+** an NPC gives you **City Coins**, spent on
   permanent perks (higher pay, slower need decay, faster walking, ...).
-- **Housing ladder:** park bench → rented room → studio → apartment → house in your chosen
-  type's style.
+- **Housing ladder (owner decision):** room above Corner Market (only briefly, Day 1) → park bench → **a back room / storeroom in a commercial
+  building that someone lets you use** (cheap inside: bare walls, mattress, crates, hot plate; story: Ines's laundromat back room, Chapter 2) →
+  **studio** → **loft** → **apartment** → **penthouse** (the top step; NOT a house; it echoes Victor Vault's golden tower but is open, shared and
+  communal). Each home has a bills-by-post envelope at its entrance and is furnished from the furniture catalog. Plan: docs/story_overview.md.
 - **Furniture rule (owner):** all furniture in rooms where you live (also temporarily) must later be buyable in a furniture store
   or online; some furniture in commercial buildings is for sale too. So furniture is never drawn ad hoc: it is a named piece of the
   **furniture catalog** (`tools/furniture.py`, `FURNITURE`: id, display name, placeholder price, category, footprint, interaction kind,
@@ -138,7 +140,7 @@ unlocks the next district. Each chapter ends with a big moment.
 
 1. **Survive** — Corner Market, fired, VaultMart, park bench, first odd jobs. Unlocks the Docks.
    Big moment: e.g. first steady job / first night not on the bench.
-2. **Get By** — Grafters/Docks and Makers/Old Factory. Big moment: first own home (rented room).
+2. **Get By** — Grafters/Docks and Makers/Old Factory. Big moment: first own place (a lent back room).
 3. **Build Up** — Makers/Techies, Station Quarter. Big moment: first employee / first business.
 4. **Break Through** — Techies/Ballers, Sports Park, pressure on VaultTech grows.
 5. **Legacy** — Hilltop/Posh, confront Victor Vault, his downfall, Old Block saved.
@@ -884,7 +886,7 @@ and `reset` commands for save tests.
 - [ ] Minigames: stacking boxes, driving
 - [ ] Skills (Strength, Creativity, Logic, Charm, Fitness) + reputation stars, incl. rival half-speed rule
 - [ ] Friendship per NPC + City Coins perks (introduced here)
-- [ ] Housing ladder step: rented room (Chapter 2 big moment) + first shop/furniture
+- [ ] Housing ladder step: lent back room (Chapter 2 big moment) + first shop/furniture
 - [ ] Polish + owner approval
 
 ### District 3: Old Factory (Makers, Chapter 2: Get By) — TODO
@@ -904,7 +906,7 @@ and `reset` commands for save tests.
 
 ### District 6: Hilltop (Posh, Chapter 4–5: Legacy) — TODO
 - [ ] Map, mentor, missions; career path waiter → property empire
-- [ ] Minigames: bluffing, negotiating; investing; car; house in chosen type's style
+- [ ] Minigames: bluffing, negotiating; investing; car; apartment, then penthouse (style of the chosen type)
 - [ ] Finale: Victor Vault's downfall, Old Block saved
 - [ ] Polish + owner approval
 

@@ -50,7 +50,7 @@ Status: **now** = built in s63 (code/text only), **proposal** = mock-up made in 
   faster Energy decay. Cure: rest (bed / bench) plus medicine from the doctor or pharmacy. **Doctor's practice in district 1** (small,
   Old Block when it exists, else a City Centre building: see the s63 proposal); a **hospital in the city** later for serious cases.
   Treatment costs money. **Bills by post**: once you have a home, an **envelope lies inside at the entrance**; A opens it -> bill
-  -> pay within N days or a penalty (late fee, then collection). Needs the housing ladder first.
+  -> pay within N days or a penalty (late fee, then collection). Needs the housing ladder first (ladder: lent back room -> studio -> loft -> apartment -> penthouse; an envelope at every home's entrance; see docs/story_overview.md).
 - **Clothing (4)**: outfits in the wardrobe (sprite variants of the player, same palette tricks as the V2 look), NPCs comment, some jobs
   need a dress code (e.g. the diner apron, a clean shirt for the notice-board jobs).
 - **Pets (5b)**: NOT now. Later buyable and placeable in the player's home (and visible in the furniture catalog style).
