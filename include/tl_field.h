@@ -238,9 +238,23 @@ namespace tl
         int _letter = 0;                // letterbox bars (pixels)
         int _letter_target = 0;
         ui::label _card_label[1];
-        bn::vector<bn::sprite_ptr, 4> _gate;        // VaultTech staff gate at the foot of the stairs (after the firing)
-        bool _cold = false;                         // cold VaultMart palette (Corner Market interior after the firing)
         int _gate_cooldown = 0;
+        warp _redirect_warp = {};
+
+        // Victor Vault's golden car (cutscene actor, see tl_car_data.h): 32x32 sprite pieces + blended shadow blobs
+        bn::vector<bn::sprite_ptr, 12> _car;
+        bn::vector<bn::sprite_ptr, 6> _car_shadow;
+        bool _car_on = false;
+        int _car_heading = 7;                   // 7 = se (+x), 3 = nw (-x)
+        bn::fixed _car_x;
+        bn::fixed _car_y;
+        int _car_from_x = 0;
+        int _car_from_y = 0;
+        int _car_to_x = 0;
+        int _car_to_y = 0;
+        int _car_frames = 0;
+        int _car_done = 0;
+        int _car_mode = 0;
         bool _shop_has_shift = false;
         int _shop_items = 4;
         int _hint_cooldown = 0;
@@ -257,7 +271,10 @@ namespace tl
         void _update_letterbox();
         void _update_focus();
         void _map_story_state();
-        void _update_gate_sprites();
+        void _car_build(int x, int y, int heading);
+        void _car_update();
+        void _car_tick();
+        void _car_clear();
         void _sync_objective_dynamic();
         void _note_evening(bool ate, bool washed);
         void _check_need_hints();

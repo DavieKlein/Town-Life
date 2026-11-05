@@ -64,7 +64,7 @@ MISSIONS = [
     ("P4", "Lunch at Lou's", "Talk to Big Lou at the diner.", ("talk", "lou"), "P5", 0),
     ("P5", "Pocket money", "Collect $30 for a rainy day.", ("money", 30), None, 0),
     ("M01", "Open Up", "Get ready for work.", ("flag", "left_room"), "M02", 0),
-    ("M02", "Stock the Shelves", "Stock three shelves (0/3).", ("flag", "shelves_stocked"), "M03", 0),
+    ("M02", "Stock the Shelves", "Stock the shelves for Rosa.", ("flag", "shelves_stocked"), "M03", 0),
     ("M03", "The Regular", "Fetch Mr. Pimm's rye loaf.", ("flag", "rye_delivered"), "M04", 0),
     ("M04", "Vault Day", "Leave the shop.", ("flag", "left_shop"), "M05", 0),
     ("M05", "Survive the Night", "Eat, freshen up, sleep on the bench.", ("flag", "slept_on_bench"), "M06", 0),

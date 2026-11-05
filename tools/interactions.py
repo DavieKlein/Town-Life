@@ -60,8 +60,12 @@ INTERACTABLES = {
     "corner_market": [
         ("shop_market", 12.2, 15.0), ("shop_market", 13.9, 15.0), ("shop_market", 15.2, 15.0),
         ("crate", 12.6, 3.1),               # the rye loaf crate in the storeroom (Day 1, Pimm's errand)
-        ("gate", 15.6, 4.7),                # the VaultTech shutter at the stairs foot (after the firing)
         # (the foot of the storeroom stairs is a warp up to "player_room")
+    ],
+    "vaultmart": [
+        # self-checkout kiosks (VaultMart prices, robot voice) and the staff gate in front of the storeroom stairs
+        ("shop_market", 11.6, 14.3), ("shop_market", 13.2, 14.3), ("shop_market", 14.8, 14.3),
+        ("gate", 15.6, 4.7),
     ],
     "diner": [
         ("shop_diner", 4.6, 4.5), ("shop_diner", 6.4, 4.5), ("shop_diner", 8.2, 4.5),

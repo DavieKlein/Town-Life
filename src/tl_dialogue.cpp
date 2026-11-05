@@ -11,6 +11,13 @@
 
 namespace tl
 {
+#ifdef TL_DEBUG_AUTO_TALK
+    // headless tests: dialogue pages and choices advance by themselves every 30 frames
+    namespace { int auto_frame = 0; bool auto_a() { return (++auto_frame % 30) == 0; } }
+#define TL_A_PRESSED() auto_a()
+#else
+#define TL_A_PRESSED() bn::keypad::a_pressed()
+#endif
     namespace
     {
         // system pages (old 40 px box)
@@ -497,7 +504,7 @@ namespace tl
     {
         if(_shown < _total)
         {
-            if(bn::keypad::a_pressed() || bn::keypad::b_pressed())
+            if(TL_A_PRESSED() || bn::keypad::b_pressed())
             {
                 _shown = _total;
                 _draw_lines(false);
@@ -531,7 +538,7 @@ namespace tl
 
         _a_icon->set_visible(((_blink / 24) & 1) == 0);
 
-        if(bn::keypad::a_pressed() || bn::keypad::b_pressed())
+        if(TL_A_PRESSED() || bn::keypad::b_pressed())
         {
             _a_icon.reset();
 
@@ -664,9 +671,18 @@ namespace tl
             _draw_choices();
         }
 
-        if(bn::keypad::a_pressed())
+        if(TL_A_PRESSED())
         {
             int chosen = _selected;
+#ifdef TL_DEBUG_AUTO_TALK
+            for(int index = 0; index < _options_count; ++index)
+            {
+                if(_options[index] == "Ask about work")
+                {
+                    chosen = index;     // headless tests take the job offer
+                }
+            }
+#endif
             _choosing = false;
             _choice_bar.clear();
             _choice_labels.clear();

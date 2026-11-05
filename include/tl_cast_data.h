@@ -41,9 +41,8 @@ namespace tl
     constexpr npc_placement npc_placements[] = {
         { npc_id::mia, map_id::corner_market, 1, 1, 1, 222, 214, 420, 870, -1, 35 },
         { npc_id::rosa, map_id::corner_market, 1, 1, 1, 198, 214, 420, 870, 28, 35 },
-        { npc_id::dex, map_id::corner_market, 1, 1, 1, 153, 182, 420, 870, 28, 35 },
         { npc_id::pimm, map_id::corner_market, 5, 1, 1, 112, 110, 540, 780, 31, 33 },
-        { npc_id::dex_vault, map_id::corner_market, 1, 1, 255, 153, 182, 360, 1320, 35, -1 },
+        { npc_id::dex_vault, map_id::vaultmart, 1, 1, 255, 153, 182, 360, 1320, 35, -1 },
         { npc_id::mia, map_id::diner, 1, 2, 255, 148, 75, 420, 720, -1, -1 },
         { npc_id::mia, map_id::city_centre, 2, 2, 255, 806, 622, 720, 750, -1, -1 },
         { npc_id::mia, map_id::diner, 1, 2, 255, 148, 75, 750, 900, -1, -1 },

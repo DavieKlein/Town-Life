@@ -319,7 +319,7 @@ namespace tl
         { "P4", "Lunch at Lou's", "Talk to Big Lou at the diner.", mission_cond::talk, int(npc_id::lou), 0, 5, 0 },
         { "P5", "Pocket money", "Collect $30 for a rainy day.", mission_cond::money, 0, 30, 0, 0 },
         { "M01", "Open Up", "Get ready for work.", mission_cond::flag, story_flag::left_room, 1, 7, 0 },
-        { "M02", "Stock the Shelves", "Stock three shelves (0/3).", mission_cond::flag, story_flag::shelves_stocked, 1, 8, 0 },
+        { "M02", "Stock the Shelves", "Stock the shelves for Rosa.", mission_cond::flag, story_flag::shelves_stocked, 1, 8, 0 },
         { "M03", "The Regular", "Fetch Mr. Pimm's rye loaf.", mission_cond::flag, story_flag::rye_delivered, 1, 9, 0 },
         { "M04", "Vault Day", "Leave the shop.", mission_cond::flag, story_flag::left_shop, 1, 10, 0 },
         { "M05", "Survive the Night", "Eat, freshen up, sleep on the bench.", mission_cond::flag, story_flag::slept_on_bench, 1, 11, 0 },

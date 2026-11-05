@@ -319,15 +319,16 @@ namespace tl::ui
 
         if(h > 64)
         {
-            int count = ((h - 64) + 63) / 64;
+            // body pieces are 32 high (the interior is vertically uniform): two per 64 px keeps the sprite VRAM low
+            int count = ((h - 64) + 31) / 32;
 
             for(int index = 0; index < count; ++index)
             {
-                int sy = 32 + (index * 64);
+                int sy = 32 + (index * 32);
 
-                if(sy > h - 68)
+                if(sy > h - 36)
                 {
-                    sy = h - 68;
+                    sy = h - 36;
                 }
 
                 row(bn::sprite_items::ui_pan_de, bn::sprite_items::ui_pan_dm, y + sy, 23);

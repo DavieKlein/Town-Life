@@ -489,6 +489,28 @@ MATERIALS = {
     "sign_white": dict(c="#ffffff", emit=1.3, emit_c="#ffffff"),  # s57-materials
     "shutter_grey": dict(c="#c6ccd4", rough=0.35, metal=0.5),  # s57-materials
     "hazard_black": dict(c="#1c1c20", rough=0.5),  # s57-materials
+    "vm_floor": dict(kind="brick", c="#e8edf2", c2="#dce3ea", mortar="#98a4b0", bw=0.6, bh=0.6, mortar_size=0.014, offset=0.0, rough=0.07),  # s57-materials
+    "vm_floor_store": dict(kind="brick", c="#aab2bc", c2="#9ea6b0", mortar="#6a727c", bw=0.6, bh=0.6, mortar_size=0.02, offset=0.0, rough=0.25),  # s57-materials
+    "vm_wall": dict(c="#e6eaee", rough=0.35),  # s57-materials
+    "vm_panel": dict(c="#8a94a2", rough=0.3, metal=0.4),  # s57-materials
+    "vm_navy": dict(c="#14284c", rough=0.3),  # s57-materials
+    "vm_frame": dict(c="#eef1f4", rough=0.25, metal=0.3),  # s57-materials
+    "vm_shelf": dict(c="#c9d0d8", rough=0.3, metal=0.4),  # s57-materials
+    "vm_back": dict(c="#f6f8fa", rough=0.5),  # s57-materials
+    "vm_box": dict(c="#f4f6f8", rough=0.45),  # s57-materials
+    "vm_box2": dict(c="#bcc4cd", rough=0.45),  # s57-materials
+    "vm_band": dict(c="#38c8dc", rough=0.4, emit=0.35, emit_c="#38c8dc"),  # s57-materials
+    "vm_label": dict(c="#0e141a", rough=0.3),  # s57-materials
+    "vm_glow": dict(c="#60f0ff", emit=1.8, emit_c="#60f0ff"),  # s57-materials
+    "vm_amber": dict(c="#ffb830", emit=1.4, emit_c="#ffb830"),  # s57-materials
+    "vm_led": dict(c="#f4fbff", emit=4.5, emit_c="#eaf6ff"),  # s57-materials
+    "vm_screen": dict(c="#46d8ee", emit=1.3, emit_c="#46d8ee"),  # s57-materials
+    "vm_screen_dk": dict(c="#0a1c2c", emit=0.3, emit_c="#16405a"),  # s57-materials
+    "vm_green": dict(c="#40ff70", emit=2.5, emit_c="#40ff70"),  # s57-materials
+    "vm_redlamp": dict(c="#ff3030", emit=2.5, emit_c="#ff3030"),  # s57-materials
+    "vm_grey_apple": dict(c="#9ca4ac", rough=0.5),  # s57-materials
+    "vm_carpet": dict(c="#7c8692", rough=0.9),  # s57-materials
+    "vm_stripe": dict(c="#38c8dc", rough=0.4, emit=0.6, emit_c="#38c8dc"),  # s57-materials
     "rug_green": dict(c="#4e8a5a", rough=0.95),
     "rug_gold": dict(c="#d8a84a", rough=0.95),
     "rug_teal": dict(c="#4a9a96", rough=0.95),
@@ -1207,7 +1229,7 @@ def main():
     ident, layer, out = argv[0], argv[1], argv[2]
     scale = int(argv[3]) if len(argv) > 3 else 2
     samples = int(argv[4]) if len(argv) > 4 else 64
-    s = next(f() for f in scn.SCENES + scn.OVERLAY_SCENES if f().ident == ident)
+    s = next(f() for f in scn.SCENES if f().ident == ident)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene

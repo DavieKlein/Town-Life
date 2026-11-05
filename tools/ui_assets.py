@@ -83,7 +83,7 @@ def build_panels():
         "te": t.crop((0, 0, 64, 32)), "tm": t.crop((96, 0, 160, 32)),
         "ne": n.crop((0, 0, 64, 32)), "nm": n.crop((96, 0, 160, 32)),
         "be": n.crop((0, 96, 64, 128)), "bm": n.crop((96, 96, 160, 128)),
-        "de": n.crop((0, 32, 64, 96)), "dm": n.crop((96, 32, 160, 96)),
+        "de": n.crop((0, 32, 64, 64)), "dm": n.crop((96, 32, 160, 64)),     # body pieces are 32 high (half the sprite VRAM of 64x64)
     }
     for k, im in pieces.items():
         write_item("ui_pan_" + k, im, im.height, pal)

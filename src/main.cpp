@@ -15,6 +15,7 @@
 #ifdef TL_DEBUG_CPU
 #include "bn_core.h"
 #include "bn_string.h"
+#include "bn_sprite_tiles.h"
 #include "tl_ui.h"
 #endif
 
@@ -75,7 +76,7 @@ int main()
         start.day = 1;
         start.minutes = 7 * 60;
         start.money = 0;
-        static constexpr int new_game_needs[5] = { 70, 85, 70, 60, 55 };
+        static constexpr int new_game_needs[5] = { 70, 85, 70, 60, 80 };     // Bladder 80 (doc: 55): the room has no bathroom
 
         for(int need = 0; need < 5; ++need)
         {
@@ -122,11 +123,15 @@ int main()
 
         if(++frame % 30 == 0)
         {
-            bn::string<24> text("cpu ");
+            bn::string<40> text("c");
             text.append(bn::to_string<8>(worst));
-            text.append(" miss ");
+            text.append(" m");
             text.append(bn::to_string<8>(missed));
-            cpu_label.set(tl::ui::font9, 100, 11, text, tl::ui::role::hud_clock);
+            text.append(" u");
+            text.append(bn::to_string<8>(bn::sprite_tiles::used_tiles_count()));
+            text.append(" a");
+            text.append(bn::to_string<8>(bn::sprite_tiles::available_tiles_count()));
+            cpu_label.set(tl::ui::font9, 60, 11, text, tl::ui::role::hud_clock);
             worst = 0;
         }
 #endif

@@ -164,7 +164,8 @@ namespace tl
         _story_check_due = true;
         _deposit.load(*_map);
         _pool_sprites.clear();
-        _map_story_state();             // staff gate, cold VaultMart palette (story flags)
+        _car_clear();
+        _map_story_state();
         _update_lighting(true);
         _update_camera();
     }
@@ -218,7 +219,7 @@ namespace tl
 
         _floor_bg->set_view(_cam_x, _cam_y);
         _objects_bg->set_view(_cam_x, _cam_y);
-        _update_gate_sprites();
+        _car_update();
         _player.update_sprite(_cam_x, _cam_y);
         _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
         _npcs.update(_cam_x, _cam_y);
@@ -242,7 +243,7 @@ namespace tl
         if(force || _light_minutes != _minutes)
         {
             _light_minutes = _minutes;
-            _light = _cold ? cold_lighting() : lighting_at(_minutes, _map->outdoor);
+            _light = lighting_at(_minutes, _map->outdoor);
             _player.set_lighting(_light);
             _npcs.set_lighting(_light);
             _critters.set_lighting(_light);
@@ -753,9 +754,9 @@ namespace tl
 
         case interactable_kind::shop_market:
         case interactable_kind::shop_diner:
-            if(best->kind == interactable_kind::shop_market && story().flag(story_flag::corner_market_cold))
+            if(best->kind == interactable_kind::shop_market && _map_id == map_id::vaultmart)
             {
-                // the robot voice of the self-checkout (HOOK VAULTMART_SWAP: the real VaultMart counter is pending)
+                // the robot voice of the self-checkout kiosk
                 _shop_return = best;
                 _show_info("VaultMart", "Welcome to VaultMart.", "Have a nice day.", "Next customer.");
             }
@@ -853,7 +854,7 @@ namespace tl
         static bn::string_view voucher_label = "Coffee (voucher)";
         static bn::string_view shift_label = "Work a shift";
         bool market = target.kind == interactable_kind::shop_market;
-        bool cold = market && story().flag(story_flag::corner_market_cold);
+        bool cold = market && _map_id == map_id::vaultmart;
         int count = market ? (cold ? 5 : 4) : 3;
 
         for(int index = 0; index < count; ++index)
@@ -908,7 +909,7 @@ namespace tl
     void field::_buy(const interactable& target, int choice)
     {
         bool market = target.kind == interactable_kind::shop_market;
-        bool cold = market && story().flag(story_flag::corner_market_cold);
+        bool cold = market && _map_id == map_id::vaultmart;
         shop_item item = market ? (cold ? cold_items[choice] : market_items[choice]) : diner_items[choice];
         bool voucher = ! market && choice == 0 && story().flag(story_flag::has_coffee_voucher) && ! story().flag(story_flag::voucher_used);
 
@@ -1818,6 +1819,14 @@ namespace tl
             }
 
             _pending_warp = _map->warp_at(_player.x(), _player.y());
+
+            if(_pending_warp && _pending_warp->target == map_id::corner_market && story().flag(story_flag::vault_scene))
+            {
+                // after the firing the shop door leads into VaultMart (the cold, regimented Corner Market)
+                _redirect_warp = *_pending_warp;
+                _redirect_warp.target = map_id::vaultmart;
+                _pending_warp = &_redirect_warp;
+            }
 
             if(_pending_warp && _pending_warp->target == map_id::player_room && story().flag(story_flag::vault_scene))
             {

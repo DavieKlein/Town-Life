@@ -10,10 +10,13 @@
 #include "bn_rect_window.h"
 #include "bn_bg_palettes.h"
 #include "bn_sprite_palettes.h"
-#include "bn_sprite_items_gate_b.h"
 
 #include "tl_cutscene.h"
-#include "tl_gate_data.h"
+#include "tl_car_data.h"
+#include "bn_sprite_items_car_se.h"
+#include "bn_sprite_items_car_nw.h"
+#include "bn_sprite_items_shadow.h"
+#include "bn_blending.h"
 #include "tl_story_ids.h"
 #include "tl_cutscene_ids.h"
 
@@ -64,12 +67,6 @@ namespace tl
                 return direction::down;
             }
         }
-
-        // The VaultTech staff gate at the foot of the storeroom stairs (graphics/gate_b.bmp from tools/gate_overlay.py): top-left of the
-        // 2 x 2 block of 32x64 sprites in image pixels of the corner_market map.
-        constexpr int gate_image_x = GATE_IMAGE_X;
-        constexpr int gate_image_y = GATE_IMAGE_Y;
-        constexpr int gate_rect[4] = { 237, 53, 262, 67 };      // solid footprint (world units)
 
         BN_DATA_EWRAM_BSS bn::string<200> pending_text;
     }
@@ -233,6 +230,7 @@ namespace tl
         _pan_mode = _pan_mode == 0 ? 0 : 2;
         _set_letterbox(0);
         _npcs.release(_day, _minutes);
+        _car_clear();
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _set_hud_hidden(false);
         _redraw_hud_text();
@@ -332,6 +330,7 @@ namespace tl
         }
 
         _npcs.tick();
+        _car_tick();
         _script_arrived_check();
         _player.update();
         _player.set_blockers(_npcs.blockers(), _npcs.count());
@@ -386,7 +385,7 @@ namespace tl
                 break;
 
             case script_state::wait_kind::moves:
-                if(_npcs.moving() || _script.walking)
+                if(_npcs.moving() || _script.walking || _car_frames > 0)
                 {
                     return;
                 }
@@ -534,7 +533,6 @@ namespace tl
         case cs_op::warp:
             _objects_bg.reset();
             _floor_bg.reset();
-            _gate.clear();
             _script.warp_map = map_id(step.a);
             _script.warp_x = step.b;
             _script.warp_y = step.c;
@@ -646,7 +644,13 @@ namespace tl
             break;
 
         case cs_op::objective:
-            _objective = step.text;
+            _objective.clear();
+
+            for(const char* c = step.text; *c && ! _objective.full(); ++c)
+            {
+                _objective.push_back(*c);       // longer texts are cut (the pause screen line holds 47 characters)
+            }
+
             _objective_override = true;
             break;
 
@@ -746,11 +750,28 @@ namespace tl
             break;
 
         case cs_op::vaultmart_swap:
-            // HOOK VAULTMART_SWAP: the cold VaultMart makeover of Corner Market (white panels, grey awning, self-checkouts, robot arm).
-            // The design is pending, so for now only the cold grey palette of the interior (flag corner_market_cold) plus a flash.
+            // VaultMart takes over: from now on the Corner Market door leads to the `vaultmart` map (see field::update, redirect warp);
+            // the warm shop and the room upstairs stay unreachable. A white flash marks the moment.
             s.set_flag(story_flag::corner_market_cold, 1);
-            _light_minutes = -1;
             _script.flash = 8;
+            break;
+
+        case cs_op::car_spawn:
+            _car_build(step.a, step.b, step.c);
+            break;
+
+        case cs_op::car_move:
+            _car_from_x = _car_x.round_integer();
+            _car_from_y = _car_y.round_integer();
+            _car_to_x = step.a;
+            _car_to_y = step.b;
+            _car_frames = step.c > 0 ? step.c : 1;
+            _car_done = 0;
+            _car_mode = step.d;
+            break;
+
+        case cs_op::car_remove:
+            _car_clear();
             break;
 
         case cs_op::jump:
@@ -807,42 +828,108 @@ namespace tl
         }
     }
 
-    // ---------------------------------------------------------------------------------------------------- VaultMart gate and cold palette
+    // ---------------------------------------------------------------------------------------------------- map story state
     void field::_map_story_state()
     {
-        _gate.clear();
-        _player.set_blocked_rect(0, 0, 0, 0);
-        _cold = _map_id == map_id::corner_market && story().flag(story_flag::corner_market_cold);
-
-        if(_map_id == map_id::corner_market && story().flag(story_flag::vault_scene))
-        {
-            for(int index = 0; index < 4; ++index)
-            {
-                bn::sprite_ptr piece = bn::sprite_items::gate_b.create_sprite(0, 0, index);
-                piece.set_bg_priority(2);
-                piece.set_z_order(6);
-                _gate.push_back(bn::move(piece));
-            }
-
-            _player.set_blocked_rect(gate_rect[0], gate_rect[1], gate_rect[2], gate_rect[3]);
-            _update_gate_sprites();
-        }
-
         _light_minutes = -1;
     }
 
-    void field::_update_gate_sprites()
+    // ---------------------------------------------------------------------------------------------------- the golden car
+    void field::_car_clear()
     {
-        if(_gate.empty())
+        _car.clear();
+        _car_shadow.clear();
+        _car_on = false;
+        _car_frames = 0;
+    }
+
+    void field::_car_build(int x, int y, int heading)
+    {
+        _car_clear();
+        _car_on = true;
+        _car_heading = heading;
+        _car_x = x;
+        _car_y = y;
+        _car_frames = 0;
+        bool se = heading == 7;
+        int count = se ? car_se_count : car_nw_count;
+        const car_piece* pieces = se ? car_se_pieces : car_nw_pieces;
+
+        for(int index = 0; index < count; ++index)
+        {
+            bn::sprite_ptr piece = se ? bn::sprite_items::car_se.create_sprite(0, 0, pieces[index].frame) :
+                                        bn::sprite_items::car_nw.create_sprite(0, 0, pieces[index].frame);
+            piece.set_bg_priority(3);         // behind the objects layer: the kerb lamp post stays in front of the car
+            piece.set_z_order(4);
+            _car.push_back(bn::move(piece));
+        }
+
+        for(int index = 0; index < 6; ++index)
+        {
+            bn::sprite_ptr blob = bn::sprite_items::shadow.create_sprite(0, 0);
+            blob.set_blending_enabled(true);
+            blob.set_bg_priority(3);
+            blob.set_z_order(6);
+            _car_shadow.push_back(bn::move(blob));
+        }
+
+        _car_update();
+    }
+
+    void field::_car_tick()
+    {
+        if(! _car_on)
         {
             return;
         }
 
-        for(int index = 0; index < 4; ++index)
+        if(_car_frames > 0)
         {
-            int x = gate_image_x + ((index % 2) * 32) - _cam_x;
-            int y = gate_image_y + ((index / 2) * 64) - _cam_y;
-            _gate[index].set_position(x + 16 - 120, y + 32 - 80);
+            ++_car_done;
+            int t = _car_done >= _car_frames ? 256 : (_car_done * 256) / _car_frames;
+            int e = t;
+
+            if(_car_mode == 1)
+            {
+                e = 256 - (((256 - t) * (256 - t)) / 256);        // ease out: slowing down to a stop
+            }
+            else if(_car_mode == 2)
+            {
+                e = (t * t) / 256;                                // ease in: speeding up
+            }
+
+            _car_x = _car_from_x + (((_car_to_x - _car_from_x) * e) / 256);
+            _car_y = _car_from_y + (((_car_to_y - _car_from_y) * e) / 256);
+
+            if(_car_done >= _car_frames)
+            {
+                _car_frames = 0;
+            }
+        }
+    }
+
+    void field::_car_update()
+    {
+        if(! _car_on)
+        {
+            return;
+        }
+
+        int fx = _map->to_image_x(_car_x.round_integer(), _car_y.round_integer()) - _cam_x;
+        int fy = _map->to_image_y(_car_x.round_integer(), _car_y.round_integer()) - _cam_y;
+        bool se = _car_heading == 7;
+        const car_piece* pieces = se ? car_se_pieces : car_nw_pieces;
+
+        for(int index = 0; index < _car.size(); ++index)
+        {
+            _car[index].set_position(fx + pieces[index].dx + 16 - 120, fy + pieces[index].dy + 16 - 80);
+        }
+
+        for(int index = 0; index < _car_shadow.size(); ++index)
+        {
+            // footprint: a row of ellipses along the car's long axis (+x on the ground = down-right on screen)
+            int off = (index - 2) * 16;
+            _car_shadow[index].set_position(fx + off - 8 - 120, fy + (off / 2) + 2 - 80 + 2);
         }
     }
 

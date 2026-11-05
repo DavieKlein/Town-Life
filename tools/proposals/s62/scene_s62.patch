@@ -1,0 +1,22 @@
+--- /home/user/Town-Life/tools/scene.py	2026-11-04 21:14:04.543444687 +0000
++++ tools/scene.py	2026-11-04 22:05:27.464074635 +0000
+@@ -163,11 +163,11 @@
+             d["sy"] = sy
+         self.prims.append(d)
+ 
+-    def text(self, s, x, y, z, size, mat, face="left", layer="objects", extrude=0.01):
++    def text(self, s, x, y, z, size, mat, face="left", layer="objects", extrude=0.01, bold=False):
+         """Text on a face. face 'left' = facing +y (down-left), 'right' = facing +x (down-right).
+         (x, y, z) = centre of the text baseline area."""
+         self.prims.append(dict(type="text", s=s, x=x, y=y, z=z, size=size, mat=mat, face=face,
+-                               layer=layer, extrude=extrude))
++                               layer=layer, extrude=extrude, bold=bold))
+ 
+     def wedge(self, x0, y0, x1, y1, z_top, z_bottom, depth_axis, mat, layer="objects"):
+         """Awning: a slanted slab sticking out of a wall. depth_axis 'y' = sticks out towards +y."""
+@@ -2481,3 +2481,5 @@
+ 
+ 
+ SCENES = [city_centre, market_v2, diner, community_centre, vaulttech_lobby, public_toilet, player_room]
++
++import rooms62  # noqa  (s62 proposal scenes)

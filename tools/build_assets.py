@@ -731,8 +731,6 @@ def main():
     import cutscene_data
     cutscene_data.main()
     build_ui_sprites()
-    import gate_overlay
-    gate_overlay.main()        # the VaultTech staff gate sprites (renders only the gate, cached)
 
 
 CRITTER_FRAMES = {"pigeon": 5, "squirrel": 4}

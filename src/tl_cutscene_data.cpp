@@ -23,6 +23,7 @@ namespace tl
         { cs_op::scene_end, 0, 0, 0, 0, 0, nullptr },  // wake_up
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // wake_up
         { cs_op::flag, story_flag::left_room, 1, 0, 0, 0, nullptr },  // briefing
+        { cs_op::spawn, int(npc_id::dex), 154, 182, 1, 0, nullptr },  // briefing
         { cs_op::pan, 202, 234, 0, 0, 0, nullptr },  // briefing
         { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // briefing
         { cs_op::say, dlg::pro_briefing, 0, 0, 0, 0, nullptr },  // briefing
@@ -51,7 +52,6 @@ namespace tl
         { cs_op::actor_face, int(npc_id::pimm), 5, 0, 0, 0, nullptr },  // pimm_arrives
         { cs_op::say, dlg::pro_pimm_enter, 0, 0, 0, 0, nullptr },  // pimm_arrives
         { cs_op::pan_player, 0, 0, 0, 0, 0, nullptr },  // pimm_arrives
-        { cs_op::objective, 0, 0, 0, 0, 0, "Fetch the rye loaf from the storeroom (second crate), then give it to Mr. Pimm." },  // pimm_arrives
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // pimm_arrives
         { cs_op::despawn, int(npc_id::pimm), 0, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::spawn, int(npc_id::pimm), 112, 110, 5, 0, nullptr },  // pimm_leaves
@@ -65,7 +65,6 @@ namespace tl
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::despawn, int(npc_id::pimm), 0, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::flag, story_flag::pimm_left, 1, 0, 0, 0, nullptr },  // pimm_leaves
-        { cs_op::objective_clear, 0, 0, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::pan, 208, 224, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::wait, 10, 0, 0, 0, 0, nullptr },  // staff_lunch
@@ -75,6 +74,26 @@ namespace tl
         { cs_op::eat, 15, 3, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::fade_out, 12, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::warp, int(map_id::city_centre), 650, 314, 3, 0, nullptr },  // vault_day
+        { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::car_spawn, 1056, 377, 3, 0, 0, nullptr },  // vault_day
+        { cs_op::pan, 720, 374, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::letterbox, 1, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::car_move, 709, 377, 170, 1, 0, nullptr },  // vault_day
+        { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::wait, 25, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::spawn, int(npc_id::robot), 717, 357, 4, 0, nullptr },  // vault_day
+        { cs_op::move, int(npc_id::robot), 720, 307, 0, 0, nullptr },  // vault_day
+        { cs_op::wait, 40, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::spawn, int(npc_id::victor), 694, 357, 4, 0, nullptr },  // vault_day
+        { cs_op::move, int(npc_id::victor), 701, 304, 0, 0, nullptr },  // vault_day
+        { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::despawn, int(npc_id::victor), 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::despawn, int(npc_id::robot), 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::car_remove, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::fade_out, 12, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::warp, int(map_id::corner_market), 128, 262, 1, 0, nullptr },  // vault_day
         { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::mia), 222, 214, 1, 0, nullptr },  // vault_day
@@ -83,9 +102,7 @@ namespace tl
         { cs_op::pan, 179, 234, 0, 0, 0, nullptr },  // vault_day
         { cs_op::letterbox, 1, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // vault_day
-        { cs_op::wait, 40, 0, 0, 0, 0, nullptr },  // vault_day
-        { cs_op::hook, 0, 0, 0, 0, 0, nullptr },  // vault_day
-        { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::wait, 30, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::robot), 128, 282, 4, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::robot), 154, 245, 0, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
@@ -117,16 +134,38 @@ namespace tl
         { cs_op::say, dlg::pro_vault_3, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::letterbox, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::pan_player, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::done, mission_id::M03, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::flag, story_flag::left_shop, 1, 0, 0, 0, nullptr },  // vault_day
         { cs_op::flag, story_flag::vault_scene, 1, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_out, 12, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::warp, int(map_id::city_centre), 704, 304, 0, 0, nullptr },  // vault_day
-        { cs_op::spawn, int(npc_id::mia), 675, 312, 6, 0, nullptr },  // vault_day
-        { cs_op::spawn, int(npc_id::rosa), 739, 312, 2, 0, nullptr },  // vault_day
+        { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::player_at, 650, 317, 3, 0, 0, nullptr },  // vault_day
+        { cs_op::car_spawn, 709, 377, 3, 0, 0, nullptr },  // vault_day
+        { cs_op::spawn, int(npc_id::victor), 704, 294, 0, 0, nullptr },  // vault_day
+        { cs_op::spawn, int(npc_id::robot), 718, 294, 0, 0, nullptr },  // vault_day
+        { cs_op::spawn, int(npc_id::dex_vault), 691, 294, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 10, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_in, 12, 0, 0, 0, 0, nullptr },  // vault_day
-        { cs_op::wait, 30, 0, 0, 0, 0, nullptr },  // vault_day
-        { cs_op::move, int(npc_id::rosa), 1120, 336, 0, 0, nullptr },  // vault_day
+        { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::move, int(npc_id::victor), 702, 355, 1, 0, nullptr },  // vault_day
+        { cs_op::move, int(npc_id::robot), 718, 355, 1, 0, nullptr },  // vault_day
+        { cs_op::move, int(npc_id::dex_vault), 688, 355, 1, 0, nullptr },  // vault_day
+        { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::despawn, int(npc_id::victor), 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::despawn, int(npc_id::robot), 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::despawn, int(npc_id::dex_vault), 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::wait, 15, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::car_spawn, 709, 377, 7, 0, 0, nullptr },  // vault_day
+        { cs_op::car_move, 1248, 377, 150, 2, 0, nullptr },  // vault_day
+        { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::car_remove, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::spawn, int(npc_id::mia), 707, 293, 0, 0, nullptr },  // vault_day
+        { cs_op::spawn, int(npc_id::rosa), 717, 293, 0, 0, nullptr },  // vault_day
+        { cs_op::move, int(npc_id::mia), 675, 312, 0, 0, nullptr },  // vault_day
+        { cs_op::move, int(npc_id::rosa), 739, 312, 0, 0, nullptr },  // vault_day
+        { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::move, int(npc_id::rosa), 1120, 336, 1, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::despawn, int(npc_id::rosa), 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::actor_face_player, int(npc_id::mia), 0, 0, 0, 0, nullptr },  // vault_day
@@ -139,7 +178,7 @@ namespace tl
         { cs_op::fade_out, 14, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::card, 0, 0, 0, 0, 0, "Four hours later..." },  // vault_day
         { cs_op::time, 18, 0, 0, 0, 0, nullptr },  // vault_day
-        { cs_op::needs, -17, -12, -10, -14, -24, nullptr },  // vault_day
+        { cs_op::needs, -17, -12, -10, -14, -8, nullptr },  // vault_day
         { cs_op::player_at, 704, 314, 0, 0, 0, nullptr },  // vault_day
         { cs_op::scene_end, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // vault_day
@@ -156,14 +195,14 @@ namespace tl
         };
         constexpr cs_script all_scripts[] = {
             { 0, 13 },
-            { 13, 8 },
-            { 21, 7 },
-            { 28, 16 },
-            { 44, 14 },
-            { 58, 7 },
-            { 65, 74 },
-            { 139, 3 },
-            { 142, 2 },
+            { 13, 9 },
+            { 22, 7 },
+            { 29, 15 },
+            { 44, 13 },
+            { 57, 7 },
+            { 64, 114 },
+            { 178, 3 },
+            { 181, 2 },
         };
         constexpr cs_cond all_conds[] = {
             { cs_cond_kind::map, int(map_id::player_room), 0 },

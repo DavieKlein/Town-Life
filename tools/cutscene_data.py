@@ -46,7 +46,10 @@ FORMAT of cutscenes_src.txt (one statement per line, '#' starts a comment, inden
     needs <hunger> <energy> <hygiene> <fun> <bladder>     add to the needs (deltas)
     eat <hunger> <energy> <fun>        eating animation, needs fill gradually (staff bread, free)
     lie_bed / get_up           the player lies down on the bed of the room / gets up
-    hook car_arrival           HOOK: the golden car (design pending) - for now a short fade
+    car_spawn <x> <y> <se|nw>  put the golden car on the street (se = heading +x, nw = heading -x)
+    car_move <x> <y> <frames> <mode>   the car drives there (mode 0 linear, 1 slowing down to a stop, 2 speeding up); wait_moves waits
+    car_remove
+    hook car_arrival           (kept, unused: the car is real now)
     vaultmart_swap             HOOK: the cold VaultMart look of Corner Market (design pending) - for now a cold palette + flash
     jump <label> / ifflag <flag> <n> <label>      jump (always / when the flag value >= n)
     end                        end of the script
@@ -72,7 +75,7 @@ OPS = {
     "flag": "Fn?", "mission": "M", "done": "M", "money": "n", "money_rank": "", "objective": "s", "objective_clear": "",
     "minigame": "k", "letterbox": "b", "pan": "cc", "pan_player": "", "time": "nn", "next_day": "nn", "needs": "nnnnn",
     "eat": "nnn", "lie_bed": "", "get_up": "", "hook": "h", "vaultmart_swap": "", "jump": "L", "ifflag": "FnL", "end": "",
-    "label": "L",
+    "label": "L", "car_spawn": "ccf", "car_move": "ccnn", "car_remove": "",
 }
 COND_KINDS = ["map", "flag", "noflag", "flag_ge", "day_eq", "day_ge", "time_ge", "time_lt", "mission"]
 

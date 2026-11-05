@@ -559,7 +559,7 @@ room's materials did not re-render the city.
 
 14-step wooden flight with handrail and PRIVATE plaque along the east wall of the storeroom (x 15.0-16.25, y 4.0 up to 0.9; `stairs_flight`
 in scene.py, applied inside `market_v2`; staff table moved to (13.4, 2.4), red poster removed). The flight is solid; the foot (15.0-16.25 x
-3.5-4.0) is walkable and is the warp up to the room. The room above is built (see above). The VaultMart staff gate (proposals/s55 `market_gate_a/b`) is NOT in the game yet: the owner has not chosen A or B.
+3.5-4.0) is walkable and is the warp up to the room. The room above is built (see above). After the firing the stairs are behind the staff gate (variant B) inside the `vaultmart` map (see "Minigames, cutscenes and the prologue").
 
 ### UI style system (tl_ui, tools/ui_assets.py)
 
@@ -700,6 +700,49 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
   "Ask about work" -> node `ask_lou_work`, sets `asked_lou_job`, shown until asked; with it only 2 small-talk topics). After editing
   `cast.py` placements without Blender runs: `cd tools; python3 -c "import build_assets as b; b.write_cast_header()"`.
 
+## Minigames, cutscenes and the prologue (s61-s62)
+
+- **Minigames** (`tl_minigame.h/.cpp`, art `tools/minigame_art.py`): each is its own scene with a blocking loop. `main.cpp` destroys the `field`
+  (frees sprite VRAM), runs `run_minigame(request)`, applies the result to a `save_data` snapshot (`apply_minigame_result` in
+  tl_field_script.cpp: money, natural need decay + job costs, clock, story flags) and rebuilds the field from it. Backgrounds are 8bpp
+  256x256 `regular_bg` (240x160 art, `create_bg(8, 48)`, palette entry 0 unused), moving parts are small sprite sheets (`mg_*`).
+  - **STOCK IT!** (Rosa): 3 sections MILK/CANS/CEREAL, belt shows the next 4 items, Left/Right snap, A put away, B swap (-2 s), 45 s, combo
+    x2/x3/x4 at 3/6/10, wrong shelf = bounce + X + combo reset + -2 s + Rosa hint, full section +50 and refill, rank C/B/A/S (<400 / 400 /
+    700 / 1000 or no mistake with 12+ items) = $18/19/20/22; the pay is handed over at the firing (flag value `stock_rank`, op `money_rank`).
+    `minigame_request::replay` = replay job stub (3 rounds, $4-7 per round; the 4th "fruit" section is not built).
+  - **PLATE RUSH** (Lou): 8 rushes (4-6 plates), SCRUB (A) / RINSE (B) / STACK (Up) inside the [ ] brackets (PERFECT in the centre), greasy pans
+    (from rush 3) = mash A x5, a missed step breaks the plate, 3 broken plates end the shift (wage still paid), wage $16 + tip $0-3 by PERFECT
+    share minus $1 per break, +10 % wage if all needs >= 60 / -25 % if a need <= 15, free staff meal (Hunger +30, Energy +5, Fun +3).
+    Lunch 11:00-15:00, dinner 17:00-21:00 (`tempo_percent` 130, more pans); one shift per day (`diner_shift_day`), started from the diner counter
+    ("Work a shift") or right after Lou's job talk. Fragile glasses (B only, after day 3) are not built.
+  - Debug (all via USERCXXFLAGS, `BUILD=build_dbg` keeps the normal build dir clean): `-DTL_DEBUG_MINIGAME=1|2 -DTL_DEBUG_BOT=1..3` runs a minigame straight away with a bot; `-DTL_DEBUG_AUTO_TALK` auto-advances dialogue pages (and picks "Ask about work"); `-DTL_DEBUG_BOT=n` alone makes minigames started
+    from the story play by bot (headless tests). VRAM is tight: keep choice questions short (<= 2 lines) and at most ~3 NPC sprites on screen
+    during talks (`-DTL_DEBUG_CPU` shows `c`pu, `m`issed frames, `u`sed / `a`vailable sprite tiles).
+- **Cutscene scripts**: source `tools/cutscenes_src.txt` (format at the top of `tools/cutscene_data.py`) -> `src/tl_cutscene_data.cpp` +
+  `include/tl_cutscene_ids.h` (run by build_assets or alone). Steps: fade/black/flash/card, warp/player_at/walk, spawn/move/swap/despawn actors,
+  say (dialogue node), info, flag/mission/money, minigame, letterbox, pan, time/needs/eat, lie_bed/get_up, car_spawn/car_move, jump/ifflag.
+  `trigger <script> when <conds>` lines start scripts while the player walks free (checked every frame in `field::update`; a script sets a
+  flag that makes its own conditions false, so Continue works anywhere). Runner: `tl_field_script.cpp` (`field::_run_step`), actors in
+  `tl_npcs` (`spawn/move_to/despawn`, schedule frozen until `release`), player auto-walk (`player::set_script_input`), letterbox (window),
+  camera pan (`_pan_mode`). Cast placements can depend on flags (`cast.py` PLACEMENTS 10th/11th element = flag_on / flag_off).
+  Dialogue source supports `if <flag> -> node` / `ifnot <flag> -> node` after a page.
+- **Prologue flow** (New Game: intro cards, name entry, start in `player_room` 7:00, $0, needs 70/85/70/60/80 - Bladder 80 instead of the doc's 55 because the room has no bathroom): wake_up -> stairs -> `briefing`
+  (Rosa, Mia, Dex) -> STOCK IT! -> `stock_react` -> 9:00 `pimm_arrives` (fetch the rye loaf from the storeroom crate, give it to Pimm, he leaves) ->
+  12:00 `staff_lunch` -> 14:00 `vault_day`: the golden car drives in, Valet + Victor enter, the firing, Rosa's pay, Vault/Valet/Dex leave and drive
+  off, Mia's goodbye ($ coffee voucher), "Four hours later..." -> evening (checklist objective Eat/Wash/Sleep, one-time need hints, bench sleep
+  rules: +0.3 Energy/min, wake at Energy 100 or 7:30 but not before 4 h) -> `news_day2` -> Mia's RETURN & EARN tip in the diner -> Lou's job
+  ("Ask about work", needs Hygiene >= 40) -> PLATE RUSH shifts. The chain stops at mission X1 "Explore the city (Old Block coming soon)".
+- **VaultMart** (s62 variant A, real map `vaultmart`, scene.py `vaultmart()`): after the firing flag `vault_scene` the Corner Market door warps to
+  `vaultmart` (redirect in `field::update`). Regimented shelf rows, kiosk bank (the three kiosks are `shop_market` interactables: robot voice
+  "Welcome to VaultMart. Have a nice day. Next customer.", prices Bread $3, Apple $2, Ready meal $7, Soda $2, Nutrient loaf $2), restock arm,
+  cold palette, storeroom stairs behind the staff gate B (interactable `gate`: "STAFF ONLY. VaultMart property."); the warm room upstairs is
+  unreachable. Dex in the grey blazer stands in the aisle (placement). `vaultmart_swap` script op = white flash + flag.
+- **Golden car** (s62, compact 0.75x): `tools/blender_car.py` + `tools/car_sprites.py` (renders), `tools/car_sprites_build.py` cuts
+  `tools/proposals/s62/car75/*` into 32x32 sprite pieces (`graphics/car_se|nw.bmp`, `include/tl_car_data.h`, 12 pieces / 192 tiles per facing),
+  blended shadow blobs; bg priority 3 so the kerb lamp post stays in front. Script ops `car_spawn x y se|nw`, `car_move x y frames mode`.
+  SW/NE facings are not built (the car only drives along the avenue).
+- Hooks `CAR_ARRIVAL` (`hook car_arrival`, unused fade) and `VAULTMART_SWAP` are now real (see above).
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)
@@ -760,11 +803,11 @@ Update the checkboxes at the end of each session.
 - [ ] District lock system driven by flags (the Docks blocker)
 
 1.5 Chapter 1 story — TODO
-- [ ] Working at Corner Market (warm palette)
-- [ ] Cutscene: Victor Vault buys the store and fires everyone
-- [ ] VaultMart transformation (cold palette, self-checkouts, robot voice)
-- [ ] Start state: $20, park bench as home; money in HUD
-- [ ] First odd jobs paying small amounts
+- [x] Working at Corner Market (warm palette): briefing, STOCK IT! shift, Mr. Pimm's rye loaf, staff lunch
+- [x] Cutscene: Victor Vault buys the store and fires everyone (golden car, Valet, expressions)
+- [x] VaultMart transformation (own cold map, self-checkout kiosks, robot voice, staff gate)
+- [x] Start state: $0 -> last pay $18-22, park bench as home; evening survival checklist
+- [x] PLATE RUSH diner job (daily shifts); [ ] odd jobs (notice board), Old Block missions M08+
 - [ ] Introduce the rival character
 - [ ] Chapter end: unlock the Docks
 
@@ -839,8 +882,8 @@ blender_render.py code is in commit `c3aaccc` (WIP). It adds projecting shop sig
 lamps, a café table, a mailbox, etc. It was reverted from main until the owner wants details.
 
 **Owner decisions (latest):**
-- **VaultTech staff gate = variant B** (roll-down shutter with a big red STAFF ONLY sign), proposal `tools/proposals/s55` (gate B). To be built
-  together with the prologue / firing scene (not before).
+- **VaultTech staff gate = variant B** (roll-down shutter with a big red STAFF ONLY sign): built into the `vaultmart` map (s62).
+- **VaultMart = variant A, golden car = compact 0.75x (owner, s62):** built (see "Minigames, cutscenes and the prologue"); proposal sources in `tools/proposals/s62/`.
 - **Player bed (s58, s59):** `bed_cosy` is soft: bevelled mattress, puffy duvet (hangs 0.07 over the sides), turned-back sheet, ONE round pillow, no
   footboard, no foot blanket. `s.box(..., bevel=r)` now works (blender_render `add_box`, rounded 3 segments, smooth faces; lines marked
   `# s57-materials` keep other scenes' cache). The sleeper uses `player_rest` frame 5 (`bed_0`, on the back, head towards -x, face pass off), lifted
