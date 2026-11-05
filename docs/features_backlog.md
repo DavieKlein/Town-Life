@@ -6,17 +6,17 @@ Status: **now** = built in s63 (code/text only), **proposal** = mock-up made in 
 
 | # | Feature | District 1? | Status |
 |---|---------|-------------|--------|
-| 1 | **Social** need | yes | logic **now** (`needs::social`, saved, pause line); HUD 6th slot = **proposal** |
-| 2 | **Showers** (Hygiene; sink hands + fountain face exist) | yes | **proposal** (placement); build after approval |
-| 3 | **Sickness** + doctor's practice + hospital + bills by post | practice yes, hospital later | **proposal** (doctor plan); logic later |
+| 1 | **Social** need | yes | **built s64** (HUD variant A: six slim slots, Social = two speech bubbles) |
+| 2 | **Showers** (Hygiene; sink hands + fountain face exist) | yes | **built s64** (public toilet cubicle, $1) |
+| 3 | **Sickness** + doctor's practice + hospital + bills by post | practice yes, hospital later | **built s64** (City Clinic, faint, sick, debt); bills by post + hospital pending |
 | 4 | **Clothing / outfits** in the wardrobe, NPC reactions, dress codes | later (needs sprite variants) | later |
 | 5 | **NPCs walk around** with routines | yes | **now** (routes, idle frames sliding); walk frames later |
 | 5b | **Pets** (buyable, placed in your home) | no | later (with homes / Old Block) |
 | 6 | **Gifts**, per-NPC favourites | yes | **now** |
-| 7 | **Phone** (calls/texts, meet-ups, odd jobs, food delivery) | yes | **proposal** (UI) |
+| 7 | **Phone** (calls/texts, meet-ups, odd jobs, food delivery) | yes | **built s64** (SELECT; contacts, messages, order food); odd jobs by text later |
 | 8 | **Gossip** between NPCs | yes | **now** |
 | 9 | **Furniture store + online ordering** (catalog `tools/furniture.py`) | later | later (needs a home first) |
-| 10 | **Collectibles** (sets with rewards) | yes | **proposal** (3 sets, sprites, collection screen) |
+| 10 | **Collectibles** (sets with rewards) | yes | **built s64** (3 sets x 4, real 3D props, collection screen) |
 | 12 | **Scratch cards / lottery** at a kiosk | yes | **now** |
 | 13 | **Weather** (rain, puddles, umbrellas, Fun -) | later | later |
 | 16 | **Events** (Saturday market in Old Block, street party, protest against VaultTech) | Old Block | later (with Old Block) |
@@ -61,3 +61,43 @@ Status: **now** = built in s63 (code/text only), **proposal** = mock-up made in 
   to tear down). They twinkle like the can pickups; collection screen in the pause menu. Proposal in s63.
 - **Weather (13)**: rain (palette dimming + particles), puddles, umbrellas, Fun -; later, after the day/night work is done on the phone.
 - **Events (16)**: Saturday market in Old Block, street party, protest against VaultTech: with Old Block and the chapter scripts.
+
+## Built in s64 (needs owner approval of the new art before main)
+
+- **HUD variant A**: six slim slots (Hunger, Energy, Hygiene, Fun, Bladder, Social), 28 px wide at pitch 30 from bg x 62, 20 px bars
+  (`graphics/hud_bar.bmp`, `hud_sprites.build_hud_bar`). Social is a real bar (decay and gains from s63). Clock / money panel unchanged.
+  Small icons at the top right: a blinking envelope (unread phone message) and a green sick face (while sick).
+- **Phone** (`tl_phone.h/.cpp`): **SELECT** while walking opens it (there is no pause-menu entry: the pause menu is full at 5 rows and
+  SELECT was free). The handset slides up from the bottom right (112 x 120 px panel, Paper / Night style, bold 9 px font):
+  - **Contacts**: everybody you have met (Mia, Rosa, Dex, Pimm, Lou, Dr. Okafor). A call shows a meet-up line (morning / afternoon),
+    friendship +1 and Social +2 once per person per day.
+  - **Messages**: 8 texts (Mia, Lou, Pimm, Rosa, Dex, a VaultTech spam message, two from the clinic: advice after your first faint and an
+    open bill). Delivered when their condition is true after 8:00; unread ones have a `*` and the envelope blinks on the HUD.
+  - **Order food**: Pizza slice $8 (Hunger +35 Energy +5 Fun +3), Burger menu $10 (+50 / +10 / +5, Bladder -3), Salad box $7 (+28 / +6 / +2),
+    Iced tea $5 (Energy +12 Fun +4 Bladder -8). Pay now, it arrives 30 game minutes later wherever you are and you eat it on the spot
+    (shops are cheaper: Ready meal $5, Burger $6). One order at a time; saved (`delivery_item`, `delivery_due`).
+- **Collectibles** (`tl_collect.h/.cpp`, `tools/collectibles.py`, `tools/blender_props.py`): 12 props rendered in Blender (same camera, sun and
+  sharp style as everything else): Old City Coins (copper penny, silver crown, brass ring coin, pewter token), Lost Postcards (mountain
+  lake, sunset beach, night skyline, lighthouse), VaultTech Flyers (gold header, black header, crumpled, folded). 16x16 game sprites with a
+  twinkle (one sparkle pixel / small plus every 30 frames), 32x32 icons on the collection screen. Fixed spots in the City Centre (park,
+  fountain square, river walk, pavement ends, plaza, road works); picking up reuses the 1.2 s bend-down animation and the "A" cue. Found
+  items stay gone. **Pause menu > Collection**: one page per set (left / right), icons dark until found.
+  Set rewards (paid when the 4th item is found): Coins $10 + Mr. Pimm +6 friendship; Postcards $5 + 1 City Coin + Mia +5; Flyers $8 +
+  Rosa +6. Saved (`collect_mask`, `collect_paid`).
+- **Shower** in the public toilet (replaces the mop / bucket / broom corner, one bin, sink and WC stay): cubicle with glass pane, curtain,
+  chrome head, valve and a coin box. A at it: "Take a shower ($1)": Hygiene to 98 over 6 s (B cancels, partial gain stays), Fun +2.
+  Animation `player_shower` (64x64, 8 facings x 4, blender_acts `shower_pose`: hands scrubbing the hair, water streaks).
+- **City Clinic** (new building on the brick lot north of the avenue, x 34.7..38.9, facade y 18; interior map `clinic` 13 x 9): waiting
+  chairs and sofa, reception counter (Dr. Okafor behind it 8:00-20:00), medicine cabinet, exam corner (couch, basin, scale, screen).
+  Reception menu: **Check-up ($8, $13 with medicine when sick)**, **Pay the bill**, Talk to the doctor, Leave. **Dr. Okafor** is a new
+  original character (cast sprite, portrait with 5 expressions, face pass, small talk, favourite gift: cookies).
+- **Sickness**:
+  - A need that stays at 0 (Hunger, Energy, Hygiene or Social) for **60 game minutes** (not while asleep) makes you **faint**: fade out,
+    card "You fainted...", you wake on the clinic's exam couch two hours later (needs patched up: Hunger +45, Energy +45, Hygiene +12,
+    Fun +6, Social +10, Bladder +10), Dr. Okafor explains, the **care fee is $20**: taken from your pocket if you have it, otherwise a
+    **debt** (shown in the pause screen as "Owe $20", a once-a-day reminder after 8:00 and a phone message). Pay at the reception desk.
+  - Two or more needs below 15 for **180 game minutes** make you **sick** (HUD sick icon, "SICK" on the pause screen): walking at 80 %,
+    Energy -0.05 more per minute, a cough message every ~150 game minutes. Cured by a check-up with medicine ($13), a faint treatment, or
+    **8 hours of sleep** (bench or bed).
+  - **Bills by post (pending)**: once the player has a home an envelope should lie at its entrance; until then the bill is paid at the
+    reception desk and reminded by message / pop-up.

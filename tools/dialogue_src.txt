@@ -476,3 +476,69 @@ LOU| Rosa says you like music. I should put a record on in here sometime.
 node gossip_work_lou
 PIMM:happy| Lou says you are keen on work. That is a rare thing these days.
 ! friend pimm 2
+
+# ---------------------------------------------------------------- s64: Dr. Okafor (City Clinic) and the faint / sickness scenes
+node bye_okafor
+OKAFOR| Drink water. Sleep. Eat. Boring advice, and it works.
+node greet_okafor_good
+OKAFOR:happy| {NAME}! You look well. Please keep it that way.
+node greet_okafor_neutral
+OKAFOR| Good day. Is something hurting?
+node greet_okafor_grumpy
+OKAFOR:sad| Long day. Three people fainted. Two of them fought over a hot dog.
+node intro_okafor
+OKAFOR| Dr. Okafor, City Clinic. Check-ups, bandages, and the occasional lecture.
+OKAFOR| Eat, sleep and wash. Most of my patients forget one of the three.
+OKAFOR| If you collapse, somebody carries you here. Please do not make it a habit.
+! flag met_okafor
+node talk_okafor_weather
+OKAFOR| Cold snaps fill my waiting room. Warm socks are medicine.
+node talk_okafor_work
+OKAFOR| Eight patients before lunch. The coffee machine is my best colleague.
+node talk_okafor_music
+OKAFOR| I hum while I stitch. Patients say it helps. Or distracts.
+node talk_okafor_sports
+OKAFOR| Sprained ankles. Always the ones who say they never run.
+node talk_okafor_gossip
+OKAFOR| Patient confidentiality. But I can say: the pigeons here eat better than most.
+node talk_okafor_compliment
+OKAFOR:happy| Thank you. That is the best thing I have heard all week.
+node talk_okafor_joke
+OKAFOR:happy| Why did the skeleton stay home? No guts. ...I have heard worse.
+node talk_okafor_complain
+OKAFOR| Complaints are a symptom. Describe them, and I will find the cause.
+node gift_fav_okafor
+OKAFOR:happy| Cookies! Do not tell my patients where I keep the tin.
+
+# faint scene: you wake up on the exam couch
+node faint_wake
+OKAFOR| There you are. Easy. Do not sit up too fast.
+if faint_told -> faint_wake_short
+OKAFOR| You collapsed on the street. Somebody carried you in, I did not ask who.
+OKAFOR:sad| Your body ran on empty for too long. That is not bravery. That is a bad plan.
+OKAFOR| I gave you something to drink and a sugar tablet. You are patched up.
+OKAFOR| Next time: eat, drink, sleep, wash. In any order, but do them.
+! flag faint_told
+node faint_wake_short
+OKAFOR| Again? Please eat something today.
+node faint_pay
+OKAFOR| The care fee was $20. I took it from your pocket. Bills by post come once you have a home.
+node faint_paid
+OKAFOR:happy| Thank you. Paid in full. Take care of yourself.
+node faint_debt
+OKAFOR| The care fee is $20, but your pockets are empty. It is noted on your account: pay at the desk when you can.
+node faint_debt_more
+OKAFOR| The bill stays on your account. Pay at the desk when you can.
+node sick_intro
+SYSTEM| You feel sick. You walk slower and get tired faster. Rest, or see Dr. Okafor at the clinic.
+node checkup_ok
+OKAFOR| Let me listen. Breathe in... out. Good. Nothing wrong with you.
+node checkup_tired
+OKAFOR| A bit run down. Sleep more, and eat something warm.
+node checkup_sick
+OKAFOR:sad| You have caught something. Here, take this, and rest tonight.
+OKAFOR| You will feel better soon.
+node checkup_pay_ok
+SYSTEM| Dr. Okafor takes the fee. You feel better.
+node bills_info
+SYSTEM| Bills by post will arrive once you have a home. Until then you pay at the desk.

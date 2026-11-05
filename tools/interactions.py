@@ -26,6 +26,9 @@ how fast Fun fills); the 4th element (radius) is 0 for everything but the founta
   The room's entries are generated from the furniture catalog (tools/furniture.py, scene.ROOM_FURNITURE + use_point()).
   ("crate", x, y)                 storeroom crate: "Take the rye loaf" while Mr. Pimm waits (story).
   ("kiosk", x, y)                 newspaper boxes at the bus stop: scratch cards ($1, 3 a day) and newspapers (gift).
+  ("shower", x, y)                public toilet shower: $1 coin slot, Hygiene to ~100 over 6 s (B cancels).
+  ("clinic", x, y)                City Clinic reception: Check-up / Pay the bill / Talk to the doctor.
+  ("couch", x, y, reach)          the exam couch (info text); fainting patients wake up here (script op lie_bed falls back to it).
   ("gate", x, y)                  VaultTech staff gate in front of the stairs (only usable after the firing): info text.
   ("seat", x, y, reach)           indoor chair / sofa / booth bench; you sit facing +y (screen down-left).
   ("seat_x", x, y, reach)         same but facing +x (screen down-right: the sit sprite is mirrored).
@@ -88,6 +91,14 @@ INTERACTABLES = {
     ],
     "public_toilet": [
         ("toilet", 2.9, 1.5, 0, 1), ("sink", 0.5, 3.5), ("bin", 0.75, 1.0),
+        ("shower", 4.55, 1.1),          # s64: the cubicle in the back-right corner (stand in the tray)
+    ],
+    "clinic": [
+        ("clinic", 6.3, 4.45), ("clinic", 7.5, 4.45), ("clinic", 8.7, 4.45),      # reception counter (y 3.1..4.0); the doctor stands behind it
+        ("couch", 11.85, 2.1, 0.6),                                                # exam couch along the back wall
+        ("seat", 1.2, 1.15, 1.0), ("seat", 2.35, 1.15, 1.0), ("seat", 3.5, 1.15, 1.0),     # waiting chairs (face +y)
+        ("seat_x", 1.65, 5.2, 1.2),                                                # the sofa on the west wall (faces +x)
+        ("bin", 9.4, 5.0),
     ],
     "player_room": _room_things(),
 }

@@ -628,8 +628,10 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
 
 - D-pad: walk (straight on screen; diagonals follow the streets) · hold B: run
 - A: interact (menu) · in menus: up/down, A ok, B back · while sitting/sleeping: D-pad or B gets up
-- START (while walking): pause menu (freezes the game): day, time, money, the five needs with exact values,
-  objective line, Resume / Save game / Quit to title. B or START resumes.
+- START (while walking): pause menu (freezes the game): day, time, money, the six needs with exact values (Social too),
+  objective line, Resume / Mission log / Collection / Save game / Quit to title. B or START resumes. "SICK" and "Owe $N" show there.
+- **SELECT (while walking): the phone** (s64): Contacts / Messages / Order food, B or SELECT closes. (`TL_DEBUG_TELEPORT` builds use SELECT
+  for teleporting instead: never test the phone with them.)
 
 ---
 
@@ -761,6 +763,27 @@ events). Visual parts (HUD with 6 needs, phone UI, collectibles, shower, doctor'
   max 3 per day (`save_data::scratch_*`); the kiosk also sells newspapers (gift).
 - Test helpers: `tools/make_save.py --items --social --gossip`; debug flag `-DTL_DEBUG_AUTO_GIFT` (auto-picks "Give a gift" like AUTO_TALK).
 
+## s64: HUD with Social, phone, collectibles, shower, City Clinic (branch `claude/intelligent-hawking-y0vl2t`, NOT on main until the owner approves the art)
+
+Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for the code:
+- **HUD variant A**: `hud_sprites.build_hud` (28 px slots, pitch 30 from bg x 62, bar sprites `hud_bar` centred at x = -46 + 30 * slot in
+  `tl_field.cpp`; slot 5 = Social). Top-right icons (`ui_icons` frames 3 = envelope, 4 = sick face) from `field::_update_hud_icons`.
+- **Phone**: `tl_phone.h/.cpp` (`phone`, data `phone_foods`, messages, contacts), opened with SELECT in `field::update`, glue in
+  `tl_field_health.cpp` (`_open_phone`, `_update_phone`, `_try_delivery`). Saved: `msg_seen/read`, `call_day`, `delivery_item/due`.
+- **Collectibles**: `tl_collect.h/.cpp`, spots / set texts in `tools/collectibles.py` (-> `include/tl_collect_spots.h`), 3D props in
+  `tools/blender_props.py` (cache `art_cache/props_*`, `build_assets.build_collectibles`), `collection_screen` in `tl_pause.cpp`.
+  `_find_pickup` returns 100 + index for a collectible (cue, A and the bend-down animation reuse the deposit code paths).
+- **Shower**: scene.py `shower_cubicle` (in `public_toilet`), interactable `shower`, `player_shower` sheet (`blender_acts.shower_pose`).
+- **City Clinic**: scene.py `clinic_building` (exterior, called from `city_centre`) + `clinic()` (interior, map `clinic`, appended to SCENES so
+  map ids stay stable), interactables `clinic` / `couch`, Dr. Okafor = cast id `okafor` (IDS index 6: small-talk slots are 8), portrait
+  `portraits/parts_okafor.py`, dialogue nodes `*_okafor`, `faint_*`, `checkup_*`, `sick_intro` in dialogue_src.txt.
+- **Sickness / faint / debt** (`tl_field_health.cpp`): `_update_health_minute` (zero counters, red counter, sick drain), cutscene `faint`
+  (cutscenes_src.txt, op `clinic_care`), `_clinic_choice`, `_check_bill_reminder`. Constants at the top of that file.
+- **Save version 3** (old saves are ignored): new fields at the end of `save_data` (collect, sick, zero_min, debt, phone). `tools/make_save.py`
+  has `--collect --sick --zero --red --debt --msg-seen --msg-read --delivery-item --delivery-due`.
+- **Owner decisions pending**: approve the clinic (exterior + interior), the shower, the collectible props, the doctor's portrait and the
+  HUD before this branch goes to main. Bills by post (envelope at the home entrance) wait for the housing ladder.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)
@@ -836,7 +859,7 @@ Update the checkboxes at the end of each session.
 - [x] Headless: save, reset, Continue restores map/position/time (mGBA reports 32 KB SRAM)
 - [ ] Verify SRAM saves work in Lemuroid on the phone
 
-Save/pause notes: `save_data` (tl_save.h) is one packed struct at SRAM offset 0 (732 bytes): magic "TLSV", version,
+Save/pause notes (s64: save version 3, new fields appended): `save_data` (tl_save.h) is one packed struct at SRAM offset 0 (732 bytes before s64): magic "TLSV", version,
 size, Fletcher checksum over everything after the header; map, facing, x, y, day, minutes, minute frames,
 total minutes, money, the five needs (bn::fixed raw), bladder boost, bin cooldowns (8 maps x 16 bins), plus
 reserved fields: player name char[12], story flags u8[64], mission id, friendship u8[16], 64 spare bytes. A save

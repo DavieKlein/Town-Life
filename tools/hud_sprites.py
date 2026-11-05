@@ -151,6 +151,27 @@ ICONS["bladder"] = [
 ]
 
 
+ICONS["social"] = [
+    "................",
+    "..#########.....",
+    ".#WWWWWWWWW#....",
+    ".#WW.W.W.WW#....",
+    ".#WWWWWWWWW#....",
+    "..###WW####.....",
+    "....#W#..#######",
+    ".........#GGGGG#",
+    ".........#GG.G.#",
+    ".........#GGGGG#",
+    ".........#GGGGG#",
+    "..........##G###",
+    "............#G#.",
+    ".............#..",
+    "................",
+    "................",
+]
+SOCIAL_COLOURS = {"W": (240, 240, 232), "G": (232, 176, 64)}
+
+
 def build_hud():
     cv = Canvas(256, 256)
     top = 176
@@ -162,19 +183,26 @@ def build_hud():
     cv.rect(10, top + 2, 50, 28, panel)
     cv.rect(10, top + 2, 50, 1, panel_l)
     cv.rect(14, top + 15, 42, 1, panel_l)
-    # need slots: 5 x 35 px, pitch 37 (see NEED_SLOT_X / need bar placement in tl_field.cpp)
-    names = ["hunger", "energy", "hygiene", "fun", "bladder"]
+    # s64 HUD variant A: six slim slots, 28 px wide at pitch 30 starting at bg x 62 (tl_field.cpp places the
+    # hud_bar sprites at x = -46 + 30 * slot): Hunger, Energy, Hygiene, Fun, Bladder, Social.
+    names = ["hunger", "energy", "hygiene", "fun", "bladder", "social"]
     for i, n in enumerate(names):
-        x = 62 + i * 37
-        cv.rect(x, top + 2, 35, 28, panel)
-        cv.rect(x, top + 2, 35, 1, panel_l)
+        x = 62 + i * 30
+        cv.rect(x, top + 2, 28, 28, panel)
+        cv.rect(x, top + 2, 28, 1, panel_l)
         for yy, row in enumerate(ICONS[n]):
             for xx, ch in enumerate(row):
                 if ch == "#":
-                    cv.set(x + 10 + xx + 1, top + 3 + yy + 1, panel_d)
-                    cv.set(x + 10 + xx, top + 3 + yy, WHITE)
-        # bar background; the fill is a sprite (graphics/need_bar.bmp) updated by the game
-        cv.rect(x + 1, top + 22, 32, 5, (16, 16, 24))
+                    cv.set(x + 6 + xx + 1, top + 3 + yy + 1, panel_d)
+                    cv.set(x + 6 + xx, top + 3 + yy, WHITE)
+        for yy, row in enumerate(ICONS[n]):
+            for xx, ch in enumerate(row):
+                if ch in SOCIAL_COLOURS:
+                    cv.set(x + 6 + xx, top + 3 + yy, SOCIAL_COLOURS[ch])
+                elif ch == "." and n == "social" and 0 < xx < 15:
+                    pass
+        # bar background (22 px); the fill is a sprite (graphics/hud_bar.bmp) updated by the game
+        cv.rect(x + 3, top + 22, 22, 5, (16, 16, 24))
     return cv
 
 
@@ -309,6 +337,22 @@ def build_need_bar():
             row = [0] * 32
             if y < 3:
                 for x in range(30):
+                    row[x] = colour if x < fill else 4
+            pixels.append(row)
+    return pixels, pal
+
+
+def build_hud_bar():
+    """32x8 frames, BAR_LEVELS levels: slim 20x3 bar for the six HUD slots."""
+    pal = [(255, 0, 255), (88, 200, 88), (232, 160, 48), (200, 56, 48), (60, 24, 28)]
+    pixels = []
+    for level in range(BAR_LEVELS):
+        fill = round(level * 20 / (BAR_LEVELS - 1))
+        colour = 1 if fill > 12 else (2 if fill > 6 else 3)
+        for y in range(8):
+            row = [0] * 32
+            if y < 3:
+                for x in range(20):
                     row[x] = colour if x < fill else 4
             pixels.append(row)
     return pixels, pal

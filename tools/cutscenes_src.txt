@@ -216,3 +216,29 @@ script mia_tip
   say pro_mia_tip
 trigger mia_tip when map=diner day>=2 flag=read_newspaper !flag=deposit_tip time>=7:00 time<12:00
 trigger mia_tip when map=diner day>=2 flag=read_newspaper !flag=deposit_tip time>=12:30 time<15:00
+
+# ------------------------------------------------------------------------------------------------ s64: fainting (a need stayed empty for an hour)
+# Started from C++ (field::update, _faint_pending). You wake up on the exam couch of the City Clinic two hours later.
+script faint
+  fade_out 24
+  card "You fainted..."
+  warp clinic 11.85 2.5 down
+  scene_begin
+  lie_bed
+  spawn okafor 11.2 3.6 ne
+  clinic_care 0
+  wait 20
+  fade_in 40
+  wait 30
+  say faint_wake
+  get_up
+  wait 10
+  ifflag clinic_paid 1 paid
+  say faint_debt
+  jump done
+  label paid
+  say faint_pay
+  label done
+  actor_face_player okafor
+  scene_end
+  player_at 6.0 5.6 up

@@ -121,7 +121,7 @@ def glyph(im, rows, x, y, colour):
 
 def build_icons():
     """Frames of 16x16: A button (green), B button (red), the bobbing "A" cue bubble (gold, tail tip at (7, 15))."""
-    out = Image.new("P", (16, 48), TRANSP)
+    out = Image.new("P", (16, 80), TRANSP)
     for i, (fill, rows) in enumerate(((3, GLYPH_A), (4, GLYPH_B))):
         f = Image.new("P", (16, 16), 0)
         d = ImageDraw.Draw(f)
@@ -136,6 +136,24 @@ def build_icons():
     d.arc((2, 2, 12, 11), 200, 290, fill=7)                     # small highlight
     glyph(f, GLYPH_A, 5, 3, 2)
     out.paste(f, (0, 32))
+    # frame 3: new message (envelope with a red seal), frame 4: sick (green face, X eyes, wavy mouth)
+    f = Image.new("P", (16, 16), 0)
+    d = ImageDraw.Draw(f)
+    d.rectangle((1, 3, 14, 12), fill=5, outline=6)
+    d.line((1, 3, 7, 8), fill=6)
+    d.line((14, 3, 8, 8), fill=6)
+    d.ellipse((6, 7, 9, 10), fill=4, outline=2)
+    out.paste(f, (0, 48))
+    f = Image.new("P", (16, 16), 0)
+    d = ImageDraw.Draw(f)
+    d.ellipse((1, 1, 14, 14), fill=3, outline=6)
+    for ex in (4, 9):
+        d.line((ex, 5, ex + 2, 7), fill=6)
+        d.line((ex + 2, 5, ex, 7), fill=6)
+    d.line((4, 11, 6, 10), fill=6)
+    d.line((6, 10, 9, 12), fill=6)
+    d.line((9, 12, 11, 11), fill=6)
+    out.paste(f, (0, 64))
     write_item("ui_icons", out, 16, ICON_PAL)
 
 

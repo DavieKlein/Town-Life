@@ -13,6 +13,7 @@
 #include "bn_sprite_items_npc_dex_vault.h"
 #include "bn_sprite_items_npc_victor.h"
 #include "bn_sprite_items_npc_robot.h"
+#include "bn_sprite_items_npc_okafor.h"
 
 namespace tl
 {
@@ -40,6 +41,8 @@ namespace tl
                 return &bn::sprite_items::npc_victor;
             case npc_id::robot:
                 return &bn::sprite_items::npc_robot;
+            case npc_id::okafor:
+                return &bn::sprite_items::npc_okafor;
             default:
                 return nullptr;     // Halloran has no look yet
             }

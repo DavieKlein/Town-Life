@@ -9,6 +9,8 @@
 #include "bn_regular_bg_items_hud.h"
 #include "bn_blending.h"
 #include "bn_sprite_items_need_bar.h"
+#include "bn_sprite_items_hud_bar.h"
+#include "tl_collect_spots.h"
 #include "bn_sprite_items_light_pool.h"
 
 #include "tl_deposit_spots.h"
@@ -25,6 +27,7 @@ namespace tl
         constexpr int frames_per_game_minute_bed = 8;      // in the bed the clock runs 8x
         constexpr int nap_minutes = 60;
         constexpr int bed_lift = 14;                       // the lying figure is raised onto the mattress (pixels)
+        constexpr int hud_slots = needs::count + 1;   // five needs + Social
         constexpr int bar_levels = 16;                 // frames in need_bar.bmp
         constexpr int interact_reach = 26;             // world units from a bench seat
         constexpr int fountain_reach = 32;             // world units beyond the fountain radius
@@ -62,6 +65,7 @@ namespace tl
         constexpr bn::string_view book_options[] = { "Read a book" };
         constexpr bn::string_view seat_options[] = { "Sit down" };
         constexpr bn::string_view bed_options[] = { "Sleep", "Take a nap", "Leave" };
+        constexpr bn::string_view shower_menu_options[] = { "Take a shower ($1)", "Leave" };
         constexpr bn::string_view desk_options[] = { "Read", "Check notes" };
 
         // Activities (frames at 60 per second).
@@ -128,9 +132,9 @@ namespace tl
         _version_label.set(ui::font9, 4, 11, "build " __DATE__ " " __TIME__, ui::role::hud_clock);
 
         // Need bars: one sprite per need over the dark bar slots of the HUD background.
-        for(int need = 0; need < needs::count; ++need)
+        for(int need = 0; need < hud_slots; ++need)
         {
-            bn::sprite_ptr bar = bn::sprite_items::need_bar.create_sprite(-48 + (need * 37), 151 + 4 - 80);
+            bn::sprite_ptr bar = bn::sprite_items::hud_bar.create_sprite(-46 + (need * 30), 151 + 4 - 80);
             bar.set_bg_priority(0);
             _bar_sprites.push_back(bn::move(bar));
         }
@@ -163,6 +167,7 @@ namespace tl
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _story_check_due = true;
         _deposit.load(*_map);
+        _collect.load(*_map);
         _pool_sprites.clear();
         _car_clear();
         _map_story_state();
@@ -224,6 +229,7 @@ namespace tl
         _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
         _npcs.update(_cam_x, _cam_y);
         _deposit.update(*_map, _cam_x, _cam_y);
+        _collect.update(*_map, _cam_x, _cam_y);
 
         int x0, y0, x1, y1, depth;
         _player.mask_area(x0, y0, x1, y1, depth);
@@ -248,6 +254,7 @@ namespace tl
             _npcs.set_lighting(_light);
             _critters.set_lighting(_light);
             _deposit.set_lighting(_light);
+            _collect.set_lighting(_light);
 
             bool lamps_on = _map->outdoor && _light.night >= 128;
 
@@ -363,6 +370,7 @@ namespace tl
 
         ++_total_minutes;
         _needs.minute_passed();
+        _update_health_minute();
         _npcs.refresh(_day, _minutes);
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _story_check_due = true;
@@ -503,6 +511,11 @@ namespace tl
                 _deposit.collect(_act.pickup);
             }
 
+            if(finished && _act.collectible >= 0)
+            {
+                _collectible_found(_act.collectible);
+            }
+
             if(finished && _act.message)
             {
                 _menu_mode = menu_mode::none;
@@ -513,14 +526,15 @@ namespace tl
 
     void field::_update_bars()
     {
-        for(int need = 0; need < needs::count; ++need)
+        for(int need = 0; need < hud_slots; ++need)
         {
-            int level = (_needs.values[need] * (bar_levels - 1) / 100).round_integer();
+            bn::fixed value = need < needs::count ? _needs.values[need] : _needs.social;
+            int level = (value * (bar_levels - 1) / 100).round_integer();
 
             if(level != _bar_levels[need])
             {
                 _bar_levels[need] = level;
-                _bar_sprites[need].set_tiles(bn::sprite_items::need_bar.tiles_item(), level);
+                _bar_sprites[need].set_tiles(bn::sprite_items::hud_bar.tiles_item(), level);
             }
         }
     }
@@ -579,7 +593,19 @@ namespace tl
 
     int field::_find_pickup(int& d2) const
     {
-        return _deposit.find(_player.x(), _player.y(), pickup_reach, d2);
+        int spot_d2 = 0;
+        int spot = _deposit.find(_player.x(), _player.y(), pickup_reach, spot_d2);
+        int item_d2 = 0;
+        int item = _collect.find(_player.x(), _player.y(), pickup_reach, item_d2);
+
+        if(item >= 0 && (spot < 0 || item_d2 <= spot_d2))
+        {
+            d2 = item_d2;
+            return 100 + item;          // a collectible (s64)
+        }
+
+        d2 = spot_d2;
+        return spot;
     }
 
     void field::_update_cue()
@@ -628,8 +654,8 @@ namespace tl
         else if(pickup >= 0)
         {
             height = 12;
-            cue_x = pickup_spots[pickup].x;
-            cue_y = pickup_spots[pickup].y;
+            cue_x = pickup >= 100 ? collect_spots[pickup - 100].x : pickup_spots[pickup].x;
+            cue_y = pickup >= 100 ? collect_spots[pickup - 100].y : pickup_spots[pickup].y;
         }
         else
         {
@@ -816,6 +842,20 @@ namespace tl
 
         case interactable_kind::bed:
             _menu.open("Bed", bed_options, 3);
+            break;
+
+        case interactable_kind::shower:
+            _menu.open("Shower", shower_menu_options, 2);
+            break;
+
+        case interactable_kind::clinic:
+            _open_clinic_menu(*best);
+            break;
+
+        case interactable_kind::couch:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            _show_info("Exam couch", "Paper roll, fresh", "sheet. Dr. Okafor's", "patients rest here.");
             break;
 
         case interactable_kind::desk:
@@ -1239,6 +1279,12 @@ namespace tl
 
     void field::_pick_up(int spot)
     {
+        if(spot >= 100)
+        {
+            _pick_collectible(spot - 100);
+            return;
+        }
+
         if(_deposit.bag_total() >= deposit::bag_max)
         {
             _info_line_a = "You can't carry any";
@@ -1414,6 +1460,22 @@ namespace tl
         if(target->kind == interactable_kind::deposit)
         {
             _deposit_choice(choice);
+            return;
+        }
+
+        if(target->kind == interactable_kind::shower)
+        {
+            if(choice == 0)
+            {
+                _use_shower(*target);
+            }
+
+            return;
+        }
+
+        if(target->kind == interactable_kind::clinic)
+        {
+            _clinic_choice(choice);
             return;
         }
 
@@ -1685,6 +1747,12 @@ namespace tl
             bar.set_visible(! hidden);
         }
 
+        if(hidden)
+        {
+            _mail_icon.reset();
+            _sick_icon.reset();
+        }
+
         if(! hidden)
         {
             _redraw_hud_text();
@@ -1884,6 +1952,16 @@ namespace tl
                 break;
             }
 
+            if(_phone_open)
+            {
+                _cue.reset();
+                _update_phone();
+                _update_camera();
+                _update_clock();
+                _update_lighting(false);
+                break;
+            }
+
             if(_menu.is_open())
             {
                 _cue.reset();
@@ -1911,6 +1989,37 @@ namespace tl
                 }
 
                 if(_minigame_pending)
+                {
+                    break;
+                }
+
+                // s64: fainting (a need stayed empty for an hour), the first "you feel sick" message, deliveries, bill reminders
+                if(_faint_pending)
+                {
+                    _faint_pending = false;
+                    _start_script(script_id::faint);
+                    break;
+                }
+
+                if(_sick_msg_pending)
+                {
+                    _sick_msg_pending = false;
+                    _set_hud_hidden(true);
+                    ui::set_night(is_night(_minutes));
+                    _conversation.start_script(dlg::sick_intro, -1);
+                    break;
+                }
+
+                _try_delivery();
+
+                if(_act.active)
+                {
+                    break;
+                }
+
+                _check_bill_reminder();
+
+                if(_conversation.active())
                 {
                     break;
                 }
@@ -1957,6 +2066,14 @@ namespace tl
                 _open_pause();
                 break;
             }
+
+            if(bn::keypad::select_pressed() && _can_pause())
+            {
+                _open_phone();
+                break;
+            }
+
+            _update_hud_icons();
 
             if(_player.current_activity() == player::activity::walking && bn::keypad::a_pressed())
             {

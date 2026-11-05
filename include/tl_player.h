@@ -30,7 +30,8 @@ namespace tl
             drink,      // scooping water with both hands
             read,
             search,     // rummaging through a trash bin
-            pickup      // bending down to grab a can or bottle
+            pickup,     // bending down to grab a can or bottle
+            shower      // standing under the shower, scrubbing hair and face
         };
 
         player();
@@ -71,6 +72,12 @@ namespace tl
         {
             _script_facing = facing;
             _script_run = run;
+        }
+
+        // Walking speed factor (1 = normal; the sick walk slower).
+        void set_speed_scale(bn::fixed scale)
+        {
+            _speed_scale = scale;
         }
 
         // A solid rectangle (world units) the player cannot walk into (the shutter gate); off when x1 <= x0.
@@ -182,6 +189,7 @@ namespace tl
         int _blockers_count = 0;
         int _script_facing = -2;
         bool _script_run = false;
+        bn::fixed _speed_scale = 1;
         int _rect[4] = { 0, 0, 0, 0 };
         bn::fixed _x;
         bn::fixed _y;

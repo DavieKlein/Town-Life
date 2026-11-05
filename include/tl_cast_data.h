@@ -16,6 +16,7 @@ namespace tl
         pimm,
         lou,
         halloran,
+        okafor,
         dex_vault,
         victor,
         robot,
@@ -64,6 +65,7 @@ namespace tl
         { npc_id::lou, map_id::diner, 1, 1, 255, 102, 41, 360, 1320, -1, -1, -1 },
         { npc_id::pimm, map_id::community_centre, 5, 1, 1, 78, 118, 780, 960, -1, -1, 1 },
         { npc_id::pimm, map_id::community_centre, 5, 2, 255, 78, 118, 480, 960, -1, -1, 1 },
+        { npc_id::okafor, map_id::clinic, 1, 1, 255, 115, 40, 480, 1200, -1, -1, -1 },
         { npc_id::pimm, map_id::city_centre, 5, 1, 255, 320, 675, 960, 1170, -1, -1, 0 },
     };
 

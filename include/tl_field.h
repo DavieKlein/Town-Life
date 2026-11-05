@@ -19,6 +19,8 @@
 #include "tl_streamed_bg.h"
 #include "tl_lighting.h"
 #include "tl_deposit.h"
+#include "tl_collect.h"
+#include "tl_phone.h"
 #include "tl_story.h"
 #include "tl_dialogue.h"
 #include "tl_minigame.h"
@@ -89,10 +91,11 @@ namespace tl
         critters _critters;
         npcs _npcs;
         deposit _deposit;
+        collectibles _collect;
         menu _menu;
         needs _needs;
-        bn::vector<bn::sprite_ptr, needs::count> _bar_sprites;
-        int _bar_levels[needs::count] = { -1, -1, -1, -1, -1 };
+        bn::vector<bn::sprite_ptr, needs::count + 1> _bar_sprites;
+        int _bar_levels[needs::count + 1] = { -1, -1, -1, -1, -1, -1 };
         bn::vector<bn::sprite_ptr, 6> _pool_sprites;
         int _version_frames = 300;     // the build date is shown for 5 seconds at start
         light_params _light;
@@ -106,6 +109,8 @@ namespace tl
             shop,           // buying food
             gifts,          // gift list of a shop
             kiosk,          // scratch cards / newspaper at the newspaper boxes
+            clinic,         // City Clinic reception (s64)
+            shower,         // $1 shower in the public toilet (s64)
             info            // a message; reopens the shop afterwards if shop_return is set
         };
 
@@ -149,6 +154,7 @@ namespace tl
             bool message = false;               // show _info_line_a / _info_line_b at the end
             const char* title = "Trash bin";      // title of that message
             int pickup = -1;                    // deposit pickup spot collected at the end
+            int collectible = -1;               // collectible item found at the end (s64)
         };
 
         activity_state _act;
@@ -162,7 +168,8 @@ namespace tl
             confirm_save,
             saved,
             confirm_quit,
-            sleep_save      // "Slept well. Save game?" after a night in the bed
+            sleep_save,     // "Slept well. Save game?" after a night in the bed
+            collection      // the collection screen (s64)
         };
 
         // Sleeping in the player's bed (see tl_field.cpp): a night's sleep or a one-hour nap.
@@ -180,6 +187,7 @@ namespace tl
 
         pause_screen _pause;
         log_screen _log;
+        collection_screen _collection;
         dialog _dialog;
         pause_mode _pause_mode = pause_mode::none;
         bn::string<48> _objective = "Explore the city";
@@ -190,6 +198,42 @@ namespace tl
         bn::string<200> _story_text;
         bool _story_check_due = true;
         bool _hud_hidden = false;
+
+        // ---- s64: sickness, fainting, the clinic bill, the phone (tl_field_health.cpp)
+        phone _phone;
+        bool _phone_open = false;
+        int _zero_min[4] = {};              // game minutes Hunger / Energy / Hygiene / Social have been empty
+        int _red_min = 0;                   // game minutes two or more needs were red
+        int _sick_rest = 0;                 // minutes slept while sick
+        int _cough_min = 0;
+        bool _sick = false;
+        bool _faint_pending = false;
+        bool _sick_msg_pending = false;
+        int _debt = 0;
+        int _debt_day = 0;
+        int _faints = 0;
+        uint16_t _msg_seen = 0;
+        uint16_t _msg_read = 0;
+        uint8_t _call_day[8] = {};
+        int _delivery_item = -1;
+        int _delivery_due = 0;
+        int _mail_blink = 0;
+        bn::optional<bn::sprite_ptr> _mail_icon;
+        bn::optional<bn::sprite_ptr> _sick_icon;
+        int _faint_paid = 0;
+        void _update_health_minute();
+        void _cure_sickness();
+        void _open_phone();
+        void _update_phone();
+        void _update_hud_icons();
+        void _try_delivery();
+        void _check_bill_reminder();
+        void _clinic_care(int kind);
+        void _open_clinic_menu(const interactable& target);
+        void _clinic_choice(int choice);
+        void _use_shower(const interactable& target);
+        void _pick_collectible(int index);
+        void _collectible_found(int index);
 
         // ---- cutscenes (tl_field_script.cpp)
         struct script_state

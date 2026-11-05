@@ -15,7 +15,8 @@ namespace tl
         constexpr int vault_day = 6;
         constexpr int news_day2 = 7;
         constexpr int mia_tip = 8;
-        constexpr int count = 9;
+        constexpr int faint = 9;
+        constexpr int count = 10;
     }
 }
 

@@ -61,6 +61,12 @@ CH["lou"] = dict(
     iris=["2a1a10", "5a3a20", "8a6034"], hair=["20140c", "3a2a1e", "5a4230", "7a5c44"], brow_col="2a1a10",
     cloth=["8a1e1a", "b83a32", "d85a4c", "f08a78"], collar=["b8b4aa", "f4f1ea", "ffffff"], hat=["a8b0c0", "dfe4ee", "fbfbfb", "ffffff"],
 )
+CH["okafor"] = dict(
+    fw=0.88, jaw=0.9, chin=95, fem=True, eye_w=1.08, iris_r=4.4, brow_w=1.9,
+    skin=["6a3c24", "9a6240", "c08a60", "dca87c", "f0ccaa"], blush="d0705a", lip=["7a2c34", "a8505a", "50181e"],
+    iris=["1e1208", "3e2814", "70502c"], hair=["0c0806", "1c1410", "30241c", "4a3a2e"], brow_col="140c08",
+    cloth=["8a9aa4", "c8d4d8", "eef2f2", "ffffff"], collar=["12625f", "1f9a94", "3cc4bc", "8ae8dc"],
+)
 CH["robot"] = dict(CH["player"], skin=CH["player"]["skin"], blush="f08a7a")
 for c in CH.values():
     for k in ("skin", "iris", "hair", "cloth", "collar", "lip", "apron", "cap", "hat"):

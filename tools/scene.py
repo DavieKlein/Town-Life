@@ -760,9 +760,8 @@ def city_centre():
     trash_can(s, 38.5, AV1 + 1.0)
     for x in (CS1 + 16.0, CS1 + 22.6):
         weeds(s, x, AV0 - 3.6, 3)
-    conifer(s, CS1 + 3.9, AV0 - 3.3, 3.4)
-    shrub(s, CS1 + 4.3, AV0 - 2.6, 0.4)
-    street_tree(s, CS1 + 2.4, AV0 - 1.2)
+    clinic_building(s, 34.7, 38.9, AV0 - 4)             # s64: CITY CLINIC on the brick lot (replaces the conifer / shrub / tree here)
+    street_tree(s, CS1 + 0.7, AV0 - 1.2)
     poster(s, CS1 + 5.2, CS1 + 6.2, AV0 - 4 + 0.08, 0.6, 1.8, "poster_yellow")
     for x in (8.0, 19.0):
         s.kit("Sidewalk_Planter", x, AV0 - 1.4, solid=True, occlude=False)
@@ -2181,21 +2180,9 @@ def public_toilet():
     for i in range(4):
         s.cyl(0.65 + i * 0.28, 0.14, 1.05, 1.23, 0.1, "robot_white", verts=12)
     indoor_bin(s, 0.75, 1.15)                                                                # the only bin (small pedal bin)
-    # mop + bucket + broom in the back-right corner
-    s.cyl(4.55, 0.55, 0.0, 0.38, 0.22, "bucket_yellow", verts=14, r2=0.27)
-    s.cyl(4.55, 0.55, 0.36, 0.38, 0.19, "stain", verts=14)
-    s.tube([(4.5, 0.5, 0.3), (4.18, 0.2, 1.45)], 0.022, "wood")
-    s.sphere(4.5, 0.5, 0.3, 0.1, "robot_white", sz=0.6)
-    s.tube([(4.9, 0.18, 0.05), (4.78, 0.15, 1.45)], 0.022, "wood")
-    s.box(4.72, 0.12, 4.98, 0.34, 0.0, 0.12, "goods_yellow")
-    s.box(4.2, 0.0, 4.75, 0.05, 1.7, 2.3, "poster_yellow")                                    # hygiene poster
-    s.box(4.3, 0.05, 4.65, 0.07, 1.95, 2.05, "metal_dark")
-    s.box(4.3, 0.05, 4.55, 0.07, 1.8, 1.88, "metal_dark")
-    # wet floor A-frame sign: in the mop corner (back wall, right of the bucket), the WC has free floor in front
-    s.box(5.2, 0.3, 5.75, 0.38, 0.0, 0.6, "goods_yellow")
-    s.box(5.2, 0.5, 5.75, 0.58, 0.0, 0.6, "goods_yellow")
-    s.set_solid(5.2, 0.3, 5.75, 0.58)
-    for (gx, gz0, gz1) in ((1.9, 0.15, 1.4), (4.1, 0.15, 1.1)):
+    # s64: the cleaner's corner (mop, bucket, broom, hygiene poster, wet-floor sign) made way for a shower cubicle (coin slot, $1)
+    shower_cubicle(s, 3.95, 0.0)
+    for (gx, gz0, gz1) in ((1.9, 0.15, 1.4),):
         s.box(gx, 0.0, gx + 0.1, 0.045, gz0, gz1, "stain")
     # ---- grime (a bit dirtier): dirty tile patches, rust under the taps, mould in the corners, stains on the floor ----
     for (gx0, gx1, gz0, gz1) in ((0.2, 0.9, 0.2, 0.9), (2.0, 2.9, 1.9, 2.6), (3.2, 3.9, 0.0, 0.5), (5.0, 5.9, 1.0, 1.9),
@@ -2213,13 +2200,13 @@ def public_toilet():
     for (fx, fy, fr) in ((0.3, 2.5, 0.2), (0.55, 2.8, 0.15), (0.25, 3.0, 0.12), (4.3, 4.0, 0.18), (4.55, 4.2, 0.13), (2.1, 5.2, 0.17),
                          (2.4, 5.35, 0.12), (5.35, 1.0, 0.16), (5.2, 1.3, 0.11), (1.4, 1.7, 0.12), (3.0, 4.6, 0.1), (5.4, 3.7, 0.12)):
         s.cyl(fx, fy, 0.0, 0.0022 + 0.0002 * fr * 10, fr, "floor_grime", layer="floor", verts=10)   # dirt in corners / edges
-    for (cx, cy, cr) in ((3.2, 2.6, 0.2), (0.9, 5.2, 0.15), (2.3, 3.9, 0.13), (5.3, 3.2, 0.17)):
+    for (cx, cy, cr) in ((3.2, 2.6, 0.2), (0.9, 5.2, 0.15), (2.3, 3.9, 0.13), (4.9, 3.2, 0.17)):
         s.cyl(cx, cy, 0.0, 0.004, cr, "stain", layer="floor", verts=10)                    # old stains
     # small, natural puddle near the mop (a few overlapping wet patches, glossy, no hard outline)
-    for k, (px, py, pr) in enumerate(((4.15, 1.25, 0.24), (4.42, 1.2, 0.2), (4.3, 1.42, 0.14), (3.95, 1.4, 0.1))):
+    for k, (px, py, pr) in enumerate(((4.35, 1.75, 0.24), (4.62, 1.7, 0.2), (4.5, 1.92, 0.14), (4.15, 1.9, 0.1))):
         s.cyl(px, py, 0.0, 0.0055 + 0.0003 * k, pr, "puddle", layer="floor", verts=14)
-    s.cyl(4.1, 1.2, 0.0, 0.0075, 0.05, "puddle_hi", layer="floor", verts=8)                  # a glint on the water
-    for (px, py) in ((3.8, 1.55), (4.7, 1.55)):
+    s.cyl(4.3, 1.7, 0.0, 0.0075, 0.05, "puddle_hi", layer="floor", verts=8)                  # a glint on the water
+    for (px, py) in ((3.7, 1.95), (4.9, 2.0)):
         s.cyl(px, py, 0.0, 0.005, 0.04, "puddle", layer="floor", verts=8)                  # drips on the way to the bucket
     s.point_light(2.5, 2.5, 2.6, 85, colour=(0.9, 0.98, 1.0))
     s.point_light(4.5, 4.0, 2.6, 60, colour=(0.9, 0.98, 1.0))
@@ -2959,3 +2946,212 @@ def vaultmart():
 
 
 SCENES.append(vaultmart)
+
+
+def shower_cubicle(s, x0, y0):
+    """s64: shower cubicle in the back-right corner of the public toilet (x0 = west glass pane, extends 1.65 cells east into the
+    wall column; the player stands in the tray at about (x0 + 0.55, 0.8)). White tiled back wall and tray, glass pane on the west
+    side, curtain bunched at the open front on the east side, chrome head on an arm, tap, coin box with a slot, drain."""
+    xe = x0 + 1.65
+    xc = x0 + 0.6                                                    # the head
+    s.box(x0, y0 + 0.02, xe, y0 + 0.05, 0.0, 2.45, "tile_wall_white")                # tiled back wall
+    s.box(x0, y0, xe, y0 + 0.02, 2.45, 2.52, "trim_white")                           # top trim
+    s.box(x0, y0 + 0.05, xe, y0 + 1.5, 0.0, 0.1, "robot_white")                      # tray (raised, white)
+    s.box(x0 + 0.02, y0 + 0.07, xe - 0.02, y0 + 1.48, 0.1, 0.115, "tile_wall_white")
+    s.cyl(xc, y0 + 0.8, 0.115, 0.13, 0.11, "metal_dark", verts=12)                   # drain
+    s.cyl(xc, y0 + 0.8, 0.13, 0.135, 0.07, "chrome", verts=10)
+    s.box(x0 - 0.04, y0, x0 + 0.04, y0 + 1.5, 0.0, 2.1, "glass_pane")                # glass pane (west side)
+    s.box(x0 - 0.07, y0, x0 + 0.07, y0 + 1.5, 2.05, 2.15, "chrome")                  # its frame (top rail)
+    s.box(x0 - 0.07, y0 + 1.42, x0 + 0.07, y0 + 1.5, 0.1, 2.1, "chrome")             # front post
+    s.box(x0 - 0.07, y0, x0 + 0.07, y0 + 0.08, 0.1, 2.1, "chrome")
+    s.set_solid(x0 - 0.08, y0, x0 + 0.07, y0 + 1.5)
+    # curtain rail along the open front and the curtain bunched at the east end
+    s.tube([(x0, y0 + 1.5, 2.12), (xe, y0 + 1.5, 2.12)], 0.02, "chrome")
+    for i in range(4):                                  # pulled to the glass end, so the tray (and whoever stands in it) stays visible
+        cx = x0 + 0.15 + i * 0.09
+        s.box(cx - 0.04, y0 + 1.44, cx + 0.04, y0 + 1.56, 0.35, 2.05, "curtain_teal" if i % 2 == 0 else "goods_blue")
+    s.box(x0 + 0.1, y0 + 1.5, x0 + 0.45, y0 + 1.53, 0.0, 0.35, "curtain_teal")          # hem
+    # shower head: wall pipe, arm, rose with a disc, valve with two handles, coin box with slot
+    s.cyl(xc, y0 + 0.1, 0.9, 2.2, 0.03, "chrome", verts=8)
+    s.tube([(xc, y0 + 0.1, 2.2), (xc, y0 + 0.35, 2.3), (xc, y0 + 0.5, 2.22)], 0.028, "chrome")
+    s.cyl(xc, y0 + 0.52, 2.16, 2.24, 0.16, "chrome", verts=16, r2=0.1)
+    s.cyl(xc, y0 + 0.52, 2.14, 2.17, 0.14, "metal_dark", verts=16)
+    s.box(xc + 0.55, y0 + 0.05, xc + 0.95, y0 + 0.14, 1.0, 1.28, "chrome")           # valve plate
+    s.cyl(xc + 0.65, y0 + 0.16, 1.14, 1.19, 0.045, "sign_red", axis="y", verts=10)
+    s.cyl(xc + 0.85, y0 + 0.16, 1.14, 1.19, 0.045, "sign_blue", axis="y", verts=10)
+    s.box(xc + 0.55, y0 + 0.05, xc + 0.95, y0 + 0.2, 1.42, 1.78, "metal_grey")       # coin box
+    s.box(xc + 0.64, y0 + 0.2, xc + 0.86, y0 + 0.22, 1.6, 1.7, "metal_dark")
+    s.box(xc + 0.73, y0 + 0.2, xc + 0.77, y0 + 0.22, 1.62, 1.68, "chrome")           # coin slot
+    s.text("$1", xc + 0.75, y0 + 0.23, 1.46, 0.1, "robot_white", face="left")
+    s.occluder(x0 - 0.1, y0, x0 + 0.1, y0 + 1.5, 2.1)
+
+
+def clinic_building(s, x0, x1, fy, y_back=11.0):
+    """s64: CITY CLINIC, a small one-storey practice (own design, cream plaster, green accents) on the brick lot north of the avenue.
+    Facade at y = fy facing +y, glass door on the right, window with blinds on the left, green cross plaque, sign band, rooftop cross
+    board, green awning."""
+    h = 4.3
+    s.box(x0, y_back, x1, fy, 0, h, "plaster_cream")
+    s.box(x0 - 0.05, fy - 0.08, x1 + 0.05, fy + 0.05, 0, 0.35, "stone")                 # plinth
+    s.box(x0 - 0.1, fy - 0.1, x1 + 0.1, fy + 0.12, h - 0.2, h + 0.1, "trim_white")        # cornice
+    s.box(x0 - 0.1, y_back, x0 + 0.05, fy, h - 0.2, h + 0.1, "trim_white")
+    s.box(x1 - 0.05, y_back, x1 + 0.1, fy, h - 0.2, h + 0.1, "trim_white")
+    s.box(x0, y_back, x1, fy - 0.1, h, h + 0.04, "roof")
+    s.box(x0 + 0.7, y_back + 1.0, x0 + 2.0, y_back + 1.9, h + 0.04, h + 0.55, "metal_light")   # air conditioning
+    s.box(x0 + 0.8, y_back + 1.1, x0 + 1.9, y_back + 1.3, h + 0.55, h + 0.62, "metal_dark")
+    s.box(x1 - 1.6, y_back + 3.0, x1 - 0.7, y_back + 3.8, h + 0.04, h + 0.3, "glass")             # skylight
+    s.box(x1 - 1.65, y_back + 2.95, x1 - 0.65, y_back + 3.0, h + 0.04, h + 0.34, "trim_white")
+    # rooftop cross board (white board, green cross) so the practice reads from far away
+    bx0, bx1 = x0 + 0.55, x0 + 1.75
+    s.box(bx0 + 0.1, fy - 0.9, bx0 + 0.18, fy - 0.8, h, h + 0.45, "metal_dark")
+    s.box(bx1 - 0.18, fy - 0.9, bx1 - 0.1, fy - 0.8, h, h + 0.45, "metal_dark")
+    s.box(bx0, fy - 0.9, bx1, fy - 0.8, h + 0.45, h + 1.55, "robot_white")
+    bm = (bx0 + bx1) / 2
+    s.box(bm - 0.13, fy - 0.8, bm + 0.13, fy - 0.76, h + 0.62, h + 1.38, "neon_green")
+    s.box(bm - 0.45, fy - 0.8, bm + 0.45, fy - 0.76, h + 0.89, h + 1.11, "neon_green")
+    # sign band
+    s.box(x0 + 0.2, fy - 0.05, x1 - 0.2, fy + 0.16, 3.0, 3.95, "clinic_green")
+    s.box(x0 + 0.15, fy - 0.05, x1 - 0.15, fy + 0.2, 2.95, 3.02, "chrome")
+    s.box(x0 + 0.15, fy - 0.05, x1 - 0.15, fy + 0.2, 3.93, 3.98, "chrome")
+    xm = (x0 + x1) / 2
+    s.text("CITY CLINIC", xm, fy + 0.17, 3.3, 0.4, "robot_white", face="left")
+    # window with blinds on the left, cross plaque above it
+    wx0, wx1 = x0 + 0.35, x0 + 1.9
+    s.box(wx0 - 0.14, fy - 0.1, wx1 + 0.14, fy + 0.08, 0.78, 2.32, "metal_light")
+    s.box(wx0, fy - 0.2, wx1, fy - 0.12, 0.92, 2.18, "shop_light")
+    for k in range(8):
+        s.box(wx0, fy - 0.1, wx1, fy - 0.02, 1.9 - k * 0.1 - 0.0, 1.97 - k * 0.1, "paper_cream")
+    s.box(wx0, fy - 0.01, wx1, fy + 0.04, 0.92, 2.18, "glass")
+    s.box((wx0 + wx1) / 2 - 0.03, fy - 0.1, (wx0 + wx1) / 2 + 0.03, fy + 0.07, 0.92, 2.18, "metal_light")
+    s.box(wx0 - 0.1, fy - 0.1, wx1 + 0.1, fy + 0.2, 0.62, 0.78, "stone")
+    s.box(wx0 + 0.1, fy - 0.05, wx1 - 0.1, fy + 0.12, 0.2, 0.52, "clinic_green")       # stucco band under the sill
+    px = (wx0 + wx1) / 2
+    s.box(px - 0.3, fy - 0.02, px + 0.3, fy + 0.04, 2.38, 2.9, "robot_white")
+    s.box(px - 0.05, fy + 0.04, px + 0.05, fy + 0.08, 2.44, 2.84, "neon_green")
+    s.box(px - 0.21, fy + 0.04, px + 0.21, fy + 0.08, 2.54, 2.74, "neon_green")
+    # door: aluminium frame with a green kick plate, glass leaf, push bar, step and mat
+    dx0, dx1 = x1 - 2.0, x1 - 0.6
+    d = 0.04 / 0.75
+    s.box(dx0 - 0.14, fy - d, dx1 + 0.14, fy + 1.5 * d, 0, 2.5, "metal_light")
+    s.box(dx0, fy - 1.2 * d, dx1, fy + 2 * d, 0, 2.38, "glass")
+    s.box(dx0, fy - 1.2 * d, dx1, fy + 2.4 * d, 0, 0.35, "clinic_green")
+    s.box((dx0 + dx1) / 2 - 0.03, fy - 1.2 * d, (dx0 + dx1) / 2 + 0.03, fy + 3 * d, 0.35, 2.38, "metal_dark")
+    s.box(dx0 + 0.12, fy + 3 * d, dx0 + 0.2, fy + 7 * d, 0.9, 1.5, "chrome")
+    s.box(dx1 - 0.2, fy + 3 * d, dx1 - 0.12, fy + 7 * d, 0.9, 1.5, "chrome")
+    s.box(dx0 - 0.2, fy, dx1 + 0.2, fy + 0.45, 0.0, 0.07, "stone")
+    s.box(dx0 - 0.1, fy + 0.05, dx1 + 0.1, fy + 0.4, 0.07, 0.09, "mat_red")
+    s.wedge(dx0 - 0.15, fy, dx1 + 0.15, fy + 1.0, 2.82, 2.5, "y", "awning_green")
+    # street details
+    potted_plant(s, x0 + 0.5, fy + 0.8, "bay")
+    potted_plant(s, dx0 - 0.7, fy + 0.7, "flowers")
+    potted_plant(s, x1 - 0.2, fy + 0.8, "bush")
+    weeds(s, x0 + 0.3, fy + 0.5, 3)
+    s.set_solid(x0, y_back, x1 - 0.001, fy - 0.001)
+    s.set_solid(dx0 - 0.1, fy - 1.0, dx1 + 0.1, fy - 0.001, False)                       # door cells walkable
+    s.occluder(x0, y_back, x1, fy, h + 0.8)
+    s.warp(dx0, fy - 1.0, dx1, fy, "clinic", 6.0, 7.4, "up")
+
+
+# ------------------------------------------------------------------ clinic interior (s64)
+def clinic():
+    """CITY CLINIC interior (13 x 9 cells): waiting area with chairs, a sofa and a table (west / back-left), reception counter with the
+    doctor behind it (centre), medicine cabinet, exam corner with couch, basin and scale (east / back-right), plants, a water cooler,
+    a hand-sanitiser stand and the door in the front wall."""
+    W, H = 13, 9
+    s = std_room("clinic", "City Clinic", W, H, "tile_clinic", "plaster_mint", "tile_wall_white", 1.2, 3.2, (5, 7),
+                 "city_centre", 37.6, 19.0, mat_cols=("clinic_green", "rug_cream"))
+    rnd = random.Random(64)
+    rug(s, 0.6, 2.0, 4.6, 6.6, "carpet_blue", "rug_cream", "carpet_blue")
+    # back wall (north): window above the chairs, cabinet behind the desk, cross sign, clock; exam corner
+    window_y(s, 1.0, 3.2, 0.0, 1.4, 2.5)
+    for i in range(3):
+        cx = 1.2 + i * 1.15
+        s.prop("house/Chair_1", cx, 0.85, rot=0, h=0.95, colours={"Wood": "#3aa07a"})
+    potted_plant(s, 4.45, 0.7, "bay")
+    # medicine cabinet (glass doors, shelves with bottles) behind the reception desk
+    s.box(5.4, 0.0, 8.4, 0.55, 0.0, 2.3, "wood_blue")
+    s.box(5.5, 0.55, 8.3, 0.6, 0.15, 0.95, "fridge_white")
+    for k in range(3):
+        s.box(5.5 + k * 0.94, 0.55, 6.4 + k * 0.94, 0.6, 1.1, 2.2, "glass_pane")
+        for lv in range(3):
+            for j in range(4):
+                bx = 5.62 + k * 0.94 + j * 0.2
+                s.box(bx, 0.3, bx + 0.12, 0.45, 1.15 + lv * 0.36, 1.35 + lv * 0.36, ["goods_white", "goods_green", "goods_orange", "goods_blue"][(j + lv + k) % 4])
+    s.set_solid(5.4, 0.0, 8.399, 0.6)
+    s.occluder(5.4, 0.0, 8.4, 0.6, 2.4)
+    # low partitions close the staff area behind the reception counter (the doctor's side)
+    for (px0, px1) in ((9.4, 9.55), (5.0, 5.15)):
+        s.box(px0, 0.6, px1, 3.1, 0.0, 1.0, "robot_white")
+        s.box(px0 - 0.03, 0.6, px1 + 0.03, 3.1, 1.0, 1.05, "clinic_green")
+        s.set_solid(px0 - 0.05, 0.6, px1 + 0.05, 3.1)
+        s.occluder(px0 - 0.05, 0.6, px1 + 0.05, 3.1, 1.1)
+    s.box(6.2, 0.0, 7.6, 0.05, 2.45, 3.0, "clinic_green")
+    s.box(6.8, 0.05, 7.0, 0.09, 2.52, 2.92, "neon_green")
+    s.box(6.6, 0.05, 7.2, 0.09, 2.62, 2.82, "neon_green")
+    wall_clock_y(s, 4.9, 0.0, 2.3, 0.26)
+    picture_y(s, 0.9, 1.9, 0.0, 2.55, 3.05, "poster_blue")
+    # reception counter (curved front plaque) with monitor, bell, leaflets, sanitiser
+    counter(s, 5.2, 3.1, 9.4, 4.0, 1.0, "clinic_green", "paper_cream", trim="trim_white")
+    s.box(5.4, 4.0, 9.2, 4.03, 0.4, 0.8, "robot_white")
+    s.text("RECEPTION", 7.3, 4.05, 0.5, 0.16, "clinic_green", face="left")
+    monitor_y(s, 6.2, 3.4, 1.05)
+    s.box(6.0, 3.55, 6.4, 3.75, 1.05, 1.08, "tv_body")
+    s.cyl(8.0, 3.55, 1.05, 1.1, 0.07, "brass", verts=12)
+    s.box(8.5, 3.3, 9.1, 3.7, 1.05, 1.22, "paper_cream")
+    s.cyl(5.55, 3.7, 1.05, 1.2, 0.05, "goods_blue", verts=10)
+    # waiting corner: sofa on the west wall, coffee table with magazines, picture
+    s.prop("house/Couch_Small2", 1.3, 5.2, rot=90, scale=0.5)
+    s.prop("house/Table_RoundSmall", 2.9, 3.4, h=0.45)
+    s.box(2.7, 3.2, 3.1, 3.55, 0.45, 0.48, "goods_red")
+    s.box(2.8, 3.3, 3.2, 3.6, 0.48, 0.5, "goods_blue")
+    picture_x(s, 2.2, 3.4, 0.0, 1.5, 2.2, "poster_yellow")
+    s.box(0.0, 3.6, 0.05, 4.4, 1.2, 2.2, "paper_cream")                                   # notice about opening hours
+    window_x(s, 6.4, 7.8, 0.0, 1.5, 2.5)
+    s.prop("house/Light_Floor1", 0.6, 7.7, h=1.6)
+    # exam corner: couch along the back wall, basin, scale, screen
+    s.box(10.9, 0.25, 12.8, 1.35, 0.0, 0.62, "metal_light")
+    s.box(10.8, 0.2, 12.9, 1.4, 0.62, 0.75, "vinyl_white")
+    s.box(10.8, 0.2, 11.6, 1.4, 0.75, 0.85, "vinyl_white")                               # raised head end
+    s.box(12.7, 0.2, 12.85, 1.4, 0.75, 0.8, "paper_cream")                               # paper roll at the foot
+    s.box(10.85, 0.5, 11.35, 1.1, 0.85, 0.92, "pillow_white")
+    s.set_solid(10.8, 0.2, 12.899, 1.399)
+    s.occluder(10.8, 0.2, 12.9, 1.4, 0.95)
+    sink_unit(s, 9.9, 0.0)
+    s.box(11.2, 0.0, 12.6, 0.05, 1.6, 2.4, "paper_cream")                                 # eye chart
+    for k in range(6):
+        s.box(11.5, 0.05, 11.5 + 0.5 - 0.07 * k, 0.07, 2.25 - k * 0.12, 2.3 - k * 0.12, "metal_dark")
+    s.box(9.5, 3.9, 10.1, 4.5, 0.0, 0.1, "metal_dark")                                     # floor scale
+    s.box(9.55, 3.95, 10.05, 4.45, 0.1, 0.12, "metal_light")
+    s.box(9.7, 3.95, 9.9, 4.0, 0.12, 1.0, "metal_light")
+    s.set_solid(9.5, 3.9, 10.099, 4.499)
+    s.occluder(9.5, 3.9, 10.1, 4.5, 1.1)
+    for k in range(3):                                                                   # privacy screen (3 panels)
+        s.box(12.35, 2.2 + k * 0.5, 12.45, 2.65 + k * 0.5, 0.15, 1.7, "curtain_teal")
+    s.box(12.3, 2.15, 12.5, 3.7, 1.7, 1.78, "chrome")
+    s.set_solid(12.3, 2.15, 12.499, 3.699)
+    s.occluder(12.3, 2.15, 12.5, 3.7, 1.8)
+    picture_y(s, 9.3, 10.3, 0.0, 2.5, 3.0, "poster_red")
+    # plants, water cooler, sanitiser stand, bin, bench by the door
+    potted_plant(s, 0.6, 8.2, "flowers")
+    potted_plant(s, 12.3, 5.4, "bay")
+    s.box(3.6, 7.4, 4.2, 7.9, 0.0, 0.95, "robot_white")                                  # water cooler
+    s.cyl(3.9, 7.65, 0.95, 1.45, 0.14, "glass_pane", verts=12)
+    s.box(3.75, 7.9, 4.05, 7.93, 0.6, 0.8, "goods_blue")
+    s.set_solid(3.6, 7.4, 4.199, 7.899)
+    s.occluder(3.6, 7.4, 4.2, 7.9, 1.5)
+    s.box(7.6, 7.9, 7.9, 8.2, 0.0, 1.0, "metal_light")                                   # hand sanitiser stand
+    s.box(7.55, 7.85, 7.95, 8.25, 1.0, 1.15, "goods_green")
+    s.set_solid(7.6, 7.9, 7.899, 8.199)
+    s.occluder(7.6, 7.9, 7.9, 8.2, 1.2)
+    indoor_bin(s, 9.4, 5.0)
+    s.box(10.6, 6.2, 12.4, 6.9, 0.35, 0.42, "wood")
+    for lx in (10.7, 12.2):
+        s.box(lx, 6.3, lx + 0.1, 6.4, 0.0, 0.35, "metal_dark")
+    s.set_solid(10.6, 6.2, 12.399, 6.899)
+    s.occluder(10.6, 6.2, 12.4, 6.9, 0.5)
+    for (lx, ly) in ((3, 3), (7, 3), (11, 3), (3, 7), (8, 6), (11, 6)):
+        s.point_light(lx, ly, 2.8, 120, colour=(0.95, 1.0, 0.96))
+    return s
+
+
+SCENES.append(clinic)

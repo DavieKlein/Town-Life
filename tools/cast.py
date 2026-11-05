@@ -55,6 +55,14 @@ CHARS = {
     pcam=(0.80,1.96)),
 }
 
+CHARS["okafor"] = dict(label="Dr. Okafor", model="Female_Alternative", height=1.70,
+    colours={"Jacket":"#f6f8f6","LightJacket":"#e6eeea","Shirt":"#1f9a94","Pants":"#2c3a4c","Hair":"#1c1410","HairBase":"#1c1410","Skin":"#b07850","Shoes":"#eeeeee","Socks":"#eeeeee"},
+    props=[("torus",(0,-0.035,1.43),(0.085,0.085,0.012),"#2a2a34"),             # stethoscope round the neck
+           ("cyl",(0.0,-0.14,1.22),(0.03,0.03,0.012),"#c8d0d8",(90,0,0)),          # chest piece
+           ("torus",(0.043,-0.125,1.64),(0.036,0.036,0.005),"#2a2630",(90,0,0)),   # glasses
+           ("torus",(-0.043,-0.125,1.64),(0.036,0.036,0.005),"#2a2630",(90,0,0)),
+           ("box",(0,-0.125,1.645),(0.03,0.008,0.008),"#2a2630")])
+
 ROBOT = dict(label="Valet", model="ROBOT", height=1.34, colours={}, props=[], pcam=(0.90, 1.40))
 
 
@@ -63,10 +71,10 @@ CHARS["robot"]=ROBOT
 
 # Sprite sheets / portraits built by build_assets.py (graphics/npc_<id>.bmp, graphics/portrait_<id>.bmp).
 PORTRAIT_ONLY = ["player"]       # the player only needs a portrait (his sprites are rendered by blender_actor.py)
-ORDER = ["player", "mia", "rosa", "dex", "pimm", "lou", "dex_vault", "victor", "robot"]
+ORDER = ["player", "mia", "rosa", "dex", "pimm", "lou", "dex_vault", "victor", "robot", "okafor"]
 
 # Every NPC id of the game (index = npc_id in C++ = friendship slot in the save). Halloran has no look yet (Docks).
-IDS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "dex_vault", "victor", "robot"]
+IDS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "okafor", "dex_vault", "victor", "robot"]
 
 # Placements: (npc, map, x, y, facing, from, to, first day, last day) - cells, 24 h clock, days 1..255.
 # Daily whereabouts follow docs/story_chapter1.md section 1.11. Rosa, Dex, Victor and Valet only appear in story scenes
@@ -94,5 +102,6 @@ PLACEMENTS = [
     ("lou", "diner", 6.4, 2.6, "sw", "6:00", "22:00", 1, 255),             # behind the counter (counter y 3.2..4.1)
     ("pimm", "community_centre", 4.9, 7.4, "ne", "13:00", "16:00", 1, 1, None, None, "pimm_library"),   # library, beside the reading table (Day 1 after the shop)
     ("pimm", "community_centre", 4.9, 7.4, "ne", "8:00", "16:00", 2, 255, None, None, "pimm_library"),
+    ("okafor", "clinic", 7.2, 2.5, "sw", "8:00", "20:00", 1, 255),           # behind the reception counter (counter y 3.1..4.0)
     ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "19:30", 1, 255, None, None, "pimm_pond"),   # City Park pond, feeding the pigeons
 ]

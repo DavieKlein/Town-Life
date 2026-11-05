@@ -215,6 +215,19 @@ def pickup_pose(i):
     return ops
 
 
+def shower_pose(i):
+    """Standing under the shower, head tilted back, both hands scrubbing hair and face (4 frames: hands up, back, forward, rinse)."""
+    sway = [0, 1, 0, -1][i]
+    ops = [("Torso", "X", -4), ("Head", "X", [-14, -18, -12, -20][i]), ("Abdomen", "Z", sway * 3)]
+    for side, sgn in (("R", -1), ("L", 1)):
+        lift = [1.0, 0.7, 1.0, 0.5][i]
+        ops += [("UpperArm." + side, "X", -78 - 10 * lift),
+                ("UpperArm." + side, "Z", -sgn * (22 + 5 * sway * sgn)),
+                ("LowerArm." + side, "X", -118 - 14 * lift),
+                ("LowerArm." + side, "Z", -sgn * 30)]
+    return ops
+
+
 def main():
     global SS
     argv = sys.argv[sys.argv.index("--") + 1:]
@@ -222,7 +235,7 @@ def main():
     SS = int(argv[2])
     samples = int(argv[3])
     colours = json.loads(argv[4])
-    only = argv[5].split(",") if len(argv) > 5 else ["eat", "drink", "read", "search", "wash", "pickup"]
+    only = argv[5].split(",") if len(argv) > 5 else ["eat", "drink", "read", "search", "wash", "pickup", "shower"]
     facings = argv[6].split(",") if len(argv) > 6 else list(FACINGS)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -312,7 +325,8 @@ def main():
     drop = make_prop("sphere", "#90ccf8", (0.04, 0.04, 0.07))
     drop2 = make_prop("sphere", "#90ccf8", (0.04, 0.04, 0.07))
     can = make_prop("cube", "#c8d0d8", (0.07, 0.07, 0.12))
-    props = [can, food, bite, book, page_l, page_r, flip, water, drop, drop2]
+    streaks = [make_prop("cube", "#9fd4f8", (0.014, 0.014, 0.3)) for _ in range(14)]
+    props = [can, food, bite, book, page_l, page_r, flip, water, drop, drop2] + streaks
 
     def shot(name):
         sc.render.filepath = os.path.join(out_dir, name)
@@ -326,7 +340,7 @@ def main():
                 for p in props:
                     p.hide_render = True
                     p.hide_viewport = True
-                ops = {"eat": eat_pose, "drink": drink_pose, "read": read_pose, "search": search_pose, "wash": wash_pose, "pickup": pickup_pose}[act](i)
+                ops = {"eat": eat_pose, "drink": drink_pose, "read": read_pose, "search": search_pose, "wash": wash_pose, "pickup": pickup_pose, "shower": shower_pose}[act](i)
                 rig.pose(ops)
                 k = rig.k
                 if act == "pickup":
@@ -351,6 +365,15 @@ def main():
                     if i == 3:
                         rig.place(drop, hc + Vector((0.14, -0.06, -0.02)) * k)
                         rig.place(drop2, hc + Vector((-0.14, -0.08, -0.12)) * k)
+                elif act == "shower":
+                    # falling water: streaks on a ring round the body, shifted down per frame
+                    for k, st in enumerate(streaks):
+                        a = k * 2.4 + 0.5
+                        rad = 0.2 + 0.1 * (k % 3)
+                        z = 2.05 - ((k * 0.29 + i * 0.25) % 1.0) * 1.9
+                        st.matrix_world = Matrix.Translation(Vector((math.cos(a) * rad, math.sin(a) * rad * 0.8, z)))
+                        st.hide_render = False
+                        st.hide_viewport = False
                 elif act == "pickup":
                     hc = hand_centre(rig, "R")
                     if i == 0:

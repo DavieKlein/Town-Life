@@ -63,7 +63,11 @@ namespace tl
         constexpr int vowed = 53;
         constexpr int mia_goodbye = 54;
         constexpr int gate_hint_seen = 55;
-        constexpr int count = 56;
+        constexpr int met_okafor = 56;
+        constexpr int faint_told = 57;
+        constexpr int sick_told = 58;
+        constexpr int clinic_paid = 59;
+        constexpr int count = 60;
     }
 
     // missions: index + 1 (0 = no mission)
@@ -247,7 +251,33 @@ namespace tl
         constexpr int gossip_choc_mia = 205;
         constexpr int gossip_music_rosa = 206;
         constexpr int gossip_work_lou = 207;
-        constexpr int count = 208;
+        constexpr int bye_okafor = 208;
+        constexpr int greet_okafor_good = 209;
+        constexpr int greet_okafor_neutral = 210;
+        constexpr int greet_okafor_grumpy = 211;
+        constexpr int intro_okafor = 212;
+        constexpr int talk_okafor_weather = 215;
+        constexpr int talk_okafor_work = 216;
+        constexpr int talk_okafor_music = 217;
+        constexpr int talk_okafor_sports = 218;
+        constexpr int talk_okafor_gossip = 219;
+        constexpr int talk_okafor_compliment = 220;
+        constexpr int talk_okafor_joke = 221;
+        constexpr int talk_okafor_complain = 222;
+        constexpr int gift_fav_okafor = 223;
+        constexpr int faint_wake = 224;
+        constexpr int faint_wake_short = 229;
+        constexpr int faint_pay = 230;
+        constexpr int faint_paid = 231;
+        constexpr int faint_debt = 232;
+        constexpr int faint_debt_more = 233;
+        constexpr int sick_intro = 234;
+        constexpr int checkup_ok = 235;
+        constexpr int checkup_tired = 236;
+        constexpr int checkup_sick = 237;
+        constexpr int checkup_pay_ok = 239;
+        constexpr int bills_info = 240;
+        constexpr int count = 241;
     }
 
 }

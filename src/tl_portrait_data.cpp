@@ -75,6 +75,14 @@
 #include "bn_sprite_items_pq_robot_b.h"
 #include "bn_sprite_items_pq_robot_c.h"
 #include "bn_sprite_items_pq_robot_d.h"
+#include "bn_sprite_items_pt_okafor_a.h"
+#include "bn_sprite_items_pt_okafor_b.h"
+#include "bn_sprite_items_pt_okafor_c.h"
+#include "bn_sprite_items_pt_okafor_d.h"
+#include "bn_sprite_items_pq_okafor_a.h"
+#include "bn_sprite_items_pq_okafor_b.h"
+#include "bn_sprite_items_pq_okafor_c.h"
+#include "bn_sprite_items_pq_okafor_d.h"
 
 namespace tl
 {
@@ -89,6 +97,7 @@ namespace tl
         constexpr portrait_set set_lou = { { &bn::sprite_items::pt_lou_a, &bn::sprite_items::pt_lou_b, &bn::sprite_items::pt_lou_c, &bn::sprite_items::pt_lou_d }, { &bn::sprite_items::pq_lou_a, &bn::sprite_items::pq_lou_b, &bn::sprite_items::pq_lou_c, &bn::sprite_items::pq_lou_d } };
         constexpr portrait_set set_victor = { { &bn::sprite_items::pt_victor_a, &bn::sprite_items::pt_victor_b, &bn::sprite_items::pt_victor_c, &bn::sprite_items::pt_victor_d }, { &bn::sprite_items::pq_victor_a, &bn::sprite_items::pq_victor_b, &bn::sprite_items::pq_victor_c, &bn::sprite_items::pq_victor_d } };
         constexpr portrait_set set_robot = { { &bn::sprite_items::pt_robot_a, &bn::sprite_items::pt_robot_b, &bn::sprite_items::pt_robot_c, &bn::sprite_items::pt_robot_d }, { &bn::sprite_items::pq_robot_a, &bn::sprite_items::pq_robot_b, &bn::sprite_items::pq_robot_c, &bn::sprite_items::pq_robot_d } };
+        constexpr portrait_set set_okafor = { { &bn::sprite_items::pt_okafor_a, &bn::sprite_items::pt_okafor_b, &bn::sprite_items::pt_okafor_c, &bn::sprite_items::pt_okafor_d }, { &bn::sprite_items::pq_okafor_a, &bn::sprite_items::pq_okafor_b, &bn::sprite_items::pq_okafor_c, &bn::sprite_items::pq_okafor_d } };
     }
 
     const portrait_set* portrait_for(int speaker)
@@ -113,6 +122,8 @@ namespace tl
             return &set_victor;
         case int(npc_id::robot):
             return &set_robot;
+        case int(npc_id::okafor):
+            return &set_okafor;
         default:
             return nullptr;
         }

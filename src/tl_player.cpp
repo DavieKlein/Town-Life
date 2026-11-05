@@ -13,6 +13,7 @@
 #include "bn_sprite_items_player_read.h"
 #include "bn_sprite_items_player_search.h"
 #include "bn_sprite_items_player_pickup.h"
+#include "bn_sprite_items_player_shower.h"
 
 namespace tl
 {
@@ -42,7 +43,7 @@ namespace tl
         constexpr int act_frames_per_facing = 4;
 
         // Frames each animation step lasts, per action_kind.
-        constexpr int act_step[5] = { 6, 16, 18, 36, 14 };
+        constexpr int act_step[7] = { 6, 16, 18, 36, 14, 18, 10 };      // wash, eat, drink, read, search, pickup, shower
 
         [[nodiscard]] const bn::sprite_item& action_item(player::action_kind kind)
         {
@@ -62,6 +63,9 @@ namespace tl
 
             case player::action_kind::pickup:
                 return bn::sprite_items::player_pickup;
+
+            case player::action_kind::shower:
+                return bn::sprite_items::player_shower;
 
             default:
                 return bn::sprite_items::player_wash;
@@ -426,7 +430,7 @@ namespace tl
             _facing = facing;
 
             // Hold B to run.
-            bn::fixed speed = (_script_facing == -2 ? bn::keypad::b_held() : _script_run) ? run_speed : walk_speed;
+            bn::fixed speed = ((_script_facing == -2 ? bn::keypad::b_held() : _script_run) ? run_speed : walk_speed) * _speed_scale;
             target_vx = directions[facing].x * speed;
             target_vy = directions[facing].y * speed;
             _vx += (target_vx - _vx) * acceleration;

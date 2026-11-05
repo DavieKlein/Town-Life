@@ -20,7 +20,7 @@ namespace tl
 
     bool field::_can_pause() const
     {
-        return _state == state::playing && ! _menu.is_open() && ! _act.active && ! _accident_pending &&
+        return _state == state::playing && ! _menu.is_open() && ! _phone_open && ! _act.active && ! _accident_pending &&
                _player.current_activity() == player::activity::walking;
     }
 
@@ -50,6 +50,8 @@ namespace tl
         info.coins = story().coins();
         _sync_objective();
         info.objective = _objective.c_str();
+        info.sick = _sick;
+        info.debt = _debt;
         ui::set_night(is_night(_minutes));
         _pause.open(info);
         _pause_mode = pause_mode::main;
@@ -82,6 +84,7 @@ namespace tl
     {
         _pause.close();
         _log.close();
+        _collection.close();
         _dialog.close();
         _pause_mode = pause_mode::none;
         _redraw_hud_text();
@@ -145,6 +148,13 @@ namespace tl
                 {
                     _open_log();
                 }
+                else if(choice == pause_screen::collection)
+                {
+                    _pause.close();
+                    ui::set_night(is_night(_minutes));
+                    _collection.open(_collect.mask, _collect.paid);
+                    _pause_mode = pause_mode::collection;
+                }
                 else if(choice == pause_screen::save)
                 {
                     save_data existing;
@@ -167,6 +177,13 @@ namespace tl
 
         case pause_mode::log:
             if(_log.update())
+            {
+                _open_pause();
+            }
+            break;
+
+        case pause_mode::collection:
+            if(_collection.update())
             {
                 _open_pause();
             }
@@ -298,6 +315,32 @@ namespace tl
         {
             out.deposit_spot[index] = _deposit.spot[index];
         }
+
+        // s64
+        out.collect_mask = _collect.mask;
+        out.collect_paid = _collect.paid;
+        out.sick = _sick ? 1 : 0;
+
+        for(int i = 0; i < 4; ++i)
+        {
+            out.zero_min[i] = uint16_t(_zero_min[i]);
+        }
+
+        out.red_min = uint16_t(_red_min);
+        out.sick_rest = uint16_t(_sick_rest);
+        out.debt = int16_t(_debt);
+        out.debt_day = uint8_t(_debt_day);
+        out.faints = uint8_t(_faints);
+        out.msg_seen = _msg_seen;
+        out.msg_read = _msg_read;
+
+        for(int i = 0; i < 8; ++i)
+        {
+            out.call_day[i] = _call_day[i];
+        }
+
+        out.delivery_item = int8_t(_delivery_item);
+        out.delivery_due = _delivery_due;
     }
 
     void field::_apply_save(const save_data& in)
@@ -340,6 +383,32 @@ namespace tl
             _deposit.load(*_map);
         }
 
+        _collect.mask = in.collect_mask & 0x0FFF;
+        _collect.paid = in.collect_paid & 7;
+        _collect.load(*_map);
+        _sick = in.sick != 0;
+        _player.set_speed_scale(_sick ? bn::fixed(0.8) : bn::fixed(1));
+
+        for(int i = 0; i < 4; ++i)
+        {
+            _zero_min[i] = in.zero_min[i];
+        }
+
+        _red_min = in.red_min;
+        _sick_rest = in.sick_rest;
+        _debt = in.debt;
+        _debt_day = in.debt_day;
+        _faints = in.faints;
+        _msg_seen = in.msg_seen;
+        _msg_read = in.msg_read;
+
+        for(int i = 0; i < 8; ++i)
+        {
+            _call_day[i] = in.call_day[i];
+        }
+
+        _delivery_item = in.delivery_item >= 0 && in.delivery_item < phone_food_count ? in.delivery_item : -1;
+        _delivery_due = in.delivery_due;
         _player.set_facing_index(in.facing);
         _npcs.load(*_map, _map_id, _day, _minutes);
         _player.set_blockers(_npcs.blockers(), _npcs.count());

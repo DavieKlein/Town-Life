@@ -16,7 +16,7 @@ import cast  # noqa: E402
 
 # ---------------------------------------------------------------------------------------------------- speakers
 SPEAKER_IDS = {"MIA": "mia", "ROSA": "rosa", "DEX": "dex", "PIMM": "pimm", "LOU": "lou", "HALLORAN": "halloran",
-               "DEXV": "dex_vault", "VICTOR": "victor", "VALET": "robot"}
+               "DEXV": "dex_vault", "VICTOR": "victor", "VALET": "robot", "OKAFOR": "okafor"}
 SP_PLAYER, SP_NPC, SP_SYSTEM = 253, 252, 254
 
 TOPICS = ["weather", "work", "music", "sports", "gossip", "compliment", "joke", "complain"]
@@ -37,6 +37,7 @@ NPC_INFO = {
     "dex_vault": ("Dex", "neutral", "NLDLNLND", 0, "NNNNN"),
     "victor": ("Victor Vault", "neutral", "NNNNNNNN", 0, "NNNNN"),
     "robot": ("Valet", "neutral", "NNNNNNNN", 0, "NNNNN"),
+    "okafor": ("Dr. Okafor", "neutral", "LLNNDNLD", 0, "LLNFN"),
 }
 # Gifts (docs/features_backlog.md): name, price. The NPC string above has one letter per gift in this order:
 # F favourite (+10 friendship), L likes (+4), N neutral (+1), D dislikes (-3). One gift per NPC and day.
@@ -54,7 +55,7 @@ GOSSIP = [
     ("work_lou", ("topic", "lou", "work"), "pimm", "gossip_work_lou"),
 ]
 assert len(GOSSIP) <= 8
-TALKERS = ["mia", "rosa", "dex", "pimm", "lou", "halloran"]       # have small talk
+TALKERS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "okafor"]       # have small talk
 
 # ---------------------------------------------------------------------------------------------------- story flags
 FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "met_lou", "met_halloran", "hint_talk_seen",
@@ -65,7 +66,9 @@ FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "
          "woke_up", "briefed", "stock_react_done", "pimm_scene", "has_rye", "pimm_left", "lunch_given", "vault_scene",
          "corner_market_cold", "has_coffee_voucher", "voucher_used", "ate_evening", "washed_evening", "news_due", "deposit_tip",
          "hint_hunger", "hint_hygiene", "hint_energy", "hint_bladder", "hint_fun", "lou_shift_go", "hyg_ok", "stock_rank",
-         "diner_shift_day", "rosa_comforted", "vowed", "mia_goodbye", "gate_hint_seen"]
+         "diner_shift_day", "rosa_comforted", "vowed", "mia_goodbye", "gate_hint_seen",
+         # s64: clinic
+         "met_okafor", "faint_told", "sick_told", "clinic_paid"]
 assert len(FLAGS) <= 64
 
 # ---------------------------------------------------------------------------------------------------- missions

@@ -50,6 +50,7 @@ FORMAT of cutscenes_src.txt (one statement per line, '#' starts a comment, inden
     car_move <x> <y> <frames> <mode>   the car drives there (mode 0 linear, 1 slowing down to a stop, 2 speeding up); wait_moves waits
     car_remove
     hook car_arrival           (kept, unused: the car is real now)
+    clinic_care <0>            s64: after a faint: 2 hours pass, needs are patched up, the $20 fee is paid (flag clinic_paid = 1) or becomes a debt (0)
     vaultmart_swap             HOOK: the cold VaultMart look of Corner Market (design pending) - for now a cold palette + flash
     jump <label> / ifflag <flag> <n> <label>      jump (always / when the flag value >= n)
     end                        end of the script
@@ -64,7 +65,7 @@ import story_data  # noqa: E402
 
 FACINGS = {"s": 0, "sw": 1, "w": 2, "nw": 3, "n": 4, "ne": 5, "e": 6, "se": 7}
 DIRS = {"down": 0, "up": 1, "left": 2, "right": 3}
-NPCS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "dex_vault", "victor", "robot"]
+NPCS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "dex_vault", "victor", "robot", "okafor"]
 
 # op -> argument kinds: n int, c cell (x16), d direction, f facing, m map, w who, N dialogue node, F flag, M mission,
 #                       s string, b on/off, k minigame kind, L label, h hook name; a trailing '?' = optional
@@ -75,7 +76,7 @@ OPS = {
     "flag": "Fn?", "mission": "M", "done": "M", "money": "n", "money_rank": "", "objective": "s", "objective_clear": "",
     "minigame": "k", "letterbox": "b", "pan": "cc", "pan_player": "", "time": "nn", "next_day": "nn", "needs": "nnnnn",
     "eat": "nnn", "lie_bed": "", "get_up": "", "hook": "h", "vaultmart_swap": "", "jump": "L", "ifflag": "FnL", "end": "",
-    "label": "L", "car_spawn": "ccf", "car_move": "ccnn", "car_remove": "",
+    "label": "L", "car_spawn": "ccf", "car_move": "ccnn", "car_remove": "", "clinic_care": "n",
 }
 COND_KINDS = ["map", "flag", "noflag", "flag_ge", "day_eq", "day_ge", "time_ge", "time_lt", "mission"]
 

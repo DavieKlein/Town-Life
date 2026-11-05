@@ -192,6 +192,27 @@ namespace tl
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // news_day2
         { cs_op::say, dlg::pro_mia_tip, 0, 0, 0, 0, nullptr },  // mia_tip
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // mia_tip
+        { cs_op::fade_out, 24, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::card, 0, 0, 0, 0, 0, "You fainted..." },  // faint
+        { cs_op::warp, int(map_id::clinic), 190, 40, 0, 0, nullptr },  // faint
+        { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::lie_bed, 0, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::spawn, int(npc_id::okafor), 179, 58, 5, 0, nullptr },  // faint
+        { cs_op::clinic_care, 0, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::fade_in, 40, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::wait, 30, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::say, dlg::faint_wake, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::get_up, 0, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::wait, 10, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::ifflag, story_flag::clinic_paid, 1, 199, 0, 0, nullptr },  // faint
+        { cs_op::say, dlg::faint_debt, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::jump, 200, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::say, dlg::faint_pay, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::actor_face_player, int(npc_id::okafor), 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::scene_end, 0, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::player_at, 96, 90, 1, 0, 0, nullptr },  // faint
+        { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // faint
         };
         constexpr cs_script all_scripts[] = {
             { 0, 13 },
@@ -203,6 +224,7 @@ namespace tl
             { 64, 114 },
             { 178, 3 },
             { 181, 2 },
+            { 183, 21 },
         };
         constexpr cs_cond all_conds[] = {
             { cs_cond_kind::map, int(map_id::player_room), 0 },

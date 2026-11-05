@@ -15,7 +15,7 @@ namespace tl
         fade_out, fade_in, black, flash, wait, card, warp, player_at, player_face, face_to, walk, scene_begin, scene_end, spawn,
         despawn, swap, move, actor_face, actor_face_player, wait_moves, say, info, flag, mission, done, money, money_rank, objective,
         objective_clear, minigame, letterbox, pan, pan_player, time, next_day, needs, eat, lie_bed, get_up, hook, vaultmart_swap,
-        jump, ifflag, end, car_spawn, car_move, car_remove
+        jump, ifflag, end, car_spawn, car_move, car_remove, clinic_care
     };
 
     struct cs_step

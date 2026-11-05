@@ -59,6 +59,8 @@ namespace tl
         int credit = 0;                 // deposit credit 0 or 1 (of 2)
         int coins = 0;                  // City Coins
         const char* objective = "";
+        bool sick = false;              // s64: "Sick" next to the clock line
+        int debt = 0;                   // open clinic bill ($)
     };
 
     // The START screen: stats on the left, options on the right.
@@ -68,9 +70,10 @@ namespace tl
     public:
         static constexpr int resume = 0;
         static constexpr int log = 1;
-        static constexpr int save = 2;
-        static constexpr int quit = 3;
-        static constexpr int options_count = 4;
+        static constexpr int collection = 2;
+        static constexpr int save = 3;
+        static constexpr int quit = 4;
+        static constexpr int options_count = 5;
         static constexpr int open_still = -1;
 
         void open(const pause_info& info);
@@ -94,6 +97,38 @@ namespace tl
         int _selected = 0;
 
         void _draw_options();
+    };
+
+    // s64: the collection screen (pause menu): one page per set (left / right), four 32x32 icons rendered from the real 3D props
+    // (found ones in colour, missing ones as dark slots), the name of the selected item (up / down moves the cursor over the icons
+    // is not needed: left / right change the set, up / down pick an item) and the set reward.
+    class collection_screen
+    {
+
+    public:
+        void open(uint16_t mask, uint8_t paid);
+        void close();
+
+        [[nodiscard]] bool is_open() const
+        {
+            return _panel.is_open();
+        }
+
+        // True when closed (A, B or START).
+        [[nodiscard]] bool update();
+
+    private:
+        ui::panel _panel;
+        bn::vector<ui::label, 8> _labels;
+        bn::vector<bn::sprite_ptr, 4> _icons;
+        ui::hint_row _hint;
+        ui::bar _bar;
+        uint16_t _mask = 0;
+        uint8_t _paid = 0;
+        int _set = 0;
+        int _item = 0;
+
+        void _draw();
     };
 
     // What the mission log shows: the current mission and the finished ones (most recent / highest first).

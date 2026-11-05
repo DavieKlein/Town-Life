@@ -35,6 +35,7 @@ import critters, npcs, cast, story_data        # noqa: E402
 import interactions          # noqa: E402
 import deposit               # noqa: E402
 import pickups               # noqa: E402
+import collectibles          # noqa: E402
 import minigame_art          # noqa: E402
 import face_pass             # noqa: E402
 import face_cfg              # noqa: E402
@@ -725,6 +726,7 @@ def main():
     build_player_actions(force, fast)
     build_player_acts(force, fast)
     build_critters(force, fast)
+    build_collectibles(force, fast)
     build_cast(force, fast)
     build_portraits()
     story_data.main()
@@ -806,6 +808,10 @@ def build_ui_sprites():
     pal = pal + [(0, 0, 0)] * (16 - len(pal))
     write_bmp(os.path.join(ROOT, "graphics", "need_bar.bmp"), pixels, 32, len(pixels), 4, pal)
     write_text(os.path.join(ROOT, "graphics", "need_bar.json"), '{\n    "type": "sprite",\n    "height": 8\n}\n')
+    pixels, pal = hud_sprites.build_hud_bar()
+    pal = pal + [(0, 0, 0)] * (16 - len(pal))
+    write_bmp(os.path.join(ROOT, "graphics", "hud_bar.bmp"), pixels, 32, len(pixels), 4, pal)
+    write_text(os.path.join(ROOT, "graphics", "hud_bar.json"), '{\n    "type": "sprite",\n    "height": 8\n}\n')
     ui_assets.main()           # panels, highlight bars, icons, fonts (tools/ui_assets.py)
     minigame_art.build()       # STOCK IT! / PLATE RUSH backgrounds and sprites (needs the portraits: run after build_portraits)
     # can & bottle pickups (16x16, 6 items x 2 twinkle frames) and their spawn spots
@@ -856,7 +862,7 @@ def build_player_actions(force, fast):
                      anchors, "player", PLAYER_COLOURS["Skin"])
 
 
-ACT_SHEETS = ("eat", "drink", "read", "search", "wash", "pickup")
+ACT_SHEETS = ("eat", "drink", "read", "search", "wash", "pickup", "shower")
 
 
 def build_player_acts(force, fast):
@@ -869,7 +875,7 @@ def build_player_acts(force, fast):
     tools_hash(h, ("blender_acts.py",) + FACE_TOOLS)
     h.update(f"acts{ss}{samples}{colours}{PLAYER_MODEL}".encode())
     out_dir = os.path.join(CACHE, "player_acts_" + h.hexdigest()[:12])
-    last = os.path.join(out_dir, "pickup_se_3.png")
+    last = os.path.join(out_dir, "shower_se_3.png")
     if force or not os.path.exists(last):
         print("rendering player activity poses...", flush=True)
         r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_acts.py"),
@@ -884,6 +890,84 @@ def build_player_acts(force, fast):
         frames = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, 64, 64) for s in stems]
         write_face_sheet("player_" + act, frames, stems, [f for f in FACINGS for i in range(4)], 64, 64,
                          anchors, "player", PLAYER_COLOURS["Skin"])
+
+
+def build_collectibles(force, fast):
+    """s64: 12 collectible props (tools/blender_props.py, real 3D renders): graphics/collectibles.bmp = 16x16 game frames
+    (item * 2 + twinkle) and graphics/collect_icons.bmp = 32x32 icons for the collection screen (12 + a locked slot);
+    include/tl_collect_spots.h = spots and set rewards (tools/collectibles.py)."""
+    samples = 16 if fast else 96
+    h = hashlib.sha1()
+    tools_hash(h, ("blender_props.py",))
+    h.update(f"props{samples}".encode())
+    out_dir = os.path.join(CACHE, "props_" + h.hexdigest()[:12])
+    last = os.path.join(out_dir, "big_flyer_folded.png")
+    if force or not os.path.exists(last):
+        print("rendering collectible props...", flush=True)
+        r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_props.py"), "--", out_dir, str(samples)],
+                           capture_output=True, text=True)
+        if not os.path.exists(last):
+            print(r.stdout[-3000:], r.stderr[-3000:])
+            raise RuntimeError("props render failed")
+    white = np.array([255.0, 255.0, 250.0])
+    for size, px, ss, has_twinkle in (("small", 16, 8, True), ("big", 32, 4, False)):
+        frames = [sprite_frame(os.path.join(out_dir, f"{size}_{n}.png"), SS_PROPS[size] // px, px, px) for n in collectibles.PROPS]
+        pts = np.concatenate([rgb[alpha & ~np.all(rgb == [40.0, 30.0, 40.0], axis=-1)] for rgb, alpha in frames]) * WEIGHT
+        cols = to5(kmeans(pts, 13, iters=20) / WEIGHT)
+        outline = np.array([40.0, 30.0, 40.0])
+        cols = np.concatenate([cols, [outline], [white]])
+        palette = [(255, 0, 255)] + [tuple(int(v) for v in c) for c in to5(cols)]
+        palette += [(0, 0, 0)] * (16 - len(palette))
+        cw = cols[:14] * WEIGHT
+        out = []
+        for rgb, alpha in frames:
+            d = ((rgb[..., None, :] * WEIGHT - cw[None, None]) ** 2).sum(3)
+            idx = d.argmin(2) + 1
+            idx[~alpha] = 0
+            if has_twinkle:
+                ys, xs = np.nonzero(alpha)
+                sx, sy = min(px - 3, int(xs.max()) + 0), max(2, int(ys.min()) - 0)
+                f0 = idx.copy()
+                f1 = idx.copy()
+                f0[sy, sx] = 15
+                for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+                    if 0 <= sx + dx < px and 0 <= sy + dy < px:
+                        f1[sy + dy, sx + dx] = 15
+                if sx + 2 < px:
+                    f1[sy, sx + 2] = 15
+                if sx - 2 >= 0:
+                    f1[sy, sx - 2] = 15
+                out += [f0, f1]
+            else:
+                out.append(idx)
+        if not has_twinkle:
+            lock = np.zeros((px, px), np.int64)
+            yy, xx = np.mgrid[0:px, 0:px]
+            m = ((xx - 15.5) / 14) ** 2 + ((yy - 15.5) / 8) ** 2 <= 1
+            lock[m] = 14
+            out.append(lock)
+        name = "collectibles" if has_twinkle else "collect_icons"
+        pixels = [row for f in out for row in f.astype(np.uint8).tolist()]
+        write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), pixels, px, px * len(out), 4, palette)
+        write_text(os.path.join(ROOT, "graphics", name + ".json"), f'{{\n    "type": "sprite",\n    "height": {px}\n}}\n')
+    lines = ["// Generated by tools/build_assets.py from tools/collectibles.py - do not edit by hand.", "#ifndef TL_COLLECT_SPOTS_H",
+             "#define TL_COLLECT_SPOTS_H", "", "namespace tl", "{", "    struct collect_spot", "    {", "        int x;              // world units",
+             "        int y;", "    };", "", "    constexpr collect_spot collect_spots[12] = {"]
+    for (x, y, st, it, _) in collectibles.SPOTS:
+        lines.append(f"        {{ {int(x * 16)}, {int(y * 16)} }},")
+    lines += ["    };", "", "    struct collect_set", "    {", "        const char* name;", "        const char* lines[3];",
+              "        int money;", "        int coins;", "        int friend_npc;      // npc_id index", "        int friend_gain;", "    };", "",
+              "    constexpr collect_set collect_sets[3] = {"]
+    for (name, short, money, coins, npc, gain, text) in collectibles.SETS:
+        lines.append(f'        {{ "{name}", {{ "{text[0]}", "{text[1]}", "{text[2]}" }}, {money}, {coins}, int(npc_id::{npc}), {gain} }},')
+    lines += ["    };", "", "    constexpr const char* collect_item_names[12] = {"]
+    lines += [f'        "{n}",' for row in collectibles.ITEM_NAMES for n in row]
+    lines += ["    };", "}", "", "#endif", ""]
+    lines.insert(3, '#include "tl_cast_data.h"')
+    write_text(os.path.join(ROOT, "include", "tl_collect_spots.h"), "\n".join(lines))
+
+
+SS_PROPS = {"small": 128, "big": 128}
 
 
 def build_critters(force, fast):
@@ -971,7 +1055,7 @@ def build_portraits():
                 write_bmp(os.path.join(ROOT, "graphics", name + ".bmp"), pixels, w, h * len(por.EXS), 4, pal)
                 write_text(os.path.join(ROOT, "graphics", name + ".json"), f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
     ids = {"mia": "int(npc_id::mia)", "rosa": "int(npc_id::rosa)", "dex": "int(npc_id::dex)", "pimm": "int(npc_id::pimm)", "lou": "int(npc_id::lou)",
-           "dex_vault": "int(npc_id::dex_vault)", "victor": "int(npc_id::victor)", "robot": "int(npc_id::robot)", "player": "speaker_player"}
+           "dex_vault": "int(npc_id::dex_vault)", "victor": "int(npc_id::victor)", "robot": "int(npc_id::robot)", "okafor": "int(npc_id::okafor)", "player": "speaker_player"}
     out = ["// Generated by tools/build_assets.py (build_portraits) - do not edit by hand.", '#include "tl_portrait.h"', '#include "tl_cast_data.h"', '#include "tl_story.h"', ""]
     for c in por.CHARS:
         for pre in ("pt", "pq"):

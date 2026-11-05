@@ -101,7 +101,10 @@ namespace tl
         wardrobe,       // info text
         gate,           // VaultTech staff gate at the foot of the storeroom stairs (after the firing)
         crate,          // storeroom crate with Mr. Pimm's rye loaf (Day 1)
-        kiosk           // newspaper boxes at the bus stop: scratch cards and newspapers (s63)
+        kiosk,          // newspaper boxes at the bus stop: scratch cards and newspapers (s63)
+        shower,         // s64: shower cubicle of the public toilet ($1 coin slot)
+        clinic,         // s64: City Clinic reception desk (check-up, pay the bill, talk to the doctor)
+        couch           // s64: the exam couch (info text; fainting patients wake up here)
     };
 
     struct interactable

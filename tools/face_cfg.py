@@ -15,5 +15,6 @@ FACE = {
     "dex":       dict(iris="#3a2616", brow="#2a1c18", lips="#a85a4a", plips="#9c5046", female=False, hair="#2a1c18", glasses=None),
     "dex_vault": dict(iris="#3a2616", brow="#241814", lips="#a85a4a", plips="#9c5046", female=False, hair="#241814", glasses=None),
     "pimm":      dict(iris="#5a7a8a", brow="#d8d8d0", lips="#b0685c", plips="#a2605a", female=False, hair="#f2f2ee", glasses=None),
+    "okafor":    dict(iris="#2a1a0e", brow="#140c08", lips="#8a3a42", plips="#7c343c", female=True,  hair="#1c1410", glasses=None),
     "lou":       dict(iris="#4a3020", brow="#3a2a1e", lips="#b0584c", plips="#a2504a", female=False, hair="#3a2a1e", glasses=None),
 }

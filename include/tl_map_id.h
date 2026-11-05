@@ -14,9 +14,10 @@ namespace tl
         public_toilet,
         player_room,
         vaultmart,
+        clinic,
     };
 
-    constexpr int maps_count = 8;
+    constexpr int maps_count = 9;
 }
 
 #endif

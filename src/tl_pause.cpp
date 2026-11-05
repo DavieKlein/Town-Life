@@ -4,13 +4,17 @@
 #include "tl_story.h"
 #include "bn_string.h"
 #include "bn_sprite_items_need_bar.h"
+#include "bn_sprite_items_collect_icons.h"
+
+#include "tl_cast_data.h"
+#include "tl_collect_spots.h"
 
 namespace tl
 {
     namespace
     {
         constexpr bn::string_view need_names[] = { "Hunger", "Energy", "Hygiene", "Fun", "Bladder", "Social" };
-        constexpr bn::string_view pause_options[] = { "Resume", "Mission log", "Save game", "Quit to title" };
+        constexpr bn::string_view pause_options[] = { "Resume", "Mission log", "Collection", "Save game", "Quit to title" };
 
         constexpr int dialog_w = 212;
         constexpr int dialog_x = (240 - dialog_w) / 2;
@@ -148,7 +152,7 @@ namespace tl
             _labels.back().set(font, x, baseline, text, r);
         };
 
-        bn::string<24> day(weekday_name(info.day));
+        bn::string<24> day((info.sick || info.debt > 0) ? weekday_short(info.day) : weekday_name(info.day));
         day.append(", day ");
         day.append(bn::to_string<8>(info.day));
         add(ui::font11, 12, 21, day, ui::role::text);
@@ -157,6 +161,22 @@ namespace tl
         money.append(bn::to_string<12>(info.money));
         _labels.emplace_back();
         _labels.back().set_right(ui::font11, 228, 21, money, ui::role::money);
+
+        if(info.sick || info.debt > 0)
+        {
+            bn::string<16> status("Owe $");
+
+            if(info.sick)
+            {
+                status = "SICK";
+            }
+            else
+            {
+                status.append(bn::to_string<8>(info.debt));
+            }
+
+            add(ui::font9, 12 + ui::text_width(ui::font11, day) + 8 + ui::text_width(ui::font9, clock_text(info.minutes)) + 8, 20, status, ui::role::money);
+        }
 
         for(int need = 0; need < 6; ++need)
         {
@@ -223,10 +243,16 @@ namespace tl
             bag.append(bn::to_string<8>(info.credit));
             bag.append("/2  Coins ");
             bag.append(bn::to_string<8>(info.coins));
+
+            if(info.debt > 0)
+            {
+                bag.append(" Owe $");
+                bag.append(bn::to_string<8>(info.debt));
+            }
+
             add(ui::font9, 12, 116, bag, ui::role::hint);
         }
 
-        _hint.open(142, 86, true, "OK");
         _draw_options();
     }
 
@@ -402,6 +428,139 @@ namespace tl
         {
             ++_scroll;
             _draw_rows();
+        }
+
+        if(bn::keypad::a_pressed() || bn::keypad::b_pressed() || bn::keypad::start_pressed())
+        {
+            close();
+            return true;
+        }
+
+        return false;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+
+    void collection_screen::open(uint16_t mask, uint8_t paid)
+    {
+        close();
+        _mask = mask;
+        _paid = paid;
+        _set = 0;
+        _item = 0;
+        _panel.open(4, 4, 232, 120, false);
+        _hint.open(190, 104, false, "OK");
+        _draw();
+    }
+
+    void collection_screen::_draw()
+    {
+        _labels.clear();
+        _icons.clear();
+        const collect_set& set = collect_sets[_set];
+        int found = 0;
+
+        for(int item = 0; item < 4; ++item)
+        {
+            found += (_mask >> ((_set * 4) + item)) & 1;
+        }
+
+        auto add = [&](const ui::font_data& font, int x, int baseline, const bn::string_view& text, ui::role r, bool right = false)
+        {
+            _labels.emplace_back();
+
+            if(right)
+            {
+                _labels.back().set_right(font, x, baseline, text, r);
+            }
+            else
+            {
+                _labels.back().set(font, x, baseline, text, r);
+            }
+        };
+
+        add(ui::font11, 12, 21, "Collection", ui::role::text);
+        bn::string<32> page("< ");
+        page.append(bn::to_string<4>(_set + 1));
+        page.append("/3 >");
+        add(ui::font9, 228, 20, page, ui::role::hint, true);
+        bn::string<40> title(set.name);
+        title.append("  ");
+        title.append(bn::to_string<4>(found));
+        title.append("/4");
+        add(ui::font9, 12, 38, title, ui::role::text);
+
+        for(int item = 0; item < 4; ++item)
+        {
+            bool have = (_mask >> ((_set * 4) + item)) & 1;
+            bn::sprite_ptr icon = bn::sprite_items::collect_icons.create_sprite(32 + (item * 48) + 16 - 120, 44 + 16 - 80,
+                                                                                have ? (_set * 4) + item : 12);
+            icon.set_bg_priority(0);
+            icon.set_z_order(-5);
+            _icons.push_back(bn::move(icon));
+        }
+
+        add(ui::font9, 32 + (_item * 48) + 12, 87, "^", ui::role::text);
+        _bar.set(10, 90, 130);
+        bool have = (_mask >> ((_set * 4) + _item)) & 1;
+        bn::string<40> name(have ? collect_item_names[(_set * 4) + _item] : "???");
+        add(ui::font9, 10 + 17, 90 + 10, name, ui::role::selected);
+
+        if((_paid >> _set) & 1)
+        {
+            add(ui::font9, 12, 114, "Set complete. Reward collected.", ui::role::hint);
+        }
+        else
+        {
+            bn::string<48> reward("Reward: $");
+            reward.append(bn::to_string<6>(set.money));
+
+            if(set.coins)
+            {
+                reward.append(" + City Coin");
+            }
+
+            reward.append(" + ");
+            reward.append(npc_infos[set.friend_npc].name);
+            add(ui::font9, 12, 114, reward, ui::role::hint);
+        }
+    }
+
+    void collection_screen::close()
+    {
+        _panel.close();
+        _labels.clear();
+        _icons.clear();
+        _bar.clear();
+        _hint.close();
+    }
+
+    bool collection_screen::update()
+    {
+        if(! is_open())
+        {
+            return true;
+        }
+
+        if(bn::keypad::left_pressed())
+        {
+            _set = (_set + 2) % 3;
+            _draw();
+        }
+        else if(bn::keypad::right_pressed())
+        {
+            _set = (_set + 1) % 3;
+            _draw();
+        }
+        else if(bn::keypad::up_pressed() && _item > 0)
+        {
+            --_item;
+            _draw();
+        }
+        else if(bn::keypad::down_pressed() && _item < 3)
+        {
+            ++_item;
+            _draw();
         }
 
         if(bn::keypad::a_pressed() || bn::keypad::b_pressed() || bn::keypad::start_pressed())

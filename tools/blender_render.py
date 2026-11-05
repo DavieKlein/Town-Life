@@ -511,6 +511,11 @@ MATERIALS = {
     "vm_grey_apple": dict(c="#9ca4ac", rough=0.5),  # s57-materials
     "vm_carpet": dict(c="#7c8692", rough=0.9),  # s57-materials
     "vm_stripe": dict(c="#38c8dc", rough=0.4, emit=0.6, emit_c="#38c8dc"),  # s57-materials
+    "neon_green": dict(c="#5cf08a", emit=3.2, emit_c="#3ee070"),  # s57-materials
+    "clinic_green": dict(c="#2e9a72", rough=0.4),  # s57-materials
+    "curtain_teal": dict(c="#3a9aa6", rough=0.95),  # s57-materials
+    "vinyl_white": dict(c="#eef2ee", rough=0.35),  # s57-materials
+    "tile_clinic": dict(kind="brick", c="#e4ece8", c2="#d6e2dc", mortar="#9db0a8", bw=0.6, bh=0.6, mortar_size=0.016, offset=0.0, rough=0.2),  # s57-materials
     "rug_green": dict(c="#4e8a5a", rough=0.95),
     "rug_gold": dict(c="#d8a84a", rough=0.95),
     "rug_teal": dict(c="#4a9a96", rough=0.95),

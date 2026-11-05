@@ -723,9 +723,18 @@ namespace tl
             }
             break;
 
+        case cs_op::clinic_care:
+            _clinic_care(step.a);
+            break;
+
         case cs_op::lie_bed:
             {
                 const interactable* bed = _find_kind(interactable_kind::bed);
+
+                if(! bed)
+                {
+                    bed = _find_kind(interactable_kind::couch);        // the clinic's exam couch
+                }
 
                 if(bed)
                 {
@@ -990,7 +999,7 @@ namespace tl
 
         static constexpr hint hints[] = {
             { needs::hunger, 40, story_flag::hint_hunger, "Your stomach growls. Eat at the diner or the shop. Or... check a bin." },
-            { needs::hygiene, 40, story_flag::hint_hygiene, "You feel grimy. A fountain or a sink helps." },
+            { needs::hygiene, 40, story_flag::hint_hygiene, "You feel grimy. A sink, the fountain or the park shower helps." },
             { needs::energy, 30, story_flag::hint_energy, "You're exhausted. A bench is a bed. Sort of." },
             { needs::bladder, 25, story_flag::hint_bladder, "Nature calls. The park has a public toilet." },
             { needs::fun, 30, story_flag::hint_fun, "You're bored. Try a book at the community centre." },

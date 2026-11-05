@@ -14,8 +14,8 @@ namespace tl
     struct save_data
     {
         static constexpr uint32_t magic_value = 0x56534C54;     // "TLSV"
-        static constexpr uint16_t save_version = 2;
-        static constexpr int max_maps = 8;                      // bin cooldown slots reserved per map index
+        static constexpr uint16_t save_version = 3;
+        static constexpr int max_maps = 10;                     // bin cooldown slots reserved per map index
         static constexpr int bins_per_map = 16;
         static constexpr int needs_count = 5;
         static constexpr int name_size = 12;
@@ -80,6 +80,22 @@ namespace tl
         uint8_t pad_story = 0;
         uint16_t coins = 0;
         uint32_t missions_done = 0;
+        // s64 (save version 3): collectibles, sickness, clinic bill, phone
+        uint16_t collect_mask = 0;              // bit per collectible found (set * 4 + item)
+        uint8_t collect_paid = 0;               // bit per set whose reward was paid
+        uint8_t sick = 0;                       // 1 = sick (slower, tires faster) until treated or rested
+        uint16_t zero_min[4] = {};              // game minutes a need has been empty: Hunger, Energy, Hygiene, Social
+        uint16_t red_min = 0;                   // game minutes two or more needs were red
+        uint16_t sick_rest = 0;                 // minutes slept while sick (rest cures at 480)
+        int16_t debt = 0;                       // clinic bill still open ($)
+        uint8_t debt_day = 0;                   // day (mod 256) of the last bill reminder
+        uint8_t faints = 0;
+        uint16_t msg_seen = 0;                  // phone messages delivered (bit per message)
+        uint16_t msg_read = 0;
+        uint8_t call_day[talk_slots] = {};      // day (mod 256) of the last phone call to each NPC
+        int8_t delivery_item = -1;              // ordered food on its way (index in the phone menu), -1 = none
+        uint8_t pad_s64 = 0;
+        int32_t delivery_due = 0;               // total_minutes when it arrives
     };
 
     static_assert(maps_count <= save_data::max_maps, "raise save_data::max_maps (and the save version)");

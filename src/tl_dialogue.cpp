@@ -60,6 +60,8 @@ namespace tl
                 return story_flag::met_lou;
             case int(npc_id::halloran):
                 return story_flag::met_halloran;
+            case int(npc_id::okafor):
+                return story_flag::met_okafor;
             default:
                 return -1;
             }
