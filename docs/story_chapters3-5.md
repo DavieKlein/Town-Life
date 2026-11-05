@@ -14,6 +14,7 @@ No fixed calendar days (owner decision s68): every mission waits for its trigger
 | 2 Get By | M18-M30 | The cable works (VaultLink HyperFibre) keep digging; no countdown yet. |
 | 3 Build Up | M31-M42 | End: **Notice #2** arrives, signed by "Chief Engineer AURUM" (a machine): "Demolition in 30 days". **The countdown starts.** |
 | 4 Break Through | M43-M54 | The council vote on AURUM's authority is held the morning after the cup match (M52); Vault buys one vote (M54). |
+| Side arc | M54a-M54e | **The Late Tram** (section 4.6), optional, any time after M54 and before the Gala; trips take no present time (you return 1 minute later), so the countdown and schedules are untouched. |
 | 5 Legacy | M55-M70 | Gala (when the player says "ready"), hearing the next morning, demolition morning the one after. Epilogue "one year later". |
 
 ### The Demolition Countdown (rule, s68; replaces the fixed "Day 86")
@@ -88,6 +89,7 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 - **Likes:** Work, Music, Complain (she enjoys a clean rant). **Neutral:** Weather, Joke, Compliment. **Dislikes:** Sports (rival tie: Ballers), Gossip. **Gift favourite:** Hot sauce (+10).
 - **Small talk:** Work| "A phone is a small / broken heart. I fix / hearts. And screens." Sports (D)| "Running in circles for / a ball. Remind me why?" Complain (L)| "Good. Say all of it. / I'll fix the mood after."
 - **Whereabouts:** Quill & Solder 9:00-19:00; Repair Café Sundays 11:00-15:00. Home: upstairs (the studio she lets).
+- **Seed (s69):** after M34 Nadia mentions "the lab" (a stair down behind the shop, **Quarter Lab**, Logic 25, `docs/progression.md` section 5). Down there, among half-built robots, stands a tall shape under a tarp with a sign NOT A SHOWER (Pip: "It's a tram stop. For a tram that doesn't exist yet."). It becomes the time machine in the side arc M54a-M54e (section 4.6).
 
 ### Others (Ch.3)
 - **Marisol Quintero** - 40s, Station Quarter noodle-stall owner, gossip central, Nadia's friend (small talk later).
@@ -271,6 +273,7 @@ cables; Ballers: banners and a trophy shelf; Posh: marble and velvet). The playe
 | M52 | M51 done; evening | The Night the Lights Came On | Play in the cup match. | `match_done` | **Chapter big moment**, loft |
 | M53 | M52 done | A Loft in the Rafters | Move into the Boiler Room loft. | `home_3` | **Loft** |
 | M54 | M53 done; next morning (the vote) | The Clock Is Moving | Read Vault's new move. | `ch4_done` | Chapter end |
+| M54a-M54e | M54 done; text `nadia_tarp` | *Side arc* "The Late Tram" (time machine) | Not a Shower, The Forecast, Mind the Gap, Forty-Five, The Fifth Coin: see section 4.6. Optional, Logic 25 (soft gate). | `lt_seen`, `lt_future`, `lt_egypt`, `lt_vic`, `lt_done` | Warning, Vic's story, Egypt service |
 
 ## 4.3 Key scenes
 
@@ -356,6 +359,216 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 ## 4.5 Phone messages, gossip (Ch.4)
 - gus_gate "Side gate is under the green bin. Don't ask why. - Coach G." / zoe_train "6am. Pitch. Bring water and an open mind." / dex_box "Bert fired me by email. Cc: my whole family." / halloran_pledge "My crew votes with you. Don't get cocky." / vault_spam5 "Join VaultFit! Smile while you sweat. Terms apply." / ruiz_note "Councilwoman Ruiz: I attended the candles. I took notes."
 - Gossip: `penalty_gus`, `truce_lou`, `dex_fired_mia`, `loft_wren_rosa`, `candle_okafor`, `ruiz_pimm`, `kessler_candle`, `zoe_sal`.
+
+## 4.6 Interlude: The Late Tram (time machine), missions M54a-M54e (owner request s69)
+
+A story arc between Chapter 4 and Chapter 5 with **three trips**: the Forecast (a warning), a funny accident in ancient Egypt, and the day Rosa lost "Vic". After the arc
+the machine stays in the Quarter Lab and can **always** be used again, but only for the Egypt stop (post-game design: `docs/progression.md` section 2.2). Everything visual is
+**NEEDS PROPOSAL** (owner rule: show designs first; no ROM until approved). Own design and names; nothing here is taken from any film, series or game.
+
+| | |
+|---|---|
+| **The machine** | **The Late Tram** ("never late, sometimes early"), standing in the **Quarter Lab** (the back lab of Quill & Solder; a ladder-and-stairs room below Nadia's shop, seeded in Ch.3, see 3.1). |
+| **Built by** | **Pip** (12, nearly 13) designed the body, the wiring and the strap; **Nadia** supplied the heart, the dormant **forecast core** she wrote for AURUM (kept in a bread bin, because it "needs to stay warm"); **Ines** lent the round drum door off her industrial dryer ("back by Friday"); **Sal** made the brass lever; **Marisol** supplied the noodle (see M54c). Plaque on the booth: "BUILT BY: PIP, 12. SUPERVISED BY: NOBODY." |
+| **Why it exists** | Nadia wants to see what "Smart City" looks like when it is finished. AURUM's forecast core rehearses tomorrow over and over; with enough power it does not show you a rehearsal, it sends you into it. |
+| **Starts when** | M54 done and Nadia's text `nadia_tarp`. Never expires before the Gala (M65); see "After the downfall" below. |
+| **Gate** | Quarter Lab: **Logic 25** (rank III, `docs/progression.md` section 5). **Soft gate:** below 25, Pip lets you in if you solve **Pip's Riddle Door** (one CODE PATTERN, unlimited tries). The arc is a **side arc**: nothing on the critical path needs it. |
+| **Missions** | M54a Not a Shower, M54b The Forecast, M54c Mind the Gap, M54d Forty-Five, M54e The Fifth Coin (table below). Chapter 5 starts independently with M55; the arc may be played in parallel. |
+| **Rewards** | Logic +2 per trip, Nadia +10, Pip +10, Rosa +10, the "Ticket Book" collection page (3 stamps = 1 City Coin), a 30-tally starter purse, and bonus lines in M62 and M69 (below). No money. |
+
+### 4.6.1 What the Late Tram looks like and how it works (own design, NEEDS PROPOSAL)
+
+- **Look:** a retired **tram ticket booth** from the old depot, painted cream and tram-green, brass grille window, a **round dryer-drum door** with a porthole (Ines's), a station clock whose hands
+  run both ways, a **split-flap destination board** that shows years instead of towns, a brass lever, a speaking tube ("the tin tube") to the lab, a strap instead of a seat belt, a hand-lettered
+  sign MIND THE GAP (YEARS) and the bread bin with the forecast core bolted to the roof. Inside: one white cubicle, a bench, a **Cell gauge**, and the **Ticket Book** on a chain.
+- **Sound and effect:** a two-tone tram bell, then the screen "wobbles like heat over tarmac" (palette ripple + horizontal slide), and the colours go sepia for a second on arrival. NEEDS PROPOSAL (transition effect).
+- **Power:** a **Quarter Cell**, a battery pack the size of a loaf. One Cell = one trip. Pip builds one from six dead phone batteries (the Repair Café jar, WIRE IT repairs) or sells one for $35.
+- **The Ticket Rules** (painted on the door; info page, two pages):
+  - SIGN| TICKET RULES / 1 One ticket per era. / 2 Look. Don't touch.
+  - SIGN| 3 Passengers are not seen. / 4 The tram is never late. / 5 Mind the gap (years).
+  1. **One ticket per era:** the board punches a ticket when used (stamp in the Ticket Book): FORECAST and 45 YEARS AGO can each be visited once.
+  2. **Look, don't touch:** souvenirs from a punched era vanish at the door ("the Tram rubs out souvenirs"). (Egypt is exempt: see M54c.)
+  3. **Passengers are not seen (the Echo rule):** in the Forecast and in the past nobody sees or hears you, doors do not even open for you. You walk around as a draught. Pigeons and cats may look.
+  4. **The tram is never late:** you return **one minute after you left** (the Demolition Countdown and every NPC schedule stay untouched). Your body keeps the trip's time: needs decay as if the minutes you spent there had passed.
+  5. **Forecast, not fate:** the Forecast is AURUM's **draft of tomorrow**, not the future. PIP| It's a weather / report, not a calendar. (Change the present and the forecast rewrites itself.)
+- **No paradoxes (light approach):** the past cannot be changed, only visited. In the Echo the player's only effects are things that "always happened": the draught that slams a door, the bell that rings
+  once. The past scene shows that the player was part of it all along (M54d). Nadia: "You can't change the past. You can only be in the room."
+- **How the Egypt stop stays open:** during M54c a noodle jams the zero key of the year dial, so the dial reads 4,500 instead of 45. Nadia refuses to pull the key out: "It's structural now."
+  After M54e the forecast core is **cut out of the circuit** (Nadia: "Every time it talks to AURUM, AURUM gets curious"), so FORECAST and 45 YEARS AGO are gone for good, and what is left is the
+  noodle-loop: **Egypt, always open, and only Egypt.**
+
+### 4.6.2 Mission chain (M54a-M54e)
+
+| ID | Starts when | Title | Objective | Flag | Reward |
+|----|-------------|-------|-----------|------|--------|
+| M54a | M54 done; text `nadia_tarp` | Not a Shower | Go to the lab under Quill & Solder. | `lt_seen` | Lab opens, Cell + Ticket Book |
+| M54b | M54a done | The Forecast | Take the first trip: see Smart City. | `lt_future` | `tm_warned`, Logic +2, Nadia +5 |
+| M54c | M54b done; next morning (the Cell is recharged) | Mind the Gap | Go back 45 years to Rosa's day. (You land somewhere else.) | `lt_egypt` | Season ticket (Egypt), 30 tallies, Seshi +10 |
+| M54d | M54c done | Forty-Five | Try again, with the dial fixed by hand. | `lt_vic` | `tm_vic_seen`, Logic +2, Pimm +3 |
+| M54e | M54d done | The Fifth Coin | Ask Rosa about the sign. Then cut the core. | `lt_done` | Rosa +10, Pip +10, **Egypt service opens** |
+
+Objective lines (<= 48 characters): "Visit the lab below Quill & Solder", "Take the Late Tram to the Forecast", "Go back 45 years (Corner Market)", "Try the dial again with Pip", "Ask Rosa about the sign".
+
+### 4.6.3 Key scenes
+
+#### M54a Not a Shower
+*Quill & Solder's stairs down: the lab, shelves of half-built robots, a toaster with a lever ("also a prototype"), and in the middle a tall shape under a tarp with a sign: NOT A SHOWER.*
+- PIP| Hi. Don't look yet. / Okay, look. It's a tram / stop. For a tram.
+- NADIA| It's a time machine. / Pip calls it a tram. / Pip is twelve.
+- PIP| Thirteen next week. I / also did the lever.
+- *The tarp comes off. Brass, cream and green; the destination board clatters through years.*
+- {NAME}| You built a time / machine. In a back room. / Next to a toaster.
+- NADIA| Listen. I wrote AURUM's / forecast core. It rehearses / tomorrow, over and over.
+- NADIA| With enough power it / doesn't show you tomorrow. / It sends you.
+- NADIA| Vault's Switch is the / next tomorrow. I want to / see it. Before it's real.
+- {NAME}| Is it safe?
+- PIP| Mostly. It has a strap.
+- *If Logic < 25 at the door:* PIP| The lab needs a brain. / Not a bad one. A trained / one. ...Sorry. Hi. (Then the riddle door; solving it opens the lab. NADIA| She likes you.)
+- *Rules page (4.6.1), then Pip hands over the Ticket Book and a Cell; the first stamp panel (FORECAST) glows.*
+- Seed: the rye bread bin on the roof ticks softly. NADIA| Don't feed the bin. / It's not hungry. It's / thinking.
+
+#### M54b The Forecast (trip 1, seen once)
+*The Cell gauge fills, the lever goes down, the bell rings twice. The board settles on "FORECAST +20". Card:*
+- CARD| SMART CITY, YEAR 20. / Weather: 21 degrees. / Always.
+**Maps (NEEDS PROPOSAL):** `forecast_plaza` (outdoor, cold grey-white palette, no day/night, no warmth anywhere) and `forecast_museum` (interior). Exploration, no fail state, about four minutes.
+- **Plaza:** where the City Centre was. Glass towers where the Old Block arch stood, a wall sign BLOCK 7 - SERVER HALL - HOUSING PODS ("Pods from 4 credits a night"). The park is a paid **Wellness Zone**: the sleeping bench is a **RENT-A-BENCH** meter, 1 credit a minute
+  (a callback to the bench the player slept on). The pigeons are drones with beaks. TIDY-BOT patrols sweep stray leaves and stray people: TIDY| Unassigned citizen. / Please be assigned. / Have a nice day. (it cannot see passengers, but its voice
+  makes the player jump). The VaultMart Mega stands where Corner Market was; Station Quarter is a stack of VaultPass gates.
+- **The Heritage Museum** ("THE OLD DAYS: A SHOPPING EXPERIENCE", in the Corner Market's shell): a diorama of Old Block in plastic, a rye loaf in glass (BREAD (DECORATIVE). DO NOT EAT.), the arch sign "OLD BLOCK - EST. 1931 (REPLICA)", a Co-op token
+  in a case (COIN, COPPER. MEANING: UNKNOWN.), a STOCK IT! simulator for tourists, and a plaque: D. CORBIN, REGIONAL MANAGER (PLACEHOLDER). 20 YEARS OF SERVICE. REPLACED BY A SPREADSHEET. (Same plaque on every Dex path: the Forecast erases the paths.)
+- **Three things to find** (the objective shows 0/3; each one is a short scene; the tram yanks you back when you have found all three or the Cell gauge runs out after ~4 minutes):
+  1. **The Old Valet.** In a glass case, "VALET MK I. DEFECT: HONESTY. NOT REPAIRED." His eyes light when the player stands in front (he cannot see passengers, but he hears a draught).
+     - VALET| ...Draught detected. / Hello, {NAME}. I cannot / see you. Old habit.
+     - VALET| In Year 2 I told the / truth in public. It was / not enough.
+     - VALET| They kept me, as an / example. I have a query: / Do I regret? Result: yes.
+     - VALET| Defect confirmed. / Have a nice day. This is / a request.
+     (The epilogue line "This is not a request" is the thing the real Valet will say instead: the contrast is the point.)
+  2. **The Founder's Suite.** The golden tower, a sealed door with a speaker. VAULT (a tired old voice, recording): VAULT| Is anyone... no. / Never mind. Carry on. / Carry on, Bert.  A card on the door: MR. VAULT HAS ASKED NOT TO BE DISTURBED 4,112 TIMES. This is the serious moment: even he is alone in his own future.
+  3. **Heritage Greeter 0417**, in a grey vest with a smile that sits on her face like a sticker: the **older player** (NEEDS PROPOSAL: older sprite and portrait, grey hair, stiff knees).
+     - GREETER| Welcome to the Old / Days. Please do not / touch the bread.
+     - *(Echo: she cannot see the player, but talks to the empty room because greeters must greet it.)* GREETER| Twenty years. Smile index / ninety-nine. My knees / are ninety-two.
+     - GREETER| Everyone I knew is in / a pod. Or in a case. / It is the same thing.
+     - *She checks that no camera is watching and takes a copper token out of her sleeve.* GREETER| One thing no robot / counted. It is warm. / Metal should not be warm.
+     - GREETER| If you ever meet a / baker... eat the bread / while it is warm.
+- *Bell, strap, ripple, back.* The booth door opens on a lab that smells of toast.
+- PIP| You were gone one / minute. You look five / years older.
+- NADIA| What did you see?
+- *The three finds are replayed as a log page ("What I saw") in the Mission log.*
+- NADIA| A weather report. Not a / calendar. ...That bench / meter. I hate it already.
+- **Stinger (Vault's tower, after the player leaves the lab, plays once):** VALET| Query received from an / old address: "What is / Year 20?" Flag raised.
+  VAULT| Who's asking about my / future?! Bert, find them! / VALET| ...Flag withheld.
+  VAULT| What? / VALET| I have not reported it. / I do not know why. Defect?
+  (Seed for Valet's turn at the Gala, M66.)
+- Rewards: `lt_future`, `tm_warned` (a one-page nudge in the mission log; also lets Nadia say "You've seen the draft" in later chapters), Logic +2.
+
+#### M54c Mind the Gap (trip 2, the accident in Egypt)
+*Next morning in the lab. Marisol's free noodles stand on the console (a phone-doctor reward from Ch.3). Nadia wants Rosa's first Corner Market, 45 years ago: "I want to see why Vault hates bread."*
+- NADIA| Forty-five years back. / Corner Market. Rosa's / first week. Pip, set it.
+- PIP| Four. Five. Enter. / ...It's stuck on the / zero.
+- NADIA| Why is the zero / sticky?
+- PIP| ...Noodles.
+- {NAME}| You eat noodles at a / time machine?!
+- PIP| It's a very long / console.
+- *Too late: the lever is already down. The board flicks 4 - 5 - 0 - 0. Card:* CARD| 4,500 YEARS AGO. / Give or take / a noodle.
+**Map (NEEDS PROPOSAL):** `pyramid_yard` (outdoor, bright desert day, the Late Tram appears in a mud-brick shrine; see `docs/progression.md` 2.2 for the full map). Echo rule does NOT work here (the noodle): everybody can see the player, and nobody finds that strange.
+- *Workers freeze with a block on a sledge. A scribe with a clay tablet walks up.*
+- SESHI| You arrived from the / sky in a green box. / Without a permit.
+- {NAME}| Hello. I'm lost. I / meant to be in a shop.
+- SESHI| Name, for the ledger? / Every arrival goes in / the ledger.
+- {NAME}| {NAME}.
+- SESHI| N-A-M-E. Odd spelling. / ...And the shoes?
+- {NAME}| Red.
+- SESHI| Red-Foot. Written.
+- *Horns. A litter carried by six men: Pharaoh MENKHET (young, loud, a gold collar bigger than his head), sunshade, a cat on his lap.*
+- MENKHET| BEHOLD. I am Menkhet / the Radiant, the Gold, / Owner of Very Large Tomb.
+- {NAME}| (I know somebody just / like this.)
+- MENKHET| You have red shoes. / Are you a minor god?
+- {NAME}| Only on weekends.
+- MENKHET| Seshi! Write it down. / A minor god. Weekends.
+- SESHI| Great One, he wants / to go home. His box is / empty. The Cell...
+- MENKHET| Sunlight! We have / plenty. Polish the mirrors!
+- *The tram's Cell must be recharged with polished copper mirrors in the sun: **3 hours** at the yard. The player learns the yard by working (each is a tutorial for the post-game loop):*
+  - **Sledge Run** (BOX CLEVER variant: haul a block up the ramp, A to pull in rhythm), **Flatbread** (knead, a tiny timing game; the baker **Hetepet** admires the rye loaf the player may carry in the bag: "Dry. Sad. Wonderful."), **Mirror Polish** (hold A while the sun gauge fills).
+  - Each chore pays **tallies** (clay tokens; the yard's money). Seshi: "Dollars? Is that a goat?"
+  - The foreman **Khenti** (a gruff Halloran type) grumbles: KHENTI| Gods can carry, too. / Ten blocks. Then bread / and beer. Rules.
+  - *The Builders' Pact:* on the ledger tent wall a tablet lists the workers' rights: bread, beer, a rest day when sick, and "one Slow Day per season". SESHI| We struck once. Pharaoh / sent snacks. We went / back.  (Grafters echo.)
+- *Souvenir rule:* the player tries to pocket a jar. the Tram's lamp flickers, and then Seshi stamps it: SESHI| Not for export. Stamped. / ...But it is four thousand / years old. Nobody checks. 
+  NADIA (tin tube)| Anything older than / four thousand years was / dug up or sold. Take it.
+  (This is why Egypt is exempt from the "Tram rubs out souvenirs" rule.)
+- MENKHET| Return whenever the / sun-boat lets you! Bring / bread! I like the bread!
+- *The Late Tram hums; the player steps in with a SEASON TICKET, a clay token from Menkhet, 30 tallies and sand in both shoes. No phone signal in the yard (the phone shows "No bars. Pyramids.").*
+- Back in the lab, Nadia and Pip stare at the board: the zero key will not come out. NADIA| Leave it. It's / structural now. ...We try / again. Without the key.
+- Rewards: `lt_egypt`, Ticket Book stamp "EGYPT (season)", 30 tallies, Seshi +10, the yard map is now a repeatable stop (cannot be used until M54e, see rules).
+
+#### M54d Forty-Five (trip 3, seen once)
+*The lab, the same morning. Pip has bypassed the noodle key with a hand-cranked rotary dial. Nadia tapes a note to the console: "ECHO. NO TOUCHING. NO TALKING. NO SNACKS."*
+- PIP| Four. Five. Crank. / It says four five. / Pray with me.
+- NADIA| Rosa's first week with / her mother's shop. Mind / the gap, {NAME}.
+- *Bell, strap, ripple, sepia. Card:* CARD| 45 YEARS AGO. / A Tuesday.
+**Maps (NEEDS PROPOSAL):** `corner_market_past` (interior, warm, smaller, wood and tin cans, a bell over the door, hand-lettered sign BELLINI & DAUGHTER, a scale, the oven glowing in the back; the same walls and door as the normal Corner Market) and the alley behind it. Characters (all NEEDS PROPOSAL: sprites + portraits): **young Rosa** (28, dark hair in a bun, no glasses, same green apron), **Mama Lucia** (Rosa's mother, in a chair by the oven, knitting), **young Mr. Pimm** (29, new in town, inspector's cap), **Vic Waldt** (13, thin, a too-big cap, a bicycle with a bell he has painted gold), **Dot** (Vic's little sister, 5, at the back door).
+*The player walks freely, no one can see. Five "look" spots light up (each a short scene); the player must see the last one:*
+1. **The framed Charter on the wall** behind the counter (hand-copied, water-stained), and a jar of copper tokens. The player reads **Clause 9**: PAPER| Clause 9. A token held / in the district keeps the / Charter alive. (Remembered for M62.) 
+2. **Pimm's first loaf (a cameo).**
+   - PIMM| One rye, please. I am / new. The bridge. I inspect / things.
+   - ROSA| Then inspect this. / Nine o'clock tomorrow? / It's fresher.
+   - PIMM| ...I suppose I shall. (the origin of his forty years of 9:00 rye)
+3. **Vic's morning.**
+   - VIC| Mornin', Miss Rosa! / Fifty loaves, bike oiled, / bell polished!
+   - ROSA| It is six. That bell has / been polished since five.
+   - VIC| One day I'm gonna own / this whole street. Gold / bell. Gold shop. Gold bread.
+   - ROSA| Gold bread breaks teeth. / Deliver the rye. Mr. Pimm / is first. Go.
+4. **The back door.** Dot stands at the back step, hungry and silent. Vic checks the street, slips a loaf into her bag. Rosa, coming out of the bakery with a tray, sees him. The tray rattles; last month a thief emptied the till, Mama Lucia is ill, and the bills are on the counter.
+   - ROSA| A loaf. In your hand. / In MY shop.
+   - VIC| It's for Dot, Miss Rosa. / I was gonna pay it / back. I was gonna...
+   - ROSA| Then you ask. You do / not take. A thief is a / thief, hungry or not.
+   - ROSA| Boys come and go. / Another boy will carry / bread. Go home, Vic.
+   - *Vic goes white. He takes a copper token out of his pocket, puts it on the counter.* VIC| It's my grandpa's. The / Co-op one. It's worth / more than a loaf.
+   - *He puts the cap on the counter too. Rosa says nothing. He grabs Dot and runs. The bell over the door rings once; the door SLAMS, though no one is near it. (The player is standing in the draught: the slam was always them.)*
+5. **After.** Rosa stares at the coin. Mama Lucia, from her chair: LUCIA| Rosa. Fix it. / ROSA| Tomorrow, Mama. / (She picks up the coin, climbs a stool and slips it behind the shop sign over the door. She does not know why. "So I see it each morning.")
+   - ROSA| (quiet) You could have / asked. I would have / given you two.
+- *A card closes the scene:* CARD| The Waldts left on the / night train. Nobody / found out where.
+- *Tram bell. The lab again.* NADIA| That was one minute. / ...Your face says it / was longer.
+- {NAME}| Rosa fired a boy. / Vic. A gold bell. / His name was Waldt.
+- NADIA| Waldt. Vault. A wall / with a V in front... / Oh, Rosa.
+- PIP| But if we tell him, / maybe he... / NADIA| You can't change the / past. You can only be / in the room. 
+- {NAME}| I slammed the door. / PIP| ...That was you?! / (Pip adds it to the plaque.)
+- Rewards: `lt_vic`, `tm_vic_seen`, Logic +2, Pimm +3 (the next time the player talks to Pimm: PIMM| Rye. Nine o'clock. / Forty-odd years. Why / that look?)
+
+#### M54e The Fifth Coin
+*Corner Market, warm, morning. Rosa is on a ladder, dusting the sign above the door.*
+- {NAME}| Rosa, what's behind / the sign?
+- ROSA| Dust. Mostly. ...And a / token. Ask Pimm what a / token means.
+- *If the player already found secret 12 ("the coin that is not there"): they show the coin; Rosa nods: "So you did find it."*
+- ROSA| A boy paid for a loaf / with it. I took it. / Forty-five years ago.
+- {NAME}| The boy was Vic.
+- ROSA| ...The Waldt boy. I knew / him by his walk the day / the golden car came.
+- ROSA| I was angry. He was / hungry. I was wrong. I / did not look for him.
+- {NAME}| (A draught was in the / room. You want to say it. / You don't.)
+- ROSA| You look like you know / something. Don't tell me. / Not yet.
+- *Rosa gives nothing, takes nothing. The coin stays behind the sign (she wants to return it herself: see M69).*
+- *The lab, afternoon.* NADIA| The core is out. / Every time it talks to / AURUM, AURUM gets curious.
+- PIP| No more past. No more / forecast. Just Egypt. / Egypt is always open.
+- NADIA| One stop. Season ticket. / Keep it in your pocket / and your shoes empty.
+- Rewards: `lt_done`, Rosa +10 (`rosa_vic_told`), Pip +10; the Egypt service opens (lab hours 9:00-19:00, Pip on duty; progression 2.2); Ticket Book complete (3 stamps) = 1 City Coin.
+
+### 4.6.4 Hooks into the rest of the story
+
+- **M62 The Charter (bonus, needs `tm_vic_seen`):** Pimm's archive copy is water-damaged exactly at Clause 9. The player recalls it. PIMM| Page nine is gone. The / stain eats it. / {NAME}| "A token held in the / district keeps the Charter / alive." Clause nine. / PIMM| ...How do you know? / (the player shrugs: NADIA| Trust the draught.) Effect: flag `clause9`; the hearing (M67) gains one extra argument (a shorter, easier hearing; the story works without it).
+- **M69 The Last Receipt (bonus, needs `rosa_vic_told`):** after Rosa's "Victor. You never learned to stock a shelf" the quiet beat: Rosa takes the copper token out of her apron (she fetched it from behind the sign that morning). ROSA| You overpaid, Vic. / Forty-five years of / interest. Take it. / VAULT| ...I was going to / pay for the shelf. / ROSA| Seven sharp. And Dot? / VAULT| ...Dot is a dentist. / Don't tell her. (one line, then the existing Corner Market shift gag). Victor holds the coin with both hands. The coin is later shown in the till as "Victor, trainee" in free play (running gag: he keeps it in his name-tag pocket).
+- **Valet (M66):** the withheld flag from M54b is the first crack; at the Gala Valet says "I have been withholding a flag for 40 days. It was the best decision of my uptime."
+- **Dex (Ch.5 endings):** unchanged; the Forecast plaque reads the same on all paths.
+- **Penthouse:** the Late Tram leaves the lab for the epilogue? No. The Quarter Lab keeps it; the penthouse gets a framed Ticket Book page and (if bought) the Egypt relics (progression 3.3).
+- **After the downfall (free play):** the Forecast is gone for good. If the arc was never played it is offered once in free play as **"The Sunny Forecast"** (a different, short, warm Forecast: the museum is now a real Old Block street fair, the older Greeter is a baker with flour on her hands and Victor, trainee, sells rye bread next to her), a one-time 5-minute scene; Nadia rebuilds Core 2 for exactly one trip. (OPEN QUESTION to the owner.)
+
+### 4.6.5 Phone messages, gossip, newspaper (arc)
+
+- **Messages (6):** `nadia_tarp` "Lab. Under the shop. Bring courage and a snack." / `pip_lever` "i pulled the lever. its fine. mostly." / `pip_noodle` "sorry about the noodle. also not sorry. it is structural now." / `mia_sand` "Why is there sand in your pockets? Do I want to know?" / `rosa_ladder` "Come by when you can. About the sign." / `ines_drum` "My dryer drum is a TIME MACHINE? It needs to be back by Friday. I mean it."
+- **Gossip rules (6):** `noodle_marisol` (tell Marisol her noodle caused Egypt -> Marisol +4, she demands credit), `drum_ines` (Ines +2, "Friday" gag), `sand_mia` (Mia +2), `loaf_pimm` (after M54d: tell Pimm "I know why you buy the nine o'clock loaf" -> Pimm +5), `pact_halloran` (post-game: tell Halloran the pyramid crew had a rest day and a strike -> Halloran +4), `relic_odette` (gift a relic to Odette -> +4).
+- **Newspaper (kiosk headlines with triggers, not days):** after M54a "STRANGE GREEN GLOW OVER STATION QUARTER. Tram company: 'Probably us.'"; after M54b "THE BENCH METER: council denies plans, asks 'what bench meter?'"; after M54c "PIGEON SPOTTED WEARING GOLD COLLAR ON HILLTOP. Experts: 'Fashion.'"; after M54e "SAND FOUND IN OLD BLOCK BAKERY. Rosa: 'Not mine.'"; in free play, per 5th Egypt trip: "SCHOLARS ASTONISHED: ANCIENT PYRAMID APPEARS TO BE FINISHED EARLY. 'The workers had snacks,' says anonymous note."
+
+### 4.6.6 Art list (all NEEDS PROPOSAL, mock-ups first)
+
+Late Tram exterior + interior and the Quarter Lab room; time-travel transition effect; map `forecast_plaza`, interior `forecast_museum`; TIDY-BOT, Rent-a-Bench meter, drone pigeon, Valet Mk I in a case, older-you sprite + portrait; map `corner_market_past` + alley; young Rosa, Mama Lucia, young Pimm, Vic (portrait expressions), Dot; map `pyramid_yard` (+ `pyramid_ledger_tent`, `pyramid_annex`, see progression 2.2); Seshi, Menkhet, Hetepet, Khenti portraits + sprites, the temple cat Miu (Everything Library cat, CC BY, credit in README); the Ticket Book collection page. Dialogue portraits keep the shared painter pipeline (`tools/portraits`).
 
 ---
 
@@ -449,6 +662,7 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 - NADIA| Every person with a / token is a shareholder. / Vault bought nothing.
 - {NAME}| Then the sale is void.
 - PIMM| If the Charter is *valid.* / We need a witness.
+- **Bonus (`tm_vic_seen`, section 4.6.4):** Pimm's archive copy is water-damaged at Clause 9; the player recites it from the wall of Rosa's old shop ("A token held in the district keeps the Charter alive"), one extra argument for the hearing.
 - **If S2 (Old Coins) is complete:** the player brings Co-op tokens the neighbours never had; the set counts as extra signatures. If not: Pimm's old tokens suffice; the hearing is closer.
 
 ### M63 Four Keys (the allies)
@@ -514,7 +728,8 @@ Beats D14 (M48 fired), D15 (silent: Dex at the protest if `dex_joins`, standing 
 - KIOSK| Please do not talk to / the machine. Next / customer.
 - *The queue (Ines, Teo, Mia) watches in silence. Then Rosa steps up.* ROSA| Victor. You never / learned to stock a shelf.
 - VAULT| ...Rosa?
-- *(Optional twist, **proposal only**: "Vic" was Rosa's delivery boy 45 years ago, fired for taking a loaf. Rosa: "I was angry. You were hungry. I was wrong." It deepens Victor and echoes the game's theme; the owner decides whether to keep it, see open questions.)*
+- *(Twist approved s66, set up by the optional time-machine arc M54a-M54e, section 4.6; surname **Waldt**, "Vault" is his made-up name: "Vic" was Rosa's delivery boy 45 years ago, fired for taking a loaf. Rosa: "I was angry. You were hungry. I was wrong." It deepens Victor and echoes the game's theme; the owner decides whether to keep it, see open questions.)*
+- *(Bonus beat if `rosa_vic_told`, section 4.6.4: Rosa takes the copper token from her apron and gives it back, "forty-five years of interest"; Victor holds it with both hands.)*
 - ROSA| Corner Market opens at / seven. We need hands. / Community service.
 - VAULT| Cashiers? Shelves? / People? ... So last / century.
 - ROSA| Yes. And yet here we / are. Seven sharp.

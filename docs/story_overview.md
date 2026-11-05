@@ -111,3 +111,12 @@ resistance), events (Saturday market, march, Block Party, Repair Café, Lantern 
 14. **Progression design (docs/progression.md):** one upgrade ladder (skills with ranks I-V, 13 tiered City Coin perks with caps, type-star passives, temporary buffs), 12 secrets (including the sewer
     sweet seller Mothball at 00:00, whose cheap sweets give buffs and whose expensive sweets, $40 rising to $150, give permanent skill points up to a cap), free play after the credits (exclusive shops, vintage
     vehicles, Legend titles, the penthouse as showcase), a pause-menu Status screen (reputation stars, skills, People list, perks, Doors) and skill gates (e.g. Charm for a club, Logic for a lab) that never block the critical path.
+
+## Owner decisions, s69
+
+15. **The time machine "The Late Tram" (side arc M54a-M54e, `docs/story_chapters3-5.md` section 4.6).** Built by Pip (12) and Nadia in the **Quarter Lab** (Station Quarter, Logic 25, soft gate), a retired tram ticket booth with a dryer-drum door, powered by a
+    battery "Quarter Cell" and Nadia's dormant AURUM forecast core. Three trips: (1) **the Forecast**, AURUM's draft of Smart City Year 20 (cold, Old Block gone, bench meters, the old Valet in a museum case, a lonely Vault behind a door, the older player as a
+    Heritage Greeter with one warm copper token), seen once; (2) an **accident in ancient Egypt** (a noodle jams the year dial: 45 becomes 4,500), where Pharaoh Menkhet takes the player for a minor god; (3) the real target, **Rosa's Corner Market 45 years ago**, where the
+    player watches Rosa fire 13-year-old Vic Waldt for taking a loaf for his little sister, and the draught that slams the door is the player (the past is not changed, only visited). Afterwards the core is cut out and the machine goes **only to Egypt**, one trip a day for a
+    Cell: tallies (the yard's money), the Menkhet furniture set, collectibles, Tomb Honey for Mothball, a growing pyramid and a 13th secret, the Sealed Annex (`docs/progression.md` section 2.2). Side arc: nothing on the critical path needs it; it adds bonus beats in M62 and M69
+    and explains the fifth Co-op coin behind the Corner Market sign (Vic's payment). All art NEEDS PROPOSAL.

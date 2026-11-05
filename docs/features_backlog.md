@@ -156,3 +156,7 @@ Hunger (food icon), Energy (bed or "Zzz" icon), Hygiene (shower icon), Bladder (
 - **HUD budget:** seven slots do not fit variant A (28 px slots, pitch 30, 6 slots). Needs a HUD proposal: 7 slots at about 26 px pitch 28 (bars thin, icons larger), or two compact rows; decide with a mock-up in a real screenshot. The Home need design above stands.
 - **Icon redesign (future proposal):** all need icons must be **clearer and more readable** than the current ones: sleep = bed or Zzz, Hygiene = shower head with drops, Bladder = toilet, Hunger = a recognisable food item (bread or fork and plate), Fun = smiley or ball, Social = two speech bubbles or two heads, Home = a small house. Test them at real GBA size (16x16 or 14x14) on the phone-size screenshot; keep the green/orange/red bar colours.
   Same icon set later feeds the Status screen, the phone and hint texts. NEEDS PROPOSAL (show the redesigned set in an in-game screenshot before building).
+
+## s69 (docs only): the Late Tram time machine
+
+Side arc M54a-M54e and the Egypt Pyramid Yard service (Cells, tallies, Menkhet furniture set, Tomb Honey, secret 13): `docs/story_chapters3-5.md` section 4.6 and `docs/progression.md` section 2.2. Needs new systems when built: relic/tally inventory, Cell stock, a yard-time gauge, `tools/egypt.py` dig spots (like `deposit.py`), furniture catalog entries ("Menkhet Collection"), collectible set S5.

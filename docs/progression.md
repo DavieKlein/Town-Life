@@ -117,9 +117,9 @@ All of this lives on the new **Status** screen of the pause menu (section 4: Ove
 
 ---
 
-## 2. Secrets (12)
+## 2. Secrets (13)
 
-Secrets are found by exploring, gossip and phone rumours; none blocks the story. A "Secrets found x/12" line appears in the Collection page once the
+Secrets are found by exploring, gossip and phone rumours; none blocks the story. A "Secrets found x/13" line appears in the Collection page once the
 first one is found (the entries stay hidden until then: "???"). Each secret is a one-time discovery with a small reward plus (where listed) a repeatable service.
 
 | # | Secret | How you find it | Reward | Art |
@@ -136,6 +136,7 @@ first one is found (the entries stay hidden until then: "???"). Each secret is a
 | 10 | **Duchess vs the kiosk** | walk Duchess (dog job) past a VaultMart kiosk | she barks, the kiosk shows OUT OF ORDER for a game day, staff cheer; Duchess +friendship | needs the corgi (already a proposal) |
 | 11 | **Trench-E's poem** | talk to the cable-works robot 5 times (after the door bridge) | it recites a poem about holes; after the ending it is dug in as a flower-bed robot that waves | NEEDS PROPOSAL (robot sprite is already part of the cable works) |
 | 12 | **The Co-op coin that is not there** | after S2 (4 coins) examine Pimm's empty coin frame in the library | a fifth coin, hidden behind the Corner Market sign (post-game collectible) | none |
+| 13 | **The Sealed Annex** (Pyramid Yard, Egypt; added s69) | after the time-machine arc (M54a-M54e): Logic 35 and three star-marked clay clues dug up at the yard | the Builders' Pact tablet, a free Throne of Reasonable Hours, the oldest shopping list; Legacy +2 (see 2.2) | NEEDS PROPOSAL (`pyramid_annex`) |
 
 ### 2.1 Mothball and the Midnight Sweets (secret 1, details)
 
@@ -183,6 +184,77 @@ Free play (part 3) adds **Legend Licorice** ($30, a buff sweet): every buff swee
 Story link: Mothball hears everything in the pipes. After M42 he sells the player, for free, a single "Pipe Whisper" (a one-line clue about the cable trench, see
 `docs/story_chapter1.md` section 3B.2a); in Chapter 5 his pipes lead to the AURUM relay (optional clue, no puzzle).
 
+### 2.2 The Late Tram and the Pyramid Yard (secret 13, repeatable service; owner request s69)
+
+After the story arc **M54a-M54e** (`docs/story_chapters3-5.md` section 4.6) the time machine in the Quarter Lab runs **only to ancient Egypt**: the forecast core is cut out and a noodle
+keeps the year dial stuck on 4,500. The stop is the **Pyramid Yard**, the building site of Pharaoh Menkhet's very large tomb. Own design, original characters. Everything visual is **NEEDS PROPOSAL**.
+Secret 13 inside it is the **Sealed Annex** (Ledger Room, below).
+
+**Rules and costs**
+
+| Rule | Value |
+|------|-------|
+| Where / when | Quarter Lab, Quill & Solder, 9:00-19:00; Pip works the lever (Nadia's shop hours). Menu: "Egypt (season ticket)" and "Ticket Book". |
+| Limit | **One trip per game day** (resets at 6:00). The main throttle. |
+| Fuel | **1 Quarter Cell** per trip. $35 from Pip, or free from **6 dead phone batteries** (items: WIRE IT repairs give 1, the Repair Café jar 2 per Sunday, bins 4 %). At most 5 Cells in stock. |
+| Body cost | Energy >= 50 and Hunger >= 20 to board (Pip: "You'll faint in the sun."). In the yard Energy and Hygiene decay 1.5x; a free well gives water (Bladder -). On return **Tram-lag**: Energy decay x1.25 for 3 hours. |
+| Time | The yard lasts up to **180 game minutes** ("yard time", 3 real minutes; a Cell gauge in the HUD slot). The world clock is frozen; you return **5 minutes** after you left, with your needs as if the yard time had passed. NPC schedules, the clock, the Demolition Countdown and the day's events are untouched. |
+| Bag | Relic slots **4 + Strength rank** (max 9). Tallies are kept in Seshi's bank (cap 999; they never leave Egypt). |
+| Not for sale | Egyptian goods carry Seshi's "NOT FOR EXPORT" stamp: shops and the Docks Salvage refuse them (their "museum problem"). They can be placed at home, put on the collection wall, or **given as gifts** (daily gift rule). No cash loop. |
+| Pip's upgrades | **Long Ticket** $150 (+60 yard minutes), **Roomier Satchel** $200 (+4 relic slots), **Sun Panel** $300 (the lab roof makes 1 free Cell every 3 game days). |
+| Caught | Walking into Menkhet's Treasury tent: SESHI| I will have to write / this down. The Tram yanks you back and the Cell is spent; what you already carry is kept. A joke, never a punishment. |
+
+**The map `pyramid_yard` (NEEDS PROPOSAL, ~52x44 cells, bright desert day, no night):** the mud-brick **Sun Gate shrine** where the Late Tram appears; the **half-built pyramid** (it grows in 10 layers, see below) with a long
+**ramp and sledge track**; the **workers' village edge** with **Hetepet's bread tent** and a brewery shed; **Seshi's Ledger Tent** (the bank, the barter desk and the Builders' Pact tablet; interior); the **Tally Market** (four stalls, rotates stock every 2 game days);
+**Menkhet's Pavilion** (shade, a cat, a sunshade, always lounging); the Nile bank with ducks and gulls (Everything Library animals, CC BY 4.0, credited in the README) and a palm grove; 20 **dune dig spots** marked by pegs; the **Sealed Annex** (a small stone door in the pyramid's flank, `pyramid_annex`).
+People (all original, NEEDS PROPOSAL sprites + portraits): **Seshi** (scribe-accountant; bank, barter and audits; friendship NPC), **Hetepet** (baker; recipes, bread swap, honey and lotus stall), **Khenti** (foreman; chores, a gruff Halloran type), **Pharaoh Menkhet** (vain, loud, funny; the
+"Decree of the Day" gag, 12 rotating decrees), **Miu** (the temple cat; pat for Fun +3 once per day; a future pet when pets are built). Egyptian friendships work like any NPC's (0-100, City Coin at 70) and appear on a "Yard" tab of the People list.
+
+**What you do there**
+- **Chores** (each pays tallies, max 2 per kind per trip; each adds pyramid blocks): *Sledge Run* (BOX CLEVER variant) 8-12 tallies, 3 blocks; *Flatbread* (knead timing) 6-10, 1 block; *Hieroglyph painting* (BIG WALL variant) 10-15, 1 block; *Fix Seshi's abacus* (WIRE IT variant, Techies) 12, 1 block; *Mirror polish* 5, 1 block.
+  A full trip pays about **30-45 tallies** and 5-8 blocks.
+- **Dig** (the dune pegs, 4 s, Energy -1, Hygiene -1, like the bin search; B cancels): 12 of the 20 spots are active each visit. Results by chance: pottery shard 38 % (flavour, a gift worth N +1), tallies 22 % (2-6), food 14 % (dates Hunger +10), **scarab** 10 % (the next missing item of the collectible set; spares become gifts), faience beads 8 % (gift, decor material), **Tomb Honey 2 %**, nothing 6 %. A dug spot refills after **3 game days** (checked at 6:00 like RETURN & EARN). Unique finds appear once ever.
+- **Barter** (Seshi takes up to 3 goods per trip): Rosa's rye loaf -> 4 tallies, Coffee -> 3, Hot sauce -> 10 (he is a spice man), a newspaper -> 2 ("Fake papyrus. Wonderful.").
+- **Food** (Hetepet): Flatbread 4 tallies (Hunger +30, Energy +8), Lotus tea 6 (Fun +10), **Tomb Honey** 40 tallies (limit 1 per trip), **Blue Lotus petals** 25 tallies (limit 1 per trip).
+- **Bread swap:** bring Rosa's bread to Hetepet once; she gives the Papyrus slip (collectible) and a recipe gift for Rosa (Rosa +6, a laugh).
+
+**Tally Market (furniture and decor; each is a furniture catalog entry, `tools/furniture.py`, category "Menkhet Collection", priced in tallies)**
+
+| Piece | Tallies | Kind |
+|-------|---------|------|
+| Reed Mat (rug) | 70 | decor, floor |
+| Reed Chair | 60 | seat (sit facing +y), quality 1 |
+| Lotus Lamp | 80 | lamp; Fun +3 once per visit to the room |
+| Alabaster Jars (pair) | 90 | decor |
+| Scarab Wall Tiles (3) | 100 | wall decor |
+| Sandstone Bench | 120 | seat, quality 2 |
+| Temple Cat "Miu" (statue) | 250 | decor; pat for Fun +3 once per day |
+| Sun Disc | 300 | wall centrepiece |
+| **Throne of Reasonable Hours** | 400 (or free, Annex) | seat, quality 3, the best nap seat in the game (Energy +) |
+| Mini Obelisk | 500 | floor centrepiece (needs Strength rank II to carry) |
+
+All ten cost 1,970 tallies (about **40-45 trips** with the usual 40 tallies per trip, about $1,500 in Cells: a long tail, one trip a day). Free play allows 12 furniture slots; the loft and penthouse show the set. Also on sale: a **Pharaoh headcloth** (a gag hat, 150 tallies; for the clothing system later).
+
+**The Pyramid grows (a long goal, not a chore):** each chore adds blocks; **12 blocks = 1 layer, 10 layers = 120 blocks (about 20 trips)**. Each layer is visible on the map. At 100 % the **Capstone Day**: Menkhet's speech
+(MENKHET| It is BEAUTIFUL. I / am beautiful. Seshi, / write beautiful.), the golden capstone, a feast. Rewards: the **Golden Capstone Lamp** (penthouse centrepiece), a **Red-Foot statuette** (a minor god in red sneakers, "weekends only"), the title
+"Honorary Minor God" on the Ticket Book page, Legacy +5. Afterwards **every 10th trip is a Festival** (tallies x2). Menkhet: "Now a bigger one." Seshi: "No."
+
+**The Sealed Annex (secret 13, one time):** a stone door that needs **Logic 35** and the three **clay clues** (found by digging at the pegs marked with a star, one per clue; the clues are rebus pictures: bread, beer, a sandal). Inside: **the Builders' Pact tablet** (collectible), the free **Throne of Reasonable Hours**, and a hidden joke tablet: the oldest recorded shopping list ("bread; more bread; ask Seshi about bread").
+Seshi weeps: SESHI| Nobody found the Pact / in forty years. Well. / In forty-five centuries. Legacy +2.
+
+**Collectible set S5 "Sands of Time" (6 pieces):** scarab seal (dig), beer-jug shard with the brewery stamp (dig), abacus bead (Seshi's chore), the papyrus order slip "3 loaves, 1 beer, 0 complaints" (bread swap), the Builders' Pact tablet (Annex), and Menkhet's sandal strap (10th trip). Reward: 1 City Coin, Legacy +5, a frame on the collection wall.
+
+**Sweet ingredients (Mothball, secret 1):** **Tomb Honey** and **Blue Lotus** are ingredients: Mothball turns one into a sweet for $20 (one buff sweet at a time, as always): **Honey Scarab** (training gains +25 % for 24 game hours, side effect: you hum in a very old key) and **Lotus Lozenge** (Fun +25, Bladder decay halved for 3 hours, side effect: you speak slowly and wisely for a minute).
+MOTHBALL| Honey from a tomb? It / never spoils. I have / notes. Stand back. These sweets give **no permanent skill points**, so the sweet cap (2.1) is not touched.
+
+**How it fits the economy**
+- Cash cost is small ($35 a trip, or batteries) next to free-play income ($400-800 a day); the real cost is the **one-trip-a-day** limit and the yard minutes. It is a time sink with a visible reward ladder, not a money machine.
+- Nothing from Egypt can be sold, so nobody can farm it for cash. The only money-adjacent outputs are gifts (friendship maintenance) and buff sweets (a bit more skill training).
+- City Coins: S5 (1) + up to 4 Egyptian friendships at 70 (3 each, once). Perks stay capped, so the extra coins only speed up the top tier a little.
+- Legacy points: S5 5, Capstone 5, Annex 2, Egyptian friendships 3 each (12): about 24 on top of the ~150 needed for Legend; a real contributor but not required.
+- The Ticket Book page lives in the Collection screen (3 stamps: FORECAST, 45 YEARS AGO, EGYPT; plus "Trips: N" and "Pyramid x/10"). The Status > Doors page lists "Quarter Lab: Logic 25 (soft gate: Pip's Riddle Door)".
+
+
 ---
 
 ## 3. Free play after the credits
@@ -207,6 +279,7 @@ The story ends at M70 "One Year Later" with the credits. Then the game **saves a
   - *Lantern Night* monthly (the Old Factory street party, Social +30, Fun +20, collectible photo).
   - *Star Night* (a movie on the library wall, Fun +25, free popcorn buff Buzz), on the first Friday of each in-game month.
   - *Rovers Cup* (Ballers: a short tournament, trophy for the penthouse shelf, 3 games to enter).
+- **The Late Tram to the Pyramid Yard** (Quarter Lab, after the time-machine arc): one trip a day for a Cell, tallies, the Menkhet furniture set, the growing pyramid, Tomb Honey and Blue Lotus for Mothball, collectible set S5; the pyramid's Capstone Day is a free-play goal (section 2.2).
 - **Daily errands board** (in the Co-op Hall): three random small tasks per day (deliver a parcel, repair a phone, serve a table, walk a dog, sort books),
   $15-40 each and 1 City Coin for every third finished errand; a **streak bonus** (+10 % per day in a row, cap +50 %) that only counts while the player keeps playing; missing a day just resets it.
 - **Max-out goals**: every type to 5 stars (top job of each: transport company, gallery, startup, club, property empire, each with passive daily income that
@@ -222,6 +295,7 @@ The story ends at M70 "One Year Later" with the credits. Then the game **saves a
 | Co-op fund projects (Old Block upgrades) | $200-$1,500 | visible changes: new street lamps, a bigger fountain, murals, library wing, a bike lane, a playground with Teo's ramp; each gives Legacy points and a ribbon-cutting scene |
 | Gifts | $3-$60 | friendship maintenance; Posh gifts are the expensive ones |
 | Legend Licorice and fine dining (Gilded Spoon tasting menu $80: Hunger +60, buffs Full and Buzz) | $30-$80 | repeatable |
+| Cells for the Late Tram ($35 each) and Pip's upgrades ($150 / $200 / $300) | $35-$300 | one trip a day; relics cannot be sold (section 2.2) |
 | Business investments (stock deals, shop expansions) | $100-$2,000 | each raises passive income, so late money is a loop, not a wall |
 
 Balance idea: free-play income is about $400-$800 per in-game day for a maxed player (businesses + errands), so a luxury piece is a few days of play, a vehicle a few weeks, the Legend title the longest goal.
@@ -234,6 +308,7 @@ The penthouse is the player's **private home** (owner s67) atop the rebuilt Co-o
 - **Trophy shelf**: Rovers Cup, mural miniatures, star-5 items, the Legend plaque.
 - **Guest book**: signed by every NPC who visits; friends with 70+ can be invited ("Come over") and visit for an evening (Social +, a short chat, a gift sometimes).
 - **Window view**: a day/night panorama with changes for every Co-op fund project (a bridge, new lamps, lights in Old Block), so the room visibly grows with the player's deeds.
+- **Relic corner**: the Menkhet Collection pieces, the Golden Capstone Lamp, the Red-Foot statuette and the framed Ticket Book page (from the Pyramid Yard, section 2.2) fit the penthouse and the loft.
 - **Garage door** (if a vehicle is owned): the owned vehicles are parked at the Hall; Bella, the hoverboard and Greenie appear in the scene.
 All penthouse pieces use the furniture catalog rule; the room itself NEEDS PROPOSAL (already planned for the epilogue).
 
@@ -285,7 +360,8 @@ and the player can always do something about it: train the skill, ask a trainer,
 | Sports Park trials (Ch4, M46-M47) | Coach Gus | Fitness 12 (already ~15 by Ch2 end) | FIT-O-METER, penalty training | GUS: "Run to the fence and back. Slowly is fine. ...Not that slowly." | Gus states it | main; trainer: Zoe's 6am drills |
 | Waiter test (Ch5, M57) | Odette / Benedict | Charm 16 | the Gilded Spoon job, Hilltop pass | ODETTE: "Your shoes are cheerful. Your posture is a crime." | Benedict hints | main; trainer: Benedict's etiquette lesson ($10) |
 | **Neon Pigeon club** (Ch3, Station Quarter) | doorman Bruno | **Charm 12** (rank II) | dance minigame, Social +40, Fun +30, gossip hub, a rare topic | BRUNO: "Your vibe is... laundromat. Come back with sparkle." | the flyer on the wall, Bruno's refusal, the log + Doors page | optional |
-| **Quarter Lab** (Ch3, Nadia's back lab) | Nadia / Pip | **Logic 25** (rank III) | prototypes: tool perks, Techies top job path | PIP: "The lab needs a brain. Not a bad one, a trained one. Sorry. Hi." | Nadia's remark after M34 | optional; trainer: Nadia's puzzle hour |
+| **Quarter Lab** (Ch3, Nadia's back lab; holds the Late Tram time machine from M54a) | Nadia / Pip | **Logic 25** (rank III) | prototypes: tool perks, Techies top job path, the Late Tram (story arc M54a-M54e, then Pyramid Yard trips) | PIP: "The lab needs a brain. Not a bad one, a trained one. Sorry. Hi." | Nadia's remark after M34; the tarp "NOT A SHOWER" | optional; **soft gate:** Pip's Riddle Door (one CODE PATTERN) lets you in below 25; trainer: Nadia's puzzle hour |
+| **Sealed Annex** (Pyramid Yard, Egypt) | Seshi | **Logic 35** and three clay clues | the Builders' Pact, the free Throne of Reasonable Hours (secret 13) | SESHI: "Stone door. Stone head. Needs both to be sharp." | the star-marked pegs | secret |
 | Rooftop of the community centre (secret 3) | the ladder | Fitness 14 | the roof, a collectible, Fun +20 | "Too high for those knees." | Pimm's rumour | secret |
 | Gallery opening at the Boiler Room (Ch4) | Wren | **Creativity 30** and Makers star 3 | exhibit your own mural, Makers top job "own gallery" | WREN: "Lovely! No. Come back when your colours have opinions." | Wren's invitation card on the wall | optional |
 | Crane cabin (Docks, Ch4+) | Halloran | Strength 30, Logic 15, Grafters star 3 | crane operator job, +$14/h, own transport company path | HALLORAN: "Cranes have feelings. They don't like noodle arms." | Halloran's board | optional |
