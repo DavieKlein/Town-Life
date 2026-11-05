@@ -2164,21 +2164,21 @@ def public_toilet():
     W, H = 6, 6
     s = std_room("public_toilet", "Public toilet", W, H, "tile_floor_dirty", "plaster_bare", "tile_dirty", 1.7, 3.0, (2, 5),
                  "city_centre", 3.0, 40.9, mat_cols=("metal_dark", "stain"))
-    toilet_unit(s, 2.9, 0.0)
-    s.box(2.2, 0.0, 3.7, 0.06, 2.3, 2.9, "sign_blue")
-    s.text("WC", 2.95, 0.09, 2.6, 0.5, "robot_white", face="left")
+    toilet_unit(s, 2.3, 0.0)
+    s.box(1.7, 0.0, 3.0, 0.06, 2.3, 2.9, "sign_blue")
+    s.text("WC", 2.05, 0.09, 2.6, 0.5, "robot_white", face="left")
     # west wall: window, sink with big mirror, hand dryer
     window_x(s, 1.0, 2.4, 0.0, 1.5, 2.5)
     sink_unit(SwapFix(s), 3.5, 0.0)
     s.box(0.0, 4.4, 0.3, 4.9, 1.1, 1.5, "chrome")                                            # hand dryer
     s.box(0.3, 4.5, 0.34, 4.8, 1.2, 1.4, "metal_dark")
     # back wall left: notice + shelf with toilet rolls
-    s.box(0.4, 0.0, 1.7, 0.05, 1.7, 2.5, "paper_cream")
-    s.text("PLEASE KEEP", 1.05, 0.08, 2.3, 0.15, "metal_dark", face="left")
-    s.text("CLEAN", 1.05, 0.08, 2.05, 0.15, "metal_dark", face="left")
-    s.box(0.4, 0.0, 1.7, 0.3, 1.0, 1.05, "wood_dark")
+    s.box(0.3, 0.0, 1.55, 0.05, 1.7, 2.5, "paper_cream")
+    s.text("PLEASE KEEP", 0.9, 0.08, 2.3, 0.15, "metal_dark", face="left")
+    s.text("CLEAN", 0.9, 0.08, 2.05, 0.15, "metal_dark", face="left")
+    s.box(0.3, 0.0, 1.55, 0.3, 1.0, 1.05, "wood_dark")
     for i in range(4):
-        s.cyl(0.65 + i * 0.28, 0.14, 1.05, 1.23, 0.1, "robot_white", verts=12)
+        s.cyl(0.55 + i * 0.28, 0.14, 1.05, 1.23, 0.1, "robot_white", verts=12)
     indoor_bin(s, 0.75, 1.15)                                                                # the only bin (small pedal bin)
     # s64: the cleaner's corner (mop, bucket, broom, hygiene poster, wet-floor sign) made way for a shower cubicle (coin slot, $1)
     shower_cubicle(s, 3.95, 0.0)
@@ -2192,7 +2192,7 @@ def public_toilet():
     for (gy0, gy1, gz0, gz1) in ((0.9, 1.7, 0.3, 1.2), (2.5, 3.4, 1.0, 1.7), (5.0, 5.8, 0.2, 0.8)):
         s.box(0.0, gy0, 0.012, gy1, gz0, gz1, "tile_grime")                               # west wall
     s.box(3.35, 0.0, 3.5, 0.014, 0.4, 0.95, "rust")                                        # rust streak under the basin
-    s.box(2.75, 0.0, 2.85, 0.014, 0.2, 0.85, "rust")                                       # drip marks behind the WC
+    s.box(2.15, 0.0, 2.25, 0.014, 0.2, 0.85, "rust")                                       # drip marks behind the WC
     s.box(0.0, 3.3, 0.014, 3.45, 0.35, 0.85, "rust")
     for (mx0, mx1, mz0, mz1) in ((0.0, 0.9, 2.55, 2.95), (5.0, 6.0, 2.6, 2.95), (3.9, 4.2, 2.7, 2.95)):
         s.box(mx0, 0.0, mx1, 0.012, mz0, mz1, "mould")                                     # damp patches under the ceiling

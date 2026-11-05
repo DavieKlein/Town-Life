@@ -241,7 +241,7 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
   CENTRE" sign; bookcases, notice board), VaultTech lobby (south door of the golden tower, marble
   and gold, reception desk), public toilet (small brick building in City Park at 1.6..4.6 x
   36.8..39.8, door onto the park path; 6x6 room with one open WC, a sink, paper towels, bin, a bit
-  grimy). **Public toilet layout (6x6):** open white WC on the back wall at (2.9, 1.5) (`toilet_unit`, lid up, nothing in
+  grimy). **Public toilet layout (6x6):** open white WC on the back wall at (2.3, 1.5) (moved left in s65, WC sign above at 1.7..3.0, notice + roll shelf 0.3..1.55) (`toilet_unit`, lid up, nothing in
   front of it), big basin with tap, soap and mirror on the west wall at (0.5, 3.5) (`sink_unit`), the ONLY bin at
   (0.75, 1.0), hand dryer, toilet-roll shelf, "PLEASE KEEP CLEAN" notice, mop + bucket + broom, wet-floor sign and
   a hygiene poster. `home_room()` (shabby first flat, approved) stays in scene.py but is NOT in `SCENES` yet

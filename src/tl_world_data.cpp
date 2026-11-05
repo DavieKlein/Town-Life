@@ -905,33 +905,33 @@ namespace
         { interactable_kind::seat_x, 14, 127, 16, 0 },
         { interactable_kind::seat_x, 173, 156, 16, 0 },
     };
-    constexpr int public_toilet_floor_tiles_count = 191;
+    constexpr int public_toilet_floor_tiles_count = 186;
     constexpr bn::color public_toilet_floor_palette[] = {
-        bn::color(0, 0, 0), bn::color(7, 8, 9), bn::color(13, 15, 14), bn::color(0, 0, 0), bn::color(20, 22, 22), bn::color(5, 6, 6), bn::color(22, 25, 24), bn::color(7, 5, 9), bn::color(16, 17, 17), bn::color(8, 5, 2), bn::color(4, 5, 5), bn::color(18, 20, 20), bn::color(9, 6, 3), bn::color(2, 2, 2), bn::color(10, 11, 11), bn::color(5, 3, 1),
-        bn::color(0, 0, 0), bn::color(9, 7, 10), bn::color(20, 23, 21), bn::color(0, 0, 0), bn::color(6, 7, 7), bn::color(12, 13, 13), bn::color(14, 15, 15), bn::color(16, 18, 17), bn::color(9, 10, 10), bn::color(9, 5, 2), bn::color(19, 21, 20), bn::color(3, 4, 4), bn::color(9, 4, 1), bn::color(18, 20, 19), bn::color(15, 17, 16), bn::color(7, 5, 9),
-        bn::color(0, 0, 0), bn::color(7, 5, 3), bn::color(19, 22, 21), bn::color(8, 9, 9), bn::color(22, 25, 24), bn::color(13, 15, 15), bn::color(4, 5, 5), bn::color(17, 19, 18), bn::color(11, 13, 12), bn::color(6, 7, 7), bn::color(7, 6, 9), bn::color(6, 12, 13), bn::color(21, 23, 22), bn::color(9, 11, 10), bn::color(15, 17, 17), bn::color(24, 27, 25),
-        bn::color(0, 0, 0), bn::color(9, 5, 2), bn::color(8, 5, 9), bn::color(7, 3, 0), bn::color(5, 5, 6), bn::color(9, 6, 12), bn::color(8, 5, 9), bn::color(9, 4, 1), bn::color(7, 6, 10), bn::color(7, 3, 1), bn::color(7, 4, 3), bn::color(8, 6, 9), bn::color(9, 5, 5), bn::color(8, 6, 12), bn::color(8, 6, 12), bn::color(8, 5, 4),
-        bn::color(0, 0, 0), bn::color(5, 6, 6), bn::color(23, 25, 24), bn::color(13, 15, 14), bn::color(0, 0, 0), bn::color(18, 20, 19), bn::color(7, 6, 9), bn::color(2, 3, 3), bn::color(7, 4, 2), bn::color(11, 13, 13), bn::color(4, 5, 5), bn::color(16, 18, 17), bn::color(9, 10, 11), bn::color(15, 16, 16), bn::color(2, 7, 9), bn::color(7, 8, 9),
-        bn::color(0, 0, 0), bn::color(7, 3, 1), bn::color(8, 6, 10), bn::color(0, 0, 0), bn::color(5, 6, 7), bn::color(9, 6, 11), bn::color(13, 15, 14), bn::color(3, 4, 4), bn::color(12, 14, 13), bn::color(10, 11, 11), bn::color(8, 4, 3), bn::color(2, 1, 0), bn::color(8, 9, 8), bn::color(3, 2, 2), bn::color(16, 17, 17), bn::color(0, 0, 1),
-        bn::color(0, 0, 0), bn::color(6, 6, 8), bn::color(14, 15, 15), bn::color(0, 0, 0), bn::color(8, 9, 9), bn::color(3, 4, 4), bn::color(7, 4, 2), bn::color(6, 7, 8), bn::color(5, 6, 6), bn::color(12, 13, 13), bn::color(10, 12, 12), bn::color(2, 2, 2), bn::color(9, 10, 10), bn::color(7, 8, 8), bn::color(7, 5, 7), bn::color(8, 6, 10),
-        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(7, 8, 9), bn::color(5, 7, 8), bn::color(2, 3, 3), bn::color(2, 3, 3), bn::color(4, 5, 5), bn::color(6, 8, 9), bn::color(6, 7, 8), bn::color(2, 2, 3), bn::color(0, 1, 2), bn::color(6, 7, 8), bn::color(4, 5, 6), bn::color(7, 8, 8), bn::color(0, 1, 1), bn::color(7, 8, 9),
+        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(16, 17, 17), bn::color(7, 6, 9), bn::color(23, 25, 24), bn::color(8, 8, 9), bn::color(21, 23, 22), bn::color(13, 14, 14), bn::color(5, 4, 6), bn::color(10, 11, 12), bn::color(9, 6, 3), bn::color(5, 9, 11), bn::color(24, 27, 26), bn::color(18, 20, 19), bn::color(6, 4, 2), bn::color(8, 5, 2),
+        bn::color(0, 0, 0), bn::color(7, 3, 1), bn::color(0, 0, 0), bn::color(7, 3, 0), bn::color(8, 6, 11), bn::color(15, 16, 15), bn::color(5, 5, 6), bn::color(2, 3, 2), bn::color(9, 5, 2), bn::color(9, 6, 11), bn::color(7, 4, 4), bn::color(13, 14, 14), bn::color(7, 7, 8), bn::color(1, 0, 1), bn::color(10, 11, 11), bn::color(7, 5, 9),
+        bn::color(0, 0, 0), bn::color(7, 9, 9), bn::color(21, 23, 22), bn::color(24, 27, 26), bn::color(6, 7, 7), bn::color(15, 17, 17), bn::color(11, 12, 12), bn::color(22, 24, 23), bn::color(14, 16, 15), bn::color(17, 19, 18), bn::color(9, 10, 10), bn::color(12, 14, 14), bn::color(20, 22, 21), bn::color(6, 5, 6), bn::color(23, 26, 25), bn::color(18, 20, 19),
+        bn::color(0, 0, 0), bn::color(8, 6, 10), bn::color(7, 3, 1), bn::color(0, 0, 0), bn::color(6, 7, 8), bn::color(8, 6, 12), bn::color(9, 5, 2), bn::color(8, 6, 11), bn::color(9, 4, 2), bn::color(9, 4, 1), bn::color(13, 13, 15), bn::color(9, 6, 11), bn::color(8, 5, 8), bn::color(10, 7, 11), bn::color(8, 6, 12), bn::color(7, 4, 3),
+        bn::color(0, 0, 0), bn::color(2, 2, 2), bn::color(13, 14, 14), bn::color(6, 7, 7), bn::color(14, 16, 15), bn::color(0, 0, 0), bn::color(10, 11, 11), bn::color(3, 3, 3), bn::color(17, 18, 18), bn::color(5, 6, 6), bn::color(4, 5, 4), bn::color(15, 17, 17), bn::color(11, 13, 13), bn::color(9, 10, 10), bn::color(8, 9, 9), bn::color(18, 20, 19),
+        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(0, 0, 0),
+        bn::color(0, 0, 0), bn::color(22, 24, 23), bn::color(5, 6, 6), bn::color(13, 15, 14), bn::color(9, 10, 10), bn::color(0, 0, 0), bn::color(15, 17, 16), bn::color(19, 21, 20), bn::color(17, 19, 18), bn::color(6, 7, 7), bn::color(11, 13, 13), bn::color(4, 5, 5), bn::color(20, 22, 21), bn::color(3, 3, 4), bn::color(7, 8, 8), bn::color(10, 11, 11),
+        bn::color(0, 0, 0), bn::color(5, 6, 6), bn::color(0, 0, 0), bn::color(12, 13, 14), bn::color(2, 3, 3), bn::color(9, 10, 11), bn::color(0, 1, 1), bn::color(1, 2, 2), bn::color(18, 21, 22), bn::color(3, 4, 5), bn::color(6, 6, 7), bn::color(0, 6, 8), bn::color(7, 6, 10), bn::color(7, 9, 9), bn::color(14, 16, 17), bn::color(2, 6, 9),
     };
-    constexpr int public_toilet_objects_tiles_count = 349;
+    constexpr int public_toilet_objects_tiles_count = 340;
     constexpr bn::color public_toilet_objects_palette[] = {
-        bn::color(0, 0, 0), bn::color(2, 12, 25), bn::color(14, 15, 15), bn::color(20, 21, 21), bn::color(5, 7, 10), bn::color(3, 15, 16), bn::color(27, 27, 26), bn::color(9, 11, 7), bn::color(31, 31, 31), bn::color(2, 9, 25), bn::color(18, 18, 18), bn::color(3, 2, 6), bn::color(5, 21, 21), bn::color(5, 6, 9), bn::color(10, 13, 14), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(31, 31, 30), bn::color(15, 14, 11), bn::color(0, 0, 2), bn::color(25, 23, 19), bn::color(18, 17, 14), bn::color(4, 3, 6), bn::color(28, 26, 20), bn::color(29, 28, 24), bn::color(2, 1, 5), bn::color(8, 7, 8), bn::color(31, 31, 26), bn::color(21, 20, 17), bn::color(5, 6, 9), bn::color(10, 13, 14), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(13, 14, 14), bn::color(30, 30, 29), bn::color(7, 8, 8), bn::color(22, 23, 22), bn::color(2, 0, 5), bn::color(26, 27, 26), bn::color(24, 25, 24), bn::color(31, 31, 31), bn::color(20, 21, 20), bn::color(16, 17, 16), bn::color(18, 19, 18), bn::color(10, 11, 11), bn::color(5, 6, 9), bn::color(10, 13, 14), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(31, 31, 31), bn::color(4, 13, 29), bn::color(1, 0, 4), bn::color(27, 24, 18), bn::color(9, 9, 10), bn::color(26, 26, 24), bn::color(5, 4, 8), bn::color(21, 21, 20), bn::color(29, 29, 27), bn::color(6, 15, 30), bn::color(16, 17, 17), bn::color(13, 13, 12), bn::color(5, 6, 9), bn::color(10, 13, 14), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(23, 22, 22), bn::color(15, 12, 9), bn::color(1, 1, 5), bn::color(13, 13, 13), bn::color(31, 30, 25), bn::color(21, 17, 8), bn::color(8, 7, 8), bn::color(23, 19, 11), bn::color(21, 19, 17), bn::color(27, 24, 17), bn::color(10, 11, 9), bn::color(16, 16, 14), bn::color(5, 6, 9), bn::color(10, 13, 14), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(2, 1, 5), bn::color(16, 17, 16), bn::color(25, 25, 23), bn::color(31, 31, 31), bn::color(10, 11, 10), bn::color(6, 7, 7), bn::color(22, 22, 21), bn::color(3, 10, 25), bn::color(5, 14, 28), bn::color(14, 14, 13), bn::color(19, 19, 18), bn::color(28, 28, 26), bn::color(5, 6, 9), bn::color(10, 13, 14), bn::color(31, 30, 25),
-        bn::color(0, 0, 0), bn::color(16, 18, 17), bn::color(2, 1, 5), bn::color(6, 7, 7), bn::color(13, 11, 8), bn::color(26, 0, 1), bn::color(10, 10, 10), bn::color(14, 15, 15), bn::color(5, 5, 5), bn::color(19, 20, 19), bn::color(26, 27, 26), bn::color(22, 23, 22), bn::color(12, 13, 12), bn::color(5, 6, 9), bn::color(10, 13, 14), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(12, 11, 9), bn::color(30, 30, 29), bn::color(5, 6, 6), bn::color(6, 16, 28), bn::color(16, 17, 17), bn::color(7, 8, 8), bn::color(2, 1, 6), bn::color(20, 21, 20), bn::color(30, 0, 0), bn::color(13, 14, 13), bn::color(2, 8, 17), bn::color(3, 4, 5), bn::color(5, 6, 8), bn::color(10, 13, 14), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(31, 31, 31), bn::color(1, 0, 4), bn::color(20, 19, 16), bn::color(14, 13, 12), bn::color(27, 25, 19), bn::color(23, 22, 22), bn::color(4, 13, 29), bn::color(7, 6, 8), bn::color(31, 29, 24), bn::color(26, 23, 18), bn::color(29, 26, 21), bn::color(2, 6, 17), bn::color(5, 6, 8), bn::color(10, 13, 14), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(13, 14, 14), bn::color(28, 29, 27), bn::color(1, 0, 4), bn::color(31, 31, 31), bn::color(25, 25, 25), bn::color(19, 20, 20), bn::color(9, 10, 11), bn::color(30, 30, 29), bn::color(23, 23, 23), bn::color(21, 22, 22), bn::color(17, 18, 18), bn::color(26, 27, 26), bn::color(5, 6, 8), bn::color(10, 13, 14), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(29, 28, 25), bn::color(20, 19, 17), bn::color(1, 0, 3), bn::color(16, 16, 15), bn::color(22, 21, 19), bn::color(4, 3, 6), bn::color(12, 13, 12), bn::color(31, 31, 31), bn::color(8, 8, 9), bn::color(26, 25, 21), bn::color(31, 31, 28), bn::color(31, 30, 26), bn::color(5, 6, 8), bn::color(10, 13, 14), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(0, 0, 5), bn::color(23, 22, 21), bn::color(31, 31, 26), bn::color(26, 21, 12), bn::color(14, 12, 10), bn::color(21, 17, 9), bn::color(26, 24, 18), bn::color(21, 20, 17), bn::color(3, 2, 6), bn::color(29, 27, 22), bn::color(15, 17, 15), bn::color(9, 8, 9), bn::color(5, 6, 8), bn::color(10, 13, 14), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(17, 17, 14), bn::color(8, 9, 8), bn::color(31, 31, 30), bn::color(24, 24, 23), bn::color(11, 12, 10), bn::color(18, 19, 19), bn::color(6, 6, 7), bn::color(1, 0, 5), bn::color(15, 14, 12), bn::color(19, 18, 16), bn::color(21, 21, 21), bn::color(27, 27, 26), bn::color(5, 6, 8), bn::color(10, 13, 14), bn::color(31, 30, 25),
+        bn::color(0, 0, 0), bn::color(3, 7, 15), bn::color(5, 23, 21), bn::color(2, 12, 24), bn::color(3, 8, 24), bn::color(3, 20, 18), bn::color(16, 14, 14), bn::color(3, 15, 16), bn::color(7, 6, 6), bn::color(2, 0, 3), bn::color(21, 20, 22), bn::color(3, 11, 27), bn::color(5, 14, 29), bn::color(5, 6, 8), bn::color(10, 13, 14), bn::color(31, 30, 25),
     };
     constexpr uint8_t public_toilet_solid[] = {
-        0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,1,1,0,0,0,1,1,1,1,
-        0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,1,1,0,0,0,1,1,1,1,
-        0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,1,1,0,0,0,1,1,1,1,
-        0,0,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,0,0,0,1,1,1,1,
-        0,0,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,0,0,0,1,1,1,1,
+        0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,1,1,1,1,
+        0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,1,1,1,1,
+        0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,1,1,1,1,
+        0,0,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,1,1,1,1,
+        0,0,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,1,1,1,1,
         0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,1,1,
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
@@ -958,14 +958,14 @@ namespace
     constexpr occluder public_toilet_occluders[] = {
         { -6, -6, 96, 1, 112, -20, 222, 112 },
         { -6, 0, 1, 96, 17, -17, 121, 112 },
-        { 39, -2, 53, 16, 143, 54, 175, 98 },
+        { 30, -2, 43, 16, 133, 49, 165, 94 },
         { 0, 44, 12, 67, 52, 48, 87, 103 },
         { 7, 13, 16, 23, 104, 56, 123, 84 },
         { 61, 0, 64, 24, 157, 39, 184, 108 },
     };
 
     constexpr interactable public_toilet_interactables[] = {
-        { interactable_kind::toilet, 46, 24, 0, 1 },
+        { interactable_kind::toilet, 36, 24, 0, 1 },
         { interactable_kind::sink, 8, 56, 0, 0 },
         { interactable_kind::bin, 12, 16, 0, 0 },
         { interactable_kind::shower, 72, 17, 0, 0 },

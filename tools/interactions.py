@@ -90,7 +90,7 @@ INTERACTABLES = {
         ("seat_x", 0.9, 3.95, 1.0), ("seat_x", 0.9, 7.95, 1.0), ("seat_x", 10.85, 9.75, 1.0),
     ],
     "public_toilet": [
-        ("toilet", 2.9, 1.5, 0, 1), ("sink", 0.5, 3.5), ("bin", 0.75, 1.0),
+        ("toilet", 2.3, 1.5, 0, 1), ("sink", 0.5, 3.5), ("bin", 0.75, 1.0),
         ("shower", 4.55, 1.1),          # s64: the cubicle in the back-right corner (stand in the tray)
     ],
     "clinic": [
