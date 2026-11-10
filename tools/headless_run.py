@@ -108,6 +108,29 @@ class Runner:
         ptr, size = self._sram()
         ct.memset(ptr, 0xFF, size)
 
+    def stats(self, label):
+        """Debug builds (-DTL_DEBUG_CPU): prints frames, missed frames, peak and average cpu % since the last `stats`."""
+        self.core.retro_serialize_size.restype = ct.c_size_t
+        size = self.core.retro_serialize_size()
+        buf = ct.create_string_buffer(size)
+        self.core.retro_serialize(buf, ct.c_size_t(size))
+        data = buf.raw
+        pos = data.find(b"PCLT")
+        if pos < 0:
+            print("stats: magic not found")
+            return
+        import struct
+        cur = struct.unpack_from("<6I", data, pos)
+        prev = getattr(self, "_prev_stats", (0, 0, 0, 0, 0, 0))
+        frames, missed, ssum = cur[1] - prev[1], cur[2] - prev[2], cur[4] - prev[4]
+        print("STATS %-28s frames %5d missed %4d peak(cum) %3d >85%%frames %3d avg %5.1f%%" % (label, frames, missed, cur[3], cur[5] - prev[5], ssum / max(frames, 1)))
+        if "hist" in label:
+            hist = data[pos + 32:pos + 32 + 1024]
+            n = cur[1] - prev[1]
+            seq = [hist[i & 1023] for i in range(prev[1], cur[1])][-1024:]
+            print("HIST", " ".join(str(v) for v in seq))
+        self._prev_stats = cur
+
     def reset(self):
         self.core.retro_reset()
 
@@ -157,6 +180,8 @@ def main():
             runner.load_sram(parts[1])
         elif op == "clearsram":
             runner.clear_sram()
+        elif op == "stats":
+            runner.stats(" ".join(parts[1:]))
         elif op == "reset":
             runner.reset()
         else:

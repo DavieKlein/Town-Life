@@ -1098,11 +1098,12 @@ def build_cast(force, fast):
                 print(r.stdout[-3000:], r.stderr[-3000:])
                 raise RuntimeError("cast render failed")
         if name not in cast.PORTRAIT_ONLY:
-            stems = [f"{f}_0" for f in FACINGS]
+            per = 1 if cast.CHARS[name].get("model") == "ROBOT" else FRAMES_PER_FACING     # humans: idle + 8 walk frames
+            stems = [f"{f}_{i}" for f in FACINGS for i in range(per)]
             frames = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, FRAME_W, FRAME_H) for s in stems]
             if has_face:
                 anchors = json.load(open(sprites_done))
-                write_face_sheet("npc_" + name, frames, stems, FACINGS, FRAME_W, FRAME_H, anchors, name, cast.CHARS[name]["colours"]["Skin"])
+                write_face_sheet("npc_" + name, frames, stems, [s_.split("_")[0] for s_ in stems], FRAME_W, FRAME_H, anchors, name, cast.CHARS[name]["colours"]["Skin"])
             else:
                 write_sprite_sheet("npc_" + name, frames, FRAME_W, FRAME_H)
     write_cast_header()

@@ -125,6 +125,8 @@ namespace tl
         int _fade_counter = 0;
         int _cam_x = 0;
         int _cam_y = 0;
+        bn::fixed _lead_x;              // smooth camera lead in the walking direction (screen pixels)
+        bn::fixed _lead_y;
         int _minutes = 8 * 60;          // time of day in minutes (prototype clock)
         int _day = 1;                   // day counter, +1 at midnight
         int _minute_frames = 0;

@@ -89,6 +89,8 @@ int main()
     }
 
 #ifdef TL_DEBUG_CPU
+    // Debug build only: stats readable by tools/headless_run.py (command `stats`), found in EWRAM by the magic number.
+    static volatile unsigned dbg_stats[8 + 256] __attribute__((section(".ewram"))) = { 0x544C4350, 0, 0, 0, 0, 0, 0, 0 };   // [6] = history index; [8..] = 1024 byte ring of per-frame cpu %
     // Debug build only: worst CPU usage (percent) and missed frames of the last second, top left.
     tl::ui::label cpu_label;
     int worst = 0;
@@ -120,6 +122,12 @@ int main()
         int usage = (bn::core::last_cpu_usage() * 100).round_integer();
         worst = usage > worst ? usage : worst;
         missed += bn::core::last_missed_frames();
+        reinterpret_cast<volatile unsigned char*>(dbg_stats + 8)[dbg_stats[1] & 1023] = (unsigned char)(usage > 255 ? 255 : usage);
+        dbg_stats[1] = dbg_stats[1] + 1;                        // frames
+        dbg_stats[2] = dbg_stats[2] + bn::core::last_missed_frames();
+        dbg_stats[3] = usage > int(dbg_stats[3]) ? usage : dbg_stats[3];   // peak cpu %
+        dbg_stats[4] = dbg_stats[4] + usage;                    // sum of cpu %
+        dbg_stats[5] = usage > 85 ? dbg_stats[5] + 1 : dbg_stats[5];
 
         if(++frame % 30 == 0)
         {

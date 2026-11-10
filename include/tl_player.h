@@ -143,6 +143,17 @@ namespace tl
             return _y.floor_integer();
         }
 
+        // Current velocity in screen pixels per frame (the camera leads in the walking direction).
+        [[nodiscard]] bn::fixed screen_vx() const
+        {
+            return _vx - _vy;
+        }
+
+        [[nodiscard]] bn::fixed screen_vy() const
+        {
+            return (_vx + _vy) / 2;
+        }
+
         // Point the camera should follow (image pixels): roughly the middle of the body.
         [[nodiscard]] int focus_x() const
         {
@@ -193,6 +204,9 @@ namespace tl
         int _rect[4] = { 0, 0, 0, 0 };
         bn::fixed _x;
         bn::fixed _y;
+        int _raw_facing = -1;       // d-pad direction of the last frame and how long it has been the same
+        int _raw_count = 0;
+        int _input_facing = -1;     // accepted d-pad direction
         bn::fixed _vx;              // world units per frame
         bn::fixed _vy;
         int _facing = 0;            // 0..7: s, sw, w, nw, n, ne, e, se (clockwise screen directions)

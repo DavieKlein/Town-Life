@@ -108,6 +108,8 @@ namespace tl
             int route_pos = 0;
             int wait = 0;           // frames to wait at a route point
             bool walking = false;
+            bn::fixed anim = 0;     // distance walked (walk animation)
+            int frame = 0;          // 0 = idle, 1..8 = walk frames
         };
 
         bn::vector<npc, max_npcs> _npcs;
@@ -123,6 +125,9 @@ namespace tl
 
         [[nodiscard]] int _index_of(npc_id who) const;
         void _add_actor(npc_id who, int x, int y, int facing);
+        void _set_frame(npc& n);
+        void _walked(npc& n, bn::fixed distance);
+        void _stopped(npc& n);
         void _build(int day, int minutes);
         void _apply_palettes();
     };
