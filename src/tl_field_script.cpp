@@ -85,6 +85,17 @@ namespace tl
             snap.need_raw[need] = v.data();
         };
 
+        // "Feeling great" at the start of the shift (all needs >= 70) = +10 % wage; a need <= 15 = -25 % (s71: judged before the decay)
+        bool all_good = true;
+        bool any_low = false;
+
+        for(int need = 0; need < needs::count; ++need)
+        {
+            int value = bn::fixed::from_data(snap.need_raw[need]).round_integer();
+            all_good = all_good && value >= needs::great_enter;
+            any_low = any_low || value <= 15;
+        }
+
         for(int need = 0; need < needs::count; ++need)
         {
             add_need(need, needs::decay[need] * minutes);
@@ -109,15 +120,6 @@ namespace tl
         {
             // PLATE RUSH: wage + tip (needs bonus / penalty at the start of the shift are applied by the caller through request.pan...)
             int wage = result.wage + result.tip;
-            bool all_good = true;
-            bool any_low = false;
-
-            for(int need = 0; need < needs::count; ++need)
-            {
-                int value = bn::fixed::from_data(snap.need_raw[need]).round_integer();
-                all_good = all_good && value >= 60;
-                any_low = any_low || value <= 15;
-            }
 
             if(all_good)
             {
@@ -142,7 +144,7 @@ namespace tl
             s.add_friendship(int(npc_id::lou), 3);
             pending_text = "Shift done! Wage $";
             pending_text.append(bn::to_string<8>(wage));
-            pending_text.append(". Staff meal: eat up!");
+            pending_text.append(all_good ? " (+10% Feeling great). Staff meal: eat up!" : ". Staff meal: eat up!");
         }
 
         while(clock >= 24 * 60)
@@ -959,6 +961,10 @@ namespace tl
             _objective.append(story().flag(story_flag::washed_evening) ? "[x]" : "[ ]");
             _objective.append("  Sleep on a bench");
         }
+        else
+        {
+            _odd_objective();       // s71: an open odd job from the notice board
+        }
     }
 
     void field::_note_evening(bool ate, bool washed)
@@ -1068,6 +1074,7 @@ namespace tl
         _minigame_req.start_minutes = lunch ? (_minutes > 11 * 60 ? _minutes : 11 * 60) : (_minutes > 17 * 60 ? _minutes : 17 * 60);
         _minigame_req.tempo_percent = dinner ? 130 : 100;
         _minigame_req.pan_percent = dinner ? 25 : 12;
+        apply_plate_special(_minigame_req, _day);
 #ifdef TL_DEBUG_BOT
         _minigame_req.bot = TL_DEBUG_BOT;
 #endif

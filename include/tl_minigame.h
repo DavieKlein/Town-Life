@@ -24,6 +24,10 @@ namespace tl
         bool replay = false;            // STOCK IT! as a replayable job (3 rounds; the 4th section "fruit" is not built yet)
         int tempo_percent = 100;        // PLATE RUSH: dinner shift = 130
         int pan_percent = 12;           // PLATE RUSH: chance that a plate is a greasy pan (from rush 3 on)
+        int special = 0;                // PLATE RUSH: daily special index (plate_special_for_day), shown on the start card
+        int extra_plates = 0;           // special: +n plates in every rush
+        int tip_bonus = 0;              // special: +$n on the tip before breakage is subtracted
+        int vip_bonus = 0;              // special: +$n when no plate breaks (a VIP guest eats today)
         int bot = 0;                    // debug: 0 = human, 1 = perfect, 2 = sloppy, 3 = terrible (headless tests only)
     };
 
@@ -43,6 +47,11 @@ namespace tl
         int pay_preview = 0;            // STOCK IT!: the money Rosa hands over later (18 / 19 / 20 / 22)
         int minutes = 0;                // game minutes the shift took
     };
+
+    // PLATE RUSH daily specials (s71, against repetition): one per weekday (day 1 = Monday). Fills the tempo / pan / plates / tip fields
+    // of the request (tempo_percent and pan_percent are changed relative to what the caller already set).
+    void apply_plate_special(minigame_request& request, int day);
+    [[nodiscard]] const char* plate_special_name(int special);
 
     // STOCK IT! pay by rank (the prologue's last pay).
     [[nodiscard]] int stock_pay_for_rank(int rank);

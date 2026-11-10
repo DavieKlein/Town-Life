@@ -59,6 +59,7 @@ namespace tl
         int credit = 0;                 // deposit credit 0 or 1 (of 2)
         int coins = 0;                  // City Coins
         const char* objective = "";
+        bool great = false;             // s71: "Feeling great" (all needs high)
         bool sick = false;              // s64: "Sick" next to the clock line
         int debt = 0;                   // open clinic bill ($)
     };

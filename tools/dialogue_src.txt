@@ -159,6 +159,13 @@ LOU:happy| Apron's on the hook. Wash, rinse, repeat! Welcome to Lou's!
 SYSTEM| Lunch shift 11:00 to 15:00, $16 plus tips. Ask at the counter any day: "Work a shift".
 ! flag lou_shift_go
 
+node ask_lou_crates
+PLAYER| The board says you need crates carried?
+LOU:happy| Heh, the board works! Delivery is out back. Twelve crates, one pair of arms. Yours.
+LOU| Six dollars when it is done. Mind your back, friend. Ready?
+? Let's haul. -> end | flag crates_go
+? Not now. -> end
+
 node intro_lou_look
 LOU| Look all you like. Looking is free. Pancakes are not.
 goto hint_talk

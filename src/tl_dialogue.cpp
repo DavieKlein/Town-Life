@@ -1123,6 +1123,12 @@ namespace tl
             _story_node = dlg::ask_lou_work;
             --topic_limit;
         }
+        else if(_npc == int(npc_id::lou) && story().crates_open())
+        {
+            _story_node = dlg::ask_lou_crates;
+            _story_label = "Carry the crates";
+            --topic_limit;
+        }
         else if(_npc == int(npc_id::rosa) || _npc == int(npc_id::mia))
         {
             const story_state& st = story();
@@ -1255,6 +1261,11 @@ namespace tl
             node = kind == 'F' ? dlg::gift_fav : (kind == 'L' ? dlg::gift_like : (kind == 'D' ? dlg::gift_dislike : dlg::gift_neutral));
         }
 
+        if(delta > 0 && s.feeling_great())
+        {
+            ++delta;
+        }
+
         s.take_item(gift);
         s.note_gift(_npc, _day);
         s.add_friendship(_npc, delta);
@@ -1317,6 +1328,12 @@ namespace tl
             int room = story_state::daily_talk_cap - s.gained_today(_npc, _day);
             room = room < 0 ? 0 : room;
             delta = delta > room ? room : delta;
+
+            if(delta > 0 && s.feeling_great())
+            {
+                ++delta;        // s71 Feeling great: +1 friendship on every positive gain
+            }
+
             s.note_gain(_npc, _day, delta);
         }
 

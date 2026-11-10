@@ -934,7 +934,7 @@ namespace tl
 
             [[nodiscard]] int _plates_in_rush(int rush) const
             {
-                return 4 + (rush >= 3 ? 1 : 0) + (rush >= 6 ? 1 : 0);      // 4, 4, 4, 5, 5, 5, 6, 6 (rush index 0..7)
+                return 4 + _req.extra_plates + (rush >= 3 ? 1 : 0) + (rush >= 6 ? 1 : 0);      // 4, 4, 4, 5, 5, 5, 6, 6 (rush index 0..7)
             }
 
             [[nodiscard]] int _tip() const
@@ -958,6 +958,11 @@ namespace tl
                     {
                         tip = 1;
                     }
+                }
+
+                if(steps > 0)
+                {
+                    tip += _req.tip_bonus;
                 }
 
                 tip -= _broken;
@@ -1047,13 +1052,24 @@ namespace tl
                 ui::label help[4];
                 banner.open(112, 4, 124, 49, true);
                 banner_title.set_centre(ui::font11, 174, 18, "PLATE RUSH", ui::role::title);
+                ui::label special_label;
+                special_label.set_centre(ui::font9, 174, 31, plate_special_name(_req.special), ui::role::money);
                 help[0].set_centre(ui::font9, 174, 44, "Hit the key inside [ ]", ui::role::text);
                 help[1].set(ui::font9, 118, 66, "A scrub   B rinse", ui::role::hud_clock);
                 help[2].set(ui::font9, 118, 77, "Up stack  Pan: mash A", ui::role::hud_clock);
                 help[3].set(ui::font9, 118, 88, "3 broken plates: over", ui::role::hud_clock);
                 dialogue_box box;
                 box.open(int(npc_id::lou), false, 0);
-                say_auto(box, "Wash, rinse, repeat! Drop one, I cry.", 1, _req.bot);
+                static constexpr const char* lou_lines[7] = {
+                    "Quiet Monday. Easy start, kid. Drop one, I cry.",
+                    "Tuesday is pan day. Grease everywhere!",
+                    "Rush orders today! Everyone wants it fast.",
+                    "Thursday regulars tip well. Impress them!",
+                    "Friday, full house! More plates per rush.",
+                    "A VIP guest eats here today. Break nothing!",
+                    "Sunday brunch! Fast and generous."
+                };
+                say_auto(box, lou_lines[_req.special < 0 || _req.special > 6 ? 0 : _req.special], 1, _req.bot);
                 box.close();
                 bn::core::update();
                 apply_fade(0, 0);
@@ -1485,7 +1501,8 @@ namespace tl
                 result.broken = _broken;
                 result.mistakes = _misses;
                 result.wage = 16;
-                result.tip = _tip();
+                int vip = (_req.vip_bonus > 0 && _broken == 0 && ! _early) ? _req.vip_bonus : 0;
+                result.tip = _tip() + vip;
                 {
                     int total = _plates_total();
                     int minutes = (240 * (_washed + _broken)) / (total > 0 ? total : 1);
@@ -1496,7 +1513,7 @@ namespace tl
                 ui::set_night(is_night(_req.start_minutes + 240));
                 int steps = _perfect + _good + _misses;
                 int share = steps > 0 ? (_perfect * 100) / steps : 0;
-                result_row rows[7];
+                result_row rows[8];
                 int count = 0;
                 rows[count++] = { "Plates", bn::string<16>(bn::to_string<8>(_washed)), false };
                 bn::string<16> value(bn::to_string<8>(share));
@@ -1515,7 +1532,13 @@ namespace tl
                 }
 
                 rows[count++] = { "Tip", tip_text, true };
-                rows[count++] = { "Total", money_text(16 + _tip()), true };
+
+                if(_req.vip_bonus > 0)
+                {
+                    rows[count++] = { "VIP guest", money_text(vip), true };
+                }
+
+                rows[count++] = { "Total", money_text(16 + _tip() + vip), true };
                 result_panel panel;
                 _clock.clear();
                 _rush_label.clear();
@@ -1543,6 +1566,52 @@ namespace tl
                 return result;
             }
         };
+    }
+
+    const char* plate_special_name(int special)
+    {
+        static constexpr const char* names[7] = {
+            "Quiet Monday", "Pan Tuesday", "Rush Wednesday", "Tip Thursday", "Full House Friday", "VIP Saturday", "Brunch Sunday"
+        };
+        return names[special < 0 || special > 6 ? 0 : special];
+    }
+
+    void apply_plate_special(minigame_request& request, int day)
+    {
+        int special = ((day - 1) % 7 + 7) % 7;
+        request.special = special;
+
+        switch(special)
+        {
+        case 0:     // slower belt
+            request.tempo_percent = request.tempo_percent * 90 / 100;
+            break;
+
+        case 1:     // many greasy pans
+            request.pan_percent += 20;
+            break;
+
+        case 2:     // rush orders: faster belt
+            request.tempo_percent = request.tempo_percent * 115 / 100;
+            break;
+
+        case 3:     // regulars tip generously
+            request.tip_bonus = 2;
+            break;
+
+        case 4:     // one more plate in every rush
+            request.extra_plates = 1;
+            break;
+
+        case 5:     // VIP guest: +$3 if nothing breaks
+            request.vip_bonus = 3;
+            break;
+
+        default:    // brunch: a bit faster, a bit more tip
+            request.tempo_percent = request.tempo_percent * 110 / 100;
+            request.tip_bonus = 1;
+            break;
+        }
     }
 
     int stock_pay_for_rank(int rank)

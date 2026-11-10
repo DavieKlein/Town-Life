@@ -105,6 +105,12 @@ namespace tl
             return _action_finished;
         }
 
+        // True while walking freely and standing still (no speed, idle loop): the field turns him towards the A cue then.
+        [[nodiscard]] bool standing_still() const
+        {
+            return _activity == activity::walking && _vx == 0 && _vy == 0 && _gait == 0;
+        }
+
         [[nodiscard]] int facing_index() const
         {
             return _facing;

@@ -162,13 +162,17 @@ namespace tl
         _labels.emplace_back();
         _labels.back().set_right(ui::font11, 228, 21, money, ui::role::money);
 
-        if(info.sick || info.debt > 0)
+        if(info.sick || info.debt > 0 || info.great)
         {
             bn::string<16> status("Owe $");
 
             if(info.sick)
             {
                 status = "SICK";
+            }
+            else if(info.debt <= 0)
+            {
+                status = "GREAT!";
             }
             else
             {

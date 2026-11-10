@@ -90,6 +90,7 @@ def make(path, a):
     s.msg_read = a.msg_read
     s.delivery_item = a.delivery_item
     s.delivery_due = a.delivery_due
+    s.spare[0], s.spare[1] = a.odd       # odd jobs: day (mod 256) and done/taken bit mask
     raw = bytes(s)
     x, y = 1, 0
     for byte in raw[12:]:
@@ -129,7 +130,9 @@ if __name__ == "__main__":
     p.add_argument("--msg-read", type=lambda v: int(v, 0), default=0)
     p.add_argument("--delivery-item", type=int, default=-1)
     p.add_argument("--delivery-due", type=int, default=0)
+    p.add_argument("--odd", default="0,0", help="odd jobs day,mask (bits 1 flyers done, 2 books done, 4 crates done, 8 crates taken, 16 flyers taken)")
     a = p.parse_args()
+    a.odd = [int(v) for v in a.odd.split(",")]
     a.zero = [int(v) for v in a.zero.split(",")]
     a.needs = [int(v) for v in a.needs.split(",")] if a.needs else [50, 50, 50, 50, a.bladder]
     make(a.out, a)

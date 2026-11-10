@@ -391,6 +391,8 @@ namespace tl
 
         ++_total_minutes;
         _needs.minute_passed();
+        _odd_refresh();
+        _update_great(true);
         _update_health_minute();
         _npcs.refresh(_day, _minutes);
         _player.set_blockers(_npcs.blockers(), _npcs.count());
@@ -527,6 +529,18 @@ namespace tl
                 _redraw_hud_text();
             }
 
+            if(finished && _act.odd_bit)
+            {
+                _odd_mask |= uint8_t(_act.odd_bit);
+
+                if(_act.odd_bit == 4)
+                {
+                    _odd_mask &= uint8_t(~8);       // crates taken -> done
+                }
+
+                _sync_objective();
+            }
+
             if(finished && _act.pickup >= 0)
             {
                 _deposit.collect(_act.pickup);
@@ -659,6 +673,7 @@ namespace tl
         if(! target && pickup < 0 && npc < 0)
         {
             _cue.reset();
+            _cue_faced = -1;
             return;
         }
 
@@ -733,6 +748,15 @@ namespace tl
             }
         }
 
+        // s71 control feel: standing still with the cue showing, the player turns to face what it points at (once per target).
+        int face_key = npc >= 0 ? 10000 + npc : (pickup >= 0 ? 20000 + pickup : int(target - _map->interactables) + 1);
+
+        if(face_key != _cue_faced && _player.standing_still())
+        {
+            _cue_faced = face_key;
+            _player.face_towards(cue_x, cue_y);
+        }
+
         static constexpr int bob[4] = { 0, 1, 2, 1 };
         ++_cue_frame;
         int sx = _map->to_image_x(cue_x, cue_y) - _cam_x;
@@ -788,6 +812,12 @@ namespace tl
         ui::set_night(is_night(_minutes));
         _menu_target = best;
         _menu_mode = menu_mode::interact;
+
+        if(best->kind != interactable_kind::bench && best->kind != interactable_kind::seat &&
+           best->kind != interactable_kind::seat_x && best->kind != interactable_kind::bed)
+        {
+            _player.face_towards(best->x, best->y);     // using something: look at it
+        }
 
         switch(best->kind)
         {
@@ -850,9 +880,7 @@ namespace tl
             break;
 
         case interactable_kind::noticeboard:
-            _menu_mode = menu_mode::none;
-            _menu_target = nullptr;
-            _show_info("Notice board", "No jobs posted", "yet. Check", "back soon!");
+            _open_board(*best);
             break;
 
         case interactable_kind::reception:
@@ -1448,6 +1476,16 @@ namespace tl
             return;
         }
 
+        if(mode == menu_mode::board)
+        {
+            if(choice < 3)
+            {
+                _board_choice(choice);
+            }
+
+            return;
+        }
+
         if(mode == menu_mode::shop)
         {
             int items = _shop_items;
@@ -1787,6 +1825,7 @@ namespace tl
         int ny = _npcs.y_of(npc_index);
         _player.face_towards(nx, ny);
         _npcs.face_towards(npc_index, _player.x(), _player.y());
+        story().set_crates_open(_crates_open());
         _set_hud_hidden(true);
         ui::set_night(is_night(_minutes));
         story().set_flag(story_flag::hyg_ok, _needs.values[needs::hygiene] >= 40 ? 1 : 0);   // Lou: "you smell like a bench"
@@ -1828,6 +1867,12 @@ namespace tl
         {
             story().set_flag(story_flag::lou_shift_go, 0);
             _try_start_shift();
+        }
+
+        if(story().flag(story_flag::crates_go))
+        {
+            story().set_flag(story_flag::crates_go, 0);
+            _start_crates();
         }
     }
 
@@ -2084,25 +2129,30 @@ namespace tl
             if(bn::keypad::start_pressed() && _can_pause())
             {
                 _cue.reset();
+                _toast_clear();
                 _open_pause();
                 break;
             }
 
             if(bn::keypad::select_pressed() && _can_pause())
             {
+                _toast_clear();
                 _open_phone();
                 break;
             }
 
             _update_hud_icons();
+            _update_flyers();
+            _update_toast();
 
             if(_player.current_activity() == player::activity::walking && bn::keypad::a_pressed())
             {
                 _open_interaction_menu();
 
-                if(_menu.is_open())
+                if(_menu.is_open() || _conversation.active())
                 {
                     _cue.reset();
+                    _toast_clear();
                     break;
                 }
             }

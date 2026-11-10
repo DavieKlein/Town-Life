@@ -68,7 +68,9 @@ FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "
          "hint_hunger", "hint_hygiene", "hint_energy", "hint_bladder", "hint_fun", "lou_shift_go", "hyg_ok", "stock_rank",
          "skip_pimm", "skip_lunch", "lunch_hint", "diner_shift_day", "rosa_comforted", "vowed", "mia_goodbye", "gate_hint_seen",
          # s64: clinic
-         "met_okafor", "faint_told", "sick_told", "clinic_paid"]
+         "met_okafor", "faint_told", "sick_told", "clinic_paid",
+         # s71: Lou's crates job (odd job from the community centre board)
+         "crates_go"]
 assert len(FLAGS) <= 64
 
 # ---------------------------------------------------------------------------------------------------- missions

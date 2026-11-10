@@ -51,6 +51,7 @@ namespace tl
         _sync_objective();
         info.objective = _objective.c_str();
         info.sick = _sick;
+        info.great = _great;
         info.debt = _debt;
         ui::set_night(is_night(_minutes));
         _pause.open(info);
@@ -299,6 +300,8 @@ namespace tl
         out.bladder_boost = int16_t(_needs.bladder_boost);
         out.social_valid = 1;
         out.social = uint8_t(_needs.social.round_integer());
+        out.spare[0] = _odd_day;
+        out.spare[1] = _odd_mask;
 
         for(int index = 0; index < bin_slots && index < maps_count * 16; ++index)
         {
@@ -360,6 +363,8 @@ namespace tl
         }
 
         _needs.bladder_boost = in.bladder_boost;
+        _odd_day = in.spare[0];
+        _odd_mask = in.spare[1];
         _needs.social = in.social_valid ? bn::fixed(in.social > 100 ? 100 : in.social) : bn::fixed(60);
 
         for(int index = 0; index < maps_count * 16; ++index)
@@ -410,6 +415,7 @@ namespace tl
         _delivery_item = in.delivery_item >= 0 && in.delivery_item < phone_food_count ? in.delivery_item : -1;
         _delivery_due = in.delivery_due;
         _player.set_facing_index(in.facing);
+        _update_great(false);
         _npcs.load(*_map, _map_id, _day, _minutes);
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _redraw_hud_text();

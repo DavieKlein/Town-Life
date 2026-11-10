@@ -23,6 +23,25 @@ namespace tl
         // Change per game minute when just walking around (tunable).
         static constexpr bn::fixed decay[count] = { -0.07, -0.05, -0.04, -0.06, -0.1 };
 
+        // "Feeling great" (s71): entered when all five bar needs are >= great_enter, kept until one drops below great_exit
+        // (hysteresis, so the toast does not flicker). Effect: +10 % pay (rounded up) and +1 friendship on every positive
+        // small-talk / gift gain. Social is not part of it.
+        static constexpr int great_enter = 70;
+        static constexpr int great_exit = 65;
+
+        [[nodiscard]] bool all_at_least(int limit) const
+        {
+            for(int need = 0; need < count; ++need)
+            {
+                if(values[need] < limit)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         // Social (s63): talking, small talk and gifts fill it, it decays slowly. It is NOT one of the five HUD bars yet (a sixth slot
         // needs the approved HUD proposal): shown as a line in the pause screen. Below 20 (lonely) Fun gains are halved.
         bn::fixed social = 60;

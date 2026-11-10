@@ -816,6 +816,23 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
   Re-render player only: `python3 -c "import sys; sys.path.insert(0,'tools'); import build_assets as b; b.build_player(False, False)"` (~1.5 min), cast ~3 min.
   CPU in headless tests (TL_DEBUG_CPU): idle ~26 %, walk ~30 %, run ~29-34 %; no extra missed frames beyond map streaming.
 
+## s71: variety, "Feeling great", control feel (branch `claude/intelligent-hawking-y0vl2t`)
+
+- **PLATE RUSH daily specials** (`apply_plate_special`, `plate_special_name` in tl_minigame.cpp; weekday = (day-1) % 7, shown as a gold line on the start card and in Lou's
+  intro line): Mon Quiet (tempo -10 %), Tue Pan (+20 % pans), Wed Rush (tempo +15 %), Thu Tip (+$2 tip), Fri Full House (+1 plate per rush), Sat VIP (+$3 if no plate
+  breaks, own result row), Sun Brunch (tempo +10 %, +$1 tip). Fields `special / extra_plates / tip_bonus / vip_bonus` in `minigame_request`.
+- **Odd jobs** (notice board in the community centre, `tl_field_jobs.cpp`, menu "Odd jobs", once per day each, state `_odd_day/_odd_mask` saved in `save_data::spare[0..1]`
+  (size unchanged), mask bits in the .cpp): Flyers $5 (walk within 26 units of bus stop, fountain square, City Park: toast per spot, objective line shows n/3),
+  Sort books $4 (5 s `search` animation at the board), Lou's crates $6 (take it at the board, then Lou's talk menu gets the story row "Carry the crates" ->
+  dialogue node `ask_lou_crates`, effect flag `crates_go` (last free story flag, 64/64 used), 7 s `pickup` animation in `_end_conversation`). Flags/state reset at midnight.
+- **Feeling great** (`needs::great_enter` 70 / `great_exit` 65 with hysteresis, `field::_update_great`, `story().feeling_great()`): all five bar needs high. Effects: +10 % pay
+  (rounded up, `_job_pay` for odd jobs; PLATE RUSH wage judged on the needs at shift start, before the shift decay), +1 friendship on every positive small-talk / gift gain.
+  Toast "Feeling great! Pay +10%" (`_toast`, non-modal label at the top, 170 frames, waits while a menu/dialogue/activity is open), "GREAT!" next to the clock on the pause screen.
+  The Social need is not part of it. Need decay per game minute (unchanged): Hunger -0.07, Energy -0.05, Hygiene -0.04, Fun -0.06, Bladder -0.1, Social -0.05.
+- **Control feel**: standing still while the A cue shows, the player turns to face its target once (`player::standing_still`, `field::_cue_faced`); opening an interaction menu
+  also faces the object (not for benches / seats / beds, which set their own pose).
+- `tools/make_save.py --odd day,mask` for odd-job tests. Mock-up for need-effect icons in menus (proposal only, not built): see the session scratchpad `icons/`.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

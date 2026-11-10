@@ -293,6 +293,28 @@ namespace tl
             return value;
         }
 
+        // s71: "Feeling great" (all needs high), set by the field. Conversations add +1 to every positive friendship gain then.
+        void set_great(bool great)
+        {
+            _great = great;
+        }
+
+        [[nodiscard]] bool feeling_great() const
+        {
+            return _great;
+        }
+
+        // s71: Lou has an odd job for today (taken at the notice board), set by the field before a conversation starts.
+        void set_crates_open(bool open)
+        {
+            _crates_open = open;
+        }
+
+        [[nodiscard]] bool crates_open() const
+        {
+            return _crates_open;
+        }
+
         void fill_save(save_data& out) const;
         void apply_save(const save_data& in);
 
@@ -311,6 +333,8 @@ namespace tl
         uint32_t _done_mask = 0;
         int _money_delta = 0;
         int _social_delta = 0;
+        bool _great = false;
+        bool _crates_open = false;
         uint8_t _items[gift_count] = {};
         uint8_t _gift_day[save_data::talk_slots] = {};
         uint8_t _gossip[gossip_count] = {};         // 0 = none, 1..250 = day marker when noted, 255 = told

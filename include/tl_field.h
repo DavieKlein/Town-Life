@@ -87,6 +87,7 @@ namespace tl
         ui::label _zzz_label;
         bn::optional<bn::sprite_ptr> _cue;  // the bobbing "A" over the nearest object in reach
         int _cue_frame = 0;
+        int _cue_faced = -1;                // what the player was last turned towards while standing still (see _update_cue)
         player _player;
         critters _critters;
         npcs _npcs;
@@ -111,6 +112,7 @@ namespace tl
             kiosk,          // scratch cards / newspaper at the newspaper boxes
             clinic,         // City Clinic reception (s64)
             shower,         // $1 shower in the public toilet (s64)
+            board,          // the community centre notice board: odd jobs (s71)
             info            // a message; reopens the shop afterwards if shop_return is set
         };
 
@@ -157,6 +159,7 @@ namespace tl
             const char* title = "Trash bin";      // title of that message
             int pickup = -1;                    // deposit pickup spot collected at the end
             int collectible = -1;               // collectible item found at the end (s64)
+            int odd_bit = 0;                    // odd job done flag set when the activity finishes (s71)
         };
 
         activity_state _act;
@@ -316,6 +319,27 @@ namespace tl
         void _kiosk_choice(const interactable& target, int choice);
         void _scratch_card(const interactable& target);
         int _hint_cooldown = 0;
+
+        // ---- s71: odd jobs, "Feeling great", toast (tl_field_jobs.cpp)
+        uint8_t _odd_day = 0;               // day (mod 256) _odd_mask belongs to (saved in save_data::spare[0..1])
+        uint8_t _odd_mask = 0;              // done / taken bits of the three odd jobs + flyer spots visited
+        bool _great = false;
+        ui::label _toast_label;
+        bn::string<32> _toast_text;
+        int _toast_frames = 0;
+        bool _toast_wait = false;
+        [[nodiscard]] int _job_pay(int base) const;
+        void _odd_refresh();
+        void _toast(const char* text);
+        void _toast_clear();
+        void _update_toast();
+        void _update_great(bool announce);
+        void _open_board(const interactable& target);
+        void _board_choice(int choice);
+        void _update_flyers();
+        void _start_crates();
+        bool _odd_objective();
+        [[nodiscard]] bool _crates_open() const;
 
         [[nodiscard]] bool _cond_ok(const cs_cond& cond) const;
         void _check_triggers();
