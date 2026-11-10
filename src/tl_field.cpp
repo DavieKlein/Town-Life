@@ -10,6 +10,7 @@
 #include "bn_blending.h"
 #include "bn_sprite_items_need_bar.h"
 #include "bn_sprite_items_hud_bar.h"
+#include "bn_sprite_items_ui_icons.h"
 #include "tl_collect_spots.h"
 #include "bn_sprite_items_light_pool.h"
 
@@ -142,6 +143,13 @@ namespace tl
             bn::sprite_ptr bar = bn::sprite_items::hud_bar.create_sprite(-46 + (need * 30), 151 + 4 - 80);
             bar.set_bg_priority(0);
             _bar_sprites.push_back(bn::move(bar));
+
+            // "+" / "-" marker above the right end of the slot (shown by _update_pm)
+            bn::sprite_ptr pm = bn::sprite_items::ui_icons.create_sprite(-46 + (need * 30) + 9, 128 - 80 - 1, 5);
+            pm.set_bg_priority(0);
+            pm.set_z_order(39);
+            pm.set_visible(false);
+            _pm_sprites.push_back(bn::move(pm));
         }
 
         _update_bars();
@@ -556,6 +564,31 @@ namespace tl
                 _menu_mode = menu_mode::none;
                 _show_info(_act.title, _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
             }
+        }
+    }
+
+    void field::_update_pm()
+    {
+        for(int slot = 0; slot < hud_slots; ++slot)
+        {
+            bn::sprite_ptr& pm = _pm_sprites[slot];
+            int& timer = _needs.pm_timer[slot];
+
+            if(timer > 0)
+            {
+                --timer;
+            }
+
+            if(timer <= 0 || _hud_hidden)
+            {
+                pm.set_visible(false);
+                continue;
+            }
+
+            int bob = (timer / 6) % 2;        // 1 px bob
+            pm.set_tiles(bn::sprite_items::ui_icons.tiles_item(), _needs.pm_sign[slot] > 0 ? 5 : 6);
+            pm.set_y(128 - 80 - 1 - bob);
+            pm.set_visible(true);
         }
     }
 
@@ -2142,6 +2175,7 @@ namespace tl
             }
 
             _update_hud_icons();
+            _update_pm();
             _update_flyers();
             _update_toast();
 

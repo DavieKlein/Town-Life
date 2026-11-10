@@ -121,7 +121,7 @@ def glyph(im, rows, x, y, colour):
 
 def build_icons():
     """Frames of 16x16: A button (green), B button (red), the bobbing "A" cue bubble (gold, tail tip at (7, 15))."""
-    out = Image.new("P", (16, 80), TRANSP)
+    out = Image.new("P", (16, 112), TRANSP)
     for i, (fill, rows) in enumerate(((3, GLYPH_A), (4, GLYPH_B))):
         f = Image.new("P", (16, 16), 0)
         d = ImageDraw.Draw(f)
@@ -154,6 +154,18 @@ def build_icons():
     d.line((6, 10, 9, 12), fill=6)
     d.line((9, 12, 11, 11), fill=6)
     out.paste(f, (0, 64))
+    # frames 5 / 6: "+" (green) and "-" (red) markers for the HUD need bars: 11 px disc, dark outline, bold white glyph
+    for i, fill in enumerate((3, 4)):
+        f = Image.new("P", (16, 16), 0)
+        d = ImageDraw.Draw(f)
+        d.ellipse((2, 2, 12, 12), fill=fill, outline=6)
+        d.line((4, 7, 10, 7), fill=5)
+        d.line((4, 6, 10, 6), fill=5) if i == 1 else None
+        if i == 0:
+            d.line((7, 4, 7, 10), fill=5)
+            d.line((6, 4, 6, 10), fill=5)
+            d.line((4, 6, 10, 6), fill=5)
+        out.paste(f, (0, (5 + i) * 16))
     write_item("ui_icons", out, 16, ICON_PAL)
 
 

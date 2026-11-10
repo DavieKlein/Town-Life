@@ -589,6 +589,12 @@ in scene.py, applied inside `market_v2`; staff table moved to (13.4, 2.4), red p
   pause panel 232x120 at (4, 4); dialog width 212.
 - Sprite z order: text 0, highlight bar 10-11, panel 20-24 (lower = in front).
 
+- **HUD +/- markers (s72, owner request):** a small green "+" / red "-" disc (`ui_icons` frames 5 / 6, built in `tools/ui_assets.py`) bobs above the
+  right end of a HUD slot while its need rises / falls because of an action. `needs::add` / `add_social` set `pm_sign` / `pm_timer` (60 frames,
+  refreshed by every change, so timed activities show it throughout); `minute_passed` decay uses the private `_add_raw` and never marks.
+  `field::_update_pm` (called next to `_update_hud_icons`) shows / hides the 6 `_pm_sprites` (hidden with the HUD). Direct writes to
+  `_needs.values` (pause debug, accident reset) do not mark.
+
 ### Engine
 
 - **World units**: 1 cell = 16 units; +x goes down-right, +y goes down-left on screen.

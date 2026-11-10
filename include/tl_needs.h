@@ -47,10 +47,26 @@ namespace tl
         bn::fixed social = 60;
         static constexpr bn::fixed social_decay = -0.05;
 
+        // HUD "+" / "-" markers (s72): every action change (add / add_social) that really moves a value sets the sign (+1 / -1)
+        // and a frame timer of pm_frames for that slot (0..4 = needs, 5 = Social). The slow natural decay (minute_passed) does not.
+        static constexpr int pm_frames = 60;
+        int pm_sign[count + 1] = { 0, 0, 0, 0, 0, 0 };
+        int pm_timer[count + 1] = { 0, 0, 0, 0, 0, 0 };
+
+        void mark_change(int slot, bn::fixed before, bn::fixed after)
+        {
+            if(after != before)
+            {
+                pm_sign[slot] = after > before ? 1 : -1;
+                pm_timer[slot] = pm_frames;
+            }
+        }
+
         void add_social(bn::fixed amount)
         {
-            bn::fixed v = social + amount;
-            social = v < 0 ? bn::fixed(0) : (v > 100 ? bn::fixed(100) : v);
+            bn::fixed before = social;
+            _add_social_raw(amount);
+            mark_change(count, before, social);
         }
 
         // After drinking the bladder fills faster for a while (game minutes left).
@@ -58,8 +74,9 @@ namespace tl
 
         void add(int need, bn::fixed amount)
         {
-            bn::fixed v = values[need] + amount;
-            values[need] = v < 0 ? bn::fixed(0) : (v > 100 ? bn::fixed(100) : v);
+            bn::fixed before = values[need];
+            _add_raw(need, amount);
+            mark_change(need, before, values[need]);
         }
 
         void minute_passed()
@@ -73,15 +90,28 @@ namespace tl
                     change *= 3;
                 }
 
-                add(need, change);
+                _add_raw(need, change);
             }
 
-            add_social(social_decay);
+            _add_social_raw(social_decay);
 
             if(bladder_boost > 0)
             {
                 --bladder_boost;
             }
+        }
+
+    private:
+        void _add_raw(int need, bn::fixed amount)
+        {
+            bn::fixed v = values[need] + amount;
+            values[need] = v < 0 ? bn::fixed(0) : (v > 100 ? bn::fixed(100) : v);
+        }
+
+        void _add_social_raw(bn::fixed amount)
+        {
+            bn::fixed v = social + amount;
+            social = v < 0 ? bn::fixed(0) : (v > 100 ? bn::fixed(100) : v);
         }
     };
 }

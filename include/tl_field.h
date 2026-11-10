@@ -96,6 +96,7 @@ namespace tl
         menu _menu;
         needs _needs;
         bn::vector<bn::sprite_ptr, needs::count + 1> _bar_sprites;
+        bn::vector<bn::sprite_ptr, needs::count + 1> _pm_sprites;   // HUD +/- markers (s72)
         int _bar_levels[needs::count + 1] = { -1, -1, -1, -1, -1, -1 };
         bn::vector<bn::sprite_ptr, 6> _pool_sprites;
         int _version_frames = 300;     // the build date is shown for 5 seconds at start
@@ -231,6 +232,7 @@ namespace tl
         void _open_phone();
         void _update_phone();
         void _update_hud_icons();
+        void _update_pm();
         void _try_delivery();
         void _check_bill_reminder();
         void _clinic_care(int kind);
