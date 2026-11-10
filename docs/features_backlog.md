@@ -159,4 +159,4 @@ Hunger (food icon), Energy (bed or "Zzz" icon), Hygiene (shower icon), Bladder (
 
 ## s69 (docs only): the Late Tram time machine
 
-Side arc M54a-M54e and the Egypt Pyramid Yard service (Cells, tallies, Menkhet furniture set, Tomb Honey, secret 13): `docs/story_chapters3-5.md` section 4.6 and `docs/progression.md` section 2.2. Needs new systems when built: relic/tally inventory, Cell stock, a yard-time gauge, `tools/egypt.py` dig spots (like `deposit.py`), furniture catalog entries ("Menkhet Collection"), collectible set S5.
+Main-story arc M54a-M54e (s70) and the Egypt Pyramid Yard service (Cells, deben rings, Sun-star reputation, Egyptian residents, Menkhet furniture set, Tomb Honey, secret 13): `docs/story_chapters3-5.md` section 4.6 and `docs/progression.md` section 2.2. Needs new systems when built: relic/deben inventory, per-NPC Egypt friendship, Sun points, Cell stock, a yard-time gauge, `tools/egypt.py` dig spots (like `deposit.py`), furniture catalog entries ("Menkhet Collection"), collectible set S5.

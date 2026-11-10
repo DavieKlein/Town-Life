@@ -114,9 +114,18 @@ resistance), events (Saturday market, march, Block Party, Repair Café, Lantern 
 
 ## Owner decisions, s69
 
-15. **The time machine "The Late Tram" (side arc M54a-M54e, `docs/story_chapters3-5.md` section 4.6).** Built by Pip (12) and Nadia in the **Quarter Lab** (Station Quarter, Logic 25, soft gate), a retired tram ticket booth with a dryer-drum door, powered by a
+15. **The time machine "The Late Tram" (main-story finale of Chapter 4, M54a-M54e; was a side arc until s70, see decision 16, `docs/story_chapters3-5.md` section 4.6).** Built by Pip (12) and Nadia in the **Quarter Lab** (Station Quarter, Logic 25, soft gate), a retired tram ticket booth with a dryer-drum door, powered by a
     battery "Quarter Cell" and Nadia's dormant AURUM forecast core. Three trips: (1) **the Forecast**, AURUM's draft of Smart City Year 20 (cold, Old Block gone, bench meters, the old Valet in a museum case, a lonely Vault behind a door, the older player as a
     Heritage Greeter with one warm copper token), seen once; (2) an **accident in ancient Egypt** (a noodle jams the year dial: 45 becomes 4,500), where Pharaoh Menkhet takes the player for a minor god; (3) the real target, **Rosa's Corner Market 45 years ago**, where the
     player watches Rosa fire 13-year-old Vic Waldt for taking a loaf for his little sister, and the draught that slams the door is the player (the past is not changed, only visited). Afterwards the core is cut out and the machine goes **only to Egypt**, one trip a day for a
-    Cell: tallies (the yard's money), the Menkhet furniture set, collectibles, Tomb Honey for Mothball, a growing pyramid and a 13th secret, the Sealed Annex (`docs/progression.md` section 2.2). Side arc: nothing on the critical path needs it; it adds bonus beats in M62 and M69
+    Cell: deben (the yard's money), the Menkhet furniture set, collectibles, Tomb Honey for Mothball, a growing pyramid and a 13th secret, the Sealed Annex (`docs/progression.md` section 2.2). The arc supplies required beats in M62, M66 and M69
     and explains the fifth Co-op coin behind the Corner Market sign (Vic's payment). All art NEEDS PROPOSAL.
+
+## Owner decisions, s70
+
+16. **The Late Tram is main story; Egypt is a living place (docs: `docs/story_chapters3-5.md` 4.6, `docs/progression.md` 2.2).**
+    (a) M54a-M54e are the **critical path**, the final act of Chapter 4 (order M54 -> M54a..e -> M55; the a-e ids are kept so M55-M70 references stay valid; `ch4_done` is set in M54e). The Logic 25 gate stays **soft**: Pip's Riddle Door (one CODE PATTERN, unlimited tries) always lets you in, so nothing hard-locks.
+    The payoffs are now required beats: Valet's doubt seed (`tm_warned`, M66), the Clause 9 argument (`tm_vic_seen` -> `clause9`, M62, the key argument of the Hearing M67) and Rosa returning Vic's token (`rosa_vic_told`, M69). All triggers are flags and missions, no fixed days.
+    (b) **Egypt is always available** from M54e (one trip a day, a Quarter Cell each, up to 180 yard minutes, nothing for dollars). In Egypt the player talks with named original residents (Seshi, Hetepet, Khenti, Pharaoh Menkhet, the potter Nebet, the stonemason Ankhu, the twins Bek and Nofret, the temple cat Miu) with small talk, gifts and friendship like in the city, and builds a separate
+    **Egypt reputation: Sun stars 0-5** (Visitor, Helper, Trusted, Honoured Guest, Companion of the Sun) that unlocks stalls, discounts, special pieces, the Sealed Annex and titles. The yard currency is **deben rings** ("tallies" is retired), earned by chores, digs and barter and spent only in Egypt on food and on furniture for the player's homes (the Menkhet Collection, eleven pieces); not exchangeable for dollars.
+    (c) Approved as written: Rosa's line "Boys come and go. Tokens stay.", Vic's birth name **Waldt** ("Vault" is made up), the one-time free-play **Sunny Forecast** (a warm future after the downfall), the art order (Late Tram + lab, Pyramid Yard, past Corner Market, Forecast maps) and the scope. Everything visual is still NEEDS PROPOSAL; nothing is built.
