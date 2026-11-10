@@ -878,6 +878,7 @@ and `reset` commands for save tests.
 - [ ] Better pixel art for this district (original designs), warm/cold palette per area
 - [ ] Objects drawn over the player (tree tops, roofs) via a second bg layer
 - [ ] Music + sound effects for this district (maxmod, `audio/`)
+      Plan (tracks, SFX, maxmod setup, tracker workflow, proof of concept): **docs/music_plan.md** (proposal, nothing built).
 - [ ] Owner approves the district → move on
 
 ### District 2: Docks (Grafters, Chapter 1 end / Chapter 2) — TODO
