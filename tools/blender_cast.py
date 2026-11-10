@@ -12,6 +12,7 @@ TOOLS = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, TOOLS)
 from blender_render import rgb
 import cast as cdef
 import face_kit
+import actor_cycles as cyc
 CELL_M = 0.75
 FW_, FH_, FX, FY = 32, 64, 16, 54
 FACINGS = {"s": 45, "sw": 0, "w": -45, "nw": -90, "n": -135, "ne": 180, "e": 135, "se": 90}
@@ -158,13 +159,29 @@ if mode in ("sprites", "both"):
     cam_o = setup_cam_sprite()
     camfwd = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)), math.cos(math.radians(45)) * math.sin(math.radians(60)), -0.5))
     anchors = {}
+    # sprites of humans also get the walk cycle (cyc.WALK_FRAMES frames, same sampling as the player); the robot hovers (idle only)
+    walk = None
+    if mode == "sprites" and C.get("model") != "ROBOT":
+        walk = next(a for a in bpy.data.actions if a.name.endswith("_Walk"))
+        idle_act = next(a for a in bpy.data.actions if a.name.endswith("_Idle"))
+        walk_frames = cyc.cycle_frames(walk, cyc.passing_frame(arm, walk), cyc.WALK_FRAMES)
     for fname, angle in FACINGS.items():
         pivot.rotation_euler = (0, 0, math.radians(angle))
+        if walk is not None:
+            arm.animation_data.action = idle_act
         sc.frame_set(1)
         sc.render.filepath = os.path.join(out_dir, f"{fname}_0.png")
         bpy.ops.render.render(write_still=True)
         if FACE is not None:
             anchors[f"{fname}_0"] = FACE.project(cam_o, camfwd, FW_, FH_)
+        if walk is not None:
+            arm.animation_data.action = walk
+            for i, fr in enumerate(walk_frames):
+                cyc.set_frame(fr)
+                sc.render.filepath = os.path.join(out_dir, f"{fname}_w{i}.png")
+                bpy.ops.render.render(write_still=True)
+                if FACE is not None:
+                    anchors[f"{fname}_w{i}"] = FACE.project(cam_o, camfwd, FW_, FH_)
     if FACE is not None:
         json.dump(anchors, open(os.path.join(out_dir, "anchors.json"), "w"))
     # remove sprite sun for portrait

@@ -109,6 +109,11 @@ namespace tl
         // Visible play area is the screen minus the 32 px HUD bar at the bottom.
         constexpr int hud_height = 32;
 
+        [[nodiscard]] bn::fixed clamp_fixed(bn::fixed value, int min_value, int max_value)
+        {
+            return value < min_value ? bn::fixed(min_value) : (value > max_value ? bn::fixed(max_value) : value);
+        }
+
         [[nodiscard]] constexpr int clamp(int value, int min_value, int max_value)
         {
             return value < min_value ? min_value : (value > max_value ? max_value : value);
@@ -160,6 +165,8 @@ namespace tl
         _objects_bg.emplace(1, _map->objects, _map->image_width, _map->image_height, objects_priority,
                             front_priority);
         _pan_mode = 0;
+        _lead_x = 0;            // instant camera snap after a warp
+        _lead_y = 0;
         _player.place(*_map, x, y, facing);
         _critters.load(*_map);
         _map_id = id;
@@ -207,8 +214,22 @@ namespace tl
         int min_y = _map->view_y0;
         int max_y = _map->view_y1 - view_height;
         _update_focus();
-        int target_x = _focus_x - (view_width / 2);
-        int target_y = _focus_y - (view_height / 2);
+
+        // Smooth follow: the camera leads a little in the walking direction. The lead is an eased offset that is added
+        // to the player's rounded position, so the player and the background always move in whole-pixel lockstep (no 1 px wobble).
+        bn::fixed want_lead_x = 0;
+        bn::fixed want_lead_y = 0;
+
+        if(_pan_mode == 0)
+        {
+            want_lead_x = clamp_fixed(_player.screen_vx() * 9, -22, 22);
+            want_lead_y = clamp_fixed(_player.screen_vy() * 9, -12, 12);
+        }
+
+        _lead_x += (want_lead_x - _lead_x) * bn::fixed(0.07);
+        _lead_y += (want_lead_y - _lead_y) * bn::fixed(0.07);
+        int target_x = _focus_x - (view_width / 2) + _lead_x.round_integer();
+        int target_y = _focus_y - (view_height / 2) + _lead_y.round_integer();
         _cam_x = min_x <= max_x ? clamp(target_x, min_x, max_x) : (min_x + max_x) / 2;
         _cam_y = min_y <= max_y ? clamp(target_y, min_y, max_y) : (min_y + max_y) / 2;
 

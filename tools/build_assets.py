@@ -791,7 +791,7 @@ def write_face_sheet(name, frames, stems, facings, w, h, anchors, who, skin_hex)
                f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
 
 
-FACE_TOOLS = ("face_kit.py", "face_cfg.py", "player_look.py")
+FACE_TOOLS = ("face_kit.py", "face_cfg.py", "player_look.py", "actor_cycles.py")
 
 
 def tools_hash(h, files):
@@ -1085,7 +1085,7 @@ def build_cast(force, fast):
         tools_hash(h, ("blender_cast.py",) + FACE_TOOLS)
         h.update(f"cast{name}{ss}{samples}{sorted(look.items())}".encode())
         out_dir = os.path.join(CACHE, f"cast_{name}_" + h.hexdigest()[:12])
-        last = os.path.join(out_dir, "se_0.png")
+        last = os.path.join(out_dir, "se_0.png" if cast.CHARS[name].get("model") == "ROBOT" or name in cast.PORTRAIT_ONLY else f"se_w{WALK_FRAMES - 1}.png")
         has_face = name in face_cfg.FACE and name not in cast.PORTRAIT_ONLY
         sprites_done = os.path.join(out_dir, "anchors.json" if has_face else "se_0.png")
         if force or not os.path.exists(last) or (name not in cast.PORTRAIT_ONLY and not os.path.exists(sprites_done)):
@@ -1098,11 +1098,12 @@ def build_cast(force, fast):
                 print(r.stdout[-3000:], r.stderr[-3000:])
                 raise RuntimeError("cast render failed")
         if name not in cast.PORTRAIT_ONLY:
-            stems = [f"{f}_0" for f in FACINGS]
+            robot = cast.CHARS[name].get("model") == "ROBOT"     # humans: idle + WALK_FRAMES walk frames
+            stems = [f"{f}_{t}" for f in FACINGS for t in (["0"] if robot else ["0"] + [f"w{i}" for i in range(WALK_FRAMES)])]
             frames = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, FRAME_W, FRAME_H) for s in stems]
             if has_face:
                 anchors = json.load(open(sprites_done))
-                write_face_sheet("npc_" + name, frames, stems, FACINGS, FRAME_W, FRAME_H, anchors, name, cast.CHARS[name]["colours"]["Skin"])
+                write_face_sheet("npc_" + name, frames, stems, [s_.split("_")[0] for s_ in stems], FRAME_W, FRAME_H, anchors, name, cast.CHARS[name]["colours"]["Skin"])
             else:
                 write_sprite_sheet("npc_" + name, frames, FRAME_W, FRAME_H)
     write_cast_header()
@@ -1112,7 +1113,8 @@ def build_cast(force, fast):
 # Player: rigged CC0 character (art_source/quaternius_characters) rendered by tools/blender_actor.py
 # ---------------------------------------------------------------------------------------------
 FACINGS = ["s", "sw", "w", "nw", "n", "ne", "e", "se"]   # clockwise screen directions
-FRAMES_PER_FACING = 9                                     # idle + 8 walk frames
+IDLE_FRAMES, WALK_FRAMES, RUN_FRAMES = 6, 12, 12                # player: idle loop, walk cycle, run cycle (tools/actor_cycles.py)
+FRAMES_PER_FACING = IDLE_FRAMES + WALK_FRAMES                # player.bmp frames per facing (32x64); the run frames are player_run.bmp (64x64)
 FRAME_W, FRAME_H = 32, 64
 PLAYER_MODEL = "Male_LongSleeve"
 # Our own protagonist outfit (material name -> sRGB): blue top, khaki trousers, brown hair.
@@ -1130,7 +1132,7 @@ def build_player(force, fast):
         h.update(open(os.path.join(TOOLS, f), "rb").read())
     h.update(f"{ss}{samples}{colours}{PLAYER_MODEL}".encode())
     out_dir = os.path.join(CACHE, "player_" + h.hexdigest()[:12])
-    last = os.path.join(out_dir, f"se_{FRAMES_PER_FACING - 1}.png")
+    last = os.path.join(out_dir, f"se_r{RUN_FRAMES - 1}.png")
     if force or not os.path.exists(last):
         print("rendering player...", flush=True)
         r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_actor.py"),
@@ -1139,10 +1141,15 @@ def build_player(force, fast):
             print(r.stdout[-3000:], r.stderr[-3000:])
             raise RuntimeError("character render failed")
 
-    stems = [f"{f}_{i}" for f in FACINGS for i in range(FRAMES_PER_FACING)]
+    stems = [f"{f}_{t}{i}" for f in FACINGS for t, n in (("i", IDLE_FRAMES), ("w", WALK_FRAMES)) for i in range(n)]
     frames = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, FRAME_W, FRAME_H) for s in stems]
     anchors = json.load(open(os.path.join(out_dir, "anchors.json")))
     write_face_sheet("player", frames, stems, [s.split("_")[0] for s in stems], FRAME_W, FRAME_H, anchors, "player",
+                     PLAYER_COLOURS["Skin"])
+    # run cycle: 64x64 frames (separate sheet and palette, shown by a separate sprite while B is held)
+    rstems = [f"{f}_r{i}" for f in FACINGS for i in range(RUN_FRAMES)]
+    rframes = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, 64, FRAME_H) for s in rstems]
+    write_face_sheet("player_run", rframes, rstems, [s.split("_")[0] for s in rstems], 64, FRAME_H, anchors, "player",
                      PLAYER_COLOURS["Skin"])
 
     # soft shadow under the feet (drawn with alpha blending)

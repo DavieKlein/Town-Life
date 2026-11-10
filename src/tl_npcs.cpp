@@ -21,6 +21,14 @@ namespace tl
     {
         constexpr int feet_offset_y = 54 - 32;  // feet relative to the sprite centre (32x64 frames)
 
+        // Sprite sheets: humans have 13 frames per facing (idle + 12 walk frames, same cycle as the player); the hovering robot only the idle one.
+        [[nodiscard]] int frames_per_facing(npc_id who)
+        {
+            return who == npc_id::robot ? 1 : 13;
+        }
+
+        constexpr bn::fixed step_length = 2.42;     // world units walked per walk frame (1.36 m stride cycle = 29 units, 12 frames)
+
         [[nodiscard]] const bn::sprite_item* item_of(npc_id who)
         {
             switch(who)
@@ -93,7 +101,7 @@ namespace tl
                 continue;
             }
 
-            bn::sprite_ptr sprite = item->create_sprite(0, 0, p.facing);
+            bn::sprite_ptr sprite = item->create_sprite(0, 0, p.facing * frames_per_facing(p.who));
             sprite.set_bg_priority(_map->player_hidden(p.x, p.y, 12, 56) ? 3 : 2);
             _npcs.push_back(npc{ bn::move(sprite), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
                                  120 + int(index * 37 % 90), false });
@@ -165,7 +173,7 @@ namespace tl
         {
             int screen_x = _map->to_image_x(n.x, n.y) - cam_x - 120;
             int screen_y = _map->to_image_y(n.x, n.y) - cam_y - 80;
-            n.sprite.set_position(screen_x, screen_y - feet_offset_y - ((n.bob / 6) % 2));
+            n.sprite.set_position(screen_x, screen_y - feet_offset_y - (frames_per_facing(n.who) == 1 ? (n.bob / 6) % 2 : 0));
         }
     }
 
@@ -220,7 +228,42 @@ namespace tl
         }
 
         _npcs[index].facing = facing;
-        _npcs[index].sprite.set_tiles(item_of(_npcs[index].who)->tiles_item(), facing);
+        _set_frame(_npcs[index]);
+    }
+
+    void npcs::_set_frame(npc& n)
+    {
+        int per = frames_per_facing(n.who);
+        n.sprite.set_tiles(item_of(n.who)->tiles_item(), (n.facing * per) + (per > 1 ? n.frame : 0));
+    }
+
+    void npcs::_walked(npc& n, bn::fixed distance)
+    {
+        // walk animation driven by the distance walked: frames 1..12, the idle frame 0 when standing
+        if(frames_per_facing(n.who) == 1)
+        {
+            return;
+        }
+
+        n.anim += distance;
+        int frame = 1 + (n.anim / step_length).floor_integer() % 12;
+
+        if(frame != n.frame)
+        {
+            n.frame = frame;
+            _set_frame(n);
+        }
+    }
+
+    void npcs::_stopped(npc& n)
+    {
+        n.anim = 0;
+
+        if(n.frame != 0)
+        {
+            n.frame = 0;
+            _set_frame(n);
+        }
     }
 
     void npcs::wander(int player_x, int player_y, int talk_index)
@@ -238,6 +281,12 @@ namespace tl
 
             if(n.route < 0 || n.placement < 0 || index == talk_index)
             {
+                if(index == talk_index && n.frame != 0)
+                {
+                    n.walking = false;
+                    _stopped(n);
+                }
+
                 continue;
             }
 
@@ -271,6 +320,7 @@ namespace tl
                 n.fy = n.y;
                 n.walking = false;
                 n.bob = 0;
+                _stopped(n);
                 _wander_seed = (_wander_seed * 1103515245u) + 12345u;
                 n.wait = 180 + int((_wander_seed >> 16) % 300);
                 _blockers[index] = { n.x, n.y };
@@ -289,6 +339,7 @@ namespace tl
             if(pdx * pdx + pdy * pdy < 18 * 18)
             {
                 // the player is in the way: wait (his position is checked against the NPC's next step)
+                _stopped(n);
                 continue;
             }
 
@@ -307,6 +358,7 @@ namespace tl
                 // give up on this leg: wait, then try the next point
                 n.walking = false;
                 n.wait = 90;
+                _stopped(n);
                 continue;
             }
 
@@ -315,6 +367,7 @@ namespace tl
             n.x = nx;
             n.y = ny;
             ++n.bob;
+            _walked(n, step);
             _blockers[index] = { n.x, n.y };
             n.sprite.set_bg_priority(_map->player_hidden(n.x, n.y, 12, 56) ? 3 : 2);
             moved = true;
@@ -340,7 +393,7 @@ namespace tl
             if(facing != n.facing)
             {
                 n.facing = facing;
-                n.sprite.set_tiles(item_of(n.who)->tiles_item(), facing);
+                _set_frame(n);
             }
         }
     }
@@ -371,7 +424,7 @@ namespace tl
             return;
         }
 
-        bn::sprite_ptr sprite = item->create_sprite(0, 0, facing);
+        bn::sprite_ptr sprite = item->create_sprite(0, 0, facing * frames_per_facing(who));
         sprite.set_bg_priority(_map->player_hidden(x, y, 12, 56) ? 3 : 2);
         _npcs.push_back(npc{ bn::move(sprite), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y), -1, 0, 0, false });
         _blockers[_npcs.size() - 1] = { x, y };
@@ -454,7 +507,7 @@ namespace tl
         if(index >= 0)
         {
             _npcs[index].facing = facing;
-            _npcs[index].sprite.set_tiles(item_of(who)->tiles_item(), facing);
+            _set_frame(_npcs[index]);
         }
     }
 
@@ -505,6 +558,7 @@ namespace tl
                 n.fy = n.y;
                 n.speed = 0;
                 n.bob = 0;
+                _stopped(n);
             }
             else
             {
@@ -513,6 +567,7 @@ namespace tl
                 n.x = n.fx.round_integer();
                 n.y = n.fy.round_integer();
                 ++n.bob;
+                _walked(n, step);
             }
 
             _blockers[index] = { n.x, n.y };

@@ -5,6 +5,7 @@
 #include "bn_blending.h"
 #include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_items_player.h"
+#include "bn_sprite_items_player_run.h"
 #include "bn_sprite_items_shadow.h"
 #include "bn_sprite_items_player_rest.h"
 #include "bn_sprite_items_player_wash.h"
@@ -21,17 +22,34 @@ namespace tl
     {
         constexpr int hitbox_radius = 4;        // world units around the feet
 
-        // player.bmp: 32x64 frames rendered from the 3D character, 9 per facing (idle + 8 walk frames),
-        // 8 facings in clockwise screen order (s, sw, w, nw, n, ne, e, se). Feet at (16, 54) in each frame.
-        constexpr int frames_per_facing = 9;
-        constexpr int walk_frames = 8;
+        // player.bmp: 32x64 frames rendered from the 3D character, 18 per facing: 6 idle (breathing loop) and 12 walk
+        // frames (tools/actor_cycles.py), 8 facings in clockwise screen order (s, sw, w, nw, n, ne, e, se). Feet at (16, 54).
+        // player_run.bmp: 64x64 frames (the long running stride does not fit 32 px), 12 per facing, feet at (32, 54), shown
+        // by a separate sprite only while running. Walk and run both start at the passing pose (left foot planted, right
+        // foot swinging past it) and stay in the same foot phase, so switching between them keeps the legs in step.
+        constexpr int idle_frames = 6;
+        constexpr int walk_frames = 12;
+        constexpr int run_frames = 12;
+        constexpr int walk_base = idle_frames;
+        constexpr int frames_per_facing = idle_frames + walk_frames;
+        constexpr int idle_hold = 28;               // game frames per idle frame (6 frames = a 2.8 s breathing loop)
+        constexpr int turn_hold = 2;                // game frames per in-between facing while turning
+        constexpr bn::fixed settle_speed = 0.5;     // walk frames per game frame while the feet come to rest
         constexpr int feet_offset_y = 54 - 32;  // feet relative to the sprite centre
 
         constexpr bn::fixed walk_speed = 1.25;  // screen pixels per frame
         constexpr bn::fixed run_speed = 2.25;
-        constexpr bn::fixed acceleration = 0.25; // fraction of the speed difference applied per frame
-        constexpr bn::fixed deceleration = 0.4;
-        constexpr bn::fixed step_length = 4;    // screen pixels per walk animation frame
+        constexpr bn::fixed acceleration = 0.38; // fraction of the speed difference applied per frame
+        constexpr bn::fixed deceleration = 0.45;
+        constexpr bn::fixed start_kick = 0.45;   // fraction of the target speed reached in the first frame from standstill
+
+        // Planted feet: one cycle of the Quaternius Walk action moves the body 1.36 m (stance-foot speed x cycle length),
+        // one Run cycle 2.8 m (measured in tools; see CLAUDE.md "Smooth motion"). The screen distance of 1 m depends on the
+        // facing (iso projection, the d-pad moves equal screen pixels in every direction): 15.08 px/m for s/n, 23.85 px/m
+        // for the street diagonals sw/nw/ne/se, 30.16 px/m for w/e. So the screen pixels per animation frame differ per facing.
+        // Index = facing (s, sw, w, nw, n, ne, e, se). Multiply every entry to tune sliding vs. cadence.
+        constexpr bn::fixed walk_step[8] = { 1.71, 2.71, 3.42, 2.71, 1.71, 2.71, 3.42, 2.71 };   // px per frame, 1.36 m / 12
+        constexpr bn::fixed run_step[8] = { 3.52, 5.57, 7.04, 5.57, 3.52, 5.57, 7.04, 5.57 };    // px per frame, 2.8 m / 12
 
         // player_rest.bmp: 64x64, frames 0-3 sitting (facing down-left), 4 sleeping on the side; the
         // seat point is at (32, 44). player_wash.bmp: 64x64, 8 facings x 4 frames, feet at (32, 54).
@@ -194,9 +212,10 @@ namespace tl
         _y = y;
         _vx = 0;
         _vy = 0;
+        _input_facing = -1;
+        _raw_facing = -1;
         _facing = facing_from_direction(facing);
-        _anim_distance = 0;
-        _anim_frame = 0;
+        _reset_anim();
         _update_graphics();
     }
 
@@ -209,13 +228,20 @@ namespace tl
 
         _vx = 0;
         _vy = 0;
-        _anim_frame = 0;
+        _reset_anim();
         _update_graphics();
     }
 
     void player::set_visible(bool visible)
     {
-        _sprite.set_visible(visible);
+        _visible = visible;
+        _sprite.set_visible(visible && ! _run_sprite);
+
+        if(_run_sprite)
+        {
+            _run_sprite->set_visible(visible);
+        }
+
         _shadow.set_visible(visible);
     }
 
@@ -255,6 +281,7 @@ namespace tl
     void player::set_facing_index(int facing)
     {
         _facing = facing & 7;
+        _shown_facing = _facing;
         _update_graphics();
     }
 
@@ -268,6 +295,7 @@ namespace tl
         _activity_timer = 0;
         _vx = 0;
         _vy = 0;
+        _run_sprite.reset();
         _rest_sprite = bn::sprite_items::player_rest.create_sprite(0, 0);
         _rest_sprite->set_bg_priority(2);
         _rest_sprite->set_horizontal_flip(mirrored);
@@ -305,6 +333,7 @@ namespace tl
 
         const bn::sprite_item& item = action_item(kind);
         _act_item = &item;
+        _run_sprite.reset();
         _act_sprite = item.create_sprite(0, 0, _facing * act_frames_per_facing);
         _act_sprite->set_bg_priority(2);
         _apply_lighting();
@@ -360,7 +389,7 @@ namespace tl
 
         _sit_frames = 0;
         _activity = activity::walking;
-        _anim_frame = 0;
+        _reset_anim();
         _update_graphics();
 
         _apply_lighting();
@@ -421,7 +450,25 @@ namespace tl
             return;
         }
 
-        int facing = _script_facing == -2 ? input_facing() : _script_facing;
+        int facing = _script_facing;
+
+        if(facing == -2)
+        {
+            // d-pad: a changed direction must be held for a few frames before it counts, so pressing or releasing two keys
+            // a frame apart does not flicker through an in-between facing (and slide the feet that way)
+            int raw = input_facing();
+            _raw_count = raw == _raw_facing ? _raw_count + 1 : 0;
+            _raw_facing = raw;
+            int needed = raw < 0 ? 0 : (_input_facing < 0 ? 1 : 2);
+
+            if(raw != _input_facing && _raw_count >= needed)
+            {
+                _input_facing = raw;
+            }
+
+            facing = _input_facing;
+        }
+
         bn::fixed target_vx;
         bn::fixed target_vy;
 
@@ -433,6 +480,13 @@ namespace tl
             bn::fixed speed = ((_script_facing == -2 ? bn::keypad::b_held() : _script_run) ? run_speed : walk_speed) * _speed_scale;
             target_vx = directions[facing].x * speed;
             target_vy = directions[facing].y * speed;
+
+            if(bn::abs(_vx) + bn::abs(_vy) < bn::fixed(0.1))
+            {
+                _vx = target_vx * start_kick;       // quick first step instead of a slow ramp
+                _vy = target_vy * start_kick;
+            }
+
             _vx += (target_vx - _vx) * acceleration;
             _vy += (target_vy - _vy) * acceleration;
         }
@@ -475,30 +529,54 @@ namespace tl
             _vy = 0;
         }
 
-        // Walk animation driven by the distance moved on screen.
+        // Walk / run animation driven by the distance moved on screen (planted feet), idle breathing when standing.
         bn::fixed moved_x = bn::abs((_x - old_x) - (_y - old_y));
         bn::fixed moved_y = bn::abs((_x - old_x) + (_y - old_y)) / 2;
         bn::fixed moved = moved_x > moved_y ? moved_x + (moved_y / 2) : moved_y + (moved_x / 2);
 
         if(moved > bn::fixed(0.1))
         {
-            _anim_distance += moved;
+            bool running = _script_facing == -2 ? bn::keypad::b_held() : _script_run;
+            int gait = running ? 2 : 1;
 
-            if(_anim_distance >= step_length)
+            if(_gait == 0)
             {
-                _anim_distance -= step_length;
-                _anim_frame = (_anim_frame % walk_frames) + 1;
+                _phase = 0;                         // first step starts at the passing pose
             }
 
-            if(_anim_frame == 0)
+            _gait = gait;
+            _phase += moved / (running ? run_step[_facing] : walk_step[_facing]);
+
+            while(_phase >= walk_frames)
             {
-                _anim_frame = 1;
+                _phase -= walk_frames;
+            }
+        }
+        else if(_gait != 0)
+        {
+            // come to rest: finish the stride up to the nearest passing pose (frame 0 or 6), then breathe
+            bn::fixed half = walk_frames / 2;
+            bn::fixed in_half = _phase;
+
+            while(in_half >= half)
+            {
+                in_half -= half;
+            }
+
+            if(in_half < settle_speed || in_half >= half - settle_speed)
+            {
+                _gait = 0;
+                _phase = 0;
+                _idle_timer = 0;
+            }
+            else
+            {
+                _phase += in_half < half / 2 ? -settle_speed : settle_speed;
             }
         }
         else
         {
-            _anim_frame = 0;
-            _anim_distance = 0;
+            ++_idle_timer;
         }
 
         _update_graphics();
@@ -531,6 +609,13 @@ namespace tl
         int screen_x = image_x() - cam_x - 120;
         int screen_y = image_y() - cam_y - 80;
         _sprite.set_position(screen_x, screen_y - feet_offset_y);
+
+        if(_run_sprite)
+        {
+            _run_sprite->set_position(screen_x, screen_y - feet_offset_y);
+            _run_sprite->set_bg_priority(2);
+        }
+
         _shadow.set_position(screen_x, screen_y - 1);
 
         // Always above the objects layer; the front layer redraws the map pixels that are in front.
@@ -578,6 +663,13 @@ namespace tl
         bn::sprite_palette_ptr palette = _sprite.palette();
         palette.set_colors(bn::span<const bn::color>(colours, 16));
 
+        if(_run_sprite)
+        {
+            light_colours(bn::sprite_items::player_run.palette_item().colors_ref().data(), colours, 16, _light);
+            bn::sprite_palette_ptr run_palette = _run_sprite->palette();
+            run_palette.set_colors(bn::span<const bn::color>(colours, 16));
+        }
+
         if(_act_sprite)
         {
             light_colours(_act_item->palette_item().colors_ref().data(), colours, 16, _light);
@@ -593,8 +685,76 @@ namespace tl
         }
     }
 
+    void player::_reset_anim()
+    {
+        _gait = 0;
+        _phase = 0;
+        _idle_timer = 0;
+        _shown_facing = _facing;
+        _turn_timer = 0;
+    }
+
     void player::_update_graphics()
     {
-        _sprite.set_tiles(bn::sprite_items::player.tiles_item(), (_facing * frames_per_facing) + _anim_frame);
+        // turning: the shown facing steps through the in-between facings (1 frame each + turn_hold) instead of snapping
+        if(_shown_facing != _facing)
+        {
+            if(_turn_timer > 0)
+            {
+                --_turn_timer;
+            }
+            else
+            {
+                int diff = (_facing - _shown_facing) & 7;
+                _shown_facing = (_shown_facing + (diff <= 4 ? 1 : 7)) & 7;
+                _turn_timer = turn_hold - 1;
+            }
+        }
+        else
+        {
+            _turn_timer = 0;
+        }
+
+        int frame;
+
+        if(_gait == 0)
+        {
+            frame = (_idle_timer / idle_hold) % idle_frames;
+        }
+        else
+        {
+            frame = walk_base + _phase.floor_integer();
+        }
+
+        bool want_run = _gait == 2 && _activity == activity::walking;
+
+        if(want_run)
+        {
+            int run_frame = (_shown_facing * run_frames) + _phase.floor_integer();
+
+            if(! _run_sprite)
+            {
+                _run_sprite = bn::sprite_items::player_run.create_sprite(0, 0, run_frame);
+                _run_sprite->set_bg_priority(2);
+                _run_sprite->set_visible(_visible);
+                _sprite.set_visible(false);
+                _apply_lighting();
+                update_sprite(_last_cam_x, _last_cam_y);
+            }
+            else
+            {
+                _run_sprite->set_tiles(bn::sprite_items::player_run.tiles_item(), run_frame);
+            }
+
+            return;
+        }
+
+        if(_run_sprite)
+        {
+            _run_sprite.reset();
+            _sprite.set_visible(_visible);
+        }
+
+        _sprite.set_tiles(bn::sprite_items::player.tiles_item(), (_shown_facing * frames_per_facing) + frame);
     }
 }

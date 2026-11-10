@@ -143,6 +143,17 @@ namespace tl
             return _y.floor_integer();
         }
 
+        // Current velocity in screen pixels per frame (the camera leads in the walking direction).
+        [[nodiscard]] bn::fixed screen_vx() const
+        {
+            return _vx - _vy;
+        }
+
+        [[nodiscard]] bn::fixed screen_vy() const
+        {
+            return (_vx + _vy) / 2;
+        }
+
         // Point the camera should follow (image pixels): roughly the middle of the body.
         [[nodiscard]] int focus_x() const
         {
@@ -169,6 +180,8 @@ namespace tl
         bn::sprite_ptr _shadow;
         bn::sprite_ptr _sprite;
         bn::optional<bn::sprite_ptr> _rest_sprite;     // 64x64 sitting / sleeping sprite
+        bn::optional<bn::sprite_ptr> _run_sprite;      // 64x64 run frames (only while running, replaces _sprite)
+        bool _visible = true;
         bn::optional<bn::sprite_ptr> _act_sprite;      // eat / drink / read / search / wash animation
         const bn::sprite_item* _act_item = nullptr;
         action_kind _act_kind = action_kind::wash;
@@ -193,14 +206,21 @@ namespace tl
         int _rect[4] = { 0, 0, 0, 0 };
         bn::fixed _x;
         bn::fixed _y;
+        int _raw_facing = -1;       // d-pad direction of the last frame and how long it has been the same
+        int _raw_count = 0;
+        int _input_facing = -1;     // accepted d-pad direction
         bn::fixed _vx;              // world units per frame
         bn::fixed _vy;
         int _facing = 0;            // 0..7: s, sw, w, nw, n, ne, e, se (clockwise screen directions)
-        bn::fixed _anim_distance;   // screen pixels walked, drives the walk cycle
-        int _anim_frame = 0;
+        int _gait = 0;              // 0 idle (breathing loop), 1 walk, 2 run
+        bn::fixed _phase;           // walk / run cycle position in sprite frames (0 = passing pose), advanced per screen pixel walked
+        int _idle_timer = 0;        // game frames in the idle loop
+        int _shown_facing = 0;      // facing of the sprite: follows _facing through the in-between facings
+        int _turn_timer = 0;
 
         [[nodiscard]] bool _blocked(int nx, int ny) const;
         void _update_graphics();
+        void _reset_anim();
         void _apply_lighting();
         void _stand_up();
         void _update_activity();

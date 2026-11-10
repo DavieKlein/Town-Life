@@ -5,8 +5,8 @@ Town Life - animated character renderer (runs INSIDE Blender, called by tools/bu
 
 Imports a rigged, animated CC0 character (Quaternius "Animated Men/Women Characters"), recolours
 its materials, scales it to HEIGHT_M and renders, for 8 isometric facings, one idle frame and
-WALK_FRAMES frames of the walk cycle with the same camera scale as the maps:
-  <out_dir>/<facing>_<frame>.png   facing in s/sw/w/nw/n/ne/e/se (screen directions), frame 0 = idle
+idle (6), walk (12) and run (12) frames with the same camera scale as the maps:
+  <out_dir>/<facing>_<i|w|r><n>.png   facing in s/sw/w/nw/n/ne/e/se (screen directions); i = idle loop, w = walk, r = run
 Each frame is FRAME_W x FRAME_H pixels (times supersample) with the feet at (FEET_X, FEET_Y).
 """
 
@@ -23,12 +23,13 @@ import scene as scn  # noqa: E402
 from blender_render import rgb  # noqa: E402
 import face_kit  # noqa: E402
 import player_look  # noqa: E402
+import actor_cycles as cyc  # noqa: E402
 
 CELL_M = scn.CELL_M
 FRAME_W, FRAME_H = 32, 64
 FEET_X, FEET_Y = 16, 54
+RUN_FRAME_W = 64                        # run frames are 64x64 (player_run sheet), feet at (32, 54)
 HEIGHT_M = 1.78
-WALK_FRAMES = 8
 
 # 8 facings in clockwise screen order, starting with "screen down". The angle rotates the model
 # (which faces Blender -Y = world +y = screen down-left at 0 degrees) around Z.
@@ -180,23 +181,25 @@ def main():
         save_anchors(out_dir)
         return
 
-    w0, w1 = int(walk.frame_range[0]), int(walk.frame_range[1])
-    cycle = w1 - w0
+    run = find_action("_Run")
+    walk_start = cyc.passing_frame(arm, walk)
+    run_start = cyc.passing_frame(arm, run)
+    print("PASSING", walk_start, run_start)
+    jobs = [("i", idle, cyc.cycle_frames(idle, idle.frame_range[0], cyc.IDLE_FRAMES), FRAME_W),
+            ("w", walk, cyc.cycle_frames(walk, walk_start, cyc.WALK_FRAMES), FRAME_W),
+            ("r", run, cyc.cycle_frames(run, run_start, cyc.RUN_FRAMES), RUN_FRAME_W)]
     for name, angle in FACINGS.items():
         root.rotation_euler = (0, 0, math.radians(angle + model_yaw))
-        arm.animation_data.action = idle
-        sc.frame_set(1)
-        tweak(arm)
-        sc.render.filepath = os.path.join(out_dir, f"{name}_0.png")
-        bpy.ops.render.render(write_still=True)
-        record(f"{name}_0", co, FRAME_W, FRAME_H)
-        arm.animation_data.action = walk
-        for i in range(WALK_FRAMES):
-            sc.frame_set(w0 + round(i * cycle / WALK_FRAMES))
-            tweak(arm)
-            sc.render.filepath = os.path.join(out_dir, f"{name}_{i + 1}.png")
-            bpy.ops.render.render(write_still=True)
-            record(f"{name}_{i + 1}", co, FRAME_W, FRAME_H)
+        for tag, action, frames, fw in jobs:
+            arm.animation_data.action = action
+            setup_camera(fw, FRAME_H, fw // 2, FEET_Y, co=co)      # the run frames are 64 px wide (long stride), feet centred
+            for i, fr in enumerate(frames):
+                cyc.set_frame(fr)
+                tweak(arm)
+                stem = f"{name}_{tag}{i}"
+                sc.render.filepath = os.path.join(out_dir, stem + ".png")
+                bpy.ops.render.render(write_still=True)
+                record(stem, co, fw, FRAME_H)
     save_anchors(out_dir)
 
 

@@ -415,7 +415,7 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
 │   ├── tl_world.h               map_info / layer_data / warp / occluder / direction + helpers
 │   ├── tl_field.h, tl_player.h, tl_streamed_bg.h
 │   └── tl_map_id.h              GENERATED: enum map_id
-├── graphics/                    GENERATED Butano assets: hud, player (32x64 x 72 frames), shadow
+├── graphics/                    GENERATED Butano assets: hud, player (32x64 x 144 frames, 64x64 run sheet), shadow
 ├── audio/  dmg_audio/           (empty) for music/sound later
 ├── art_cache/                   (git-ignored) cached Blender renders
 ├── art_source/
@@ -516,7 +516,7 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   (Shirt, Pants, Hair, Skin, Shoes, Socks, Eyes; `PLAYER_COLOURS` in build_assets.py), scales it to
   1.78 m and renders the Idle pose + 8 frames of the Walk action for 8 facings (clockwise screen
   order s, sw, w, nw, n, ne, e, se), 4x supersampled; build_assets adds a 1 px dark outline and
-  quantizes to one 15-colour palette. Frame 32x64, feet at (16, 54); sheet = 72 frames.
+  quantizes to one 15-colour palette. Frame 32x64, feet at (16, 54); sheet = 18 frames per facing (see "Smooth motion").
 
 ### Character faces (option B, owner-approved) and the player V2 look
 
@@ -786,6 +786,36 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
 - **Owner decisions pending**: approve the clinic (exterior + interior), the shower, the collectible props, the doctor's portrait and the
   HUD before this branch goes to main. Bills by post (envelope at the home entrance) wait for the housing ladder.
 
+## Movement feel and performance pass (s71, branch `claude/intelligent-hawking-y0vl2t`)
+
+- **Measuring:** a `-DTL_DEBUG_CPU` build keeps stats in EWRAM; `python3 tools/headless_run.py ROM "...; stats LABEL"` prints frames, missed
+  frames, >85 % frames and average CPU since the last `stats` (a label containing `hist` also dumps the per-frame CPU %).
+- **Dropped frames fixed:** `streamed_bg::set_view` scanned both 31x18 windows (~1100 cells) on every 8 px camera step; it now walks only the
+  strips that changed. `update_front` (per-pixel depth mask) is skipped when player area, depth and window are unchanged. Walking/running
+  average CPU 33-42 % -> 20-34 %, missed frames per ~500 walking frames 4-10 -> 0-3 (boot / map load still misses ~6, pause open ~6, collection open ~11, once).
+- **Player:** acceleration 0.38 (was 0.25) with a first-frame kick (45 % of target speed), braking 0.45; a changed d-pad direction must hold 2 frames
+  (1 from standstill) so two keys pressed/released a frame apart no longer flicker through an in-between facing; (old stride notes superseded by "Smooth motion" below).
+- **Camera:** smooth lead (`field::_update_camera`): an eased offset (`_lead_x/_y`, 7 % per frame, 9 px per px/frame of speed, max 22 x 12 px) added to the
+  player's rounded position, so player and BG stay in whole-pixel lockstep (no wobble); instant snap (lead 0) on map load, off while a script pans.
+- **NPC walk cycles:** `tools/blender_cast.py` renders the Walk action (12 frames, see "Smooth motion") for humans (the robot stays idle-only); `build_cast` writes
+  13 frames per facing (idle + 12 walk; `frames_per_facing` in tl_npcs.cpp); `tl_npcs` plays them by distance walked (wander and cutscene
+  `move_to`). ROM +0.5 MB, no extra VRAM (one frame is resident). Re-render only the cast with `cd tools; python3 -c "import build_assets as b; b.build_cast(False, False)"` (~3 min).
+
+- **Smooth motion (s71, `tools/actor_cycles.py`):** player sheets: `player.bmp` 32x64, 18 frames per facing = 6 idle (slow breathing loop from the Idle
+  action, 28 game frames each) + 12 walk; `player_run.bmp` 64x64, 12 run frames per facing (the Run stride is wider than 32 px), shown by a second
+  sprite `_run_sprite` only while B is held (the 32x64 sprite is hidden then). Cycles are sampled sub-frame evenly over the Quaternius Walk (25 frames) /
+  Run (21 frames) loop starting at the PASSING POSE (`passing_frame`: left foot planted, right foot swinging past), so idle -> walk starts at an almost
+  upright pose and walk <-> run keep the same foot phase (`_phase` 0..12 is kept when switching). Frame names `<facing>_<i|w|r><n>`. NPCs: idle + 12 walk
+  (same sampling, `<facing>_0`, `<facing>_w<n>`).
+  **Planted feet:** the animation advances per screen pixel walked with a per-facing step (`walk_step[]` / `run_step[]` in tl_player.cpp): one Walk cycle moves
+  the body 1.36 m, one Run cycle ~2.8 m (stance-foot speed x cycle length, measured on the rig); 1 m is 15.1 px (s/n), 23.9 px (diagonals) or 30.2 px (w/e) on
+  screen, so steps differ per facing. Because the d-pad moves equal screen pixels in every direction, cadence is higher for vertical moves (walk s/n
+  ~3.6 cycles/s, w/e ~1.8) - a design trade-off (slower vertical speed would even it out). NPCs use 2.42 world units per frame.
+  Stopping: the stride finishes up to the nearest passing pose (`settle_speed`), then idle; turning: `_shown_facing` steps through in-between facings
+  (1 + 2 game frames each) when the facing changes by more than 45 degrees.
+  Re-render player only: `python3 -c "import sys; sys.path.insert(0,'tools'); import build_assets as b; b.build_player(False, False)"` (~1.5 min), cast ~3 min.
+  CPU in headless tests (TL_DEBUG_CPU): idle ~26 %, walk ~30 %, run ~29-34 %; no extra missed frames beyond map streaming.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)
@@ -878,7 +908,6 @@ and `reset` commands for save tests.
 - [ ] Better pixel art for this district (original designs), warm/cold palette per area
 - [ ] Objects drawn over the player (tree tops, roofs) via a second bg layer
 - [ ] Music + sound effects for this district (maxmod, `audio/`)
-      Plan (tracks, SFX, maxmod setup, tracker workflow, proof of concept): **docs/music_plan.md** (proposal, nothing built).
 - [ ] Owner approves the district → move on
 
 ### District 2: Docks (Grafters, Chapter 1 end / Chapter 2) — TODO
