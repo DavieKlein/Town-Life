@@ -29,11 +29,9 @@ namespace tl
 
         constexpr bn::fixed walk_speed = 1.25;  // screen pixels per frame
         constexpr bn::fixed run_speed = 2.25;
-        constexpr bn::fixed acceleration = 0.38; // fraction of the speed difference applied per frame
-        constexpr bn::fixed deceleration = 0.45;
-        constexpr bn::fixed start_kick = 0.45;   // fraction of the target speed reached in the first frame from standstill
-        constexpr bn::fixed step_length = 4;    // screen pixels per walk animation frame (walking)
-        constexpr bn::fixed run_step_length = 5;    // runs take longer strides (faster stepping, but not a blur)
+        constexpr bn::fixed acceleration = 0.25; // fraction of the speed difference applied per frame
+        constexpr bn::fixed deceleration = 0.4;
+        constexpr bn::fixed step_length = 4;    // screen pixels per walk animation frame
 
         // player_rest.bmp: 64x64, frames 0-3 sitting (facing down-left), 4 sleeping on the side; the
         // seat point is at (32, 44). player_wash.bmp: 64x64, 8 facings x 4 frames, feet at (32, 54).
@@ -196,8 +194,6 @@ namespace tl
         _y = y;
         _vx = 0;
         _vy = 0;
-        _input_facing = -1;
-        _raw_facing = -1;
         _facing = facing_from_direction(facing);
         _anim_distance = 0;
         _anim_frame = 0;
@@ -425,25 +421,7 @@ namespace tl
             return;
         }
 
-        int facing = _script_facing;
-
-        if(facing == -2)
-        {
-            // d-pad: a changed direction must be held for a few frames before it counts, so pressing or releasing two keys
-            // a frame apart does not flicker through an in-between facing (and slide the feet that way)
-            int raw = input_facing();
-            _raw_count = raw == _raw_facing ? _raw_count + 1 : 0;
-            _raw_facing = raw;
-            int needed = raw < 0 ? 0 : (_input_facing < 0 ? 1 : 2);
-
-            if(raw != _input_facing && _raw_count >= needed)
-            {
-                _input_facing = raw;
-            }
-
-            facing = _input_facing;
-        }
-
+        int facing = _script_facing == -2 ? input_facing() : _script_facing;
         bn::fixed target_vx;
         bn::fixed target_vy;
 
@@ -455,13 +433,6 @@ namespace tl
             bn::fixed speed = ((_script_facing == -2 ? bn::keypad::b_held() : _script_run) ? run_speed : walk_speed) * _speed_scale;
             target_vx = directions[facing].x * speed;
             target_vy = directions[facing].y * speed;
-
-            if(bn::abs(_vx) + bn::abs(_vy) < bn::fixed(0.1))
-            {
-                _vx = target_vx * start_kick;       // quick first step instead of a slow ramp
-                _vy = target_vy * start_kick;
-            }
-
             _vx += (target_vx - _vx) * acceleration;
             _vy += (target_vy - _vy) * acceleration;
         }
@@ -513,11 +484,9 @@ namespace tl
         {
             _anim_distance += moved;
 
-            bn::fixed step = (_script_facing == -2 ? bn::keypad::b_held() : _script_run) ? run_step_length : step_length;
-
-            if(_anim_distance >= step)
+            if(_anim_distance >= step_length)
             {
-                _anim_distance -= step;
+                _anim_distance -= step_length;
                 _anim_frame = (_anim_frame % walk_frames) + 1;
             }
 

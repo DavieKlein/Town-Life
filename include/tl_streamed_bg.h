@@ -66,8 +66,6 @@ namespace tl
         uint16_t _front_written[front_cells];
         int _front_written_count = 0;
         int _front_parity = 0;
-        int _front_key[7] = {};             // arguments + window of the last front redraw (skipped when unchanged)
-        bool _front_key_valid = false;
         int _palette_bank = 0;
         int _window_x = 0;
         int _window_y = 0;

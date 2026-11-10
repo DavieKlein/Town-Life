@@ -158,29 +158,13 @@ if mode in ("sprites", "both"):
     cam_o = setup_cam_sprite()
     camfwd = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)), math.cos(math.radians(45)) * math.sin(math.radians(60)), -0.5))
     anchors = {}
-    # sprites of humans also get the 8-frame walk cycle (frames 1..8, like the player); the robot hovers (idle only)
-    walk = None
-    if mode == "sprites" and C.get("model") != "ROBOT":
-        walk = next(a for a in bpy.data.actions if a.name.endswith("_Walk"))
-        idle_act = next(a for a in bpy.data.actions if a.name.endswith("_Idle"))
-        w0, w1 = int(walk.frame_range[0]), int(walk.frame_range[1])
     for fname, angle in FACINGS.items():
         pivot.rotation_euler = (0, 0, math.radians(angle))
-        if walk is not None:
-            arm.animation_data.action = idle_act
         sc.frame_set(1)
         sc.render.filepath = os.path.join(out_dir, f"{fname}_0.png")
         bpy.ops.render.render(write_still=True)
         if FACE is not None:
             anchors[f"{fname}_0"] = FACE.project(cam_o, camfwd, FW_, FH_)
-        if walk is not None:
-            arm.animation_data.action = walk
-            for i in range(8):
-                sc.frame_set(w0 + round(i * (w1 - w0) / 8))
-                sc.render.filepath = os.path.join(out_dir, f"{fname}_{i + 1}.png")
-                bpy.ops.render.render(write_still=True)
-                if FACE is not None:
-                    anchors[f"{fname}_{i + 1}"] = FACE.project(cam_o, camfwd, FW_, FH_)
     if FACE is not None:
         json.dump(anchors, open(os.path.join(out_dir, "anchors.json"), "w"))
     # remove sprite sun for portrait

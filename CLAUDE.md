@@ -786,22 +786,6 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
 - **Owner decisions pending**: approve the clinic (exterior + interior), the shower, the collectible props, the doctor's portrait and the
   HUD before this branch goes to main. Bills by post (envelope at the home entrance) wait for the housing ladder.
 
-## Movement feel and performance pass (s71, branch `claude/intelligent-hawking-y0vl2t`)
-
-- **Measuring:** a `-DTL_DEBUG_CPU` build keeps stats in EWRAM; `python3 tools/headless_run.py ROM "...; stats LABEL"` prints frames, missed
-  frames, >85 % frames and average CPU since the last `stats` (a label containing `hist` also dumps the per-frame CPU %).
-- **Dropped frames fixed:** `streamed_bg::set_view` scanned both 31x18 windows (~1100 cells) on every 8 px camera step; it now walks only the
-  strips that changed. `update_front` (per-pixel depth mask) is skipped when player area, depth and window are unchanged. Walking/running
-  average CPU 33-42 % -> 20-34 %, missed frames per ~500 walking frames 4-10 -> 0-3 (boot / map load still misses ~6, pause open ~6, collection open ~11, once).
-- **Player:** acceleration 0.38 (was 0.25) with a first-frame kick (45 % of target speed), braking 0.45; a changed d-pad direction must hold 2 frames
-  (1 from standstill) so two keys pressed/released a frame apart no longer flicker through an in-between facing; running takes 5 px strides (walk 4).
-  The walk cycle is 8 frames per facing (distance driven, ~19 fps stepping); more frames need a Blender re-render (not done).
-- **Camera:** smooth lead (`field::_update_camera`): an eased offset (`_lead_x/_y`, 7 % per frame, 9 px per px/frame of speed, max 22 x 12 px) added to the
-  player's rounded position, so player and BG stay in whole-pixel lockstep (no wobble); instant snap (lead 0) on map load, off while a script pans.
-- **NPC walk cycles:** `tools/blender_cast.py` renders the 8-frame Walk action for humans (the robot stays idle-only); `build_cast` writes
-  9 frames per facing (idle + 8, same as the player; `frames_per_facing` in tl_npcs.cpp); `tl_npcs` plays them by distance walked (wander and cutscene
-  `move_to`). ROM +0.5 MB, no extra VRAM (one frame is resident). Re-render only the cast with `cd tools; python3 -c "import build_assets as b; b.build_cast(False, False)"` (~3 min).
-
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

@@ -164,7 +164,6 @@ namespace tl
         }
 
         _front_written_count = 0;
-        _front_key_valid = false;
     }
 
     void streamed_bg::update_front(int x0, int y0, int x1, int y1, int depth)
@@ -174,22 +173,7 @@ namespace tl
             return;
         }
 
-        // Nothing moved since the last redraw (standing still, dialogue, menus): the front layer in VRAM is still right.
-        if(_front_key_valid && _front_key[0] == x0 && _front_key[1] == y0 && _front_key[2] == x1 && _front_key[3] == y1 &&
-           _front_key[4] == depth && _front_key[5] == _window_x && _front_key[6] == _window_y)
-        {
-            return;
-        }
-
         clear_front();
-        _front_key[0] = x0;
-        _front_key[1] = y0;
-        _front_key[2] = x1;
-        _front_key[3] = y1;
-        _front_key[4] = depth;
-        _front_key[5] = _window_x;
-        _front_key[6] = _window_y;
-        _front_key_valid = true;
 
         int cx0 = x0 < 0 ? 0 : x0 >> 3;
         int cy0 = y0 < 0 ? 0 : y0 >> 3;
@@ -404,74 +388,27 @@ namespace tl
 
             if(old_valid)
             {
-                // Only the cells that left the window are hidden and only the new ones are shown: walk the strips that differ
-                // (the old window minus the new one, and the other way round) instead of testing every cell of both windows.
                 for(int cy = old_y; cy < old_y + window_rows; ++cy)
                 {
                     bool row_inside = cy >= window_y && cy < window_y + window_rows;
-                    int first = old_x;
-                    int last = old_x + window_columns;
 
-                    if(row_inside)
+                    for(int cx = old_x; cx < old_x + window_columns; ++cx)
                     {
-                        // left strip [old_x, window_x) and right strip [window_x + columns, old_x + columns)
-                        int left_end = window_x < last ? window_x : last;
-                        int right_begin = window_x + window_columns > first ? window_x + window_columns : first;
-
-                        for(int cx = first; cx < left_end; ++cx)
+                        if(! row_inside || cx < window_x || cx >= window_x + window_columns)
                         {
                             _hide_cell(cx, cy);
-                        }
-
-                        for(int cx = right_begin; cx < last; ++cx)
-                        {
-                            _hide_cell(cx, cy);
-                        }
-                    }
-                    else
-                    {
-                        for(int cx = first; cx < last; ++cx)
-                        {
-                            _hide_cell(cx, cy);
-                        }
-                    }
-                }
-
-                for(int cy = window_y; cy < window_y + window_rows; ++cy)
-                {
-                    bool row_inside = cy >= old_y && cy < old_y + window_rows;
-                    int first = window_x;
-                    int last = window_x + window_columns;
-
-                    if(row_inside)
-                    {
-                        int left_end = old_x < last ? old_x : last;
-                        int right_begin = old_x + window_columns > first ? old_x + window_columns : first;
-
-                        for(int cx = first; cx < left_end; ++cx)
-                        {
-                            _show_cell(cx, cy);
-                        }
-
-                        for(int cx = right_begin; cx < last; ++cx)
-                        {
-                            _show_cell(cx, cy);
-                        }
-                    }
-                    else
-                    {
-                        for(int cx = first; cx < last; ++cx)
-                        {
-                            _show_cell(cx, cy);
                         }
                     }
                 }
             }
-            else
+
+            for(int cy = window_y; cy < window_y + window_rows; ++cy)
             {
-                for(int cy = window_y; cy < window_y + window_rows; ++cy)
+                bool row_inside = old_valid && cy >= old_y && cy < old_y + window_rows;
+
+                for(int cx = window_x; cx < window_x + window_columns; ++cx)
                 {
-                    for(int cx = window_x; cx < window_x + window_columns; ++cx)
+                    if(! row_inside || cx < old_x || cx >= old_x + window_columns)
                     {
                         _show_cell(cx, cy);
                     }
