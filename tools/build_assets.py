@@ -791,7 +791,7 @@ def write_face_sheet(name, frames, stems, facings, w, h, anchors, who, skin_hex)
                f'{{\n    "type": "sprite",\n    "height": {h}\n}}\n')
 
 
-FACE_TOOLS = ("face_kit.py", "face_cfg.py", "player_look.py", "actor_cycles.py")
+FACE_TOOLS = ("face_kit.py", "face_cfg.py", "player_look.py", "actor_cycles.py", "char72.py", "char_build.py")
 
 
 def tools_hash(h, files):

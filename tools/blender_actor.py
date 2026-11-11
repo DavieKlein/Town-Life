@@ -24,6 +24,7 @@ from blender_render import rgb  # noqa: E402
 import face_kit  # noqa: E402
 import player_look  # noqa: E402
 import actor_cycles as cyc  # noqa: E402
+import char72  # noqa: E402
 
 CELL_M = scn.CELL_M
 FRAME_W, FRAME_H = 32, 64
@@ -69,8 +70,11 @@ CAMFWD = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)),
 
 def tweak(arm):
     """Player V2 shoulders: re-applied after every frame_set (the actions key the torso scale)."""
-    face_kit.player_pose_tweaks(arm)
+    char72.tweak(arm, BD[0])
     bpy.context.view_layer.update()
+
+
+BD = [None]
 
 
 def record(stem, co, fw, fh):
@@ -107,47 +111,13 @@ def main():
     sc.render.resolution_y = FRAME_H * ss
     sc.render.image_settings.color_mode = "RGBA"
 
-    bpy.ops.import_scene.fbx(filepath=fbx)
-    arm = next(o for o in sc.objects if o.type == "ARMATURE")
-    meshes = [o for o in sc.objects if o.type == "MESH"]
-    for m in bpy.data.materials:
-        if m.use_nodes and "Principled BSDF" in m.node_tree.nodes:
-            bsdf = m.node_tree.nodes["Principled BSDF"]
-            bsdf.inputs["Alpha"].default_value = 1.0          # the FBX files import with alpha 0
-            bsdf.inputs["Roughness"].default_value = 0.65
-            base = m.name.split(".")[0]
-            if base in colours:
-                bsdf.inputs["Base Color"].default_value = rgb(colours[base])
-
-    # scale to the wanted height, feet on the ground at the origin
-    idle = find_action("_Idle")
-    walk = find_action("_Walk")
-    arm.animation_data_create()
-    arm.animation_data.action = idle
-    sc.frame_set(1)
-    bpy.context.view_layer.update()
-    deps = bpy.context.evaluated_depsgraph_get()
-    zs = []
-    for o in meshes:
-        ev = o.evaluated_get(deps)
-        me = ev.to_mesh()
-        zs += [(ev.matrix_world @ v.co).z for v in me.vertices]
-        ev.to_mesh_clear()
-    height = max(zs) - min(zs)
-    root = bpy.data.objects.new("root", None)
-    sc.collection.objects.link(root)
-    arm.parent = root
-    s = HEIGHT_M / height
-    root.scale = (s, s, s)
-    root.location = (0, 0, -min(zs) * s)
-    bpy.context.view_layer.update()
-
-    # player V2 look: proportions on the keyframes, outfit details, modelled face (anchors for the pixel pass)
-    face_kit.apply_proportions()
-    player_look.apply(arm)
-    FACE[0] = face_kit.Face(sc, arm, "player", colours["Skin"], next(m for m in meshes if m.name == "BaseHuman"))
-    FACE[0].build()
-    FACE[0].make_anchors()
+    # s72: unique build + realistic face + V1 Soft look (tools/char72.py, table tools/char_build.py); the player keeps the V2 outfit
+    char72.soft_render(sc)
+    L = char72.load(sc, "player", fbx, colours)
+    BD[0] = L["BD"]
+    arm, meshes, root = L["arm"], L["meshes"], L["root"]
+    idle, walk = L["idle"], find_action("_Walk")
+    FACE[0] = char72.dress(L, sc)
     arm.data.pose_position = "POSE"
     bpy.context.view_layer.update()
 
@@ -156,14 +126,8 @@ def main():
     world = bpy.data.worlds.new("world")
     sc.world = world
     world.use_nodes = True
-    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.6, 0.66, 0.8, 1)
-    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
-    sun = bpy.data.lights.new("sun", "SUN")
-    sun.energy = 3.5
-    sun.angle = math.radians(10)
-    so = bpy.data.objects.new("sun", sun)
-    sc.collection.objects.link(so)
-    so.rotation_euler = Vector((-0.25, 0.7, -0.65)).normalized().to_track_quat("-Z", "Y").to_euler()
+    char72.soft_world(world)
+    char72.soft_sun(sc)
 
     if mode == "actions":
         render_actions(sc, arm, meshes, root, co, out_dir, model_yaw)

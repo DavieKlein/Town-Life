@@ -1053,3 +1053,13 @@ The owner asked for (1) the full City Centre — done, awaiting feedback — and
 **Ultimate Food Pack** in the Corner Market supermarket (replace the box products in `product()` /
 `gondola()` with food models: download from the Drive folder, keep only what is used in
 `art_source/quaternius_food/`). After that: Old Block (east end of the avenue) and step 1.2.
+
+## s72: unique character builds + realistic faces (owner-approved, built)
+
+- **Per-character builds:** `tools/char_build.py` (`B[name]`: height, head/hand scale, shoulder/chest, belly/bust/hips, limb girth, lean, face params, hair volume pieces, clothing extras, props)
+  is the single source for all actor renders; the Blender side is `tools/char72.py` (`load`, `dress`, `tweak(arm, BD)` after every `frame_set`, `Face72`, V1 Soft helpers).
+  Used by `blender_cast.py` (NPCs, `USE72`; debug env `TL_FACINGS=s,se TL_NOWALK=1`), `blender_actor.py` and `blender_acts.py` (the player, all sheets). Old `cast.py` looks stay only for the robot.
+- **V1 Soft actor look:** pixel filter 1.4, sky strength 1.5, sun 3.0 W with 30 degree angle, smooth shading + 1 subdivision on the bodies. Frame layout, feet (16, 54) and anchors are unchanged.
+- **Face pass additions** (`face_pass.extra_paint`, parameters from `char_build.B[who]['face']`): lash flick (women), under-eye bag (age >= 1), heavy brow, lower lip, smile creases.
+- Fixes: Okafor = open knee-length lab coat (3 box panels on the Hips bone), Lou's apron a flat plane, Victor smaller pads + deeper tan skin (#b9774a), Pimm darker cap. New characters need an entry in `char_build.B` AND `face_cfg.FACE`.
+- Preview tip: render with `TL_FACINGS`/`TL_NOWALK`, quantize with `face_pass.quantize_sheet` + `paint_face` (see git history of this section for the idea). Cast re-render ~15 min, player + acts ~10 min.

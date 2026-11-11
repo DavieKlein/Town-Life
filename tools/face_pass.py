@@ -11,6 +11,7 @@ import math
 import numpy as np
 
 import face_cfg
+import char_build
 
 WEIGHT = np.array([0.30, 0.59, 0.11]) ** 0.5
 OUTLINE = np.array([40.0, 30.0, 40.0])
@@ -93,7 +94,7 @@ def make_ctx(pal, name, skin_hex):
     skin = np.array(hx(skin_hex), float)
     hair = np.array(hx(F["hair"]), float)
     lo, hi = 1, 1 + NFREE
-    ctx = dict(out=OUT, eyew=EYEW, mouth=MOUTH, blush=BLUSH)
+    ctx = dict(out=OUT, eyew=EYEW, mouth=MOUTH, blush=BLUSH, who=name)
     ctx["skin_shade"] = nearest(pal, skin * 0.80 + np.array([40, 0, 20]) * 0.2, lo, hi)
     ctx["brow"] = nearest(pal, hair * 0.62, lo, hi)
     ctx["hair_hi"] = nearest(pal, hair * 0.5 + np.array([255, 255, 255]) * 0.5 if name != "victor" else hair * 1.0, lo, hi)
@@ -168,4 +169,44 @@ def paint_face(idx, anc, ctx, facing, opt=None):
         put(fl(mx), my, ctx["mouth"], skin_only=True)
     if anc["crown"][2]:
         put(fl(anc["crown"][0]), fl(anc["crown"][1]) + 1, ctx["hair_hi"])
+    extra_paint(idx, anc, ctx, facing, eyes, ey)
     return idx
+
+
+def extra_paint(idx, anc, ctx, facing, eyes, ey):
+    """s72 additions (owner-approved) for the front / 3/4 views: outer lash flick (women), under-eye bag (age >= 1), heavy brow (brow_w >= 1.2),
+    lower lip (women), smile creases (big smiles). Parameters come from char_build.B[who]['face']."""
+    who = ctx.get("who")
+    if who not in char_build.B or FACE_EYES.get(facing, 0) != 2 or len(eyes) != 2:
+        return
+    F = face_cfg.FACE[who]
+    P = char_build.B[who]["face"]
+    H, W = idx.shape
+    fl = lambda v: int(math.floor(v))
+    SK = ctx["skin_set"]
+
+    def put(x, y, c):
+        if 0 <= x < W and 0 <= y < H and idx[y, x] != 0 and idx[y, x] != ctx["out"] and idx[y, x] in SK:
+            idx[y, x] = c
+
+    def put_out(x, y):
+        if 0 <= x < W and 0 <= y < H and idx[y, x] != 0 and idx[y, x] != ctx["out"] and idx[y, x] in SK:
+            idx[y, x] = ctx["out"]
+    for (x, out) in eyes:
+        if F["female"]:
+            put_out(x + out, ey)                      # outer lash flick
+        if P["age"] >= 1:
+            put(x, ey + 2, ctx["skin_shade"])         # under-eye bag
+        if P["brow_w"] >= 1.2:
+            put(x - out, ey - 1, ctx["brow"])         # heavy brow runs further towards the nose
+    mx, my = anc["mouth"][0], anc["mouth"][1]
+    my = max(int(round(my - 0.2)), ey + 3)
+    if facing == "s":
+        if F["female"]:
+            put(fl(mx - 0.5), my + 1, ctx["blush"])   # lower lip
+            put(fl(mx + 0.5), my + 1, ctx["blush"])
+        if P["smile"] >= 0.7:
+            put(fl(mx - 1.5), my - 1, ctx["skin_shade"])   # smile creases
+            put(fl(mx + 2.5), my - 1, ctx["skin_shade"])
+    elif F["female"]:
+        put(fl(mx), my + 1, ctx["blush"])

@@ -13,6 +13,7 @@ from blender_render import rgb
 import cast as cdef
 import face_kit
 import actor_cycles as cyc
+import char_build
 CELL_M = 0.75
 FW_, FH_, FX, FY = 32, 64, 16, 54
 FACINGS = {"s": 45, "sw": 0, "w": -45, "nw": -90, "n": -135, "ne": 180, "e": 135, "se": 90}
@@ -21,6 +22,9 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 name, out_dir, ss, samples, mode = argv[0], argv[1], int(argv[2]), int(argv[3]), argv[4]
 pyaw = float(argv[5]) if len(argv) > 5 else 22.0
 C = cdef.CHARS[name]
+USE72 = mode == "sprites" and name in char_build.B and C.get("model") != "ROBOT"     # s72: unique builds + realistic faces + V1 Soft light
+if USE72:
+    import char72
 os.makedirs(out_dir, exist_ok=True)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -88,6 +92,14 @@ if C.get("model") == "ROBOT":
     build_robot(body)
     meshes_h = C["height"]
     k = 1.0
+elif USE72:
+    fbx = os.path.join(TOOLS, "..", "art_source", "quaternius_characters", char_build.B[name]["model"] + ".fbx")
+    char72.soft_render(sc)
+    L72 = char72.load(sc, name, fbx)
+    pivot, body, arm, root = L72["pivot"], L72["body"], L72["arm"], L72["root"]
+    BD72 = L72["BD"]
+    meshes = L72["meshes"]
+    FACE = char72.dress(L72, sc)
 else:
     body.scale = (k * C.get("widen", 1.0), k * C.get("depth", 1.0), k)
     fbx = os.path.join(TOOLS, "..", "art_source", "quaternius_characters", C["model"] + ".fbx")
@@ -156,6 +168,10 @@ if mode in ("sprites", "both"):
     sun = bpy.data.lights.new("sun", "SUN"); sun.energy = 3.5; sun.angle = math.radians(10)
     so = bpy.data.objects.new("sun", sun); sc.collection.objects.link(so)
     so.rotation_euler = Vector((-0.25, 0.7, -0.65)).normalized().to_track_quat("-Z", "Y").to_euler()
+    if USE72:
+        bpy.data.objects.remove(so)
+        char72.soft_world(world)
+        so = char72.soft_sun(sc)
     cam_o = setup_cam_sprite()
     camfwd = Vector((-math.sin(math.radians(45)) * math.sin(math.radians(60)), math.cos(math.radians(45)) * math.sin(math.radians(60)), -0.5))
     anchors = {}
@@ -165,19 +181,26 @@ if mode in ("sprites", "both"):
         walk = next(a for a in bpy.data.actions if a.name.endswith("_Walk"))
         idle_act = next(a for a in bpy.data.actions if a.name.endswith("_Idle"))
         walk_frames = cyc.cycle_frames(walk, cyc.passing_frame(arm, walk), cyc.WALK_FRAMES)
+    only_f = os.environ.get("TL_FACINGS")            # debugging: render only some facings / only the idle frame
     for fname, angle in FACINGS.items():
+        if only_f and fname not in only_f.split(","):
+            continue
         pivot.rotation_euler = (0, 0, math.radians(angle))
         if walk is not None:
             arm.animation_data.action = idle_act
         sc.frame_set(1)
+        if USE72:
+            char72.tweak(arm, BD72)
         sc.render.filepath = os.path.join(out_dir, f"{fname}_0.png")
         bpy.ops.render.render(write_still=True)
         if FACE is not None:
             anchors[f"{fname}_0"] = FACE.project(cam_o, camfwd, FW_, FH_)
-        if walk is not None:
+        if walk is not None and not os.environ.get("TL_NOWALK"):
             arm.animation_data.action = walk
             for i, fr in enumerate(walk_frames):
                 cyc.set_frame(fr)
+                if USE72:
+                    char72.tweak(arm, BD72)
                 sc.render.filepath = os.path.join(out_dir, f"{fname}_w{i}.png")
                 bpy.ops.render.render(write_still=True)
                 if FACE is not None:
