@@ -5,6 +5,7 @@ cream collar / cuffs / zip on the sweater, brown belt with a gold buckle, chunky
 Call apply(arm) after the armature is scaled and parented (root scale set), with the colours already applied.
 """
 import math
+import os
 
 import bpy
 from mathutils import Matrix, Vector
@@ -53,7 +54,7 @@ def apply(arm):
     arm.data.pose_position = "REST"
     bpy.context.view_layer.update()
     collar = _slot(me, "Collar", "#f4efe0")
-    cuff = _slot(me, "Cuff", "#f4efe0")
+    cuff = _slot(me, "Cuff", os.environ.get("TL_CUFF", "#22407f"))
     zipm = _slot(me, "Zip", "#f4efe0")
     sole = _slot(me, "Sole", "#f6f3ea", 0.5)
     shoeb = _slot(me, "ShoeB", "#c8352e")

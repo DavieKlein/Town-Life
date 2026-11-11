@@ -6,7 +6,7 @@ Units: `height` metres; mesh-space numbers are in Quaternius mesh units (the 1.7
 
   model     Quaternius rig (male bases Male_*, female bases Female_*)
   height    final body height (m)
-  head,hand head / hand scale on the Head / Palm bones (game player = 1.28 / 1.38)
+  head,hand head / hand scale on the Head / Palm bones (game player = 1.28 / 1.12 since s75)
   shoulder  Torso x scale (chest + shoulder width; player V2 = 1.14)
   chest     Torso y scale (chest depth)
   belly     forward bulge of the belly (mesh units, z 2.2-3.1), bellyx = side growth of the belly band
@@ -34,7 +34,7 @@ B = {}
 
 B["player"] = dict(
     model="Male_LongSleeve", height=1.78, colours=PLAYER_COLOURS, props=[], v2=True,
-    head=1.28, hand=1.38, shoulder=1.14, chest=1.0, belly=0.0, girth=(1.0, 1.0, 1.0), lean=(1, 2, 1, -2),
+    head=1.28, hand=1.12, shoulder=1.14, chest=1.0, belly=0.0, girth=(1.0, 1.0, 1.0), lean=(1, 2, 1, -2),
     face=dict(nose=(1.0, 1.0), jaw=1.0, brow_w=1.0, brow_tilt=0, smile=0.25, age=0),
     hair=[("sphere", (0.0, -0.05, 4.82), (0.27, 0.31, 0.12), "#4a2a18"),                  # a bit of volume on top
           ("sphere", (0.10, -0.24, 4.78), (0.17, 0.09, 0.07), "#4a2a18", (0, 20, 0))],    # side-swept fringe
@@ -45,7 +45,7 @@ B["mia"] = dict(
     colours={"Shirt": "#2a9a96", "Pants": "#3c4a66", "Hair": "#c8622a", "HairBase": "#c8622a", "Skin": "#f2c8a4", "Shoes": "#3a2a22",
              "Socks": "#f2efe6"},
     props=[],
-    head=1.30, hand=1.30, shoulder=0.93, chest=0.95, belly=0.0, bust=0.05, hips=0.10, girth=(0.96, 0.98, 0.9), lean=(0, 0, 1, -1),
+    head=1.30, hand=1.10, shoulder=0.93, chest=0.95, belly=0.0, bust=0.05, hips=0.10, girth=(0.96, 0.98, 0.9), lean=(0, 0, 1, -1),
     face=dict(nose=(0.8, 0.8), jaw=0.9, brow_w=0.9, brow_tilt=4, smile=0.5, age=0),
     hair=[("sphere", (0.0, 0.16, 4.72), (0.30, 0.20, 0.17), "#c8622a"),                    # back volume
           ("sphere", (0.0, 0.40, 4.55), (0.12, 0.12, 0.12), "#c8622a"),                    # ponytail root
@@ -59,7 +59,7 @@ B["rosa"] = dict(
     model="Female_Dress", height=1.54,
     colours={"Dress": "#7a2236", "Hair": "#c4c4cc", "Skin": "#eabf9c", "Shoes": "#2e2420"},
     props=[("torus", (0, -0.035, 1.40), (0.075, 0.075, 0.009), "#f4f0e8")],               # pearls (glasses are fitted by the face kit)
-    head=1.32, hand=1.34, shoulder=1.0, chest=1.12, belly=0.16, bellyx=0.06, bust=0.10, hips=0.10, girth=(1.16, 1.18, 1.08), lean=(2, 4, 4, -3),
+    head=1.32, hand=1.10, shoulder=1.0, chest=1.12, belly=0.16, bellyx=0.06, bust=0.10, hips=0.10, girth=(1.16, 1.18, 1.08), lean=(2, 4, 4, -3),
     face=dict(nose=(1.0, 1.1), jaw=1.0, brow_w=1.0, brow_tilt=-2, smile=0.3, age=2),
     hair=[("sphere", (0.0, 0.18, 4.95), (0.12, 0.12, 0.11), "#c4c4cc"),                    # grey bun
           ("sphere", (0.0, 0.14, 4.80), (0.30, 0.24, 0.12), "#c4c4cc"),
@@ -72,7 +72,7 @@ B["dex"] = dict(
     colours=dict(cdef.CHARS["dex"]["colours"]),
     props=[("box", (0, -0.118, 1.02), (0.25, 0.03, 0.42), "#2f7a45"),                       # green apron (narrow, he is thin)
            ("box", (0.09, -0.139, 1.15), (0.07, 0.01, 0.04), "#f0e0a0")],
-    head=1.24, hand=1.40, shoulder=0.90, chest=0.88, belly=0.0, girth=(0.84, 0.88, 0.86), lean=(4, 7, 8, -6), arms_len=1.10,
+    head=1.24, hand=1.12, shoulder=0.90, chest=0.88, belly=0.0, girth=(0.84, 0.88, 0.86), lean=(4, 7, 8, -6), arms_len=1.10,
     face=dict(nose=(0.9, 1.15), jaw=0.85, brow_w=1.0, brow_tilt=-4, smile=0.1, age=0, stubble=True),
     hair=[("sphere", (0.0, -0.14, 4.98), (0.22, 0.22, 0.13), "#2a1c18", (-25, 0, 0)),     # tall messy quiff
           ("sphere", (0.12, -0.08, 5.02), (0.13, 0.15, 0.09), "#2a1c18"),
@@ -90,7 +90,7 @@ B["pimm"] = dict(
            ("box", (0, -0.15, 1.83), (0.19, 0.10, 0.016), "#41301d", (8, 0, 0)),
            ("torus", (0, -0.02, 1.455), (0.09, 0.09, 0.03), "#a8312f"),                    # red scarf
            ("cyl", (-0.30, -0.10, 0.40), (0.012, 0.012, 0.80), "#5a3d22")],               # walking stick
-    head=1.24, hand=1.30, shoulder=0.88, chest=0.92, belly=0.07, girth=(0.92, 0.84, 0.84), lean=(9, 14, 20, -24),
+    head=1.24, hand=1.10, shoulder=0.88, chest=0.92, belly=0.07, girth=(0.92, 0.84, 0.84), lean=(9, 14, 20, -24),
     face=dict(nose=(1.1, 1.2), jaw=0.9, brow_w=1.25, brow_tilt=-3, smile=-0.1, age=3),
     hair=[("sphere", (0.29, 0.17, 4.40), (0.045, 0.07, 0.07), "#f2f2ee"),                  # white tufts below the cap
           ("sphere", (-0.29, 0.17, 4.40), (0.045, 0.07, 0.07), "#f2f2ee"),
@@ -106,7 +106,7 @@ B["lou"] = dict(
            ("box", (0, -0.20, 1.30), (0.20, 0.03, 0.11), "#b83a32"),                       # bib
            ("cyl", (0, 0.01, 1.765), (0.112, 0.112, 0.09), "#fbfbfb"),                     # chef hat band
            ("sphere", (0, 0.01, 1.865), (0.155, 0.155, 0.105), "#fbfbfb")],                # puffy top
-    head=1.20, hand=1.50, shoulder=1.20, chest=1.12, belly=0.30, bellyx=0.15, hips=0.06, girth=(1.38, 1.26, 1.32), lean=(-4, -3, 3, 0),
+    head=1.20, hand=1.18, shoulder=1.20, chest=1.12, belly=0.30, bellyx=0.15, hips=0.06, girth=(1.38, 1.26, 1.32), lean=(-4, -3, 3, 0),
     face=dict(nose=(1.35, 1.0), jaw=1.25, brow_w=1.15, brow_tilt=2, smile=0.8, age=1, moustache=True, jowls=True),
     hair=[("sphere", (0.28, 0.10, 4.50), (0.06, 0.11, 0.14), "#3a2a1e"),                  # short sides under the hat
           ("sphere", (-0.28, 0.10, 4.50), (0.06, 0.11, 0.14), "#3a2a1e")],
@@ -119,7 +119,7 @@ B["victor"] = dict(
            ("cyl", (0, -0.150, 1.27), (0.042, 0.042, 0.012), "#f6d874", (90, 0, 0)),
            ("cyl", (0.32, -0.08, 0.42), (0.014, 0.014, 0.84), "#f2c94c"),                  # gold cane
            ("sphere", (0.32, -0.08, 0.86), (0.04, 0.04, 0.04), "#f2c94c")],
-    head=1.16, hand=1.40, shoulder=1.22, chest=1.12, belly=0.10, bust=0.10, girth=(1.12, 1.0, 1.12), lean=(-3, -9, 3, -6),
+    head=1.16, hand=1.12, shoulder=1.22, chest=1.12, belly=0.10, bust=0.10, girth=(1.12, 1.0, 1.12), lean=(-3, -9, 3, -6),
     face=dict(nose=(1.1, 1.35), jaw=1.15, brow_w=1.0, brow_tilt=5, smile=0.5, age=1, smirk=True),
     hair=[("sphere", (0.0, 0.06, 4.93), (0.27, 0.31, 0.15), "#f1ead4"),                   # swept-back volume
           ("sphere", (0.0, 0.32, 4.60), (0.22, 0.10, 0.17), "#f1ead4"),
@@ -136,7 +136,7 @@ B["okafor"] = dict(
            ("torus", (0.043, -0.125, 1.64), (0.036, 0.036, 0.005), "#2a2630", (90, 0, 0)),
            ("torus", (-0.043, -0.125, 1.64), (0.036, 0.036, 0.005), "#2a2630", (90, 0, 0)),
            ("box", (0, -0.125, 1.645), (0.03, 0.008, 0.008), "#2a2630")],
-    head=1.24, hand=1.30, shoulder=1.0, chest=1.0, belly=0.0, bust=0.04, hips=0.07, girth=(1.0, 1.04, 0.95), lean=(-1, -3, -2, 1),
+    head=1.24, hand=1.10, shoulder=1.0, chest=1.0, belly=0.0, bust=0.04, hips=0.07, girth=(1.0, 1.04, 0.95), lean=(-1, -3, -2, 1),
     face=dict(nose=(0.95, 0.95), jaw=0.95, brow_w=0.95, brow_tilt=2, smile=0.35, age=1),
     hair=[("sphere", (0.0, 0.06, 4.93), (0.20, 0.20, 0.13), "#1c1410"),                    # natural curls: cluster of puffs
           ("sphere", (0.17, 0.06, 4.84), (0.15, 0.17, 0.13), "#1c1410"),

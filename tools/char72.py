@@ -361,12 +361,48 @@ def load(sc, name, fbx, colours=None):
     return dict(name=name, BD=BD, arm=arm, meshes=meshes, body_mesh=body_mesh, pivot=pivot, body=body, root=root, idle=idle)
 
 
+HAND_CRISP = os.environ.get("TL_HANDMODE", "crisp") == "crisp"
+HAND_GROUPS = ("Palm.", "MiddleHand.", "Fingers.", "Thumb1.", "Thumb2.")
+
+
+def hand_verts(o):
+    """Indices of the body vertices that belong mainly to the hand bones (s75)."""
+    gi = {g.index for g in o.vertex_groups if g.name.startswith(HAND_GROUPS)}
+    out = set()
+    for v in o.data.vertices:
+        w = sum(g.weight for g in v.groups if g.group in gi)
+        if w >= 0.5:
+            out.add(v.index)
+    return out
+
+
+HAND_TINT = tuple(float(x) for x in os.environ.get("TL_HANDTINT", "0.96,0.86,0.80").split(","))
+
+
+def tint_hands(o, hv):
+    """s75: hands get their own skin material a little warmer / darker than the lit face skin, so they do not quantize
+    to the pale cuff / collar cream and read as gloves."""
+    si = [i for i, m in enumerate(o.data.materials) if m and m.name.split(".")[0] == "Skin"]
+    if not si or HAND_TINT == (1.0, 1.0, 1.0):
+        return
+    m = o.data.materials[si[0]].copy()
+    m.name = "SkinHand"
+    bsdf = m.node_tree.nodes["Principled BSDF"]
+    c = list(bsdf.inputs["Base Color"].default_value)
+    bsdf.inputs["Base Color"].default_value = (c[0] * HAND_TINT[0], c[1] * HAND_TINT[1], c[2] * HAND_TINT[2], 1)
+    o.data.materials.append(m)
+    k = len(o.data.materials) - 1
+    for poly in o.data.polygons:
+        if o.data.materials[poly.material_index].name.split(".")[0] == "Skin" and all(v in hv for v in poly.vertices):
+            poly.material_index = k
+
+
 def dress(L, sc):
     """Proportions, props, face (+ anchors), extras, V1 Soft shading. Returns the Face72."""
     BD, arm, body, body_mesh, name = L["BD"], L["arm"], L["body"], L["body_mesh"], L["name"]
     props = [(prim(p[0], p[1], p[2], p[3], body, rot=(p[4] if len(p) > 4 else (0, 0, 0))), p) for p in BD["props"]]
     bpy.context.view_layer.update()
-    face_kit.apply_proportions(BD["head"], BD["hand"])
+    face_kit.apply_proportions(BD["head"], float(os.environ.get("TL_HAND", BD["hand"])))
     face = Face72(sc, arm, name, BD["colours"]["Skin"], body_mesh, BD)
     for o, p in props:
         if p[1][2] > 1.55:
@@ -380,8 +416,15 @@ def dress(L, sc):
     arm.data.pose_position = "POSE"
     for o in sc.objects:                                      # V1 Soft: smooth shading + one subdivision level on the bodies
         if o.type == "MESH" and any(m.type == "ARMATURE" for m in o.modifiers):
+            hv = hand_verts(o)
+            tint_hands(o, hv)
             for poly in o.data.polygons:
-                poly.use_smooth = True
+                poly.use_smooth = not (HAND_CRISP and all(v in hv for v in poly.vertices))   # s75: hands stay faceted (thumb / fingers read)
+            if HAND_CRISP:
+                cr = o.data.attributes.get("crease_edge") or o.data.attributes.new("crease_edge", "FLOAT", "EDGE")
+                for e in o.data.edges:
+                    if e.vertices[0] in hv and e.vertices[1] in hv:
+                        cr.data[e.index].value = 1.0
             md = o.modifiers.new("s72_subsurf", "SUBSURF")
             md.levels = md.render_levels = 1
     return face

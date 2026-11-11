@@ -527,7 +527,7 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 
 ### Character faces (option B, owner-approved) and the player V2 look
 
-- **Proportions:** head 1.28x and hands 1.38x on every character sprite (`face_kit.apply_proportions()` scales the keyframes of the
+- **Proportions:** head 1.28x and hands 1.12x (s75; was 1.38x, owner: "hands look like gloves") on every character sprite (`face_kit.apply_proportions()` scales the keyframes of the
   `Head` / `Palm.L/R` bones - the actions key them, so pose-bone scale alone is overwritten); the player also gets broader shoulders
   (`player_pose_tweaks`, Torso scale 1.14, must be re-applied after every `frame_set`). Head props from `cast.py` (z > 1.55 m: caps, hats,
   bun, glasses) are glued to the Head bone so they scale with the head; Rosa's / Victor's glasses are replaced by fitted ones.
@@ -547,6 +547,10 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
 - **Player V2 look** (`tools/player_look.py`, done): cream collar / cuffs / zip, belt with gold buckle, chunky red sneakers with white
   soles (the FBX "Eyes" material below knee height is the shoes). `PLAYER_COLOURS` now #2c5fb8 sweater, #a98655 trousers, #4a2a18 hair.
   The cast.py player entry (portrait only) still has the old colours.
+- **Hands (s75):** per-character `hand` scale in `char_build.B` is now 1.10-1.18 (player 1.12); hand faces (vertices weighted >= 50 % to Palm/MiddleHand/Fingers/Thumb bones)
+  are flat-shaded with edge crease 1.0 so the 1-level subdivision leaves them faceted (thumb / fingers read), and get their own `SkinHand` material
+  (skin x 0.96/0.86/0.80, `char72.HAND_TINT`) so they no longer quantize to the pale cuff / collar cream. Player cuffs are navy `#22407f` (were cream).
+  Debug env: `TL_HAND` (scale), `TL_HANDMODE=soft` (old smooth hands), `TL_HANDTINT`, `TL_CUFF`. All actor sheets re-rendered.
 - Proposal scripts: `tools/proposals/s54/`.
 
 ### The player's room above the Corner Market (s55 variant B2, approved; built s57)

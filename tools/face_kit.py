@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import face_cfg  # noqa: E402
 
 HEAD_K = 1.28
-HAND_K = 1.38
+HAND_K = 1.12
 SHOULDER_K = 1.14        # player only (V2)
 
 EXPR_NEUTRAL = dict(brow_dy=0.0, brow_tilt=0, mouth_curve=0.0, mouth_open=0.0, lid=0.0, lid_tilt=0, squint=0.0, blush=0.35, teeth=False)
