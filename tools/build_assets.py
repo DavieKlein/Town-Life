@@ -116,7 +116,7 @@ def _blur3(a):
     return t[:, :-2] * k[0] + t[:, 1:-1] * k[1] + t[:, 2:] * k[2]
 
 
-def sharpen(img, amount=0.9):
+def sharpen(img, amount=0.55):
     """Alpha-aware unsharp mask on the RGB channels (3x3 binomial blur; transparent pixels do not leak in).
     Applied to the downscaled render, before grading and quantization (sharp style C)."""
     a = np.asarray(img).astype(np.float64)
@@ -129,15 +129,15 @@ def sharpen(img, amount=0.9):
 
 
 def grade(img):
-    """Colour grade before quantization: more contrast and saturation (sharp style C: 1.3 / 1.22) and cool, slightly
+    """Colour grade before quantization: more contrast and saturation (v1-soft: 1.15 / 1.08) and cool, slightly
     purple shadows, for the moodier look of classic pre-rendered city games."""
     a = np.asarray(img).astype(np.float64) / 255.0
     rgb = a[..., :3]
     luma = (rgb * [0.299, 0.587, 0.114]).sum(2, keepdims=True)
-    rgb = luma + (rgb - luma) * 1.3                                    # saturation
-    rgb = np.clip(0.5 + (rgb - 0.5) * 1.22, 0, 1)                      # contrast
+    rgb = luma + (rgb - luma) * 1.15                                   # saturation
+    rgb = np.clip(0.5 + (rgb - 0.5) * 1.08, 0, 1)                      # contrast
     shadow = np.clip(1.0 - luma / 0.45, 0, 1)                          # 1 in deep shadow
-    rgb = rgb * (1 - 0.18 * shadow) + shadow * 0.18 * rgb * np.array([0.82, 0.8, 1.15])
+    rgb = rgb * (1 - 0.12 * shadow) + shadow * 0.12 * rgb * np.array([0.85, 0.83, 1.1])
     a[..., :3] = np.clip(rgb, 0, 1)
     return Image.fromarray(np.clip(a * 255 + 0.5, 0, 255).astype(np.uint8), "RGBA")
 

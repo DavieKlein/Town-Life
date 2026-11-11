@@ -617,18 +617,52 @@ MATERIALS = {
 # ---------------------------------------------------------------------------------------------
 # Geometry
 # ---------------------------------------------------------------------------------------------
+SOFT_SEGS = 32          # v1-soft style: cylinders / spheres use 32 segments
+
+
+def box_bevel(p):
+    """Bevel radius (m) of a box: explicit p["bevel"], else automatic for furniture-sized boxes (v1-soft style).
+    Ground slabs, thin sheets and big wall pieces stay sharp."""
+    if p.get("bevel"):
+        return p["bevel"]
+    dx = abs(p["x1"] - p["x0"]) * CELL_M
+    dy = abs(p["y1"] - p["y0"]) * CELL_M
+    dz = abs(p["z1"] - p["z0"])
+    mn, mx = min(dx, dy, dz), max(dx, dy)
+    if p["z0"] < -0.01 or mn < 0.06 or mx > 4.0 or dz > 2.6:
+        return 0.0
+    return min(0.07, 0.3 * mn)
+
+
+def _copy_into(bm, tmp, smooth=False):
+    nv = {v: bm.verts.new(v.co) for v in tmp.verts}
+    for f in tmp.faces:
+        nf = bm.faces.new([nv[v] for v in f.verts])
+        if smooth:
+            nf.smooth = True
+    tmp.free()
+
+
 def add_box(bm, p):
     x0, x1 = sorted((p["x0"] * CELL_M, p["x1"] * CELL_M))
     y0, y1 = sorted((-p["y0"] * CELL_M, -p["y1"] * CELL_M))
     z0, z1 = p["z0"], p["z1"]
-    vs = [bm.verts.new(v) for v in ((x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),
-                                    (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1))]
-    for f in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
-        bm.faces.new([vs[i] for i in f])
-    if p.get("bevel"):  # s57-materials
-        bmesh.ops.bevel(bm, geom=list(set(vs[i].link_edges[j] for i in range(8) for j in range(3))), offset=p["bevel"], segments=3, affect="EDGES")  # s57-materials
-        for f in bm.faces:  # s57-materials
-            f.smooth = True  # s57-materials
+    corners = ((x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),
+               (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1))
+    faces = ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7))
+    b = box_bevel(p)
+    if not b:
+        vs = [bm.verts.new(v) for v in corners]
+        for f in faces:
+            bm.faces.new([vs[i] for i in f])
+        return
+    # bevel in its own tiny bmesh (bmesh.ops.bevel in the big shared bmesh is very slow), then copy the result over
+    tmp = bmesh.new()
+    tv = [tmp.verts.new(v) for v in corners]
+    for f in faces:
+        tmp.faces.new([tv[i] for i in f])
+    bmesh.ops.bevel(tmp, geom=list(tmp.edges), offset=b, segments=3, affect="EDGES")
+    _copy_into(bm, tmp, True)
 
 
 def add_wedge(bm, p):
@@ -649,31 +683,36 @@ def add_wedge(bm, p):
 
 def add_cyl(bm, p):
     axis = p.get("axis", "z")
+    tmp = bmesh.new()
     if axis != "z":
         from mathutils import Matrix
         depth = p["z1"] - p["z0"]
-        res = bmesh.ops.create_cone(bm, cap_ends=True, segments=p.get("verts", 24), radius1=p["r"],
+        res = bmesh.ops.create_cone(tmp, cap_ends=True, segments=max(p.get("verts", 24), SOFT_SEGS), radius1=p["r"],
                                     radius2=p.get("r2", p["r"]), depth=depth)
         rot = Matrix.Rotation(math.radians(90), 4, "X" if axis == "y" else "Y")
-        bmesh.ops.transform(bm, matrix=rot, verts=res["verts"])
+        bmesh.ops.transform(tmp, matrix=rot, verts=res["verts"])
         x, y, _ = bl(p["x"], p["y"])
-        bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, p["z0"])))
+        bmesh.ops.translate(tmp, verts=res["verts"], vec=Vector((x, y, p["z0"])))
+        _copy_into(bm, tmp)
         return
     r = p["r"]
-    res = bmesh.ops.create_cone(bm, cap_ends=True, segments=p.get("verts", 16), radius1=r, radius2=p.get("r2", r),
+    res = bmesh.ops.create_cone(tmp, cap_ends=True, segments=max(p.get("verts", 16), SOFT_SEGS), radius1=r, radius2=p.get("r2", r),
                                 depth=p["z1"] - p["z0"])
     x, y, _ = bl(p["x"], p["y"])
-    bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, (p["z0"] + p["z1"]) / 2)))
+    bmesh.ops.translate(tmp, verts=res["verts"], vec=Vector((x, y, (p["z0"] + p["z1"]) / 2)))
+    _copy_into(bm, tmp)
 
 
 def add_sphere(bm, p):
-    res = bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=10, radius=p["r"])
+    tmp = bmesh.new()
+    res = bmesh.ops.create_uvsphere(tmp, u_segments=SOFT_SEGS, v_segments=20, radius=p["r"])
     for v in res["verts"]:
         v.co.z *= p.get("sz", 1.0)
         v.co.x *= p.get("sx", 1.0)  # s57-materials
         v.co.y *= p.get("sy", 1.0)  # s57-materials
     x, y, _ = bl(p["x"], p["y"])
-    bmesh.ops.translate(bm, verts=res["verts"], vec=Vector((x, y, p["z"])))
+    bmesh.ops.translate(tmp, verts=res["verts"], vec=Vector((x, y, p["z"])))
+    _copy_into(bm, tmp)
 
 
 def add_poly(bm, p):
@@ -900,6 +939,23 @@ def add_prop(p, layer_visible):
                          @ Matrix.Scale(p["scale"], 4) @ Matrix.Translation((-cx, -cy, -mn.z)))
 
 
+def soften_object(ob, me):
+    """v1-soft: smooth shading with weighted normals (hard edges stay sharp above 36 degrees)."""
+    if len(me.polygons) > 20000:
+        return
+    for poly in me.polygons:
+        poly.use_smooth = True
+    try:
+        me.use_auto_smooth = True
+        me.auto_smooth_angle = math.radians(36)
+    except Exception:
+        pass
+    md = ob.modifiers.new("wn", "WEIGHTED_NORMAL")
+    md.mode = "FACE_AREA"
+    md.keep_sharp = True
+    md.weight = 50
+
+
 def build(scene_obj, layer_visible):
     mats = {}
 
@@ -949,6 +1005,7 @@ def build(scene_obj, layer_visible):
                 poly.use_smooth = True
         me.materials.append(mat(mname))
         ob = bpy.data.objects.new(me.name, me)
+        soften_object(ob, me)
         if thin_g:
             ob["tl_thin"] = True
         bpy.context.scene.collection.objects.link(ob)
@@ -1156,17 +1213,17 @@ def stylize(layer_visible):
         if ls.linestyle is None:
             ls.linestyle = bpy.data.linestyles.new(f"tl_lines{i}")
         style = ls.linestyle
-        if not sharp:
-            style.color = (0.07, 0.05, 0.09)
-            style.thickness = 1.6
-            style.alpha = 0.85
+        if not sharp:                           # v1-soft: thin, light outlines (renders are 2x: thickness 2 = 1 px)
+            style.color = (0.16, 0.12, 0.16)
+            style.thickness = 1.1
+            style.alpha = 0.55
         elif i == 0:
-            style.color = (0.03, 0.02, 0.05)
-            style.thickness = 2.5               # 1.25 px in the final image (renders are 2x)
-            style.alpha = 1.0
+            style.color = (0.11, 0.08, 0.12)
+            style.thickness = 1.7
+            style.alpha = 0.85
         else:
-            style.thickness = 1.0
-            style.alpha = 1.0
+            style.thickness = 0.8
+            style.alpha = 0.8
             mod = style.color_modifiers.new("mat", "MATERIAL")
             mod.material_attribute = "DIFF"
 

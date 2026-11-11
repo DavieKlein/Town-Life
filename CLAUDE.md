@@ -486,11 +486,15 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
     `produce_display`, `a_frame_sign`, `street_tree`.
   - Keep door cells and the paths around interactables walkable: `set_solid` rounds to whole
     cells.
-  **Style pass** (`stylize()` in blender_render.py, always on) = **sharp style "variant C" (owner-approved, s49/s50)**:
-  Cycles 192 samples, pixel filter 0.5 (`RENDER_SAMPLES` in build_assets.py), then an unsharp mask (`sharpen()`, before
-  quantization) and `grade()` (saturation 1.3, contrast 1.22, cool shadows). `stylize()` adds Freestyle outlines: on the
-  **objects layer** crisp, opaque, near-black 1.25 px lines (silhouette + border + crease); the **floor layer** keeps the old
-  soft 0.8 px outline (alpha 0.85). **Outline rules for thin parts:** a thick black line swallows rods and legs (the library
+  **Style pass** (`stylize()` in blender_render.py, always on) = **"V1 Soft" (owner-approved s71, applied to ALL maps s72; replaces sharp variant C)**:
+  Cycles 192 samples, pixel filter 0.5 (`RENDER_SAMPLES`), softer sun (outdoor 9 deg, indoor fill 32 deg), boxes that are furniture-sized
+  (`box_bevel()`: z0 >= 0, smallest side >= 0.06 m, longest <= 4 m, height <= 2.6 m) get a 3-segment bevel (radius min(0.07, 0.3 x smallest)), cylinders
+  and spheres have 32 segments (`SOFT_SEGS`), and every generated mesh gets smooth shading + a Weighted Normal modifier (`soften_object()`).
+  **Speed:** bmesh ops (bevel, cone, uvsphere) must run in a tiny temporary bmesh and be copied over (`_copy_into`); inside the big shared bmesh
+  they are quadratic (scene build 8+ min instead of 5 s). Then `sharpen()` amount 0.55 and `grade()` (saturation 1.15, contrast 1.08, light cool
+  shadows), both before quantization. Freestyle outlines are thin and light: objects layer 1.7 px-units (0.85 px final) alpha 0.85 near-black, thin
+  lineset 0.8 / 0.8 in the material's darkened colour, floor layer 1.1 / alpha 0.55. (The 31x21 "worst window" printed by build_assets is
+  conservative: the engine shows 31x18 = 558 cells, below the 624-slot cache.) **Outline rules for thin parts:** a thick black line swallows rods and legs (the library
   chairs and tables turned black in the first test). `build()` therefore splits primitives per material into thin and normal
   mesh objects (`prim_thin`: box/cyl with the two smaller dimensions < 0.12 m or the smallest < 0.045 m, thin tubes/spheres,
   text) and imported props whose name contains Chair / Table / Stool / Light_ (`THIN_PROPS`). Thin objects go into a second
@@ -499,7 +503,7 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   from separate thin primitives (or add the prop name to `THIN_PROPS`). Check new furniture with
   `python3 tools/proposals/s50/crop_check.py OUTDIR name:scene:x0,y0,x1,y1 ...` (renders crops with the real renderer and
   runs the real quantizer; 4x zoom PNGs). Actors (player, NPCs, animals) keep their own outline style.
-  (`grade()` / `sharpen()` in build_assets.py run before quantization.)
+
   Quick look at a small area: `blender -b --python tools/blender_render.py -- <scene> <layer>
   <out.png> 2 32 "x0,y0,x1,y1"` (crop in image pixels). Tall buildings are simply cut off at the image
   top (the camera never shows more than `origin_y` px above the back corner), like the classic games.
