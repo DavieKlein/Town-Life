@@ -162,7 +162,7 @@ namespace tl
             else
             {
                 _odd_mask |= bit_flyers_taken;
-                _show_info("Flyers", "Take a stack. Walk to", "the bus stop, the fountain", "and the park.");
+                _show_info("Flyers", "Take a stack. Walk to", "the bus stop, fountain", "and the park.");
                 _sync_objective();
             }
         }

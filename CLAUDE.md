@@ -843,6 +843,15 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
   also faces the object (not for benches / seats / beds, which set their own pose).
 - `tools/make_save.py --odd day,mask` for odd-job tests. Mock-up for need-effect icons in menus (proposal only, not built): see the session scratchpad `icons/`.
 
+## s73 playtest (headless, details: docs/playtest_s73.md)
+
+- The prologue plays from New Game to mission X1 and all systems were exercised headlessly; fixes: flyers info line cut off, an open menu is now
+  closed when a conversation starts (no message can freeze the world over a menu). The Hunger-40 freeze could not be reproduced on this build.
+- **Playtest tools:** `tools/playtest_driver.py` (scripted play: `goto X Y`, `state`, savestates, shots; needs a ROM built with
+  `-DTL_DEBUG_POS`, which makes `field::update` write a state dump found by the magic "TLDB"), `tools/make_save.py --bag`. Build recipe for
+  fast story runs: `-DTL_DEBUG_AUTO_TALK -DTL_DEBUG_BOT=1 -DTL_DEBUG_POS` (dialogue + minigames by themselves). **Never combine
+  `-DTL_DEBUG_CPU` with story runs that reach a minigame** (black screen); use a separate build for `stats`.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

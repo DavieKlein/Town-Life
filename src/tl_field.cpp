@@ -20,6 +20,19 @@
 
 namespace tl
 {
+#ifdef TL_DEBUG_POS
+    struct dbg_state_t
+    {
+        char magic[4];
+        int x, y, map, day, minutes, money, mission, menu, conv, act, script, state, frame;
+        unsigned char flags[64];
+        int needs[5];
+        int friends[8];
+    };
+
+    volatile dbg_state_t dbg_state;
+#endif
+
     namespace
     {
         constexpr int fade_frames = 12;
@@ -2021,6 +2034,12 @@ namespace tl
 
             if(_conversation.active())
             {
+                // s73: a pop-up message must never sit on top of an open menu (the menu would be frozen under it)
+                if(_menu.is_open())
+                {
+                    _menu.close();
+                }
+
                 // the world stands still (also the clock) while somebody talks
                 _cue.reset();
                 _update_camera();
@@ -2309,5 +2328,40 @@ namespace tl
         default:
             break;
         }
+
+#ifdef TL_DEBUG_POS
+        // s73 headless tests: a state dump that tools/drv.py finds in a savestate by its magic
+        {
+            dbg_state.magic[0] = 'T'; dbg_state.magic[1] = 'L'; dbg_state.magic[2] = 'D'; dbg_state.magic[3] = 'B';
+            dbg_state.x = _player.x();
+            dbg_state.y = _player.y();
+            dbg_state.map = int(_map_id);
+            dbg_state.day = _day;
+            dbg_state.minutes = _minutes;
+            dbg_state.money = _money;
+            dbg_state.mission = story().mission();
+            dbg_state.menu = _menu.is_open() ? 1 : 0;
+            dbg_state.conv = _conversation.active() ? 1 : 0;
+            dbg_state.act = _act.active ? 1 : 0;
+            dbg_state.script = _script.active ? 1 : 0;
+            dbg_state.state = int(_state);
+            dbg_state.frame = dbg_state.frame + 1;
+
+            for(int i = 0; i < 64; ++i)
+            {
+                dbg_state.flags[i] = (unsigned char)story().flag(i);
+            }
+
+            for(int i = 0; i < 5; ++i)
+            {
+                dbg_state.needs[i] = _needs.values[i].round_integer();
+            }
+
+            for(int i = 0; i < 8; ++i)
+            {
+                dbg_state.friends[i] = story().friendship(i);
+            }
+        }
+#endif
     }
 }

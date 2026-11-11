@@ -90,6 +90,9 @@ def make(path, a):
     s.msg_read = a.msg_read
     s.delivery_item = a.delivery_item
     s.delivery_due = a.delivery_due
+    if a.bag:                                           # deposit bag: cans,bottles[,credit]; no loose pickups in the district
+        bag = [int(v) for v in a.bag.split(",")] + [0, 0, 0]
+        s.deposit_init, s.deposit_cans, s.deposit_bottles, s.deposit_credit = 1, bag[0], bag[1], bag[2]
     s.spare[0], s.spare[1] = a.odd       # odd jobs: day (mod 256) and done/taken bit mask
     raw = bytes(s)
     x, y = 1, 0
@@ -130,6 +133,7 @@ if __name__ == "__main__":
     p.add_argument("--msg-read", type=lambda v: int(v, 0), default=0)
     p.add_argument("--delivery-item", type=int, default=-1)
     p.add_argument("--delivery-due", type=int, default=0)
+    p.add_argument("--bag", default="", help="deposit bag cans,bottles[,credit] (also clears the loose pickups)")
     p.add_argument("--odd", default="0,0", help="odd jobs day,mask (bits 1 flyers done, 2 books done, 4 crates done, 8 crates taken, 16 flyers taken)")
     a = p.parse_args()
     a.odd = [int(v) for v in a.odd.split(",")]
