@@ -808,7 +808,7 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
   average CPU 33-42 % -> 20-34 %, missed frames per ~500 walking frames 4-10 -> 0-3 (boot / map load still misses ~6, pause open ~6, collection open ~11, once).
 - **Player:** acceleration 0.38 (was 0.25) with a first-frame kick (45 % of target speed), braking 0.45; a changed d-pad direction must hold 2 frames
   (1 from standstill) so two keys pressed/released a frame apart no longer flicker through an in-between facing; (old stride notes superseded by "Smooth motion" below).
-- **Camera:** smooth lead (`field::_update_camera`): an eased offset (`_lead_x/_y`, 7 % per frame, 9 px per px/frame of speed, max 22 x 12 px) added to the
+- **Camera:** OFF since s74 (owner: the moving camera was distracting; `camera_lead = false` in `field::_update_camera`, camera stays centred). Was: smooth lead (`field::_update_camera`): an eased offset (`_lead_x/_y`, 7 % per frame, 9 px per px/frame of speed, max 22 x 12 px) added to the
   player's rounded position, so player and BG stay in whole-pixel lockstep (no wobble); instant snap (lead 0) on map load, off while a script pans.
 - **NPC walk cycles:** `tools/blender_cast.py` renders the Walk action (12 frames, see "Smooth motion") for humans (the robot stays idle-only); `build_cast` writes
   13 frames per facing (idle + 12 walk; `frames_per_facing` in tl_npcs.cpp); `tl_npcs` plays them by distance walked (wander and cutscene

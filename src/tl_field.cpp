@@ -241,7 +241,10 @@ namespace tl
         bn::fixed want_lead_x = 0;
         bn::fixed want_lead_y = 0;
 
-        if(_pan_mode == 0)
+        // Owner (s74): the moving camera lead was distracting, so it is off; the camera stays centred on the player.
+        constexpr bool camera_lead = false;
+
+        if(camera_lead && _pan_mode == 0)
         {
             want_lead_x = clamp_fixed(_player.screen_vx() * 9, -22, 22);
             want_lead_y = clamp_fixed(_player.screen_vy() * 9, -12, 12);
