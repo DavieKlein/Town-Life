@@ -67,6 +67,61 @@ namespace tl
         // New game: the screen stays black until the first cutscene fades in.
         void begin_black();
 
+        // ---- black box / bug reporter (tl_blackbox.h)
+        // Free-walking state with nothing open: a snapshot taken now restores faithfully.
+        [[nodiscard]] bool blackbox_calm() const
+        {
+            return _state == state::playing && _pause_mode == pause_mode::none && ! _menu.is_open() && ! _conversation.active() &&
+                   ! _script.active && ! _act.active && ! _phone_open && ! _minigame_pending && ! _accident_pending;
+        }
+
+        // The report panel needs a lot of sprites: close the pause screen / an open interaction menu first (the player reopens them).
+        void blackbox_make_room()
+        {
+            if(_pause_mode != pause_mode::none)
+            {
+                _close_pause();
+            }
+            else if(_menu.is_open())
+            {
+                _menu.close();
+            }
+        }
+
+        // Cheap live values for the black box (map index, feet position, day, minutes, money, 1 = free play state).
+        void blackbox_live(uint32_t out[7]) const
+        {
+            out[0] = uint32_t(_map - &get_map(map_id(0)));
+            out[1] = uint32_t(_player.x());
+            out[2] = uint32_t(_player.y());
+            out[3] = uint32_t(_day);
+            out[4] = uint32_t(_minutes);
+            out[5] = uint32_t(_money);
+            out[6] = _state == state::playing ? 1 : 0;
+        }
+
+        void rng_state(uint32_t out[3]) const
+        {
+            static_assert(sizeof(bn::random) == 12, "bn::random layout");
+            __builtin_memcpy(static_cast<void*>(out), static_cast<const void*>(&_rng), 12);
+        }
+
+        void set_rng_state(const uint32_t in[3])
+        {
+            __builtin_memcpy(static_cast<void*>(&_rng), static_cast<const void*>(in), 12);
+        }
+
+        // Replay mode: skip the fade-in after Continue so the first frame is already playable.
+        void skip_fade_in()
+        {
+            if(_state == state::fading_in)
+            {
+                _fade_counter = 0;
+                _set_fade(0);
+                _state = state::playing;
+            }
+        }
+
     private:
         enum class state
         {

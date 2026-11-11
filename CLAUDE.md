@@ -647,6 +647,7 @@ Commands: `wait N`, `hold KEYS N` (e.g. `right+b`), `press KEYS`, `shot FILE`. L
   objective line, Resume / Mission log / Collection / Save game / Quit to title. B or START resumes. "SICK" and "Owe $N" show there.
 - **SELECT (while walking): the phone** (s64): Contacts / Messages / Order food, B or SELECT closes. (`TL_DEBUG_TELEPORT` builds use SELECT
   for teleporting instead: never test the phone with them.)
+- **L + R together (anywhere after the game started): "Report a bug"** (black box, see below). Disabled in `TL_DEBUG_TELEPORT` builds.
 
 ---
 
@@ -863,6 +864,23 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
 - Run speed 2.95 px/frame. NPCs behind a counter are drawn in two parts (`npcs::_set_priority`: full sprite priority 3 + upper 32x32 half
   priority 2, `player_hidden(..., ignore_taller)`). Script op `pan_now` + `field::_early_pan()` put the briefing camera on the cast before the fade-in.
 - Tree candidates on paths (park (21.0, 41.0), (4.0, 45.5)): docs/playtest_s73.md, scene.py not changed yet (needs a City Centre re-render).
+
+## Bug reporter and black box (s75, docs/bug_reports.md)
+
+- `src/tl_blackbox.cpp` / `include/tl_blackbox.h`: a `bn::core` update callback (installed in `main()` right after `core::init`) records the keypad of every
+  frame (RLE, 2048-entry ring in EWRAM), takes a full `save_data` snapshot + the field's `bn::random` state every 15 s (two slots, up to 10 s patience for a
+  calm moment) and opens the **"Report a bug"** panel on L+R (runs its own frames from inside the callback, so it works in menus, dialogue, cutscenes and
+  minigames; not in title / intro / name entry). No room (minigame, busy dialogue: panel needs ~380 tiles / 34 sprites) -> filed as "Other" plus a one-line
+  note; the pause screen / shop menu is closed first (`field::blackbox_make_room`).
+- Reports (4, ring) live in SRAM from offset 4096 (save stays at 0, `static_assert(sizeof(save_data) <= 4096)`): header "TLBR" + slots "TLBX" (category,
+  flags, map/pos/time, build string, snapshot, input log <= 4 KB). Save version unchanged. A replay request (flag + rng) in the header makes the next
+  Continue restore the rng and skip the fade-in (`blackbox::take_replay`).
+- `python3 tools/bug_report.py list|dump|replay GAME.srm ... --rom town-life.gba --out DIR` lists reports and replays one in the mGBA core (inputs fed in
+  step with the game's frame counter, found in the emulator state by the magic "TLBB"), writing PNGs, `replay.gif` and `summary.txt` with a final-state
+  comparison. How the owner sends the `.srm` (and Dutch instructions): docs/bug_reports.md.
+- **Gotcha found while building it:** `bn::optional<tl::field>` in `main()` was ~14 KB on the 32 KB IWRAM stack; any extra static data made the title hang.
+  It is now `BN_DATA_EWRAM_BSS static` in EWRAM. Keep big objects off the stack. Also: `save_data` has default member initialisers, so statics holding it
+  need raw storage (`raw<T>` in tl_blackbox.cpp) to stay out of static constructors.
 
 ## Roadmap / status
 

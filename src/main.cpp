@@ -11,6 +11,7 @@
 #include "tl_story.h"
 #include "tl_name_entry.h"
 #include "tl_minigame.h"
+#include "tl_blackbox.h"
 
 #ifdef TL_DEBUG_CPU
 #include "bn_core.h"
@@ -19,9 +20,54 @@
 #include "tl_ui.h"
 #endif
 
+namespace
+{
+    // Black box hooks (tl_blackbox.h): the field lives in main(), so these reach it through a pointer.
+    bn::optional<tl::field>* bb_field = nullptr;
+
+    bool bb_snapshot(tl::save_data& out, uint32_t rng[3])
+    {
+        if(bb_field && *bb_field)
+        {
+            (*bb_field)->snapshot(out);
+            (*bb_field)->rng_state(rng);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool bb_live(uint32_t out[7])
+    {
+        if(bb_field && *bb_field)
+        {
+            (*bb_field)->blackbox_live(out);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool bb_calm()
+    {
+        return bb_field && *bb_field && (*bb_field)->blackbox_calm();
+    }
+
+    void bb_make_room()
+    {
+        if(bb_field && *bb_field)
+        {
+            (*bb_field)->blackbox_make_room();
+        }
+    }
+
+    constexpr tl::blackbox::source bb_source = { bb_snapshot, bb_live, bb_calm, bb_make_room };
+}
+
 int main()
 {
     bn::core::init();
+    tl::blackbox::init();
 
 #ifdef TL_DEBUG_MINIGAME
     // Debug build only: starts a minigame straight away (1 = STOCK IT!, 2 = PLATE RUSH) with a bot (TL_DEBUG_BOT) for headless tests.
@@ -32,6 +78,7 @@ int main()
 #ifdef TL_DEBUG_BOT
         request.bot = TL_DEBUG_BOT;
 #endif
+        tl::blackbox::start(nullptr);       // reporter test without a field
         tl::run_minigame(request);
 
         while(true)
@@ -44,7 +91,8 @@ int main()
     // Title screen first; "Quit to title" in the pause menu soft-resets back to here.
     bool continue_game = tl::run_title();
     bn::core::update();     // lets Butano release the title screen's VRAM
-    bn::optional<tl::field> field;
+    BN_DATA_EWRAM_BSS static bn::optional<tl::field> field;     // in EWRAM: a field is ~14 KB and the IWRAM stack is small
+    bb_field = &field;
 
     if(continue_game)
     {
@@ -54,6 +102,15 @@ int main()
         {
             tl::story().apply_save(save);
             field.emplace(save);
+
+            // tools/bug_report.py replays: same random state as at the snapshot, and no fade-in (the log starts at the first frame)
+            uint32_t rng[3];
+
+            if(tl::blackbox::take_replay(rng))
+            {
+                field->set_rng_state(rng);
+                field->skip_fade_in();
+            }
         }
     }
 
@@ -88,6 +145,8 @@ int main()
         field->begin_black();
     }
 
+    tl::blackbox::start(&bb_source);
+
 #ifdef TL_DEBUG_CPU
     // Debug build only: stats readable by tools/headless_run.py (command `stats`), found in EWRAM by the magic number.
     static volatile unsigned dbg_stats[8 + 256] __attribute__((section(".ewram"))) = { 0x544C4350, 0, 0, 0, 0, 0, 0, 0 };   // [6] = peak used sprite tiles, [7] = lowest available; [8..] = 1024 byte ring of per-frame cpu %
@@ -109,12 +168,15 @@ int main()
             tl::minigame_request request = field->minigame();
             tl::save_data snapshot;
             field->snapshot(snapshot);
+            tl::blackbox::note_scene(1);
             field.reset();
             bn::core::update();
             tl::minigame_result result = tl::run_minigame(request);
             tl::apply_minigame_result(snapshot, request, result);
             bn::core::update();
             field.emplace(snapshot);
+            tl::blackbox::note_scene(2);
+            tl::blackbox::force_snapshot();
         }
 
         bn::core::update();

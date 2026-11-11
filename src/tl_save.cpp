@@ -44,12 +44,17 @@ namespace tl
         return true;
     }
 
-    void save_write(save_data& data)
+    void save_finalize(save_data& data)
     {
         data.magic = save_data::magic_value;
         data.version = save_data::save_version;
         data.size = sizeof(save_data);
         data.checksum = checksum_of(data);
+    }
+
+    void save_write(save_data& data)
+    {
+        save_finalize(data);
         bn::sram::write(data);
     }
 }

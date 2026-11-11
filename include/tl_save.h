@@ -103,6 +103,12 @@ namespace tl
     // True if SRAM holds a valid save (magic, version, size, checksum and ranges all fine); fills `out`.
     [[nodiscard]] bool save_read(save_data& out);
 
+    // Fills magic, version, size and checksum (what save_write does before writing).
+    void save_finalize(save_data& data);
+
+    // The bug reports (tl_blackbox) live in SRAM from offset 4096 on: the save must never grow past that.
+    static_assert(sizeof(save_data) <= 4096, "save_data would overlap the bug report region in SRAM (tl_blackbox.h)");
+
     // Writes the save (fills magic, version, size and checksum).
     void save_write(save_data& data);
 }
