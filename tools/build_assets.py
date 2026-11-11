@@ -128,16 +128,20 @@ def sharpen(img, amount=0.55):
     return Image.fromarray(a.astype(np.uint8), "RGBA")
 
 
+BANK_SMOOTH, BANK_SMOOTH_BASE = 0.6, 20.0      # see convert_layer
+GRADE_SAT, GRADE_CON, GRADE_SHADOW = 1.28, 1.20, 0.15
+
+
 def grade(img):
-    """Colour grade before quantization: more contrast and saturation (v1-soft: 1.15 / 1.08) and cool, slightly
+    """Colour grade before quantization: more contrast and saturation (v1-soft grade s73: 1.28 / 1.20; was 1.15 / 1.08) and cool, slightly
     purple shadows, for the moodier look of classic pre-rendered city games."""
     a = np.asarray(img).astype(np.float64) / 255.0
     rgb = a[..., :3]
     luma = (rgb * [0.299, 0.587, 0.114]).sum(2, keepdims=True)
-    rgb = luma + (rgb - luma) * 1.15                                   # saturation
-    rgb = np.clip(0.5 + (rgb - 0.5) * 1.08, 0, 1)                      # contrast
+    rgb = luma + (rgb - luma) * GRADE_SAT                                   # saturation
+    rgb = np.clip(0.5 + (rgb - 0.5) * GRADE_CON, 0, 1)                      # contrast
     shadow = np.clip(1.0 - luma / 0.45, 0, 1)                          # 1 in deep shadow
-    rgb = rgb * (1 - 0.12 * shadow) + shadow * 0.12 * rgb * np.array([0.85, 0.83, 1.1])
+    rgb = rgb * (1 - GRADE_SHADOW * shadow) + shadow * GRADE_SHADOW * rgb * np.array([0.85, 0.83, 1.1])
     a[..., :3] = np.clip(rgb, 0, 1)
     return Image.fromarray(np.clip(a * 255 + 0.5, 0, 255).astype(np.uint8), "RGBA")
 
@@ -392,6 +396,31 @@ def convert_layer(img, banks, transparent, cls_img=None, layer="floor"):
         if (new_assign == assign).all() and it > 0:
             break
         assign = new_assign
+
+    # s73: bank smoothing. Neighbouring tiles of one flat surface (a bench plank, a wall) often have nearly equal error in two
+    # banks and flip between them tile by tile, which shows as a patchwork of slightly different tones. A tile now only
+    # leaves the bank of its neighbours when that costs clearly more (checkerboard sweeps, parity keeps it stable).
+    if BANK_SMOOTH > 0 and banks > 1 and len(used) > 1:
+        grid = np.full(th * tw, -1, dtype=np.int64)
+        grid[used] = assign
+        pos = np.full(th * tw, -1, dtype=np.int64)
+        pos[used] = np.arange(len(used))
+        ty_, tx_ = used // tw, used % tw
+        floor_cost = np.where(allowed, errs, np.inf).min(1) + 64 * BANK_SMOOTH_BASE
+        for sweep in range(6):
+            for parity in (0, 1):
+                sel = np.where((ty_ + tx_) % 2 == parity)[0]
+                diff = np.zeros((len(sel), banks))
+                for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+                    ny, nx = ty_[sel] + dy, tx_[sel] + dx
+                    ok = (ny >= 0) & (ny < th) & (nx >= 0) & (nx < tw)
+                    nb = np.where(ok, grid[np.clip(ny, 0, th - 1) * tw + np.clip(nx, 0, tw - 1)], -1)
+                    for b in range(banks):
+                        diff[:, b] += (ok & (nb >= 0) & (nb != b))
+                cost = errs[sel] + BANK_SMOOTH * diff * floor_cost[sel, None]
+                cost[~allowed[sel]] = np.inf
+                grid[used[sel]] = cost.argmin(1)
+        assign = grid[used]
 
     # final indices
     tile_bank = np.zeros(th * tw, dtype=np.int32)

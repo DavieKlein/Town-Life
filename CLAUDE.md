@@ -491,8 +491,11 @@ Code conventions: namespace `tl`, files prefixed `tl_`, Butano style (snake_case
   (`box_bevel()`: z0 >= 0, smallest side >= 0.06 m, longest <= 4 m, height <= 2.6 m) get a 3-segment bevel (radius min(0.07, 0.3 x smallest)), cylinders
   and spheres have 32 segments (`SOFT_SEGS`), and every generated mesh gets smooth shading + a Weighted Normal modifier (`soften_object()`).
   **Speed:** bmesh ops (bevel, cone, uvsphere) must run in a tiny temporary bmesh and be copied over (`_copy_into`); inside the big shared bmesh
-  they are quadratic (scene build 8+ min instead of 5 s). Then `sharpen()` amount 0.55 and `grade()` (saturation 1.15, contrast 1.08, light cool
-  shadows), both before quantization. Freestyle outlines are thin and light: objects layer 1.7 px-units (0.85 px final) alpha 0.85 near-black, thin
+  they are quadratic (scene build 8+ min instead of 5 s). Then `sharpen()` amount 0.55 and `grade()` (**s73: saturation 1.28, contrast 1.20, shadow tint 0.15**; was 1.15 / 1.08 / 0.12 and looked washed out; module constants
+  `GRADE_SAT/CON/SHADOW` in build_assets.py), both before quantization. **Bench blotches (s73):** the `wood` / `fence_wood` / `cardboard` materials were cloud noise whose
+  tiny colour variation quantized into orange diamond blotches; they are flat colours now, and `soften_object` smooths only non-axis-aligned faces (bevel strips, round parts), big planar faces stay flat. **The real cause of the diamond patchwork** was the per-tile bank choice in `convert_layer`: neighbouring tiles of one flat surface flipped between
+  banks with slightly different oranges. A bank-smoothing pass (`BANK_SMOOTH` 0.6: a tile only leaves its neighbours' bank if that is clearly worse; checkerboard sweeps) fixed it
+  (+1 % unique tiles; the 31x21 'worst window' print is still 651 for the city, the engine shows 31x18 = 558 cells). Note: a full `build_assets.py` run ends with a Blender crash in `build_cast` in this container (maps are written before that). Freestyle outlines are thin and light: objects layer 1.7 px-units (0.85 px final) alpha 0.85 near-black, thin
   lineset 0.8 / 0.8 in the material's darkened colour, floor layer 1.1 / alpha 0.55. (The 31x21 "worst window" printed by build_assets is
   conservative: the engine shows 31x18 = 558 cells, below the 624-slot cache.) **Outline rules for thin parts:** a thick black line swallows rods and legs (the library
   chairs and tables turned black in the first test). `build()` therefore splits primitives per material into thin and normal

@@ -386,7 +386,7 @@ MATERIALS = {
     "chalkboard": dict(c="#26302c", rough=0.9),
     "chalk": dict(c="#e8e8e0"),
     "red_paint": dict(c="#c02828", rough=0.4),
-    "wood": dict(kind="noise", c="#a8703c", c2="#946030", scale=6),
+    "wood": dict(c="#a06c3a", rough=0.7),   # flat: a cloud-noise grain banded into orange diamonds after quantization
     "wood_dark": dict(c="#5c3a20"),
     "wood_green": dict(c="#2c6a44", rough=0.45),
     "wood_blue": dict(c="#2e4e8a", rough=0.45),
@@ -435,7 +435,7 @@ MATERIALS = {
     "orange_paint": dict(c="#f07a1a", rough=0.5),
     "metal_grey": dict(c="#8a8c94", rough=0.4, metal=0.5),
     "bin_green": dict(c="#2e5a3a", rough=0.5),
-    "fence_wood": dict(kind="noise", c="#8a6a48", c2="#6e543a", scale=12),
+    "fence_wood": dict(c="#7c5e40", rough=0.8),
     "chain_link": dict(kind="checker", c="#5a5c64", c2="#3a3c44", scale=40.0, rough=0.5),
     "poster_red": dict(kind="noise", c="#c83838", c2="#f0d8a0", scale=9),
     "poster_yellow": dict(kind="noise", c="#e8c040", c2="#3a4a8a", scale=7),
@@ -519,7 +519,7 @@ MATERIALS = {
     "rug_green": dict(c="#4e8a5a", rough=0.95),
     "rug_gold": dict(c="#d8a84a", rough=0.95),
     "rug_teal": dict(c="#4a9a96", rough=0.95),
-    "cardboard": dict(kind="noise", c="#bc8e5c", c2="#a87c4c", scale=14),
+    "cardboard": dict(c="#b28452", rough=0.9),
     "cardboard_dark": dict(c="#8e6a42"),
     "window_sky": dict(c="#d4ecff", emit=1.4, emit_c="#d8eeff"),
     "clock_face": dict(c="#f6f2e2", rough=0.4),
@@ -944,7 +944,10 @@ def soften_object(ob, me):
     if len(me.polygons) > 20000:
         return
     for poly in me.polygons:
-        poly.use_smooth = True
+        # s73: big planar faces (axis-aligned normal) stay flat; only bevel strips / round parts are smooth. Smooth normals
+        # over a plank top gave a soft gradient that quantized into diamond blotches.
+        n = poly.normal
+        poly.use_smooth = max(abs(n.x), abs(n.y), abs(n.z)) < 0.9995
     try:
         me.use_auto_smooth = True
         me.auto_smooth_angle = math.radians(36)
