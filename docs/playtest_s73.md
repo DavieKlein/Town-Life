@@ -88,3 +88,35 @@ by doing what it says; all mission objectives are <= 48 chars (script-checked), 
 8. Pause menu: Save game, quit to title, Continue. Sleep in the room only on Day 1 (the room is closed after the firing).
 9. Look for: freezes (note what menu/dialogue was open and the in-game time), text that is cut off, objectives that cannot be completed,
    anything that hides the player wrongly (depth), slow-downs.
+
+## Phone test round 1 (owner, Lemuroid) - fixes
+
+1. **Crash opening the Mission log** ("Sprite tiles allocate failed. Tiles count: 8"). Cause: `field::_open_log` closed the pause panel and opened
+   the log in the same frame; Butano releases sprite tiles only at the next `core::update`, so the old pause panel (~500 tiles) and the new log
+   (~400) coexisted on top of the field's own tiles (up to ~280 at night with pigeons, light pools and pickups). Reproduced headless with a save at the
+   fountain square at 22:00 with a bag (`make_save.py ... city_centre 52 40 --minutes 1320 --bag 5,3`, pause -> Mission log). Fix: a
+   `bn::core::update()` between closing one pause-family screen and opening the next (log, collection, dialogs, back to the pause screen), see
+   `tl_field_pause.cpp`. Measured with the new `-DTL_DEBUG_CPU` tile readout (`stats` prints "sprite tiles peak used / lowest free"): pause screen
+   peaks at ~780 of 1024 tiles in the worst case (242 free), log / collection / phone / dialogue with portrait (506) stay below that.
+   The log itself already shows only 4 finished-mission rows (scroll, max 24 entries), so no paging was needed.
+2. **Run speed** 2.25 -> 2.95 px/frame (`run_speed`, tl_player.cpp). `run_step[]` is the stride length per animation frame (a property of the
+   Run cycle, 2.8 m / 12), so planted feet stay planted and the cadence scales with the speed (vertical runs now ~4 cycles/s). Walk unchanged.
+3. **NPCs behind counters** (Lou, Mia at the checkout). The objects layer has a single priority; the occluder rule "something taller than the
+   sprite overlaps -> stay in front" (the room's back wall) always won for NPCs, so they were drawn completely in front of the counter. Now
+   `map_info::player_hidden(..., ignore_taller)` is used for NPCs and when an NPC stands behind a low occluder but a taller one overlaps, the NPC is
+   drawn in two parts (`npcs::_set_priority`): the full sprite at priority 3 (legs hidden by the counter) plus a 32x32 upper half (own 16 tiles,
+   copied from the ROM frame) at priority 2. Proof 3x: `.../phonefix/lou3.png` (before), `lou3c.png`, `mia1-3x.png` (after); VaultMart Dex
+   (`dex1-3x.png`) and the diner waitress Mia are in front of the furniture and unchanged.
+4. **"Half of Mia and Rosa at the loading screen"**: the briefing starts with a camera pan to the checkout, but scripts only start after the
+   fade-in, so the fade showed the cast cut off at the left screen edge. New script op `pan_now x y` (camera jumps) and
+   `field::_early_pan()` (first fade-in frame: if a trigger's script reaches `pan_now` before its first wait/dialogue, the camera is already
+   there). Used by `briefing`. Proof: `esheet.png` (12 fade-in frames).
+5. **Tree on the path** (no re-render done, scene.py unchanged). Candidates (3x screenshots in `.../phonefix/`):
+   - A `treeA-3x.png`: park tree at (21.0, 41.0) stands ON the east end of the dirt path (y 40..42, x 12..22), trunk and solid block the
+     path. Proposed: move it to (21.0, 43.6) or drop it (`for (x, y, sc) in (...)` in `city_centre`, park block).
+   - B `treeB-3x.png` / `treeB2-3x.png`: park tree (4.0, 45.5, scale 1.05) with the conifer (1.8, 46.4), tree (7.5, 46.0) and planter (6.0, 43.5) crowd
+     the path in front of the toilet door: the canopy covers the area left/below the door and hides the player on the grass around (6, 44).
+     Proposed: remove (4.0, 45.5) (the conifer and the (7.5, 46.0) tree keep the park dense).
+   - C `treeC-3x.png`: street tree (34.7, 20.8) at the avenue corner next to the hydrant: on the sidewalk in a grate, canopy over the zebra
+     end, acceptable; no change proposed.
+   Any of these means a City Centre re-render (~45 min), to be batched with the next map change.

@@ -210,6 +210,56 @@ namespace tl
         }
     }
 
+    // s73 (phone test: "at the loading screen you see half of Mia and Rosa"): a scene that starts with a camera jump (`pan_now`) only
+    // began after the fade-in, so the fade showed the cast cut off at the screen edge. Called on the first fade-in frame: if a trigger
+    // will start a script that jumps the camera before its first wait / dialogue, the camera is already there.
+    void field::_early_pan()
+    {
+        const cs_trigger* triggers = cutscene_triggers();
+        const cs_cond* conds = cutscene_conds();
+
+        for(int index = 0; index < cutscene_triggers_count(); ++index)
+        {
+            bool ok = true;
+
+            for(int k = 0; k < triggers[index].cond_count && ok; ++k)
+            {
+                ok = _cond_ok(conds[triggers[index].first_cond + k]);
+            }
+
+            if(! ok)
+            {
+                continue;
+            }
+
+            const cs_script& script = cutscene_scripts()[triggers[index].script];
+
+            for(int pc = script.first; pc < script.first + script.count; ++pc)
+            {
+                const cs_step& step = cutscene_steps()[pc];
+
+                if(step.op == cs_op::pan_now)
+                {
+                    _pan_mode = 1;
+                    _pan_x = step.a;
+                    _pan_y = step.b;
+                    _focus_x = _map->to_image_x(_pan_x, _pan_y);
+                    _focus_y = _map->to_image_y(_pan_x, _pan_y) - 22;
+                    _update_camera();
+                    return;
+                }
+
+                if(step.op == cs_op::wait || step.op == cs_op::say || step.op == cs_op::info || step.op == cs_op::warp ||
+                   step.op == cs_op::fade_out || step.op == cs_op::black)
+                {
+                    return;
+                }
+            }
+
+            return;
+        }
+    }
+
     // ---------------------------------------------------------------------------------------------------- running a script
     void field::_start_script(int id)
     {
@@ -682,6 +732,14 @@ namespace tl
             _pan_mode = 1;
             _pan_x = step.a;
             _pan_y = step.b;
+            break;
+
+        case cs_op::pan_now:
+            _pan_mode = 1;
+            _pan_x = step.a;
+            _pan_y = step.b;
+            _focus_x = _map->to_image_x(_pan_x, _pan_y);
+            _focus_y = _map->to_image_y(_pan_x, _pan_y) - 22;
             break;
 
         case cs_op::pan_player:

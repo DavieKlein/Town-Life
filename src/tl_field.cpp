@@ -2013,6 +2013,11 @@ namespace tl
         {
 
         case state::fading_in:
+            if(_fade_counter == fade_frames && ! _script.active && _pause_mode == pause_mode::none)
+            {
+                _early_pan();
+            }
+
             --_fade_counter;
             _set_fade(_fade_counter);
 

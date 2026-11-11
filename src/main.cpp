@@ -90,7 +90,7 @@ int main()
 
 #ifdef TL_DEBUG_CPU
     // Debug build only: stats readable by tools/headless_run.py (command `stats`), found in EWRAM by the magic number.
-    static volatile unsigned dbg_stats[8 + 256] __attribute__((section(".ewram"))) = { 0x544C4350, 0, 0, 0, 0, 0, 0, 0 };   // [6] = history index; [8..] = 1024 byte ring of per-frame cpu %
+    static volatile unsigned dbg_stats[8 + 256] __attribute__((section(".ewram"))) = { 0x544C4350, 0, 0, 0, 0, 0, 0, 0 };   // [6] = peak used sprite tiles, [7] = lowest available; [8..] = 1024 byte ring of per-frame cpu %
     // Debug build only: worst CPU usage (percent) and missed frames of the last second, top left.
     tl::ui::label cpu_label;
     int worst = 0;
@@ -128,6 +128,12 @@ int main()
         dbg_stats[3] = usage > int(dbg_stats[3]) ? usage : dbg_stats[3];   // peak cpu %
         dbg_stats[4] = dbg_stats[4] + usage;                    // sum of cpu %
         dbg_stats[5] = usage > 85 ? dbg_stats[5] + 1 : dbg_stats[5];
+        {
+            unsigned used = bn::sprite_tiles::used_tiles_count();
+            unsigned avail = bn::sprite_tiles::available_tiles_count();
+            dbg_stats[6] = used > dbg_stats[6] ? used : dbg_stats[6];                      // peak used sprite tiles
+            dbg_stats[7] = dbg_stats[7] == 0 || avail < dbg_stats[7] ? avail : dbg_stats[7];   // lowest available sprite tiles
+        }
 
         if(++frame % 30 == 0)
         {

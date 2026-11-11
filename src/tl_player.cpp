@@ -38,7 +38,7 @@ namespace tl
         constexpr int feet_offset_y = 54 - 32;  // feet relative to the sprite centre
 
         constexpr bn::fixed walk_speed = 1.25;  // screen pixels per frame
-        constexpr bn::fixed run_speed = 2.25;
+        constexpr bn::fixed run_speed = 2.95;   // s73 phone test: was 2.25, felt too slow
         constexpr bn::fixed acceleration = 0.38; // fraction of the speed difference applied per frame
         constexpr bn::fixed deceleration = 0.45;
         constexpr bn::fixed start_kick = 0.45;   // fraction of the target speed reached in the first frame from standstill
@@ -49,7 +49,7 @@ namespace tl
         // for the street diagonals sw/nw/ne/se, 30.16 px/m for w/e. So the screen pixels per animation frame differ per facing.
         // Index = facing (s, sw, w, nw, n, ne, e, se). Multiply every entry to tune sliding vs. cadence.
         constexpr bn::fixed walk_step[8] = { 1.71, 2.71, 3.42, 2.71, 1.71, 2.71, 3.42, 2.71 };   // px per frame, 1.36 m / 12
-        constexpr bn::fixed run_step[8] = { 3.52, 5.57, 7.04, 5.57, 3.52, 5.57, 7.04, 5.57 };    // px per frame, 2.8 m / 12
+        constexpr bn::fixed run_step[8] = { 3.52, 5.57, 7.04, 5.57, 3.52, 5.57, 7.04, 5.57 };    // px per animation frame, 2.8 m / 12: a function of the stride, not of the speed, so planted feet stay planted when run_speed changes (cadence scales)
 
         // player_rest.bmp: 64x64, frames 0-3 sitting (facing down-left), 4 sleeping on the side; the
         // seat point is at (32, 44). player_wash.bmp: 64x64, 8 facings x 4 frames, feet at (32, 54).

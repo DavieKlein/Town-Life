@@ -3,6 +3,7 @@
 
 #include "bn_vector.h"
 #include "bn_fixed.h"
+#include "bn_optional.h"
 #include "bn_sprite_ptr.h"
 
 #include "tl_world.h"
@@ -93,6 +94,7 @@ namespace tl
         struct npc
         {
             bn::sprite_ptr sprite;
+            bn::optional<bn::sprite_ptr> upper;     // s73: head and torso (top 32 rows) at priority 2 while `sprite` (priority 3) stands behind a counter
             npc_id who;
             int x;
             int y;
@@ -126,6 +128,8 @@ namespace tl
         [[nodiscard]] int _index_of(npc_id who) const;
         void _add_actor(npc_id who, int x, int y, int facing);
         void _set_frame(npc& n);
+        void _set_priority(npc& n);
+        void _make_upper(npc& n);
         void _walked(npc& n, bn::fixed distance);
         void _stopped(npc& n);
         void _build(int day, int minutes);

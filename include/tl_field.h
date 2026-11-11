@@ -345,6 +345,7 @@ namespace tl
 
         [[nodiscard]] bool _cond_ok(const cs_cond& cond) const;
         void _check_triggers();
+        void _early_pan();
         void _start_script(int id);
         void _end_script();
         void _update_script();

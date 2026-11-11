@@ -34,6 +34,17 @@ namespace tl
         _version_label.clear();
         _version_frames = 0;
 
+        if(_pause_mode != pause_mode::none)
+        {
+            // Coming back from the log / collection / a dialog: let Butano release their sprite tiles first (s73: opening the log
+            // while the old pause panel was still being freed needed ~1200 tiles and crashed with "no more available VRAM").
+            _log.close();
+            _collection.close();
+            _dialog.close();
+            _pause.close();
+            bn::core::update();
+        }
+
         pause_info info;
         info.day = _day;
         info.minutes = _minutes;
@@ -76,6 +87,7 @@ namespace tl
         }
 
         _pause.close();
+        bn::core::update();         // sprite tiles of the pause panel are only released at the next frame
         ui::set_night(is_night(_minutes));
         _log.open(info);
         _pause_mode = pause_mode::log;
@@ -101,6 +113,8 @@ namespace tl
         static constexpr bn::string_view ok[] = { "OK" };
 
         _pause.close();
+        _dialog.close();
+        bn::core::update();
 
         switch(which)
         {
@@ -152,6 +166,7 @@ namespace tl
                 else if(choice == pause_screen::collection)
                 {
                     _pause.close();
+                    bn::core::update();
                     ui::set_night(is_night(_minutes));
                     _collection.open(_collect.mask, _collect.paid);
                     _pause_mode = pause_mode::collection;

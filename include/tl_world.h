@@ -262,7 +262,7 @@ namespace tl
         // The whole layer shares one priority, so when the player stands behind a small object but in
         // front of a large one that also overlaps the sprite (e.g. a bollard in front of a tower), the
         // large one wins and the player stays in front: otherwise the player would vanish.
-        [[nodiscard]] constexpr bool player_hidden(int x, int y, int half_width, int sprite_height) const
+        [[nodiscard]] constexpr bool player_hidden(int x, int y, int half_width, int sprite_height, bool ignore_taller = false) const
         {
             int image_x = to_image_x(x, y);
             int image_y = to_image_y(x, y);
@@ -280,7 +280,7 @@ namespace tl
                     {
                         behind = true;
                     }
-                    else if(o.sy0 < image_y - sprite_height)
+                    else if(! ignore_taller && o.sy0 < image_y - sprite_height)
                     {
                         return false;   // in front of something taller than the player
                     }

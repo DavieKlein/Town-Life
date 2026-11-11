@@ -855,6 +855,15 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
   fast story runs: `-DTL_DEBUG_AUTO_TALK -DTL_DEBUG_BOT=1 -DTL_DEBUG_POS` (dialogue + minigames by themselves). **Never combine
   `-DTL_DEBUG_CPU` with story runs that reach a minigame** (black screen); use a separate build for `stats`.
 
+## Phone test round 1 fixes (s73)
+
+- Pause-family screens (pause, log, collection, dialogs) must not overlap: Butano frees sprite tiles at the next `core::update`, so
+  `tl_field_pause.cpp` calls `bn::core::update()` between closing one and opening the next (the log crashed with "no more available VRAM"
+  otherwise). Debug `stats` (`-DTL_DEBUG_CPU`) now also prints peak used / lowest free sprite tiles (check new screens with it; the pause screen peaks ~780/1024).
+- Run speed 2.95 px/frame. NPCs behind a counter are drawn in two parts (`npcs::_set_priority`: full sprite priority 3 + upper 32x32 half
+  priority 2, `player_hidden(..., ignore_taller)`). Script op `pan_now` + `field::_early_pan()` put the briefing camera on the cast before the fade-in.
+- Tree candidates on paths (park (21.0, 41.0), (4.0, 45.5)): docs/playtest_s73.md, scene.py not changed yet (needs a City Centre re-render).
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

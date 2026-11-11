@@ -24,7 +24,7 @@ namespace tl
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // wake_up
         { cs_op::flag, story_flag::left_room, 1, 0, 0, 0, nullptr },  // briefing
         { cs_op::spawn, int(npc_id::dex), 154, 182, 1, 0, nullptr },  // briefing
-        { cs_op::pan, 202, 234, 0, 0, 0, nullptr },  // briefing
+        { cs_op::pan_now, 202, 234, 0, 0, 0, nullptr },  // briefing
         { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // briefing
         { cs_op::say, dlg::pro_briefing, 0, 0, 0, 0, nullptr },  // briefing
         { cs_op::pan_player, 0, 0, 0, 0, 0, nullptr },  // briefing

@@ -5,6 +5,9 @@
 
 #include "bn_math.h"
 #include "bn_sprite_palette_ptr.h"
+#include "bn_sprite_builder.h"
+#include "bn_sprite_tiles_ptr.h"
+#include "bn_sprite_tiles_item.h"
 #include "bn_sprite_items_npc_mia.h"
 #include "bn_sprite_items_npc_rosa.h"
 #include "bn_sprite_items_npc_dex.h"
@@ -102,10 +105,10 @@ namespace tl
             }
 
             bn::sprite_ptr sprite = item->create_sprite(0, 0, p.facing * frames_per_facing(p.who));
-            sprite.set_bg_priority(_map->player_hidden(p.x, p.y, 12, 56) ? 3 : 2);
-            _npcs.push_back(npc{ bn::move(sprite), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
+            _npcs.push_back(npc{ bn::move(sprite), bn::optional<bn::sprite_ptr>(), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
                                  120 + int(index * 37 % 90), false });
             _blockers[_npcs.size() - 1] = { p.x, p.y };
+            _set_priority(_npcs.back());
         }
 
         _apply_palettes();
@@ -173,7 +176,13 @@ namespace tl
         {
             int screen_x = _map->to_image_x(n.x, n.y) - cam_x - 120;
             int screen_y = _map->to_image_y(n.x, n.y) - cam_y - 80;
-            n.sprite.set_position(screen_x, screen_y - feet_offset_y - (frames_per_facing(n.who) == 1 ? (n.bob / 6) % 2 : 0));
+            int sprite_y = screen_y - feet_offset_y - (frames_per_facing(n.who) == 1 ? (n.bob / 6) % 2 : 0);
+            n.sprite.set_position(screen_x, sprite_y);
+
+            if(n.upper)
+            {
+                n.upper->set_position(screen_x, sprite_y - 16);
+            }
         }
     }
 
@@ -235,6 +244,58 @@ namespace tl
     {
         int per = frames_per_facing(n.who);
         n.sprite.set_tiles(item_of(n.who)->tiles_item(), (n.facing * per) + (per > 1 ? n.frame : 0));
+
+        if(n.upper)
+        {
+            _make_upper(n);
+        }
+    }
+
+    // s73: the objects layer has ONE priority, so an NPC behind a counter used to be hidden completely (the back wall behind the
+    // counter is taller than the NPC) or drawn in front of it entirely. When an NPC stands behind a low occluder but a taller one
+    // overlaps his sprite, the legs (full sprite, priority 3) stay behind the counter and the top half (priority 2) is drawn over it.
+    void npcs::_set_priority(npc& n)
+    {
+        bool behind = _map->player_hidden(n.x, n.y, 12, 56);
+        bool split = ! behind && _map->player_hidden(n.x, n.y, 12, 56, true);
+        n.sprite.set_bg_priority(behind || split ? 3 : 2);
+
+        if(split)
+        {
+            if(! n.upper)
+            {
+                _make_upper(n);
+                _apply_palettes();
+            }
+        }
+        else
+        {
+            n.upper.reset();
+        }
+    }
+
+    void npcs::_make_upper(npc& n)
+    {
+        const bn::sprite_item* item = item_of(n.who);
+        int per = frames_per_facing(n.who);
+        int graphic = (n.facing * per) + (per > 1 ? n.frame : 0);
+        bn::span<const bn::tile> frame = item->tiles_item().graphics_tiles_ref(graphic);
+        // allocated (not created from ROM data): the ROM frame is already registered as a 32-tile graphic
+        bn::sprite_tiles_ptr tiles = n.upper ? n.upper->tiles() : bn::sprite_tiles_ptr::allocate(16, bn::bpp_mode::BPP_4);
+        bn::span<bn::tile> vram = *tiles.vram();
+
+        for(int index = 0; index < 16; ++index)
+        {
+            vram[index] = frame[index];
+        }
+
+        if(! n.upper)
+        {
+            bn::sprite_builder builder(bn::sprite_shape_size(bn::sprite_shape::SQUARE, bn::sprite_size::BIG), bn::move(tiles), n.sprite.palette());
+            builder.set_bg_priority(2);
+            builder.set_position(n.sprite.position().x(), n.sprite.position().y() - 16);
+            n.upper = builder.release_build();
+        }
     }
 
     void npcs::_walked(npc& n, bn::fixed distance)
@@ -369,7 +430,7 @@ namespace tl
             ++n.bob;
             _walked(n, step);
             _blockers[index] = { n.x, n.y };
-            n.sprite.set_bg_priority(_map->player_hidden(n.x, n.y, 12, 56) ? 3 : 2);
+            _set_priority(n);
             moved = true;
         }
 
@@ -425,9 +486,9 @@ namespace tl
         }
 
         bn::sprite_ptr sprite = item->create_sprite(0, 0, facing * frames_per_facing(who));
-        sprite.set_bg_priority(_map->player_hidden(x, y, 12, 56) ? 3 : 2);
-        _npcs.push_back(npc{ bn::move(sprite), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y), -1, 0, 0, false });
+        _npcs.push_back(npc{ bn::move(sprite), bn::optional<bn::sprite_ptr>(), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y), -1, 0, 0, false });
         _blockers[_npcs.size() - 1] = { x, y };
+        _set_priority(_npcs.back());
         _apply_palettes();
         update(_last_cam_x, _last_cam_y);
     }
@@ -571,7 +632,7 @@ namespace tl
             }
 
             _blockers[index] = { n.x, n.y };
-            n.sprite.set_bg_priority(_map->player_hidden(n.x, n.y, 12, 56) ? 3 : 2);
+            _set_priority(n);
         }
 
         update(_last_cam_x, _last_cam_y);

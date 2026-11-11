@@ -42,6 +42,7 @@ FORMAT of cutscenes_src.txt (one statement per line, '#' starts a comment, inden
     minigame stock|dishes      ends the script and starts a minigame (the field is rebuilt afterwards, see main.cpp)
     letterbox on|off           cinema bars (top / bottom 16 px)
     pan <x> <y> / pan_player   camera looks at a point / back to the player
+    pan_now <x> <y>            like pan, but the camera jumps there at once (no half-visible actors at the screen edge while it scrolls)
     time <h> <m>               set the clock (same day);  next_day <h> <m> = next day at that time
     needs <hunger> <energy> <hygiene> <fun> <bladder>     add to the needs (deltas)
     eat <hunger> <energy> <fun>        eating animation, needs fill gradually (staff bread, free)
@@ -76,7 +77,7 @@ OPS = {
     "flag": "Fn?", "mission": "M", "done": "M", "money": "n", "money_rank": "", "objective": "s", "objective_clear": "",
     "minigame": "k", "letterbox": "b", "pan": "cc", "pan_player": "", "time": "nn", "next_day": "nn", "needs": "nnnnn",
     "eat": "nnn", "lie_bed": "", "get_up": "", "hook": "h", "vaultmart_swap": "", "jump": "L", "ifflag": "FnL", "end": "",
-    "label": "L", "car_spawn": "ccf", "car_move": "ccnn", "car_remove": "", "clinic_care": "n",
+    "label": "L", "car_spawn": "ccf", "car_move": "ccnn", "car_remove": "", "clinic_care": "n", "pan_now": "cc",
 }
 COND_KINDS = ["map", "flag", "noflag", "flag_ge", "day_eq", "day_ge", "time_ge", "time_lt", "mission"]
 
