@@ -1,4 +1,4 @@
-"""Top-down layout plan of the proposed Old Block map (60 x 48 cells) -> PNG.   python3 plan.py OUT.png"""
+"""Top-down layout plan of the proposed Old Block map (80 x 64 cells) -> PNG.   python3 plan.py OUT.png"""
 import os
 import sys
 from PIL import Image, ImageDraw, ImageFont
@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oldblock as ob   # noqa: E402  (imports the real scene helpers only; no Blender needed)
 import data             # noqa: E402
 
-K = 15                       # px per cell
+K = 12                       # px per cell
 OX, OY = 40, 56
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 F9, F14 = (ImageFont.truetype(FONT, n) for n in (9, 15))
@@ -14,7 +14,7 @@ COL = {"r": (112, 108, 100), "b": (214, 150, 96), "o": (118, 170, 98), "w": (110
 OVR = {"hoard": (60, 74, 104), "barrier": (240, 130, 30), "trench": (80, 56, 36), "arch": (150, 96, 70), "thicket": (40, 100, 56),
        "backroom": (200, 190, 160), "court": (180, 96, 70), "garden": (96, 150, 80), "site": (96, 106, 126), "fence": (150, 150, 160),
        "avenue": (96, 98, 106), "street": (132, 124, 112), "h1": (206, 122, 90), "laundry": (224, 170, 90), "bakery": (222, 140, 130),
-       "h4": (120, 150, 200), "yard": (196, 172, 120), "stall": (230, 160, 70), "chess": (170, 160, 140)}
+       "h4": (120, 150, 200), "h5": (110, 170, 160), "alley": (150, 130, 100), "square": (196, 190, 170), "lane": (126, 118, 108), "pond": (70, 130, 150), "cottages": (230, 200, 150), "orchard": (110, 160, 80), "meadow": (136, 180, 110), "yard": (196, 172, 120), "stall": (230, 160, 70), "chess": (170, 160, 140)}
 
 
 def P(x, y):
@@ -39,13 +39,16 @@ def main(out):
     for (a, b, c, e) in ob.LANE_CELLS:
         d.rectangle([P(a, b), P(c, e)], fill=(236, 214, 120), outline=(120, 90, 20))
     d.rectangle([P(10.2, 14.5), P(10.8, 25.5)], fill=(255, 140, 20))
-    lab = {"avenue": (1.0, 21.0), "hoard": (3, 14.0), "street": (22.0, 21.5), "h1": (16.7, 12.0), "laundry": (21.6, 13.5),
-           "yard": (29.7, 7.0), "bakery": (35.2, 13.5), "h4": (41.7, 13.5), "garden": (17.4, 31.5), "chess": (29.7, 27.0),
-           "court": (36.5, 31.0), "site": (51.0, 24.0), "stall": (45.6, 20.7), "backroom": (29.7, 10.3), "thicket": (11.0, 29.0)}
-    names = {"avenue": "AVENUE STUB\n(cold: cable works)", "hoard": "HOARDING", "street": "COBBLE STREET (warm)", "h1": "VALDEZ\nhouse + balcony",
-             "laundry": "INES'\nLAUNDROMAT", "yard": "YARD", "bakery": "BELLINI\nBAKERY", "h4": "ROW\nHOUSE 4", "garden": "COMMUNITY\nGARDEN",
-             "chess": "CHESS", "court": "COURT", "site": "DEMOLITION SITE\n+ Co-op Hall", "stall": "STALL", "backroom": "BACK\nROOM",
-             "thicket": "THICKET"}
+    lab = {"avenue": (1.0, 21.0), "hoard": (3, 14.0), "street": (30.0, 21.0), "h1": (16.7, 12.0), "laundry": (26.0, 13.5), "alley": (21.3, 6.5),
+           "yard": (34.2, 6.5), "bakery": (40.7, 13.5), "square": (47.2, 12.2), "h4": (53.1, 13.5), "h5": (61.1, 13.5),
+           "garden": (17.4, 31.5), "chess": (29.7, 27.0), "pond": (38.0, 31.0), "court": (58.0, 31.0), "stall": (59.6, 20.6),
+           "backroom": (34.5, 10.0), "thicket": (11.0, 29.0), "lane": (50.2, 45.0), "cottages": (38.5, 55.0), "orchard": (57.0, 52.0),
+           "meadow": (24.0, 45.0), "site": (69.5, 24.0)}
+    names = {"avenue": "AVENUE STUB\n(cold: cable works)", "hoard": "HOARDING", "street": "COBBLE STREET (warm)", "h1": "VALDEZ\nhouse", "laundry": "INES'\nLAUNDROMAT",
+             "alley": "ALLEY\nTeo's den", "yard": "YARD", "bakery": "BELLINI\nBAKERY", "square": "SQUARE", "h4": "HOUSE 4", "h5": "HOUSE 5",
+             "garden": "COMMUNITY\nGARDEN", "chess": "CHESS", "pond": "POND PARK", "court": "COURT", "stall": "STALL", "backroom": "BACK\nROOM",
+             "thicket": "THICKET", "lane": "BAKER'S\nLANE", "cottages": "COTTAGES\n(spaced out,\nwith yards)", "orchard": "ORCHARD +\nALLOTMENTS",
+             "meadow": "MEADOW, trees,\nfootpaths", "site": "DEMOLITION SITE\n+ Co-op Hall"}
     for k, pos in lab.items():
         d.multiline_text(P(*pos), names[k], font=F9, fill=(255, 255, 255), spacing=1)
     d.text((P(14.0, 17.3)[0] - 10, P(14.0, 17.3)[1]), "ARCH", font=F9, fill=(255, 240, 200))
@@ -66,7 +69,7 @@ def main(out):
         d.rectangle([px - 12, py - 6, px + 12, py + 6], fill=(40, 40, 70), outline=(255, 255, 255))
         d.text((px - 11, py - 6), m, font=F9, fill=(255, 255, 255))
     lx, ly = OX + W * K + 14, OY
-    d.text((lx, ly), "OLD BLOCK  60 x 48 cells", font=F14, fill=(255, 255, 255))
+    d.text((lx, ly), "OLD BLOCK  80 x 64 cells", font=F14, fill=(255, 255, 255))
     ly += 24
     d.text((lx, ly), "plan: x -> east, y v south\n(game camera: x goes down-right)", font=F9, fill=(200, 200, 210))
     ly += 36

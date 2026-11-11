@@ -21,7 +21,7 @@ from scene import (Scene, CELL_M, window_left, window_right, door_left, flat_roo
                    trash_can, hydrant, cone, potted_plant, flower_box, shrub, flower_bed, hedge, a_frame_sign, conifer,
                    bench_along_x, fence_wood, chain_link, poster, weeds, ivy, vault_v_logo, FLOWERS, planter)
 
-W, H = 60, 48
+W, H = 80, 64
 M = 1 / CELL_M
 
 # ---- shared layout (cells). plan.py draws these boxes with labels. kind: 'b' building, 'o' open area, 'w' works/cold, 'r' road ----
@@ -36,19 +36,27 @@ LAYOUT = [
     ("trench", "TRENCH", 11.3, 18.5, 13.3, 25.5, "w"),
     ("arch", "ARCH", 14.5, 18.5, 15.7, 25.5, "b"),
     ("thicket", "BUSH THICKET (sneak lane)", 10.8, 27.5, 18.2, 34.5, "o"),
-    ("street", "COBBLE STREET", 15.7, 19.5, 50.0, 24.5, "r"),
+    ("street", "COBBLE STREET", 15.7, 19.5, 68.0, 24.5, "r"),
+    ("lane", "BAKER'S LANE (N-S)", 50.0, 24.5, 55.0, 62.0, "r"),
     ("h1", "Valdez house", 16.5, 9.0, 21.0, 18.0, "b"),
-    ("laundry", "INES' LAUNDROMAT", 21.0, 10.0, 29.5, 18.0, "b"),
-    ("yard", "back lot + back room", 29.5, 6.0, 35.0, 18.0, "o"),
-    ("backroom", "BACK ROOM (future home)", 29.5, 9.0, 32.6, 14.5, "b"),
-    ("bakery", "BELLINI BAKERY (+ Okafor's flat)", 35.0, 10.0, 41.5, 18.0, "b"),
-    ("h4", "Row house 4", 41.5, 10.0, 46.0, 18.0, "b"),
-    ("stall", "ROSA'S STALL", 45.5, 20.5, 49.5, 24.0, "o"),
+    ("alley", "alley + Teo's den", 21.0, 6.0, 25.5, 18.0, "o"),
+    ("laundry", "INES' LAUNDROMAT", 25.5, 10.0, 34.0, 18.0, "b"),
+    ("yard", "yard + back room", 34.0, 6.0, 40.5, 18.0, "o"),
+    ("backroom", "BACK ROOM (future home)", 34.4, 9.5, 37.4, 14.5, "b"),
+    ("bakery", "BELLINI BAKERY (+ Okafor's flat)", 40.5, 10.0, 47.0, 18.0, "b"),
+    ("square", "FOUNTAIN SQUARE (market)", 47.0, 12.0, 53.0, 18.0, "o"),
+    ("h4", "Row house 4", 53.0, 10.0, 57.5, 18.0, "b"),
+    ("h5", "House 5", 61.0, 10.0, 65.5, 18.0, "b"),
+    ("stall", "ROSA'S STALL", 59.5, 20.5, 65.0, 24.0, "o"),
     ("garden", "COMMUNITY GARDEN", 17.0, 27.0, 29.0, 40.0, "o"),
-    ("chess", "CHESS PLAZA", 29.5, 26.5, 34.0, 32.0, "o"),
-    ("court", "COURT", 34.5, 28.0, 48.5, 38.5, "o"),
-    ("fence", "SITE FENCE", 50.0, 4.0, 50.6, 34.0, "w"),
-    ("site", "DEMOLITION SITE + Co-op Hall", 50.6, 4.0, 60.0, 34.0, "w"),
+    ("chess", "CHESS PLAZA", 29.5, 26.5, 35.0, 32.0, "o"),
+    ("pond", "POND PARK", 36.0, 28.0, 47.0, 37.0, "o"),
+    ("cottages", "COTTAGES (west of lane)", 38.0, 40.0, 49.3, 62.0, "b"),
+    ("court", "COURT", 56.0, 28.5, 67.0, 37.5, "o"),
+    ("orchard", "ORCHARD + allotments", 56.0, 40.0, 79.0, 62.0, "o"),
+    ("meadow", "MEADOW + paths", 17.0, 41.0, 37.0, 62.0, "o"),
+    ("fence", "SITE FENCE", 68.0, 4.0, 68.6, 34.0, "w"),
+    ("site", "DEMOLITION SITE + Co-op Hall", 68.6, 4.0, 80.0, 34.0, "w"),
 ]
 
 
@@ -62,7 +70,7 @@ NEW_MATERIALS = {
     "plaster_blue": dict(kind="noise", c="#7f9fc6", c2="#7090b8", scale=6),
     "plaster_terra": dict(kind="noise", c="#c8744c", c2="#b8683f", scale=6),
     "plaster_stain": dict(c="#8c7a60", rough=0.95),
-    "cobble": dict(kind="paving_grit", c="#8c8576", c2="#716b5e", mortar="#3e3a33", bw=0.27, bh=0.2, mortar_size=0.03, crack_scale=0.9),
+    "cobble": dict(kind="paving_grit", c="#8a8374", c2="#7e786b", mortar="#5c574e", bw=0.5, bh=0.4, mortar_size=0.02, crack_scale=0.5),
     "asphalt_patch": dict(kind="asphalt_grit", rough=0.95),
     "vault_hoard": dict(c="#2d3a4e", rough=0.5),
     "vault_cold": dict(kind="noise", c="#8d98a6", c2="#7d8896", scale=9),
@@ -80,7 +88,7 @@ NEW_MATERIALS = {
     "yellow_machine": dict(c="#eab21c", rough=0.45, metal=0.3),
     "rubber_track": dict(c="#202228", rough=0.9),
     "mud": dict(kind="noise", c="#4e3a28", c2="#3e2e20", scale=14),
-    "rubble": dict(kind="noise", c="#9a948a", c2="#7a746a", scale=22),
+    "rubble": dict(kind="noise", c="#9a948a", c2="#8e887e", scale=8),
     "boards": dict(kind="noise", c="#7a6448", c2="#5e4c36", scale=16),
     "bush_dark": dict(kind="noise", c="#24502c", c2="#386a34", scale=5, rough=0.95),
     "sunflower": dict(c="#f2c418", rough=0.6),
@@ -97,6 +105,14 @@ NEW_MATERIALS = {
     "notice_orange": dict(c="#f08a20", rough=0.6),
     "lamp_amber": dict(c="#ffb23a", emit=2.2, emit_c="#ffb23a"),
     "wire_dark": dict(c="#24262c", rough=0.7),
+    "pond_flat": dict(c="#3f7f8c", rough=0.08),
+    # tile-budget materials: low-contrast / large-scale versions so that big areas de-duplicate into few tiles
+    "grass_flat": dict(kind="noise", c="#559f3e", c2="#5aa443", scale=4, rough=0.95),
+    "slab_flat": dict(kind="noise", c="#aaa499", c2="#a39d92", scale=4),
+    "paving_flat": dict(kind="paving_grit", c="#a8604a", c2="#9c5844", mortar="#6a5448", bw=0.5, bh=0.25, mortar_size=0.01, crack_scale=0.3),
+    "brick_flat": dict(c="#86583e", rough=0.85),
+    "mesh_flat": dict(c="#50525a", rough=0.6),
+    "brick_big": dict(kind="brick", c="#8a5a40", c2="#7e5239", mortar="#a89480", bw=0.6, bh=0.3),
 }
 
 
@@ -264,7 +280,7 @@ def crate_stack(s, x, y, n=2, rot=0.0):
 
 def chain_link_y(s, x, y0, y1, h=2.0, solid=True):
     """Chain-link fence along y (N-S) at plane x."""
-    s.box(x - 0.02, y0, x + 0.02, y1, 0.05, h, "chain_link")
+    s.box(x - 0.02, y0, x + 0.02, y1, 0.05, h, "mesh_flat")
     s.box(x - 0.04, y0, x + 0.04, y1, h - 0.04, h, "metal_grey")
     yy = y0
     while yy <= y1 + 0.01:
@@ -677,7 +693,7 @@ def rosas_stall(s, x, y):
 
 def garden(s, x0, y0, x1, y1, rnd):
     """Community garden: low fence, raised beds with crops, shed, rain barrel, compost, scarecrow, bench with a WATER ME sign."""
-    s.box(x0, y0, x1, y1, -0.1, 0.0, "grass", layer="floor")
+    s.box(x0, y0, x1, y1, -0.1, 0.0, "grass_flat", layer="floor")
     # dirt paths
     s.box(x0 + 5.8, y0, x0 + 6.8, y1, 0.0, 0.01, "path_dirt", layer="floor")
     s.box(x0, y0 + 5.0, x1, y0 + 5.8, 0.0, 0.01, "path_dirt", layer="floor")
@@ -809,15 +825,16 @@ def hoop(s, x, y, face):
 
 
 def demolition_site(s, x0, y0, x1, y1, rnd):
+    rnd = R(68)
     """Fenced site: orange mesh fence (x0), notices, Co-op Hall (derelict), yellow digger, NODE 7 hatch, rubble, floodlight."""
     s.box(x0, y0, x1, y1, -0.1, 0.0, "rubble", layer="floor")
-    for k in range(18):
+    for k in range(5):
         sx, sy = rnd.uniform(x0 + 0.5, x1 - 0.5), rnd.uniform(y0 + 14.0, y1 - 0.5)
         s.box(sx, sy, sx + rnd.uniform(0.5, 1.8), sy + rnd.uniform(0.4, 1.2), 0.0, 0.02 + rnd.random() * 0.02, "mud", layer="floor")
     # fence panels (orange net = barrier_stripes would be too loud; use chain_link + orange top rail) and notices
     chain_link_y(s, x0 - 0.1, y0, y1, h=2.1)
     s.box(x0 - 0.14, y0, x0 - 0.06, y1, 2.0, 2.1, "notice_orange")
-    for k, yy in enumerate((14.5, 17.0, 19.2, 26.5, 29.0, 31.5)):                         # VaultTech notices + Teo's counter posters
+    for k, yy in enumerate((16.0, 26.5, 30.0)):                         # VaultTech notices + Teo's counter posters
         m = "notice_orange" if k % 3 != 2 else "poster_green"
         s.box(x0 - 0.16, yy, x0 - 0.1, yy + 0.8, 0.9, 1.7, m)
     s.box(x0 - 0.2, 20.1, x0 - 0.06, 24.0, 0.3, 2.0, "metal_dark") if False else None
@@ -825,14 +842,12 @@ def demolition_site(s, x0, y0, x1, y1, rnd):
     s.box(x0 - 0.12, 19.6, x0 - 0.04, 24.4, 0.1, 2.0, "metal_dark")
     for yy in (19.6, 24.4):
         s.box(x0 - 0.14, yy - 0.06, x0 - 0.02, yy + 0.06, 0, 2.2, "metal_grey")
-    for k in range(7):
-        s.box(x0 - 0.13, 19.8 + 0.65 * k, x0 - 0.05, 19.85 + 0.65 * k, 0.1, 2.0, "metal_grey")
     s.box(x0 - 0.19, 21.1, x0 - 0.1, 22.9, 1.1, 1.8, "notice_orange")
     s.text("NOTICE", x0 - 0.2, 22.0, 1.55, 0.2, "ink_black", face="right", bold=True)
     s.text("demolition: unsigned", x0 - 0.2, 22.0, 1.25, 0.1, "ink_black", face="right")
     # Co-op Hall
     hx0, hy0, hx1, hy1 = x0 + 1.8, 7.0, x1 - 0.4, 16.5
-    s.box(hx0, hy0, hx1, hy1, 0, 5.2, "brick_brown")
+    s.box(hx0, hy0, hx1, hy1, 0, 5.2, "brick_flat")
     s.box(hx0 - 0.1, hy1 - 0.1, hx1 + 0.1, hy1 + 0.1, 4.8, 5.2, "stone")
     s.box(hx0, hy0 - 0.1, hx1, hy1 + 0.1, 5.2, 5.3, "stone")
     s.box(hx0 + 0.4, hy0 + 0.4, hx1 - 0.4, hy1 - 0.4, 5.3, 5.4, "roof")
@@ -840,17 +855,13 @@ def demolition_site(s, x0, y0, x1, y1, rnd):
     dxm = (hx0 + hx1) / 2
     s.box(dxm - 1.0, hy1 - 0.02, dxm + 1.0, hy1 + 0.1, 0, 3.0, "boards")
     s.box(dxm - 1.15, hy1 - 0.02, dxm + 1.15, hy1 + 0.14, 3.0, 3.25, "stone")
-    s.tube([(dxm - 1.0, hy1 + 0.16, 1.2), (dxm, hy1 + 0.2, 1.05), (dxm + 1.0, hy1 + 0.16, 1.2)], 0.03, "metal_dark")
     for wx in (hx0 + 0.7, hx1 - 2.1):
-        window_left(s, wx, wx + 1.2, hy1 - 0.02, 1.2, 3.0)
+        s.box(wx, hy1 - 0.02, wx + 1.2, hy1 + 0.04, 1.2, 3.0, "metal_dark")      # empty window opening behind the boards
         s.box(wx - 0.02, hy1 + 0.0, wx + 1.22, hy1 + 0.08, 1.4, 1.7, "boards")
         s.box(wx - 0.02, hy1 + 0.0, wx + 1.22, hy1 + 0.08, 2.2, 2.5, "boards")
     s.box(hx0 + 0.9, hy1 - 0.03, hx1 - 0.9, hy1 + 0.09, 3.9, 4.6, "sign_cream")
     s.text("OLD BLOCK CO-OPERATIVE", (hx0 + hx1) / 2, hy1 + 0.1, 4.38, 0.26, "ink_black", face="left", bold=True)
     s.text("1931", (hx0 + hx1) / 2, hy1 + 0.1, 4.06, 0.2, "red_paint", face="left", bold=True)
-    ivy(s, hx0 + 0.1, hx0 + 2.2, hy1 + 0.0, 4.2, rnd)
-    for k in range(5):                                                                    # roof gaps / weeds
-        s.sphere(hx0 + 0.8 + k * 1.6, hy0 + 1.5 + (k % 2), 5.5, 0.2, "leaves_light")
     s.set_solid(hx0, hy0, hx1, hy1)
     s.occluder(hx0, hy0, hx1, hy1, 5.6)
     # digger
@@ -870,7 +881,7 @@ def demolition_site(s, x0, y0, x1, y1, rnd):
     s.box(x0 + 2.7, 18.6, x0 + 3.3, 19.0, 4.5, 4.9, "vault_cold")
     s.box(x0 + 2.75, 19.0, x0 + 3.25, 19.04, 4.55, 4.85, "lamp_glass")
     for (xx, yy, r) in ((x0 + 3.5, 29.8, 1.0), (x0 + 6.8, 21.0, 0.8), (x0 + 6.0, 30.5, 0.9), (x0 + 1.5, 31.0, 0.7)):
-        for _ in range(5):
+        for _ in range(3):
             s.sphere(xx + rnd.uniform(-r, r), yy + rnd.uniform(-r, r), 0.1, rnd.uniform(0.25, 0.5) * r, "rubble", sz=0.6)
         s.set_solid(xx - r, yy - r, xx + r, yy + r)
     s.set_solid(x0, y0, x1, y1)           # whole site is out of bounds for now (opened in Chapter 5)
@@ -918,92 +929,128 @@ def hoarding_and_drums(s, rnd):
 
 
 def street_dressing(s, rnd):
-    """Lamps, bins, hydrants, bunting, laundry, benches, pots, bike rack, posters (the 'lived-in' pass)."""
-    for x in (19.0, 33.0, 47.0):
+    """Lamps, bins, hydrant, bunting, washing lines (kept sparse: dense detail fills the 624-slot tile window)."""
+    for x in (19.0, 38.0, 57.0):
         lamp_curved(s, x, 19.1, arm="y")
-    lamp_curved(s, 26.0, 25.2, arm="y") if False else None
-    for (x, y) in ((24.0, 26.2), (39.5, 25.8)):
+    for (x, y) in ((28.0, 26.2), (44.0, 25.8)):
         trash_can(s, x, y)
-    hydrant(s, 36.5, 25.4)
+    hydrant(s, 40.0, 25.4)
     newspaper_box(s, 17.4, 25.6, "sign_blue")
-    # cloth lines across the street between facades (north) and poles (south), bunting along the lane
-    poles = [(20.5, 25.9), (31.5, 25.9), (42.0, 25.9)]
+    poles = [(27.0, 25.9), (58.5, 25.9)]
     for (px, py) in poles:
         pole(s, px, py, 4.6)
-    for (px, py), fx in zip(poles, (20.5, 31.5, 42.0)):
-        cloth_line(s, fx, 18.1, 4.8, px, py, 4.5, 6, rnd)
-    bunting(s, 24.0, 18.1, 5.0, 24.0, 25.9, 4.55, 14, rnd) if False else None
-    bunting(s, 21.0, 18.15, 4.3, 29.0, 18.15, 4.3, 10, rnd, sag=0.15)
-    bunting(s, 35.0, 18.15, 4.1, 46.0, 18.15, 4.1, 14, rnd, sag=0.2)
-    # stoop stuff: milk crates, geranium pots, bike
-    for (x, y) in ((17.7, 19.2), (41.8, 19.1), (45.1, 19.2)):
+        cloth_line(s, px, 18.1, 4.8, px, py, 4.5, 6, rnd)
+    bunting(s, 25.5, 18.15, 4.3, 34.0, 18.15, 4.3, 9, rnd, sag=0.15)
+    for (x, y) in ((17.7, 19.2), (45.6, 19.1), (55.1, 19.2)):
         potted_plant(s, x, y, "flowers")
-    crate_stack(s, 22.1, 19.0, 2)
-    # a patched-asphalt look in the cobbles
-    for (x0, y0, x1, y1) in ((20, 21, 23, 22.6), (30, 22.3, 33.5, 24.0), (38, 20.2, 41, 21.6)):
-        s.box(x0, y0, x1, y1, 0.0, 0.012, "asphalt_patch", layer="floor")
-    # bush + weeds in the joints
-    for (x, y) in ((16.9, 24.9), (28.0, 19.8), (35.5, 24.3), (43.0, 25.2), (48.0, 20.0)):
-        weeds(s, x, y, 4, rnd)
-    # a cat shape on the wall? no: collectible spots are in tools/collectibles.py
+    crate_stack(s, 26.0, 19.0, 2)
+    for (x, y) in ((17.0, 24.9), (36.0, 19.8), (49.0, 24.8)):
+        weeds(s, x, y, 3, rnd)
 
 
 def ground(s, rnd):
-    """Floor layer: paving base, avenue stub asphalt, trench, cobble street, sidewalks, kerbs, drains."""
-    s.box(0, 0, W, H, -0.2, -0.1, "paving", layer="floor") if False else None
-    s.box(0, 0, W, H, -0.4, -0.04, "slabs", layer="floor")       # base lies lower than every other slab (never coplanar)
-    # avenue stub: asphalt with a trench cut (two pieces + deep mud box)
+    """Floor layer: slabs base, avenue stub + trench, cobble street, Baker's Lane, pavements, yard, meadow."""
+    s.box(0, 6.0, 68.0, 62.0, -0.4, -0.04, "slab_flat", layer="floor")     # base only under the walkable part of the map
     s.box(0, 18.5, 11.3, 25.5, -0.1, -0.02, "asphalt", layer="floor")
     s.box(13.3, 18.5, 14.5, 25.5, -0.1, -0.02, "asphalt", layer="floor")
     s.box(11.3, 18.5, 13.3, 25.5, -0.6, -0.55, "mud", layer="floor")
-    s.box(11.3, 18.5, 11.36, 25.5, -0.55, -0.02, "soil", layer="floor")                           # trench walls
-    s.box(13.24, 18.5, 13.3, 25.5, -0.55, -0.02, "soil", layer="floor")
-    s.box(11.3, 18.5, 13.3, 18.56, -0.55, -0.02, "soil", layer="floor")
-    s.box(11.3, 25.44, 13.3, 25.5, -0.55, -0.02, "soil", layer="floor")
+    for (a, b, c, d) in ((11.3, 18.5, 11.36, 25.5), (13.24, 18.5, 13.3, 25.5), (11.3, 18.5, 13.3, 18.56), (11.3, 25.44, 13.3, 25.5)):
+        s.box(a, b, c, d, -0.55, -0.02, "soil", layer="floor")
     s.set_solid(11.3, 18.5, 13.3, 25.5)
-    # cobble street inside
-    s.box(14.5, 19.5, 50.0, 24.5, -0.1, -0.02, "cobble", layer="floor")
-    s.box(14.5, 18.5, 15.7, 19.5, -0.1, -0.02, "asphalt", layer="floor") if False else None
-    # kerbs along the street
-    s.box(15.7, 19.5, 50.0, 19.62, -0.1, 0.05, "curb", layer="floor")
+    s.box(14.5, 19.5, 68.0, 24.5, -0.1, -0.02, "cobble", layer="floor")
+    s.box(15.7, 19.5, 68.0, 19.62, -0.1, 0.05, "curb", layer="floor")
     s.box(15.7, 24.38, 50.0, 24.5, -0.1, 0.05, "curb", layer="floor")
-    # white edge line in the avenue stub + worn centre line
+    s.box(55.0, 24.38, 68.0, 24.5, -0.1, 0.05, "curb", layer="floor")
     for x in range(0, 10, 3):
         s.box(x + 0.5, 21.95, x + 1.9, 22.05, -0.02, -0.01, "paint_yellow", layer="floor")
-    # sidewalk slabs (north and south strips)
-    s.box(0, 14.5, 15.7, 18.5, -0.1, 0.0, "paving", layer="floor")
-    s.box(0, 25.5, 16.0, 27.4, -0.1, 0.0, "paving", layer="floor")
-    s.box(15.7, 18.0, 50.0, 19.5, -0.1, 0.0, "paving", layer="floor")
-    s.box(16.0, 24.5, 50.0, 26.2, -0.1, 0.0, "paving", layer="floor")
-    # yard behind the laundromat gate, dirt/cobble
-    s.box(29.5, 6.0, 35.0, 18.0, -0.1, 0.01, "path_dirt", layer="floor")
-    s.box(29.5, 15.5, 35.0, 18.0, 0.01, 0.02, "cobble", layer="floor")
-    # cracks / dirt blotches
-    for _ in range(26):
-        x, y = rnd.uniform(1, 49), rnd.choice([rnd.uniform(19.6, 24.4), rnd.uniform(18, 19.5), rnd.uniform(24.5, 26)])
-        s.box(x, y, x + rnd.uniform(0.3, 1.0), y + rnd.uniform(0.1, 0.35), 0.0, 0.006 + rnd.random() * 0.004, "plaster_stain", layer="floor")
-    # drains
-    for x in (22.5, 36.0):
+    # pavements
+    s.box(0, 14.5, 15.7, 18.5, -0.1, 0.0, "paving_flat", layer="floor")
+    s.box(0, 25.5, 16.0, 27.4, -0.1, 0.0, "paving_flat", layer="floor")
+    s.box(15.7, 18.0, 68.0, 19.5, -0.1, 0.0, "paving_flat", layer="floor")
+    s.box(16.0, 24.5, 50.0, 26.2, -0.1, 0.0, "paving_flat", layer="floor")
+    s.box(55.0, 24.5, 68.0, 26.2, -0.1, 0.0, "paving_flat", layer="floor")
+    # Baker's Lane (N-S), cobbles with pavements either side
+    s.box(50.0, 24.5, 55.0, 62.0, -0.1, -0.02, "cobble", layer="floor")
+    s.box(49.2, 26.2, 50.0, 62.0, -0.1, 0.0, "paving_flat", layer="floor")
+    s.box(55.0, 26.2, 55.8, 40.0, -0.1, 0.0, "paving_flat", layer="floor")
+    # alley north between Valdez house and the laundromat (cobbles), the pocket square, the alley between houses 4 and 5
+    s.box(21.0, 8.0, 25.5, 18.0, -0.1, -0.01, "cobble", layer="floor")
+    s.box(47.0, 12.0, 53.0, 18.0, -0.1, 0.0, "plaza_stone", layer="floor")
+    s.box(57.5, 10.0, 61.0, 18.0, -0.1, -0.01, "cobble", layer="floor")
+    # yard
+    s.box(34.0, 6.0, 40.5, 18.0, -0.1, 0.01, "path_dirt", layer="floor")
+    s.box(34.0, 15.5, 40.5, 18.0, 0.01, 0.02, "cobble", layer="floor")
+    # a few cracks
+    for _ in range(8):
+        x, y = rnd.uniform(16, 67), rnd.uniform(19.8, 24.2)
+        s.box(x, y, x + rnd.uniform(0.3, 0.8), y + rnd.uniform(0.1, 0.25), 0.0, 0.006 + rnd.random() * 0.004, "plaster_stain", layer="floor")
+    for x in (26.5, 42.0):
         s.box(x, 24.0, x + 0.6, 24.4, 0.0, 0.015, "metal_dark", layer="floor")
-    # south zone ground: plaza by the chess table, court slab/garden are in their own builders
-    s.box(29.5, 26.2, 34.5, 32.0, -0.1, 0.0, "plaza_stone", layer="floor")
-    s.box(16.0, 26.2, 17.0, 40.0, -0.1, 0.0, "slabs", layer="floor")
-    # grass margins south
-    s.box(17.0, 40.0, 50.0, H, -0.1, 0.0, "grass", layer="floor")
-    s.box(34.5, 26.2, 50.0, 28.0, -0.1, 0.0, "slabs", layer="floor")
-    s.box(34.0, 38.5, 49.5, 40.0, -0.1, 0.0, "grass", layer="floor") if False else None
-    s.box(0, 34.5, 10.5, H, -0.1, 0.0, "grass", layer="floor")
+    # south zone: chess plaza, pond park grass, meadow grass, court slab area
+    s.box(29.5, 26.2, 35.0, 32.0, -0.1, 0.0, "plaza_stone", layer="floor")
+    s.box(16.0, 26.2, 17.0, 40.0, -0.1, 0.0, "slab_flat", layer="floor")
+    s.box(17.0, 40.0, 49.2, H, -0.1, 0.0, "grass_flat", layer="floor")
+    s.box(35.0, 26.2, 49.2, 40.0, -0.1, 0.0, "grass_flat", layer="floor")
+    s.box(55.8, 40.0, W, H, -0.1, 0.0, "grass_flat", layer="floor")
+    s.box(68.0, 34.0, W, 40.0, -0.1, 0.0, "grass_flat", layer="floor")
+    s.box(0, 34.5, 10.5, H, -0.1, 0.0, "grass_flat", layer="floor")
+    s.box(55.8, 26.2, 68.0, 40.0, -0.1, 0.0, "slab_flat", layer="floor")
+    # dirt paths: garden -> meadow -> cottages -> lane, and through the orchard
+    for (a, b, c, d) in ((23.0, 40.0, 24.2, 52.0), (23.0, 52.0, 49.2, 53.2), (35.0, 40.0, 36.2, 52.0), (55.8, 50.0, 66.0, 51.2), (60.0, 40.0, 61.2, 62.0)):
+        s.box(a, b, c, d, 0.0, 0.012, "path_dirt", layer="floor")
 
 
-def south_edge(s, rnd):
-    """Low hedges and trees along the south edge (nothing tall that would hide the street)."""
-    hedge(s, 17.0, 50.0, 41.2, 0.9)
-    for x in (20.0, 27.0, 38.0, 45.0):
-        shrub(s, x, 42.5, 0.5, "leaves")
-    for x in (24.0, 41.0):
-        conifer(s, x, 44.0, 3.4)
-    chain_link(s, 0, 10.5, 34.5, h=1.6)
-    hedge(s, 0.5, 10.0, 36.0, 1.0)
+def pond_park(s, x0, y0, x1, y1, rnd):
+    """Low pond park: water, stone rim, reeds, benches, flower beds."""
+    s.box(x0 + 1.5, y0 + 1.5, x1 - 1.5, y1 - 1.5, -0.3, 0.004, "pond_edge", layer="floor")
+    s.box(x0 + 1.9, y0 + 1.9, x1 - 1.9, y1 - 1.9, -0.3, 0.008, "pond_flat", layer="floor")
+    s.set_solid(x0 + 1.5, y0 + 1.5, x1 - 1.5, y1 - 1.5)
+    for k in range(8):
+        px = rnd.uniform(x0 + 2, x1 - 2)
+        s.sphere(px, y1 - 1.7, 0.2, 0.1, "leaves", sz=2.5)
+    bench_along_x(s, x0 + 2.0, x0 + 4.0, y1 - 0.6)
+    bench_along_x(s, x1 - 4.0, x1 - 2.0, y1 - 0.6)
+    flower_bed(s, x0 + 0.2, y0 + 0.2, x0 + 2.2, y0 + 1.0, rnd)
+    flower_bed(s, x1 - 2.2, y0 + 0.2, x1 - 0.2, y0 + 1.0, rnd)
+    shrub(s, x0 + 0.5, y1 - 0.5, 0.5, "leaves_light")
+
+
+def cottage(s, x, y, name="1Story_GableRoof_Mat", colours="cream", scale=2.1):
+    """Detached house west of Baker's Lane (facade towards +x), from the CC0 Quaternius model. Returns the footprint."""
+    return s.model(name, x, y, front="right", colours=colours, scale=scale)
+
+
+def orchard(s, x0, y0, x1, y1, rnd):
+    for (x, y) in ((x0 + 2, y0 + 3), (x0 + 6, y0 + 3), (x0 + 10, y0 + 3), (x0 + 2, y0 + 9), (x0 + 6, y0 + 9), (x0 + 10, y0 + 9)):
+        s.cyl(x, y, 0, 1.3, 0.09, "trunk", verts=8)
+        for (dx, dy, dz, r) in ((0, 0, 1.9, 0.75), (0.5, 0.2, 1.6, 0.5), (-0.4, 0.3, 1.7, 0.5)):
+            s.sphere(x + dx, y + dy, dz, r, "leaves_light")
+        for _ in range(4):
+            s.sphere(x + rnd.uniform(-0.6, 0.6), y + rnd.uniform(-0.6, 0.6), 1.5 + rnd.random() * 0.5, 0.07, "apple_red")
+        s.set_solid(x - 0.25, y - 0.25, x + 0.25, y + 0.25)
+        s.occluder(x - 0.9, y - 0.9, x + 0.9, y + 0.9, 2.8)
+    for (x, y) in ((x0 + 1, y0 + 14), (x0 + 5, y0 + 15), (x0 + 8, y0 + 14)):                 # allotment beds
+        s.box(x, y, x + 2.4, y + 3.0, 0, 0.35, "wood")
+        s.box(x + 0.1, y + 0.1, x + 2.3, y + 2.9, 0.33, 0.38, "soil")
+        for k in range(4):
+            s.sphere(x + 0.5 + 0.5 * k, y + 1.5, 0.55, 0.2, "cabbage", sz=0.7)
+        s.set_solid(x, y, x + 2.4, y + 3.0)
+    bench_along_x(s, x0 + 4.0, x0 + 6.0, y0 + 6.5)
+
+
+def meadow(s, x0, y0, x1, y1, rnd):
+    for (x, y) in ((x0 + 3, y0 + 3), (x0 + 12, y0 + 9), (x0 + 5, y0 + 15), (x0 + 15, y0 + 17)):
+        s.cyl(x, y, 0, 1.5, 0.1, "trunk", verts=8)
+        for (dx, dy, dz, r) in ((0, 0, 2.3, 1.0), (0.6, 0.3, 2.0, 0.7), (-0.5, 0.4, 2.1, 0.7)):
+            s.sphere(x + dx, y + dy, dz, r, "leaves")
+        s.set_solid(x - 0.25, y - 0.25, x + 0.25, y + 0.25)
+        s.occluder(x - 1.2, y - 1.2, x + 1.2, y + 1.2, 3.5)
+    for (x, y) in ((x0 + 8, y0 + 3), (x0 + 8, y0 + 17)):
+        bench_along_x(s, x, x + 1.8, y)
+    for _ in range(14):
+        weeds(s, rnd.uniform(x0, x1), rnd.uniform(y0, y1), 2, rnd)
+    for (x, y) in ((x0 + 1, y0 + 9), (x0 + 14, y0 + 2)):
+        flower_bed(s, x, y, x + 2.0, y + 0.9, rnd)
 
 
 def old_block():
@@ -1012,68 +1059,94 @@ def old_block():
               img_w=(W + H) * 16 + 32, img_h=oy + (W + H) * 8 + 16)
     rnd = R(1931)
     ground(s, rnd)
-    # ---- zone A: cable works (cold) ----
+    # ---- zone A: cable works (cold), the arch ----
     hoarding_and_drums(s, rnd)
     cable_works(s, rnd)
     sneak_fence_and_bushes(s, rnd)
-    # ---- the arch ----
     arch(s)
-    # ---- north row ----
+    # ---- north row, spread out with alleys and a square between the buildings ----
     row_house(s, 16.5, 21.0, FY, 3, "plaster_terra", 18.6, door_mat="wood_green", seed=11, shutters=True, extras=("stain",))
-    balcony(s, 17.2, 19.9, FY, 6.0)                                              # Mrs. Valdez's balcony (parrot cage)
+    balcony(s, 17.2, 19.9, FY, 6.0)
     s.box(18.2, FY + 0.3, 18.6, FY + 0.5, 6.1, 6.55, "brass")
-    s.sphere(18.4, FY + 0.4, 6.6, 0.1, "cloth_green")                            # Captain
-    laundromat(s, 21.0, 29.5, FY)
-    mural_east_wall(s, 29.5, 10.0, 18.0, 0.6)
-    backroom_annex(s, 29.9, 9.5, 32.9, 14.5)
-    # yard: gate, fence, clothes line, crates, Duchess' bed, bins
-    chain_link(s, 29.5, 35.0, 17.3, h=1.2) if False else None
-    fence_wood(s, 29.5, 31.7, 17.4, h=1.3)
-    fence_wood(s, 33.4, 35.0, 17.4, h=1.3)
-    s.box(31.7, 17.3, 31.85, 17.5, 0, 1.5, "wood_dark")
-    s.box(33.25, 17.3, 33.4, 17.5, 0, 1.5, "wood_dark")
-    crate_stack(s, 33.4, 11.0, 3)                                                # the M10 crates
-    crate_stack(s, 33.4, 12.0, 2)
-    crate_stack(s, 33.7, 9.2, 2)
-    pole(s, 34.3, 14.8, 3.8)
-    pole(s, 34.3, 7.2, 3.8)
-    cloth_line(s, 34.3, 7.2, 3.5, 34.3, 14.8, 3.5, 8, rnd)
-    s.cyl(31.0, 16.0, 0, 0.12, 0.45, "cloth_red", verts=14)                      # Duchess' bed
-    s.cyl(31.0, 16.0, 0.12, 0.2, 0.45, "rug_red", verts=14, r2=0.35) if False else None
-    s.sphere(31.0, 16.0, 0.25, 0.22, "plaster_ochre", sz=0.7, sx=1.4)            # the corgi (placeholder blob)
-    trash_can(s, 30.4, 11.2)
-    shrub(s, 34.5, 16.6, 0.5, "leaves")
-    bakery(s, 35.0, 41.5, FY)
-    row_house(s, 41.5, 46.0, FY, 3, "plaster_blue", 43.6, door_mat="wood_red", seed=12, extras=("dish", "stain"))
-    # ---- street end: Rosa's stall, Teo's door ramp, chess plaza ----
-    rosas_stall(s, 47.2, 22.2)
-    s.wedge(46.0, 24.5, 47.4, 26.3, 0.75, 0.0, "y", "wood_green")               # Teo's skateboard ramp: a door on bricks
-    s.box(46.0, 24.3, 47.4, 24.5, 0, 0.75, "brick_red")
-    s.box(46.55, 25.0, 46.85, 25.1, 0.3, 0.36, "brass") if False else None
-    s.text("TEO'S", 46.7, 25.5, 0.1, 0.1, "paint_white", face="left") if False else None
-    plane_tree(s, 30.3, 31.2, 1.0)   # kept south of the plaza: a canopy near the street would hide the player
-    chess_table(s, 32.2, 27.6)
-    bench_along_x(s, 29.8, 31.6, 26.6) if False else None
-    # ---- south side ----
+    s.sphere(18.4, FY + 0.4, 6.6, 0.1, "cloth_green")                                   # Captain's cage
+    # alley (21..25.5): Teo's den = a tiny lean-to shed, a barrel
+    s.box(22.2, 9.2, 24.4, 11.2, 0, 1.7, "boards")
+    s.box(22.0, 9.0, 24.6, 11.4, 1.7, 1.8, "tin_roof")
+    s.cyl(22.0, 14.0, 0, 0.9, 0.3, "barrel_blue", verts=12)
+    s.occluder(22.0, 9.0, 24.6, 11.4, 1.9)
+    laundromat(s, 25.5, 34.0, FY)
+    mural_east_wall(s, 34.0, 10.0, 18.0, 0.6)
+    backroom_annex(s, 34.4, 9.5, 37.4, 14.5)
+    fence_wood(s, 34.0, 36.2, 17.4, h=1.3)
+    fence_wood(s, 37.9, 40.5, 17.4, h=1.3)
+    s.box(36.2, 17.3, 36.35, 17.5, 0, 1.5, "wood_dark")
+    s.box(37.75, 17.3, 37.9, 17.5, 0, 1.5, "wood_dark")
+    crate_stack(s, 38.4, 11.0, 3)
+    crate_stack(s, 38.4, 12.0, 2)
+    crate_stack(s, 38.7, 9.2, 2)
+    pole(s, 39.3, 14.8, 3.8)
+    pole(s, 39.3, 7.2, 3.8)
+    cloth_line(s, 39.3, 7.2, 3.5, 39.3, 14.8, 3.5, 8, rnd)
+    s.cyl(35.8, 16.0, 0, 0.12, 0.45, "cloth_red", verts=14)
+    s.sphere(35.8, 16.0, 0.25, 0.22, "plaster_ochre", sz=0.7, sx=1.4)                   # Duchess (placeholder)
+    trash_can(s, 35.0, 11.2)
+    bakery(s, 40.5, 47.0, FY)
+    # pocket square (47..53): stone basin, benches, poster wall for Mia's posters
+    s.cyl(50.0, 14.5, 0, 0.5, 1.2, "stone", verts=20)
+    s.cyl(50.0, 14.5, 0.5, 0.52, 1.0, "pond_flat", verts=20)
+    s.cyl(50.0, 14.5, 0.5, 1.4, 0.15, "stone", verts=10)
+    s.occluder(48.7, 13.2, 51.3, 15.8, 1.5)
+    bench_along_x(s, 47.6, 49.4, 17.2)
+    bench_along_x(s, 50.6, 52.4, 17.2)
+    s.box(52.2, 12.4, 52.9, 12.5, 0, 1.7, "wood_dark")
+    s.box(52.0, 12.5, 52.95, 13.5, 0.7, 1.6, "poster_yellow")
+    row_house(s, 53.0, 57.5, FY, 3, "plaster_blue", 55.1, door_mat="wood_red", seed=12, extras=("dish", "stain"))
+    row_house(s, 61.0, 65.5, FY, 2, "plaster_teal", 63.1, door_mat="wood_green", seed=13, extras=("ac",))
+    # ---- street end: Rosa's stall, Teo's door ramp ----
+    rosas_stall(s, 63.2, 22.2)
+    s.wedge(60.2, 24.5, 61.6, 26.3, 0.75, 0.0, "y", "wood_green")
+    s.box(60.2, 24.3, 61.6, 24.5, 0, 0.75, "brick_red")
+    # ---- south side: garden, chess, pond park ----
     garden(s, 17.0, 27.0, 29.0, 40.0, rnd)
-    court(s, 34.5, 29.0, 48.5, 39.0, rnd)
+    plane_tree(s, 31.0, 36.0, 1.0)
+    chess_table(s, 32.2, 28.2)
+    pond_park(s, 36.0, 28.0, 47.0, 37.0, rnd)
+    # ---- Baker's Lane: lamps and detached cottages on its west side (facades towards +x), spaced out ----
+    for y in (30.0, 44.0, 58.0):
+        lamp_curved(s, 49.6, y, arm="y")
+    cottage(s, 49.0, 41.0, colours="cream")
+    cottage(s, 49.0, 49.5, name="2Story_GableRoof_Mat", colours="blue")
+    cottage(s, 49.0, 57.0, colours="orange")
+    # ---- east of the lane: court, orchard ----
+    court(s, 56.0, 28.5, 67.0, 37.5, rnd)
+    orchard(s, 56.0, 40.0, 67.0, 62.0, rnd)
+    orchard(s, 68.0, 40.0, 79.0, 62.0, rnd)                    # second orchard / allotment block east of the first (more to walk)
+    meadow(s, 17.0, 41.0, 37.0, 62.0, rnd)
     # ---- the demolition site ----
-    demolition_site(s, 50.0, 4.0, 60.0, 34.0, rnd)
-    # ---- dressing ----
+    demolition_site(s, 68.0, 4.0, 80.0, 34.0, rnd)
     street_dressing(s, rnd)
-    south_edge(s, rnd)
+    hedge(s, 17.0, 49.0, 63.0, 0.9)
+    chain_link(s, 0, 10.5, 34.5, h=1.6)
+    hedge(s, 0.5, 10.0, 36.0, 1.0)
     # collision borders
-    s.set_solid(0, 0, 0.5, H)          # (west edge is the warp strip; real edge handled by the map warp)
+    s.set_solid(0, 0, 0.5, H)
     s.set_solid(0, 0, W, 0.5)
     s.set_solid(0, H - 0.5, W, H)
     s.set_solid(W - 0.5, 0, W, H)
-    s.set_solid(0, 0.5, 0.5, 14.4, False) if False else None
-    s.set_solid(0, 18.0, 0.6, 34.0, False)       # avenue strip open at the west edge (warp back to the City Centre)
+    s.set_solid(0, 18.0, 0.6, 34.0, False)
     s.set_solid(0, 0, 16.0, 14.4)
     s.set_solid(0, 34.5, 16.0, H)
+    # rear zone behind the north row is closed; alleys, yard and pocket square stay open (their props keep their own solids)
+    keep = [(21.0, 8.0, 25.5, 17.9), (34.0, 6.0, 40.5, 17.9), (47.0, 12.0, 53.0, 17.9), (57.5, 10.0, 61.0, 17.9)]
+    saved = [row[:] for row in s.solid]
+    s.set_solid(16.0, 0, 68.0, 17.9)
+    r = sc.SOLID_RES
+    for (a, b, c, d) in keep:
+        for sy in range(int(b * r), int(d * r)):
+            for sx in range(int(a * r), int(c * r)):
+                s.solid[sy][sx] = saved[sy][sx]
     s.sun_strength = 4.0
     return s
 
 
-# fix up: the thicket / lane / cold-zone lists used by the doc and plan
 LANE_CELLS = [(10.9, 30.35, 17.0, 31.05), (16.4, 27.0, 17.1, 31.05)]

@@ -1,196 +1,181 @@
-# Old Block - design proposal (s74, NEEDS OWNER APPROVAL, nothing built, nothing added to `SCENES`)
+# Old Block - design (s74, revision 2 after owner feedback; nothing built, nothing added to `SCENES`)
 
-Old Block is the poor, warm, close-knit district at the east end of the City Centre avenue. It completes district 1 (Chapter 1, M08-M17).
-Original design; the only reference is the *genre* feel of handheld life-sims (a crowded little neighbourhood you learn by walking it).
-Story sources: `docs/story_chapter1.md` 3B.2 / 3B.2a / M09-M17, `docs/story_overview.md`, `docs/features_backlog.md`.
-Proposal code + renders: `tools/proposals/s74/` (see its README). Previews: `tools/proposals/s74/previews/*.png`.
+Owner feedback: "All OK, warm neighbourhood. It may be BIGGER than the City Centre. More room to walk around. Buildings don't all have to stand next to each other."
+Decisions: cable works inside the Old Block map; laundromat, bakery and Mia's flat enterable in Chapter 1, back room in Chapter 2; **no per-area palette blend** (warm
+neighbourhood, props / posters swap by flag, VaultTech parts stay cold through their own materials); barrier gap built from sprites; garden and court open in Chapter 1.
+
+Old Block is the poor, warm, close-knit district at the east end of the City Centre avenue; it completes district 1 (M08-M17). Original design, only the *genre* feel of
+handheld life-sims is referenced. Story sources: `docs/story_chapter1.md` 3B.2 / 3B.2a / M09-M17, `docs/story_overview.md`, `docs/features_backlog.md`.
+Proposal code + renders: `tools/proposals/s74/` (README there). Previews: `tools/proposals/s74/previews/` (revision 2: `r2_*.png`; revision 1 images kept as `1_..5_*.png`).
 
 ## 1. Design in one paragraph
 
-You enter from the avenue and the first thing you meet is **cold**: a VaultTech cable works (barriers, a trench, drums, a robot, a bored guard, a hoarding
-with "SMART CITY COMING SOON"). Behind a **brick arch** (OLD BLOCK - EST. 1931) glows the **warm** street: cobbles, terracotta / ochre / rose / blue plaster,
-washing lines and bunting across the road, flower boxes, a laundromat with machines turning, a bakery, a corgi. Everything is built so that
-**the way in changes the player's feeling**: first a sneak through a fence flap and a bush lane (M09), later the front door when the neighbours move the
-barriers (M13). The street ends at a **fenced demolition site** with the derelict Co-op Hall and the humming NODE 7 hatch: the threat is always visible at the end of the street.
+You enter from the avenue and meet **cold** first: the VaultTech cable works (barriers, trench, drums, robot, guard, hoarding "SMART CITY COMING SOON"). Behind the **brick arch**
+(OLD BLOCK - EST. 1931) the **warm** Cobble Street begins and the neighbourhood opens up: detached houses and shops with gaps, **an alley with Teo's den, a laundromat yard, a small
+square with a basin**, a second street, **Baker's Lane**, running south past spaced-out cottages with front yards, a **pond park**, the **community garden**, a **chess plaza**, a **court**,
+an **two orchard / allotment blocks** and a **meadow with footpaths**. The street ends at the **fenced demolition site** with the derelict Co-op Hall and the humming NODE 7 hatch. The way in
+changes the feeling: first a fence flap and a bush lane (M09), later the front gate (M13).
 
 ## 2. Map facts
 
 | Item | Value |
 |------|-------|
-| Map id (proposed) | `old_block`, "Old Block" (new entry in `SCENES`, appended so ids stay stable) |
-| Size | **60 x 48 cells** = 45 x 36 m (City Centre 72 x 60) |
-| Image | 1760 x ~1020 px (origin_x = 48*16+16 = 784, origin_y = 175; City Centre 2144 x 1272) = ~0.62 of the City Centre area |
-| Camera rule | faces that look towards +y and +x are visible: **every shopfront stands on the north side of the street**, everything south of the street is open or low |
-| Streets | avenue stub (x 0..14.5, y 18.5..25.5, 8 cells = same width as the City Centre avenue) and **Cobble Street** (x 15.7..50, y 19.5..24.5, 5 cells wide) |
-| Entry from the City Centre | the avenue's east end: CC `x >= 70.5` strip (y 18..34) warps to OB `(1.5, y - 4)`; OB `x <= 1` strip warps back to CC `(70.0, y + 4)` |
-| Collision | fine grid as usual. New: **gated solids** (see 9) |
+| Map id | `old_block` "Old Block" (appended to `SCENES`, ids stay stable) |
+| Size | **80 x 64 cells** = 60 x 48 m (City Centre 72 x 60 = 4320 cells, Old Block 5120: ~19 % bigger) |
+| Image | 2336 x 1344 px (origin_x 1040, origin_y 175; City Centre 2144 x 1272) |
+| Open ground | streets, squares, parks, orchards and meadow cover about two thirds of the map; buildings are 9 separate volumes with 3.5-6 cell gaps (City Centre blocks are continuous) |
+| Camera rule | faces looking to +y / +x are visible. **Tall things (2-3 storeys) only on the north side of a walkway or west of a N-S walkway**; south / east of walkways only low things (<= 1 storey, hedges, fences, benches, orchard trees). A 6 m house hides ~10 cells of ground diagonally behind it |
+| Streets | avenue stub (x 0..14.5, y 18.5..25.5), **Cobble Street** (x 15.7..68, y 19.5..24.5), **Baker's Lane** (x 50..55, y 24.5..62, N-S) |
+| Entry from the City Centre | CC `x >= 70.5` strip (y 18..34) <-> OB `x <= 1` strip, y mapped by -4 / +4 |
+| Collision | fine grid; **gated solids** (see 8) |
 
-ASCII plan (1 char = 2 x 2 cells, `x` right / east, `y` down / south; the PNG plan has the exact coordinates):
+ASCII plan (1 char = 2 x 2 cells; the PNG plan has exact coordinates):
 
 ```
-        0         10        20        30        40        50        60
-  y 8   ..........  ....[VALDEZ][  YARD  ][BAKERY ][ROW4 ]    |  CO-OP HALL (derelict)
-  y 14  ..HOARDING..|b  [  LAUNDROMAT  ][bk-room]   .        |  site (fenced, closed)
-  y 18  ===avenue===|T=A= C O B B L E   S T R E E T  =====STALL|  NODE 7 hatch, digger
-  y 24  ===  stub ==|    (cobbles, lines, bunting)            |g
-  y 28  ..FENCE.THICKET  [ GARDEN ] [chess] [   COURT   ]       |
-  y 40  ..............hedges, trees (low only)..............     |
-        b = barriers (x 10.5)  T = trench  A = arch  g = closed site gate  bk-room = Ines's back room
+        0         10        20        30        40        50        60        70       80
+  y 8   ..........  ...[VALD][ALLEY][ LAUNDRO ][YARD ][BAKERY][SQ ][H4]  [H5]   | CO-OP HALL
+  y 18  =avenue====|b T A== C O B B L E   S T R E E T =========  [STALL]       |g  site (closed)
+  y 28  ..FENCE.THICKET [GARDEN] chess [POND PARK]  ||LANE|| [COURT]            |
+  y 40  ..............[ MEADOW,  trees, footpaths ]  [cottages] || [ORCHARD + allotments]
+  y 62  ...........hedge....................................
+        b = barriers (x 10.5)  T = trench  A = arch  g = closed site gate
 ```
 
-## 3. Zones (coordinates in cells)
+## 3. Zones (cells)
 
 | Zone | Area | What is there |
 |------|------|---------------|
-| **A. Cable works (cold)** | x 0..14.5, y 14..34 | hoarding wall (y 15) with VaultTech posters + gold "V", portaloo, 3 cable drums (north) + 4 (south), orange/white **barrier line at x 10.5** with 3 amber lamps and the SURVEY IN PROGRESS board, **trench x 11.3..13.3** (mud, tape, a cable laid in it), TRENCH-E 3 inside it, Guard Pruitt on a folding chair on a drum at (8.6, 19.9), a security camera on a pole, grey chain-link fence continuing south to the map edge |
-| **A2. Sneak route** | x 9..18, y 27..34 | player side: a **hedge hides the flap** at fence (10.5, 30.2..31.2). Behind the fence: **bush thicket** with a **one-cell lane** (10.9 -> 17, y 30.35..31.05, then north x 16.4..17.1 up to y 27) that comes out at the south pavement just inside the arch. See 8 |
-| **B. The arch** | x 14.5..15.7, y 18.5..25.5 | two brick pillars, beam, iron sign "OLD BLOCK / EST. 1931" half pasted over with VaultTech posters (readable face is the +x side, i.e. what the camera sees) |
-| **C. Cobble Street (warm)** | x 15.7..50, y 19.5..24.5 + pavements | patched cobbles, kerbs, drains, weeds, 3 curved lamps, bins, hydrant, newspaper box, flower pots on stoops, **washing lines + bunting** between the north facades and 3 poles on the south pavement |
-| **D. North row** | facade line y = 18 | Valdez house (x 16.5..21, 3 storeys, terracotta, balcony + Captain), **Ines's Laundromat** (21..29.5, 3 storeys, ochre, blue frame, yellow/white awning, Mia's window third floor), the **yard** (29.5..35, gate + wooden fence), **Bellini Bakery** (35..41.5, 2 storeys, rose, red/white awning, Dr. Okafor's flat above), row house 4 (41.5..46, blue, satellite dish) |
-| **D2. Yard + back room** | x 29.5..35, y 6..18 | dirt/cobble yard, the **back room annex** (29.9..32.9 x 9.5..14.5, tin roof, door on its +x face with mat and "ROOM" plate = the future home), the M10 crate stack, a drying line, Duchess's bed, bin, laundromat east wall with a **sun + fish mural** |
-| **E. South side** | y 26..42 | **community garden** (17..29 x 27..40: 8 raised beds with tomatoes, cabbages, sunflowers, beans, flowers; shed, rain barrel, compost, scarecrow, bench with a WATER ME sign, wooden fence with a gate), **chess plaza** (29.5..34 x 26.5..32: plane tree, stone table, two stools), **street court** (34.5..48.5 x 28..38.5: painted rust/green court, two hoops, low chain-link, benches, bin) |
-| **F. Street end** | x 45.5..50 | **Rosa's stall** (handcart, striped awning, crates, scale, BREAD NOT BARCODES board), **Teo's door ramp** (a green door on bricks), the closed steel site gate with a NOTICE |
-| **G. Demolition site** | x 50..60, y 4..34 | orange-railed fence with orange notices + Teo's counter-posters, the derelict **Co-op Hall** (brick, boarded windows, chained arched door, stone lintel "OLD BLOCK CO-OPERATIVE 1931", roof gaps with weeds), yellow digger "VAULTTECH", **NODE 7 hatch** at (51, 22.5) with orange cables, rubble, a floodlight. Whole site is solid (opens in Chapter 5) |
+| **A. Cable works (cold)** | x 0..14.5, y 14..34 | hoarding (y 15) with VaultTech posters + gold V, portaloo, 3 + 4 cable drums, orange/white **barrier line x 10.5** with amber lamps + SURVEY IN PROGRESS board, **trench x 11.3..13.3** with a cable, TRENCH-E 3, Guard Pruitt on a chair on a drum (8.6, 19.9), camera pole, grey fence south to the map edge |
+| **A2. Sneak route** | x 9..18, y 27..34 | hedge hides the **fence flap** (10.5, 30.2..31.2). Behind it the **bush thicket** with a one-cell lane (10.9 -> 17.0 at y 30.35..31.05, then north x 16.4..17.1 to y 27) that exits just inside the arch |
+| **B. Arch** | x 14.5..15.7 | brick pillars + beam, iron sign "OLD BLOCK / EST. 1931" half covered by VaultTech posters (readable on the +x face) |
+| **C. Cobble Street** | x 15.7..68, y 19.5..24.5 | 52 cells long (was 35), kerbs, 3 curved lamps (x 19 / 38 / 57), bins, hydrant, newspaper box, flower pots, 2 washing lines + bunting (sparse on purpose) |
+| **D. North row, spaced** | facade y 18 | **Valdez house** (16.5..21, balcony + Captain) - **alley** (21..25.5, Teo's den lean-to, barrel) - **Ines's Laundromat** (25.5..34, 3 storeys) - **yard + back-room annex** (34..40.5) - **Bellini Bakery** (40.5..47, Okafor's flat above) - **pocket square** (47..53: stone basin, benches, poster wall) - **row house 4** (53..57.5) - **alley** (57.5..61) - **house 5** (61..65.5) |
+| **E. Baker's Lane** | x 50..55, y 24.5..62 | cobbled N-S street, lamps, pavements. West side: **3 detached cottages** (facades +x, y 41 / 49.5 / 57, 1-2 storeys, CC0 Quaternius models, 3-4 cell gaps) with room for front gardens later |
+| **F. South-west** | y 26..62 | **community garden** (17..29 x 27..40), **chess plaza** (29.5..35 x 26.5..32, plane tree kept south at (31, 36) so its canopy never hides the street), **pond park** (36..47 x 28..37), **meadow** (17..37 x 41..62: trees, benches, flower beds, footpaths to the cottages and the garden) |
+| **G. East of the lane** | x 55.8..68 | **court** (56..67 x 28.5..37.5, two hoops), **orchard + allotments** (56..67 and 68..79 x 40..62: 12 fruit trees, 6 beds, benches, paths) |
+| **H. Street end** | x 59.5..68 | **Rosa's stall** (63.2, 22.2), **Teo's door ramp** (60.2, 24.5), steel gate with NOTICE |
+| **I. Demolition site** | x 68..80, y 4..34 | orange-railed fence with notices, derelict **Co-op Hall** (big bricks, boarded windows, chained arched door, lintel "OLD BLOCK CO-OPERATIVE 1931"), yellow digger, **NODE 7 hatch** (69, 22.5), rubble, floodlight. Whole site solid (opens in Chapter 5) |
 
-Low-only rule for the south edge (y 40..48) and the garden / court: tall objects there would hide the street. Trees south of the street are limited to the
-chess plane tree; the player is hidden behind it by the per-pixel depth mask only on a short stretch of Cobble Street.
+Spaciousness: gaps between buildings are 3.5-6 cells, three E-W / N-S walkways, five open spaces (square, chess plaza, garden, pond park, court) and two green areas (meadow, orchard) to wander.
+The rear zone behind the north row is closed except through the alleys, yard and square (their solids are re-opened explicitly).
 
-## 4. Enterable buildings and interiors (all cutaway rooms via `std_room`, furniture only from the catalog)
+## 4. Enterable buildings and interiors (cutaway rooms via `std_room`, furniture from the catalog)
 
-Chapter 1 needs only **exteriors plus the laundromat, bakery, back room and Mia's flat**. Valdez, row house 4 and the Co-op Hall stay closed.
+| Interior | Size | Layout | Interactables | When |
+|----------|------|--------|---------------|------|
+| **Ines's Laundromat** (`laundromat`) | 14 x 10 | machines along the back wall, folding table, chairs, soap machine, lost-sock box, notice board, Duchess's bed, "TWO DOLLARS" board, stairs to Mia's flat and a door to the yard | `washer` (wash clothes $2), `seat` x4, `noticeboard` (Old Block odd jobs), soap machine, collectible spot, Ines (talk) | Ch.1 (M09, M17) |
+| **Mia's flat** (`mia_flat`) | 7 x 6 | one room, one couch, kettle, window over the street, boxes | `couch` (sleep, M17), `window` | M17 |
+| **Bellini Bakery** (`bakery`) | 10 x 8 | counter + display cases, ovens glowing, flour sacks, two tables, stairs (Okafor's flat, blocked) | `shop_bakery` (bread $3, pastries $2-4, coffee), `seat` x4, `oven` (Fun +2) | Ch.1 shop |
+| **Back room** (`back_room`) | 6 x 5 | bare walls, mattress, crates, hot plate, bucket; bills envelope at the door | `bed`, `window` | **Chapter 2** (exterior now) |
+| Valdez, house 4, house 5, cottages, Co-op Hall | later | - | - | Ch.2+ (Valdez / Biscuit), Ch.5 (Hall) |
 
-| Interior | Size | Layout (summary) | Interactables | When |
-|----------|------|------------------|---------------|------|
-| **Ines's Laundromat** (`laundromat`) | 14 x 10 | front window wall with the street; row of 6 washers + 4 dryers along the back wall, folding table, plastic chairs (seats), soap vending machine, a lost-sock box, notice board (odd jobs), Duchess's bed, chalkboard "TWO DOLLARS", door at the back-right to the stairs (Mia's flat) and the back room | `washer` (Wash your clothes $2: sets a clean-clothes flag, small Hygiene/Fun), `seat` x4, `noticeboard` (Old Block odd jobs), `kiosk`-like soap machine (gift item), `lostsock` (collectible spot), Ines (talk) | Chapter 1 (M09 intro, M17) |
-| **Back room** (`back_room`) | 6 x 5 | bare walls, mattress on the floor, crates, hot plate, bucket, one bulb, a window to the yard; bills-by-post envelope at the door; later filled from the furniture catalog | `bed` (mattress), `desk`/crate, `window`, envelope | Chapter 2 (big moment M17 -> "a key in the door"); exterior now |
-| **Bellini Bakery** (`bakery`) | 10 x 8 | counter with display cases, ovens glowing at the back, flour sacks, two small tables with chairs, stairs up (Okafor's flat, blocked) | `shop_bakery` (Rosa's loaf is NOT here: bread $3, pastries $2-4, coffee), `seat` x4, `oven` (watch / warm-up: Fun +2), Nella (cameo Ch.2, 5) | Chapter 1 shop, Chapter 2+ talks |
-| **Mia's flat** (`mia_flat`) | 7 x 6 | one room, one couch (Energy +0.5/min), kettle, window over the street, boxes | `couch` (sleep, M17), `window` | M17 |
-| Valdez house, row house 4, Co-op Hall | later | - | - | Chapter 2 (Valdez, Biscuit quests), Chapter 5 (Hall) |
-
-Cost: each interior ~ 1-2k tiles, comparable to `diner` / `community_centre` (cutaway rooms are small images).
-
-## 5. Interactables (`tools/interactions.py` style; `*` = new kind that needs a small handler)
+## 5. Interactables (positions in `tools/proposals/s74/data.py`; `*` = new kind)
 
 | Kind | Where | What |
 |------|-------|------|
-| `sign*` | barrier (10.2, 21), arch (14, 22), gate (49.3, 22) | info pages (survey notice; "Est. 1931 ..."; demolition notice) |
-| `flap*` | (9.3, 30.7) | before `sneak_route`: "Just a fence. And a lot of bushes."; after: "Squeeze through" (starts the lane walk) |
-| `hatch*` | (51, 22.5), extra reach 1.5 | "A steel hatch. It hums. It is warm. Warmer than the street." (sets nothing; `node7_seen` for later) |
-| `shop_stall*` | Rosa's stall (47.2, 23.6) | Rosa's loaf, Orange, Rye loaf; Gifts (Flowers $3); M15: free orange per friendship 40+ |
-| `chess*` | (32.2, 28.7) | "Watch the game" (Fun +2, Grigor hint lines), M13 chat |
-| `garden*` | beds (23, 30) | "Water the plants" (Fun +4, Hygiene -1; Ines/gossip hook; once per day for +friendship with Ines) |
-| `hoop*` | (36.4, 33.7), (46.6, 33.7) | "Shoot hoops" (Fitness +, Energy -, Fun +; 8 s animation; Ballers mini-game later) |
-| `bench`, `bin`, `kiosk`, `noticeboard`, `crate` | see `tools/proposals/s74/data.py` | existing kinds (court bench, 4 bins, scratch-card box, Mia's poster wall from M13, M10 crates) |
-| RETURN & EARN spots | ~14 new spots (gutters, garden, court, yard, thicket) | same global cap (7 credits loose in the world); machine stays in the City Centre |
-| collectibles | 3-4 new spots (lost sock, Docks postcard, Co-op penny in the garden, a pigeon feather) | `tools/collectibles.py` |
+| `sign*` | barrier (10.2, 21), arch (14, 22), gate (67.3, 22) | info pages |
+| `flap*` | (9.3, 30.7) | before `sneak_route`: "Just a fence. And a lot of bushes."; after: squeeze through |
+| `hatch*` | (69, 22.5) reach +1.5 | "A steel hatch. It hums. It is warm. Warmer than the street." |
+| `shop_stall*` | (63.2, 23.6) | Rosa's loaf, Orange, Rye loaf, Flowers $3 |
+| `chess*`, `garden*`, `hoop*` x2 | (32.2, 28.9), (23, 30), (57.4 / 65.6, 33.5) | watch the game; water the plants (Fun +4, once a day friendship with Ines); shoot hoops (Fitness +, Fun +) |
+| `fountain` (existing) | square basin (50, 14.5) | Wash face / Drink water |
+| `bench` x4, `bin` x4, `kiosk`, `noticeboard`, `crate` | see `data.py` | existing kinds (garden, court, pond, orchard benches; street / yard / court bins; scratch cards; Mia's poster wall from M13; M10 crates (38.8, 11.5)) |
+| RETURN & EARN spots | ~24 new spots (lane gutters, pond, meadow, orchard, court, thicket) | same global cap (7 loose credits) |
+| collectibles | 6-8 new spots (Co-op penny in the garden, lost sock, Docks postcard, feather, ...) | `tools/collectibles.py` |
 
 ## 6. NPCs, schedules and routes
 
-Existing cast slots are tight (8 small-talk slots, ~3 NPC sprites on screen during a talk). Old Block adds **Ines, Teo, Grigor** as talkers (needs slots -> raise
-the cast table to 12), and **Duchess, Pruitt, TRENCH-E, Mrs. Valdez + Captain** as barks-only actors.
+Cast slots: Ines, Teo, Grigor, Pruitt need talk slots (8 -> 12). Duchess, TRENCH-E, Mrs. Valdez + Captain are barks-only actors.
 
-| Who | Spot / route | When | Notes |
-|-----|--------------|------|-------|
-| **Pruitt** | chair at (8.6, 19.9) before M13; after M13 at (11, 20.5) with a cup of tea | always | bark + info; "I never see anybody" when the player uses the lane |
-| **TRENCH-E 3** | in the trench (12.3, 21.3), idle bob; 4 facings only | always | after M13 it "classifies" the door bridge as furniture |
-| **Ines** | laundromat door (28.4, 19.3) 7:00-21:00, inside at the counter in bad weather / evening | | shouts "Clean shirts, clean souls!" when the player passes |
-| **Teo** | `ROUTES["teo_round"]`: arch (15.5, 26.5) -> chess (31, 25.5) -> stall (46, 24.8) -> yard (33, 17) -> garden gate (23, 26.8) | 10:00-19:00 | wanders (12 walk frames exist for cast); waits at the lane exit in M09 |
-| **Duchess** | yard bed (31, 16); walks the street 12:00-13:00 | | placeholder blob in the render |
-| **Grigor** | stool at the chess table (31.25, 27.6) | 10:00-18:00 | loses to the pigeon; M13 chat |
-| **Mrs. Valdez + Captain** | balcony (18.5, 18.8) above the arch side | always | Captain barks "NEXT CUSTOMER!" when you pass below (M09 on) |
-| **Rosa** | behind the stall (49.2, 21.6) | from M10, 8:00-17:00 (Saturday market 9:00-15:00) | |
-| **M13 crowd** | Mia (44.3, 23), Ines (45.3, 20.8), Teo (47.5, 21), Grigor (46, 24), Valdez (43.5, 22), Pimm (44.8, 22.2) | 9:00 meeting | placements overridden by script flag |
-| **Dr. Okafor** | lives above the bakery, never shown; evening beat in the clinic (CC) | | |
+| Who | Spot / route | When |
+|-----|--------------|------|
+| Pruitt | chair (8.6, 19.9); after M13 (11, 20.5) with tea | always |
+| TRENCH-E 3 | in the trench (12.3, 21.3) | always |
+| Ines | laundromat door (32.9, 19.3), inside in the evening | 7:00-21:00 |
+| Teo | `teo_round`: arch (15.5, 26.5) -> chess (31, 27) -> square (50, 19) -> stall (62, 24.8) -> yard (36, 17) -> garden gate (23, 26.8) -> court (60, 30) | 10:00-19:00 (waits at the lane exit in M09) |
+| Duchess | yard bed (35.8, 16); walks the street 12:00-13:00 | always |
+| Grigor | stool (33.1, 28.2) | 10:00-18:00 |
+| Mrs. Valdez + Captain | balcony (18.5, 18.8) | always |
+| Rosa | behind the stall (65, 21.6) | from M10, 8:00-17:00; Saturday market 9:00-15:00 |
+| M13 crowd | Mia (60, 23), Ines (61, 21), Teo (63, 21), Grigor (59, 22), Valdez (58, 22.5), Pimm (60.5, 22) | 9:00 meeting |
+| Dr. Okafor | lives above the bakery, never shown | - |
 
 ## 7. Mission hooks (M08 - M17)
 
 | Mission | Old Block use |
 |---------|---------------|
-| M08 Odd Jobs | the laundromat notice board adds 2 odd jobs ("Carry the laundry" $6, "Water the garden" $4) once `old_block_open` |
-| **M09 Old Block Calling** | Mia leads along the fence (x 9..10, y 26..30) -> flap (10.5, 30.7) -> lane -> **exits at (16.8, 27)** beside the arch where Teo waits -> camera tilts to the sign (15.2, 22) -> Valdez balcony (19.2, 21) -> chess (30.8, 26.8) -> Mia points at her window (24, 20.5) -> Rosa at the street end |
-| M10 Rosa's Stall | crates in the yard (33.4, 12.3), the stall (47, 22.8), BREAD NOT BARCODES sign |
+| M08 | laundromat notice board adds 2 odd jobs once `old_block_open` |
+| **M09** | fence (x 9..10, y 26..30) -> flap (10.5, 30.7) -> lane -> exit (16.8, 27) where Teo waits -> arch sign (15.2, 22) -> Valdez balcony (19.2, 21) -> Mia points at her window (28.5, 20.5) -> chess (31, 27) -> walk to Rosa (long street: ~50 cells) |
+| M10 | yard crates (38.8, 12.3); stall (63, 22.8) |
 | M11 / M12 / M14 | only the walk to and from Old Block |
-| **M13 Notice Served** | 9:00 meeting at the stall; orange notices on every wall (poster props swap), Teo's counter-posters; **after the meeting the barriers are dragged aside + Teo's door bridge** (state C, 8) |
-| M15 Open Sesame | optional Saturday market (stalls along Cobble Street y 20..24, anonymous crowd reskins) |
-| **M17 A Roof for the Night** | Mia's flat via the laundromat stairs; chapter end; back room promised (Chapter 2) |
+| **M13** | meeting at the stall (61.5, 22), notices on every wall (poster props swap by flag), barriers moved + Teo's bridge (state C) |
+| M15 | optional Saturday market on Cobble Street + the square (stalls from x 40 to 60) |
+| **M17** | Mia's flat via the laundromat stairs; back room promised for Chapter 2 |
 
-## 8. The cable works in three states (collision + art variants)
+## 8. The cable works in three states
 
-| State | Flags | Barriers (x 10.5) | Trench | Flap | Lane (solids) | Front |
-|-------|-------|-------------------|--------|------|---------------|-------|
-| A (start) | - | solid | solid | solid (fence), hedge solid | solid | closed |
-| B (after M09 scene) | `old_block_open`, `sneak_route` | solid | solid | open | **walkable, half speed, leaf particles** | closed |
-| C (after M13) | `barrier_moved`, `door_bridge` | middle pieces (y 20..24) moved aside with laundry hung on them (art variant swaps via a second palette-free "overlay" of objects tiles or a small sprite set) | door bridge walkable (x 11.3..13.3 x y 21.3..22.7) | stays as Teo's shortcut | walkable | open |
+| State | Flags | Barriers (x 10.5) | Trench | Flap | Lane | Front |
+|-------|-------|-------------------|--------|------|------|-------|
+| A (start) | - | solid | solid | solid | solid | closed |
+| B (after M09 scene) | `old_block_open`, `sneak_route` | solid | solid | open | walkable, half speed, leaf particles | closed |
+| C (after M13) | `barrier_moved`, `door_bridge` | middle pieces moved aside with laundry on them | door bridge walkable (x 11.3..13.3, y 21.3..22.7) | stays | walkable | open |
 
-**Engine need (small): "gated solids"**: a table of `{rect, flag, invert}` evaluated when a map loads and on flag changes (`field::_refresh_gates`). Used for the lane,
-the flap, the hedge pocket, barrier gap and bridge. No new render per state if the barrier line is split into 2 pieces: the *moved-aside* variant is a
-sprite overlay (3 sprites: laundry-draped barrier pieces) drawn over the unchanged tiles, and the bridge door is a sprite (32x16). The barrier gap itself is just
-the solid being switched off: the painted barrier would stay drawn, so build the barrier as **sprites** (4 pieces) rather than tiles if the owner wants the gap to be visible.
-Cheaper alternative: leave the barrier tiles, put the aside-pieces and bridge as sprites on top and accept the barrier "ghost" (not recommended).
+**Decision (owner): sprite-built barrier gap.** The barrier line is NOT part of the map tiles: it is 4 sprites (3 pieces + 1 for the moved state; laundry-draped variants), placed by flag,
+so the gap is visible and no second render is needed. Teo's door bridge is one 32x16 sprite. The tile map stays state-A-free at the barrier line (the floor trench stays).
+**Engine need (small): gated solids**: `{rect, flag, invert}` rows evaluated on map load and flag change (`field::_refresh_gates`) for lane, flap, hedge pocket, barrier gap, bridge.
+**Squeeze effect:** half speed on lane cells, 4 drifting leaf sprites, 2 px camera sway, the player passes behind 3 taller bush clumps (the camera-side rows are kept low on purpose:
+at 2:1 isometric anything 0.75 m tall hides about 2.5 cells of ground behind it).
 
-**Squeeze effect** (as in 3B.2a): on lane cells half speed, a few leaf sprites drift (existing `critters`-style sprite pool, 4 leaves), tiny camera sway
-(2 px), the front-layer mask hides the player behind the three taller bush clumps (the lane's camera-side rows are kept low on purpose: at 2:1 isometric anything
-0.75 m tall hides ~2.5 cells of ground behind it, which would hide the whole lane).
+## 9. Warm neighbourhood, cold VaultTech parts (decision: no palette blend)
 
-## 9. Warm vs cold palette (VaultTech-taken parts colder)
+- **Materials do the work:** warm = terracotta / ochre / rose / teal / blue plaster, red brick, wood, flowers, yellow awnings; cold = `vault_hoard` navy, `vault_cold` grey-blue, orange/white barriers, mesh fence, notices.
+  The cold parts are only zone A, the site fence / site and the notices. No extra palette banks and no `warmth` save field (the earlier 2+2-bank idea is dropped).
+- **Flag swaps:** posters / notices (M13: orange notices + Teo's counter-posters), laundry on barriers (state C), door bridge, a few props (market stalls, Saturday bunting). These are sprites or tile-free overlays.
+- Day/night as usual: lit windows (laundromat, bakery, flats), lamp pools at 3 street lamps, 3 lane lamps, 2 pillar lamps, amber barrier lamps (blink via a palette entry).
 
-- **Materials**: cold = `vault_hoard` navy, `vault_cold` grey-blue, orange/white barriers, grey chain-link, white notices; warm = terracotta / ochre / rose / teal / blue plaster,
-  red brick, wood, flowers, yellow awnings.
-- **Cold zones** are A (x < 15), the demolition fence + site (x >= 50) and the notice posters. Everything between is warm.
-- **Engine idea (cheap, needs a build_assets change, not done here)**: reserve **2 of 8 floor banks and 2 of 7 object banks** for tiles that lie in a cold zone
-  (a `cold_mask` rectangle list per map), build each of them twice (cold + warm variant, 2 x 16 colours) and let `tl_lighting` blend between the variants by
-  a per-map `warmth` byte (save: `warmth_ob`, 0..100). When Chapter 1 ends or later missions "win" an area, the cold bank blends to warm, as the owner wants
-  ("winning missions turns an area warm again"). Bank budget stays 16 (floor 8 + objects 7 + HUD 1).
-- Day/night as usual (outdoor map): lit windows (laundromat window, bakery window, flats) and lamp pools at 3 street lamps + 2 pillar lamps + the amber barrier lamps (blink = palette entry).
+## 10. Lived-in, gritty details
 
-## 10. Lived-in, gritty details (all in the proposal scene)
+Patched cobbles, cracks, weeds, damp streaks, drainpipes, AC units, dishes, window boxes, shutters, stoops, washing lines + bunting, milk crates, chalkboard, hand-lettered signs, mural, scuffed court, scarecrow, rain barrel, door-ramp,
+VaultTech posters on the arch, orange notices, mud heaps, tape, cables. Kept sparse on the main street for the tile budget. Later: stray cat, pigeons (arch, stall, chess), laundry sway, bakery smoke.
 
-Patched cobbles + asphalt patches, cracks and stains, weeds in the joints, damp streaks under cornices, drainpipes, AC units, satellite dishes, window boxes, shutters,
-stoops with iron rails, washing lines + bunting, milk crates, chalkboard, hand-lettered signs, mural, scuffed court, scarecrow, rain barrel, door-ramp, VaultTech posters pasted over the arch,
-orange notices on the fence, mud heaps, tape, cables. To add later: stray cat (collectible spot), pigeons (critters: arch, stall, chess), laundry sway (palette-free: 2 frame sprite), smoke from the bakery chimney (sprite).
+## 11. New art, props and characters (NEEDS PROPOSAL where visual)
 
-## 11. New art, props and characters needed (NEEDS PROPOSAL where visual)
+- Scene helpers in `oldblock.py` (move to `scene.py`): `row_house`, `laundromat`, `bakery`, `arch`, `cable_works`, `trench_e`, `pruitt` (placeholder), `plane_tree`, `chess_table`, `rosas_stall`, `garden`, `pond_park`, `court`, `orchard`, `meadow`,
+  `cottage` (Quaternius), `demolition_site`, `digger`, `backroom_annex`, `cloth_line`, `bunting`, `mural_east_wall`; ~45 new materials (`NEW_MATERIALS`, to be added with a `# s74-materials` marker so other scenes keep their render cache).
+- Sprites: Ines, Teo, Grigor, Mrs. Valdez, Duchess, Pruitt, TRENCH-E 3, Captain, leaf particles, 4 barrier pieces, door bridge, bakery smoke. Portraits: Ines, Grigor, Pruitt (Teo from Ch.2).
+- Interiors: laundromat, mia_flat, bakery (Ch.1), back_room (Ch.2). Audio later.
 
-- Scene helpers (in `oldblock.py`, would move to `scene.py`): `row_house`, `laundromat`, `bakery`, `arch`, `cable_works`, `cable_drum`, `trench_e`, `pruitt` (placeholder), `plane_tree`,
-  `chess_table`, `rosas_stall`, `garden`, `court`, `hoop`, `demolition_site`, `digger`, `backroom_annex`, `cloth_line`, `bunting`, `mural_east_wall`. About 34 new materials (names in `NEW_MATERIALS`,
-  they go to `MATERIALS` with a `# s74-materials` marker so other scenes keep their render cache).
-- Sprites: Ines, Teo, Grigor, Mrs. Valdez, Duchess (corgi, 4 facings), Pruitt, TRENCH-E 3 (4 facings), Captain (parrot, 2 frames), leaf particles, laundry-aside barrier pieces, door bridge, bakery smoke.
-- Portraits: Ines, Teo (barks only in Ch.1: no portrait yet), Grigor (1 scripted chat: needs a portrait), Pruitt (talks: portrait).
-- Interiors: laundromat, back room, bakery, Mia's flat (catalog furniture + new: washer, dryer, soap machine, display case, oven, mattress).
-- Audio (later): Old Block theme (warm, accordion / guitar), cable-works hum.
+## 12. Cost estimates (revision 2)
 
-## 12. Cost estimates
+Measured with the real quantizer (`tilecount.py`, full 80x64 map, 24 spp):
 
-**Measured with the real quantizer** (`tools/proposals/s74/tilecount.py`, full map, 24 spp, so render noise inflates it: treat as an UPPER bound; the real
-192 spp build de-duplicates better):
+| Layer | Unique tiles | Data | Worst 31x21 window (cache 624) |
+|-------|--------------|------|--------------------------------|
+| floor (8 banks) | 15 800 | ~494 KB | 651 (saturated, see below) |
+| objects (7 banks) | 8 517 | ~266 KB | **593** (target <= 600; the worst window is the Co-op Hall + fence + digger, 502 unique at 96 spp) |
+| total | 24 317 (City Centre ~25.5k; revision 1: 17.5k on the 60x48 map) | ~0.75 MB + cells (~0.1 MB per layer) + depth maps | |
 
-| Layer | Unique tiles | Data | Worst 31x21 window (cache = 624 slots) |
-|-------|--------------|------|----------------------------------------|
-| floor (8 banks) | 10 776 | ~337 KB | **651** |
-| objects (7 banks) | 6 695 | ~209 KB | **649** |
-| total | 17 471 (City Centre ~25.5k) | ~545 KB + cells (~85 KB each layer) + depth maps (~0.4 MB) | |
-
-- **Risk:** the worst window is slightly above the 624-slot VRAM cache at 24 spp (the dense stretch is Cobble Street with cobbles + washing lines + bunting). Mitigation before building:
-  render at 192 spp and re-measure; if still > 600, flatten the cobble noise (bigger stones, fewer cracks), drop bunting on one block, thin the thicket spheres.
-- ROM: ~1.3 MB for the map (CC ~2.3 MB) + ~4 interiors (~0.2 MB each) + sprites; far below 32 MB.
-- Render time at full quality (192 spp): about 0.6 x the City Centre (~20 min) = ~13 min for the map + ~3 min per interior; the proposal renders at 24-40 spp took ~6 min for the full map.
-- Collision: 2036 primitives, 78 occluders in the proposal (CC is higher). Sprites on screen: <= 3 actors + leaves (4) + amber lamp blink (palette).
-- Save: `max_maps` 10 -> 16 (5 new maps: `old_block`, `laundromat`, `back_room`, `bakery`, `mia_flat`), new save fields `warmth_ob`, gated-state flags are story flags (no new space). Save version bump needed.
+- **How the budget was met:** the first 80x64 draft had 28.4k tiles and object windows of 645. Big areas now use low-contrast materials (`grass_flat`, `slab_flat`, `paving_flat`, flat cobbles with large stones),
+  the Co-op Hall wall is one flat brick colour (small bricks cost 643 -> 502 unique tiles in that window), the base slab exists only under the walkable part (not under the unreachable rear zone / east), the site fence mesh is flat, the Co-op Hall uses big bricks, ivy and roof weeds were removed,
+  the street gets 2 washing lines instead of 4. Spacious open ground is cheap; dense detail (ivy, fine mesh, small bricks) is what fills the window.
+- **Calibration warning:** the floor window saturates at 651/651 in this measurement for the real City Centre junction as well (checked with `windowcheck.py`: CC floor 651/651 at 96 spp, Old Block 647/651), because render noise defeats
+  de-duplication in any shaded floor area. So the floor number is not discriminating at low spp; the objects number is (CC objects window: 37 unique, Old Block junction window: 122). Re-measure both layers at 192 spp before building.
+- ROM ~2.0 MB for the map incl. depth data (CC ~2.3 MB), + ~0.2 MB per interior.
+- Render time at 192 spp: ~1.2 x the City Centre (~25 min) for the map; the proposal's 24 spp full render takes ~7 min.
+- 2350 primitives, 101 occluders (CC higher). Sprites on screen <= 3 actors + 4 leaves + barrier pieces (4) + lamp blink (palette).
+- Save: `max_maps` 10 -> 16 (new maps `old_block`, `laundromat`, `back_room`, `bakery`, `mia_flat`), save version bump; no `warmth` field any more.
 
 ## 13. Build order (each step leaves the game playable)
 
-1. Owner approves layout + look (this proposal); decide the open questions.
-2. Engine: gated solids, map table + `max_maps` 10 -> 16 (save version bump), CC east-edge warp pair, `warmth` hook (optional).
-3. Scene `old_block` exterior (street, buildings, arch, cable works, sneak lane) + CC warp; full render + tile check; **state A only** (barrier closed): M09's route works, Old Block is walkable but the interiors are still closed.
-4. Residents: cast entries (Ines, Teo, Grigor, Duchess, Pruitt, TRENCH-E), PLACEMENTS/ROUTES, barks, portraits; interactables (stall, chess, garden, hoops).
-5. Interiors: laundromat (+ stairs to Mia's flat), bakery; shop + odd jobs notice board.
-6. M09-M10 scripts, then M13 state C (sprite overlays), Saturday market (M15), Mia's flat (M17).
-7. Back room (Chapter 2), cold/warm palette banks, polish, music.
+1. Engine: gated solids, map table + `max_maps` 16 (save version), CC east-edge warp pair, barrier sprites.
+2. Scene `old_block` exterior (state A) + CC warp; 192 spp render + tile check (trim detail if the objects window > 600). M09's route works; interiors closed.
+3. Residents: cast entries (Ines, Teo, Grigor, Duchess, Pruitt, TRENCH-E), PLACEMENTS / ROUTES, barks, portraits; interactables (stall, chess, garden, hoops, basin).
+4. Interiors: laundromat (+ stairs), Mia's flat, bakery; shop + odd-job notice board.
+5. M09-M10 scripts, M13 state C (sprite overlays), Saturday market (M15), M17.
+6. Cottages' interiors / back room (Chapter 2), polish, music.
 
 ## 14. Open questions for the owner
 
-1. **Where do the cable works live?** Proposed: inside the Old Block map (its west 15 cells), so the City Centre needs no re-render, only an edge warp. Alternative: build them into the CC east end (more faithful "you walk up to a blocked street", but re-renders the biggest map).
-2. **Interiors in Chapter 1:** the earlier answer was "minimal, no interiors". Proposed: laundromat, bakery and Mia's flat (M17) enterable, back room only in Chapter 2. OK, or exteriors only first?
-3. **Warm/cold:** reserve 2 floor + 2 object palette banks for a per-area warmth blend (needs a build_assets change), or only swap props / posters by flag?
-4. **Barrier gap visuals (M13):** barrier built as 4 sprites (gap visible, small sprite cost) vs tiles with a ghost. Proposed: sprites.
-5. **Scope of south side:** garden + court as built here (Ines's garden, Ballers court that Gus's "Old Block Rovers" reuse later) in Chapter 1, or leave them fenced / empty until Chapter 2-4? Also the cast table must grow 8 -> 12 for Ines, Teo, Grigor, Pruitt.
+1. Cottages along Baker's Lane are closed shells in Chapter 1 (front gardens, no interiors). OK, or should one of them be a shop (e.g. a tool repair) already in Chapter 1?
+2. The long street makes the walk Mia -> Rosa in M09 about 50 cells (~25 s). Fine, or add a bike/skate shortcut (Teo's ramp) later?
+3. Do the meadow and orchard carry the RETURN & EARN cans (more spots, same global cap) or stay purely scenic?

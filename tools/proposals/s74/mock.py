@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 GFX = os.path.join(ROOT, "graphics")
-OX0, OY0 = 60 * 0 + 48 * 16 + 16, 175          # origin of the proposed old_block scene (H * 16 + 16, 175)
+OX0, OY0 = 64 * 16 + 16, 175          # origin of the proposed old_block scene (H * 16 + 16, 175)
 FACE = dict(s=0, sw=1, w=2, nw=3, n=4, ne=5, e=6, se=7)
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
