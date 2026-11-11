@@ -52,6 +52,13 @@ by doing what it says; all mission objectives are <= 48 chars (script-checked), 
 3. Tools: `tools/make_save.py --bag cans,bottles[,credit]` (test the machine without walking), `-DTL_DEBUG_POS` state dump,
    `tools/playtest_driver.py` (see header).
 
+## Follow-up fixes (same session)
+
+- Script op `time` (staff_lunch, skip_lunch, skip_pimm) only advances the clock, never rewinds it (`tl_field_script.cpp`).
+- HUD clock: clock/money shifted 3 px left, digits and am/pm/weekday now leave a ~2 px gap to the Hunger icon (`tl_field.cpp`).
+- The "What's next?" row is hidden for the rest of a talk once it was used (`conversation::_skip_used`); the step flags hide it afterwards.
+  (These three items below are therefore resolved: the rewind edge case, the HUD overlap and the lingering row.)
+
 ## Not fixed / observations (none blocks the phone test)
 
 - `-DTL_DEBUG_CPU` + a minigame started from the story = black screen for the whole minigame (the normal ROM and the BOT-only / AUTO_TALK builds

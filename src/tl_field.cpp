@@ -392,13 +392,15 @@ namespace tl
 
         clock_digits.append(bn::to_string<4>(minutes));
         // two-digit hours do not fit the panel at 11 px: use the 9 px digits then
-        const ui::font_data& clock_font = ui::text_width(ui::font11, clock_digits) + 2 +
-                ui::text_width(ui::font9, "am") > 47 ? ui::font9 : ui::font11;
-        _clock_label.set(clock_font, 13, 141, clock_digits, ui::role::hud_clock);
-        int small_x = 13 + ui::text_width(clock_font, clock_digits) + 2;
+        // s73: the right-hand labels (am/pm, weekday) end at x 58 at the latest (the Hunger slot starts at 62)
+        const char* day_text = weekday_short(_day);
+        int side_width = bn::max(ui::text_width(ui::font9, pm ? "pm" : "am"), ui::text_width(ui::font9, day_text));
+        const ui::font_data& clock_font = ui::text_width(ui::font11, clock_digits) + 1 + side_width > 40 ? ui::font9 : ui::font11;
+        _clock_label.set(clock_font, 10, 141, clock_digits, ui::role::hud_clock);
+        int small_x = 10 + ui::text_width(clock_font, clock_digits) + 1;
         _clock_small_label.set(ui::font9, small_x, 139, pm ? "pm" : "am", ui::role::hud_clock);
-        _day_label.set(ui::font9, small_x, 148, weekday_short(_day), ui::role::hud_clock);
-        _money_label.set(ui::font11, 13, 156, money, ui::role::hud_money);
+        _day_label.set(ui::font9, small_x, 148, day_text, ui::role::hud_clock);
+        _money_label.set(ui::font11, 10, 156, money, ui::role::hud_money);
     }
 
     void field::_tick_minute()

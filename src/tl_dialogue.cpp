@@ -841,6 +841,7 @@ namespace tl
         _npc = npc;
         _day = day;
         _minutes = minutes;
+        _skip_used = false;
         _topics_done = 0;
         _dislikes = 0;
         _used_mask = 0;
@@ -1129,7 +1130,7 @@ namespace tl
             _story_label = "Carry the crates";
             --topic_limit;
         }
-        else if(_npc == int(npc_id::rosa) || _npc == int(npc_id::mia))
+        else if(! _skip_used && (_npc == int(npc_id::rosa) || _npc == int(npc_id::mia)))
         {
             const story_state& st = story();
 
@@ -1426,6 +1427,7 @@ namespace tl
                     {
                         _phase = phase::script;
                         _after_script_talk = true;
+                        _skip_used = _story_node == dlg::ask_skip_pimm || _story_node == dlg::ask_skip_lunch;
                         _show_node(_story_node);
                     }
                     else if(choice == _gift_row)

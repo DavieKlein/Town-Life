@@ -210,6 +210,7 @@ namespace tl
         int _node = -1;
         int _day = 1;
         int _minutes = 0;
+        bool _skip_used = false;     // s73: "What's next?" was used in this talk
         int _topics_done = 0;
         int _dislikes = 0;
         int _topic = 0;

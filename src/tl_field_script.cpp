@@ -689,7 +689,11 @@ namespace tl
             break;
 
         case cs_op::time:
-            _minutes = step.a * 60 + step.b;
+            if(step.a * 60 + step.b > _minutes)      // s73: never rewind the clock
+            {
+                _minutes = step.a * 60 + step.b;
+            }
+
             _minute_frames = 0;
             _light_minutes = -1;
             _update_lighting(true);
