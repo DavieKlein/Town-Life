@@ -33,17 +33,32 @@ SPOTS = [
     (10.0, 50.6, "cb", 0, "by the railing"), (24.0, 50.6, "cb", 0, "by the railing"), (47.0, 50.6, "cb", 0, "by the railing"),
     (62.0, 50.6, "cb", 0, "by the railing"),
 ]
+# s75 Old Block spots (6th element = map): meadow / orchard / pond / lane / street / court (owner: cans also in the meadow and orchard).
+# Same global cap of 7 loose credits, so these only widen where the pickups can show up.
+OB = "old_block"
+SPOTS += [
+    (49.6, 30.5, "cb", 0, "lane gutter", OB), (49.6, 38.0, "cb", 0, "lane gutter", OB), (54.9, 34.4, "cb", 0, "lane east kerb", OB),
+    (55.4, 38.5, "c", 0, "lane east kerb", OB), (53.0, 52.0, "cb", 0, "lane cobbles", OB), (51.0, 58.5, "cb", 0, "lane cobbles", OB),
+    (20.0, 24.8, "cb", 0, "street kerb", OB), (30.0, 25.4, "c", 0, "street kerb", OB), (44.5, 25.3, "cb", 0, "next to a bin", OB),
+    (60.0, 25.5, "cb", 0, "street end", OB), (33.0, 19.2, "c", 0, "laundromat door", OB),
+    (36.7, 31.0, "cb", 0, "pond bank", OB), (46.2, 36.4, "cb", 0, "pond bank", OB),
+    (26.0, 44.8, "cb", 1, "meadow grass", OB), (30.0, 47.5, "cb", 1, "meadow grass", OB), (34.0, 55.0, "b", 1, "meadow", OB),
+    (22.0, 58.0, "cb", 1, "meadow", OB),
+    (60.0, 45.0, "cb", 1, "orchard path", OB), (63.5, 55.0, "cb", 1, "orchard", OB), (72.0, 48.0, "cb", 1, "allotments", OB),
+    (75.5, 58.0, "cb", 1, "allotments", OB),
+    (58.0, 31.0, "cb", 0, "court edge", OB), (65.0, 36.0, "c", 0, "court edge", OB), (6.0, 22.5, "c", 0, "by the works", OB),
+]
 assert len(SPOTS) <= 64
 
 MACHINE = (6.2, 37.9)          # the RETURN & EARN machine (interaction point, cells)
 
 
-def check():
+def check(ident="city_centre"):
     import scene as scn
-    s = scn.city_centre()
+    s = next(f() for f in scn.SCENES if f.__name__ == ident)
     R = scn.SOLID_RES
     bad = 0
-    for (x, y, kinds, bush, place) in [sp[:5] for sp in SPOTS if len(sp) < 6 or sp[5] == 'city_centre']:
+    for (x, y, kinds, bush, place) in [sp[:5] for sp in SPOTS if (sp[5] if len(sp) > 5 else "city_centre") == ident]:
         solid = s.solid[int(y * R)][int(x * R)]
         # also the cell the player would stand on 0.4 cells towards the avenue / machine side
         bad += solid
@@ -53,4 +68,4 @@ def check():
 
 
 if __name__ == "__main__":
-    sys.exit(1 if check() else 0)
+    sys.exit(1 if (check() or check("old_block")) else 0)

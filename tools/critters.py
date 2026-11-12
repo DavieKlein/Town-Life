@@ -23,4 +23,10 @@ SPAWNS = {
         ("squirrel", 6.0, 37.5, 3.5, 36.5), ("squirrel", 17.2, 36.9, 19.5, 36.5),
         ("squirrel", 6.5, 45.0, 7.5, 46.0),
     ],
+    # s75 Old Block: pigeons at the arch, the stall and the chess plaza; squirrels in the orchard
+    "old_block": [
+        ("pigeon", 16.0, 23.0), ("pigeon", 16.8, 23.6), ("pigeon", 62.0, 25.2), ("pigeon", 61.2, 25.6),
+        ("pigeon", 31.0, 30.6), ("pigeon", 33.4, 31.2),
+        ("squirrel", 59.6, 44.2, 58.0, 43.0), ("squirrel", 72.8, 50.8, 74.0, 49.0),
+    ],
 }

@@ -424,7 +424,7 @@ namespace tl
         { "M05", "Survive the Night", "Eat, wash up, then sleep on the bench.", mission_cond::flag, story_flag::slept_on_bench, 1, 11, 0 },
         { "M06", "Yesterday's News", "Find out what Smart City means.", mission_cond::flag, story_flag::read_newspaper, 1, 12, 0 },
         { "M07", "Plate Spinner", "Get a job at Lou's Diner.", mission_cond::flag, story_flag::diner_job, 1, 13, 0 },
-        { "X1", "Explore the city", "Explore the city (Old Block coming soon).", mission_cond::none, 0, 0, 0, 0 },
+        { "X1", "Explore the city", "Explore the city and Old Block.", mission_cond::none, 0, 0, 0, 0 },
         { "M08", "Odd Jobs", "Do three odd jobs (0/3).", mission_cond::flag, story_flag::odd_jobs_3, 1, 15, 5 },
         { "M09", "Old Block Calling", "Follow Mia to Old Block.", mission_cond::flag, story_flag::old_block_open, 1, 16, 0 },
         { "M10", "Rosa's Stall", "Carry three crates to Rosa's stall (0/3).", mission_cond::flag, story_flag::rosa_stall_done, 1, 17, 10 },

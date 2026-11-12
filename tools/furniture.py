@@ -197,6 +197,122 @@ def _sofa_small(s):
     s.prop("house/Couch_Small2", 0.4, 0.8, rot=0, scale=0.5)
 
 
+# ---- s75: Old Block (laundromat, bakery, Mia's flat, Baker's Lane shop) -------------------------------------------------------
+def _washer_front(s):
+    """Front-loading washing machine (coin-op) against the wall, porthole facing +b."""
+    s.box(0.0, 0.0, 0.85, 0.75, 0.0, 1.0, "washer_white")
+    s.box(0.0, 0.0, 0.85, 0.75, 1.0, 1.04, "wood_dark")
+    s.cyl(0.425, 0.75, 0.55, 0.59, 0.27, "washer_dial", verts=20, axis="y") if False else None
+    s.cyl(0.425, 0.76, 0.5, 0.54, 0.27, "washer_dial", verts=20)
+    s.box(0.1, 0.75, 0.75, 0.78, 0.82, 0.92, "washer_dial")
+    s.sphere(0.425, 0.78, 0.52, 0.09, "cloth_blue")
+    s.set_solid(0.0, 0.0, 0.849, 0.749)
+    s.occluder(0.0, 0.0, 0.85, 0.75, 1.1)
+
+
+def _dryer_stack(s):
+    """Washer with a tumble dryer stacked on top (the tall laundromat bank)."""
+    s.box(0.0, 0.0, 0.85, 0.75, 0.0, 1.0, "washer_white")
+    s.box(0.0, 0.0, 0.85, 0.75, 1.0, 1.9, "washer_white")
+    s.box(0.0, 0.0, 0.85, 0.75, 0.98, 1.02, "washer_dial")
+    s.cyl(0.425, 0.76, 0.5, 0.54, 0.27, "washer_dial", verts=20)
+    s.cyl(0.425, 0.76, 1.45, 1.49, 0.26, "washer_dial", verts=20)
+    s.box(0.1, 0.75, 0.75, 0.78, 1.7, 1.78, "washer_dial")
+    s.set_solid(0.0, 0.0, 0.849, 0.749)
+    s.occluder(0.0, 0.0, 0.85, 0.75, 2.0)
+
+
+def _folding_table(s):
+    """Long laminate folding table with a pile of towels."""
+    s.box(0.0, 0.0, 2.0, 0.9, 0.8, 0.86, "wood")
+    for (a, b) in ((0.08, 0.08), (1.82, 0.08), (0.08, 0.72), (1.82, 0.72)):
+        s.box(a, b, a + 0.1, b + 0.1, 0.0, 0.8, "metal_dark")
+    s.box(0.2, 0.2, 0.8, 0.7, 0.86, 0.98, "cloth_white")
+    s.box(0.25, 0.25, 0.8, 0.65, 0.98, 1.06, "cloth_blue")
+    s.box(1.2, 0.3, 1.7, 0.7, 0.86, 0.94, "cloth_yellow")
+    s.set_solid(0.0, 0.0, 1.999, 0.899)
+    s.occluder(0.0, 0.0, 2.0, 0.9, 1.1)
+
+
+def _chair_plastic(s):
+    s.prop("house/Chair_1", 0.3, 0.3, rot=0, h=0.9, colours={"Wood": "#3a78c8"})
+
+
+def _table_round(s):
+    """Small round cafe table (anchor: centre)."""
+    s.cyl(0.4, 0.4, 0.0, 0.7, 0.05, "metal_dark", verts=8)
+    s.cyl(0.4, 0.4, 0.7, 0.75, 0.42, "wood", verts=20)
+    s.cyl(0.4, 0.4, 0.0, 0.04, 0.22, "metal_dark", verts=12)
+    s.set_solid(0.0, 0.0, 0.799, 0.799)
+    s.occluder(0.0, 0.0, 0.8, 0.8, 0.8)
+
+
+def _counter_bakery(s):
+    """Bakery counter with a glass display case full of loaves, a brass till and a bell (the shop point)."""
+    s.box(0.0, 0.0, 3.0, 0.9, 0.0, 1.0, "wood_red")
+    s.box(-0.05, -0.05, 3.05, 0.95, 1.0, 1.06, "paper_cream")
+    s.box(0.1, 0.1, 1.9, 0.8, 1.06, 1.45, "glass_pane")
+    for k in range(5):
+        s.sphere(0.3 + k * 0.33, 0.45, 1.16, 0.14, "bread_crust", sz=0.7, sx=1.5, sy=0.8)
+    s.box(2.2, 0.2, 2.7, 0.65, 1.06, 1.24, "brass")
+    s.cyl(2.0, 0.75, 1.06, 1.12, 0.07, "brass", verts=12)
+    s.set_solid(0.0, 0.0, 2.999, 0.899)
+    s.occluder(0.0, 0.0, 3.0, 0.9, 1.5)
+
+
+def _shelf_bread(s):
+    """Wall shelf unit with baskets of bread."""
+    s.box(0.0, 0.0, 2.0, 0.45, 0.0, 1.9, "wood")
+    for z in (0.5, 1.0, 1.5):
+        s.box(0.05, 0.05, 1.95, 0.45, z, z + 0.04, "wood_dark")
+        for k in range(4):
+            s.sphere(0.3 + k * 0.45, 0.25, z + 0.17, 0.14, "bread_crust", sz=0.7, sx=1.5, sy=0.8)
+    s.set_solid(0.0, 0.0, 1.999, 0.449)
+    s.occluder(0.0, 0.0, 2.0, 0.45, 2.0)
+
+
+def _kettle_unit(s):
+    """Tiny kitchenette: a cupboard with a hot plate and a kettle (Mia's flat)."""
+    s.box(0.0, 0.0, 1.4, 0.6, 0.0, 0.9, "wood_blue")
+    s.box(0.0, 0.0, 1.4, 0.6, 0.9, 0.95, "metal_light")
+    s.cyl(0.4, 0.3, 0.95, 1.0, 0.15, "metal_dark", verts=14)
+    s.cyl(0.4, 0.3, 1.0, 1.3, 0.1, "metal_light", verts=12)
+    s.box(0.9, 0.15, 1.3, 0.45, 0.95, 1.05, "cloth_red")
+    s.set_solid(0.0, 0.0, 1.399, 0.599)
+    s.occluder(0.0, 0.0, 1.4, 0.6, 1.4)
+
+
+def _crate_stack(s):
+    """Two wooden crates (storage in a small flat or shop)."""
+    s.box(0.0, 0.0, 0.8, 0.7, 0.0, 0.5, "boards")
+    s.box(0.05, 0.05, 0.75, 0.65, 0.5, 0.95, "wood")
+    s.box(0.0, 0.0, 0.8, 0.05, 0.45, 0.55, "wood_dark")
+    s.set_solid(0.0, 0.0, 0.799, 0.699)
+    s.occluder(0.0, 0.0, 0.8, 0.7, 1.0)
+
+
+def _shop_shelf(s):
+    """Open grocery shelf (cans, jars, boxes) against the wall."""
+    s.box(0.0, 0.0, 2.0, 0.45, 0.0, 1.8, "wood")
+    for z in (0.45, 0.9, 1.35):
+        s.box(0.05, 0.05, 1.95, 0.45, z, z + 0.04, "wood_dark")
+        for k in range(7):
+            s.cyl(0.2 + k * 0.26, 0.25, z + 0.04, z + 0.28, 0.08, ("goods_red", "goods_blue", "goods_yellow", "goods_green")[(k + int(z * 3)) % 4], verts=10)
+    s.set_solid(0.0, 0.0, 1.999, 0.449)
+    s.occluder(0.0, 0.0, 2.0, 0.45, 1.9)
+
+
+def _counter_shop(s):
+    """Small shop counter with a till and a jar of sweets."""
+    s.box(0.0, 0.0, 2.2, 0.8, 0.0, 0.95, "wood_blue")
+    s.box(-0.05, -0.05, 2.25, 0.85, 0.95, 1.0, "paper_cream")
+    s.box(0.2, 0.2, 0.7, 0.6, 1.0, 1.18, "brass")
+    s.cyl(1.7, 0.4, 1.0, 1.25, 0.12, "glass_pane", verts=12)
+    s.set_solid(0.0, 0.0, 2.199, 0.799)
+    s.occluder(0.0, 0.0, 2.2, 0.8, 1.3)
+
+
+
 FURNITURE = {
     "bed_cosy": dict(name="Cosy oak bed", price=180, category="bed", size=(3.1, 1.55), kind="bed", quality=3, use=(1.6, 0.8, 1.2), build=_bed_cosy),
     "bedside_lamp": dict(name="Bedside table with lamp", price=45, category="lighting", size=(0.48, 0.5), kind=None, quality=1, build=_bedside_lamp),
@@ -214,6 +330,18 @@ FURNITURE = {
     "sofa_small": dict(name="Small sofa", price=220, category="seating", size=(1.7, 1.6), kind="seat", quality=2, anchor="centre", build=_sofa_small),
     "toilet_white": dict(name="White toilet", price=150, category="bathroom", size=(1.0, 1.0), kind="toilet", quality=1, native=True, build=scn.toilet_unit),
     "sink_pedestal": dict(name="Pedestal sink with mirror", price=110, category="bathroom", size=(1.4, 0.7), kind="sink", quality=1, native=True, build=scn.sink_unit),
+    # s75 Old Block (laundromat, bakery, Mia's flat, Baker's Lane shop)
+    "washer_front": dict(name="Coin-op washing machine", price=320, category="kitchen", size=(0.85, 0.75), kind="washer", quality=1, use=(0.425, 1.0, 0.6), build=_washer_front),
+    "dryer_stack": dict(name="Washer-dryer tower", price=520, category="kitchen", size=(0.85, 0.75), kind=None, quality=1, build=_dryer_stack),
+    "folding_table": dict(name="Folding table", price=60, category="decor", size=(2.0, 0.9), kind=None, quality=1, build=_folding_table),
+    "chair_plastic": dict(name="Plastic chair (blue)", price=15, category="seating", size=(0.6, 0.6), kind="seat", quality=1, anchor="centre", build=_chair_plastic),
+    "table_round": dict(name="Round cafe table", price=55, category="decor", size=(0.8, 0.8), kind=None, quality=1, anchor="centre", build=_table_round),
+    "counter_bakery": dict(name="Bakery counter with display", price=900, category="decor", size=(3.0, 0.9), kind="shop_bakery", quality=1, use=(1.5, 1.3, 0.5), build=_counter_bakery),
+    "shelf_bread": dict(name="Bread shelf", price=110, category="storage", size=(2.0, 0.45), kind=None, quality=1, build=_shelf_bread),
+    "kettle_unit": dict(name="Kitchenette with kettle", price=140, category="kitchen", size=(1.4, 0.6), kind=None, quality=1, build=_kettle_unit),
+    "crate_stack": dict(name="Wooden crates", price=20, category="storage", size=(0.8, 0.7), kind=None, quality=1, build=_crate_stack),
+    "shop_shelf": dict(name="Grocery shelf", price=95, category="storage", size=(2.0, 0.45), kind=None, quality=1, build=_shop_shelf),
+    "counter_shop": dict(name="Shop counter", price=300, category="decor", size=(2.2, 0.8), kind="shop_lane", quality=1, use=(1.1, 1.2, 0.5), build=_counter_shop),
     "bin_pedal": dict(name="Pedal bin", price=15, category="bathroom", size=(0.5, 0.5), kind="bin", quality=1, native=True, build=scn.indoor_bin),
 }
 

@@ -94,7 +94,7 @@ MISSIONS = [
     ("M06", "Yesterday's News", "Find out what Smart City means.", ("flag", "read_newspaper"), "M07", 0),
     ("M07", "Plate Spinner", "Get a job at Lou's Diner.", ("flag", "diner_job"), "X1", 0),
     # the chain stops here for now (Old Block, the notice board and the Docks are not built yet)
-    ("X1", "Explore the city", "Explore the city (Old Block coming soon).", None, None, 0),
+    ("X1", "Explore the city", "Explore the city and Old Block.", None, None, 0),
     ("M08", "Odd Jobs", "Do three odd jobs (0/3).", ("flag", "odd_jobs_3"), "M09", 5),
     ("M09", "Old Block Calling", "Follow Mia to Old Block.", ("flag", "old_block_open"), "M10", 0),
     ("M10", "Rosa's Stall", "Carry three crates to Rosa's stall (0/3).", ("flag", "rosa_stall_done"), "M11", 10),

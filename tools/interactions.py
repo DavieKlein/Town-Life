@@ -102,3 +102,43 @@ INTERACTABLES = {
     ],
     "player_room": _room_things(),
 }
+
+
+# ---------------------------------------------------------------------------------------------------------------- s75: Old Block
+# Old Block: bins come FIRST (bin cooldown slot = index & 15 per map, so they must stay within the first 16 entries).
+# New kinds: sign (5th element = text index in tl_field_oldblock.cpp), flap, hatch, shop_stall, chess, garden, hoop, washer, oven,
+# shop_bakery, shop_lane. Positions from tools/proposals/s74/data.py.
+INTERACTABLES["old_block"] = [
+    ("bin", 28.0, 26.2), ("bin", 44.0, 25.8), ("bin", 35.0, 11.2), ("bin", 61.0, 28.1),
+    ("kiosk", 17.4, 25.6),
+    ("fountain", 50.0, 14.5, 1.2),
+    ("sign", 9.9, 19.9, 0, 0), ("sign", 14.0, 22.0, 0, 1), ("sign", 67.3, 22.0, 0, 2), ("sign", 52.5, 13.2, 0, 4),
+    ("flap", 9.3, 30.7),
+    ("hatch", 69.0, 22.5, 1.5),
+    ("shop_stall", 63.2, 23.6),
+    ("chess", 32.2, 28.9), ("garden", 23.0, 30.0, 1.0), ("hoop", 57.4, 33.5), ("hoop", 65.6, 33.5),
+    ("bench", 22.4, 36.6), ("bench", 59.0, 28.1), ("bench", 64.0, 28.1), ("bench", 39.0, 36.4), ("bench", 62.0, 46.5),
+    ("bench", 48.5, 17.2), ("bench", 51.5, 17.2),
+]
+
+
+def _ob_things(ident):
+    import furniture
+    import scene_oldblock as ob
+    out = []
+    for fid, x, y, rot in ob.OB_FURNITURE[ident]:
+        f = furniture.FURNITURE[fid]
+        if f.get("kind") == "seat" and f.get("anchor") == "centre":
+            out.append(("seat", x, y, 0.8))
+        elif f.get("kind") and "use" in f:
+            ux, uy, reach = furniture.use_point(fid, x, y, rot)
+            out.append((f["kind"], round(ux, 2), round(uy, 2), reach, f["quality"]))
+    for (m, kind, x, y, reach, q) in ob.OB_EXTRA_THINGS:
+        if m == ident:
+            out.append((kind, x, y, reach, q))
+    return out
+
+
+for _ident in ("laundromat", "bakery", "mia_flat", "lane_shop"):
+    INTERACTABLES[_ident] = _ob_things(_ident)
+
