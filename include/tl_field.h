@@ -19,6 +19,7 @@
 #include "tl_streamed_bg.h"
 #include "tl_lighting.h"
 #include "tl_deposit.h"
+#include "tl_map_sprites.h"
 #include "tl_collect.h"
 #include "tl_phone.h"
 #include "tl_story.h"
@@ -147,6 +148,7 @@ namespace tl
         critters _critters;
         npcs _npcs;
         deposit _deposit;
+        map_sprites _map_sprites;
         collectibles _collect;
         menu _menu;
         needs _needs;
@@ -467,6 +469,8 @@ namespace tl
         void _finish_sleep();
         void _show_notes();
         void _show_window();
+        void _use_old_block(const interactable& target);      // tl_field_oldblock.cpp
+        void _update_gates();
         void _update_lighting(bool force);
         void _update_lamps();
         static void _set_fade(int counter);

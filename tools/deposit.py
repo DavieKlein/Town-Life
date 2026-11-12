@@ -33,7 +33,7 @@ SPOTS = [
     (10.0, 50.6, "cb", 0, "by the railing"), (24.0, 50.6, "cb", 0, "by the railing"), (47.0, 50.6, "cb", 0, "by the railing"),
     (62.0, 50.6, "cb", 0, "by the railing"),
 ]
-assert len(SPOTS) == 26
+assert len(SPOTS) <= 64
 
 MACHINE = (6.2, 37.9)          # the RETURN & EARN machine (interaction point, cells)
 
@@ -43,7 +43,7 @@ def check():
     s = scn.city_centre()
     R = scn.SOLID_RES
     bad = 0
-    for (x, y, kinds, bush, place) in SPOTS:
+    for (x, y, kinds, bush, place) in [sp[:5] for sp in SPOTS if len(sp) < 6 or sp[5] == 'city_centre']:
         solid = s.solid[int(y * R)][int(x * R)]
         # also the cell the player would stand on 0.4 cells towards the avenue / machine side
         bad += solid

@@ -71,7 +71,10 @@ namespace tl
         constexpr int sick_told = 61;
         constexpr int clinic_paid = 62;
         constexpr int crates_go = 63;
-        constexpr int count = 64;
+        constexpr int sneak_route = 64;
+        constexpr int barrier_moved = 65;
+        constexpr int door_bridge = 66;
+        constexpr int count = 67;
     }
 
     // missions: index + 1 (0 = no mission)

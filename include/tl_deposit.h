@@ -19,7 +19,7 @@ namespace tl
 
     public:
         static constexpr int bag_max = 10;
-        static constexpr int max_spots = 32;
+        static constexpr int max_spots = 64;
         static constexpr int max_loose_credits = 7;          // $3.50 of pickups at once
 
         // The save keeps one byte per spot: 0 = nothing, else kind (1 can, 2 bottle) | variant << 2.
@@ -69,6 +69,7 @@ namespace tl
         light_params _light;
         int _frame = 0;
         bool _city = false;
+        int _map = -1;
 
         void _rebuild();
     };

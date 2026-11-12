@@ -73,6 +73,55 @@ namespace tl
         constexpr bn::string_view diner_labels[] = { "Coffee $2", "Pancakes $4", "Burger $6" };
         constexpr shop_item diner_items[] = {
             { 2, 2, 0, 15, 5, -10 }, { 4, 2, 25, 8, 0, 0 }, { 6, 3, 40, 12, 0, 0 } };
+        // Bellini Bakery (Old Block): fresh and a bit dearer than the market, better quality
+        constexpr bn::string_view bakery_labels[] = { "Fresh bread $3", "Croissant $2", "Cinnamon bun $3", "Coffee $2" };
+        constexpr shop_item bakery_items[] = {
+            { 3, 2, 22, 4, 0, 0 }, { 2, 2, 12, 5, 2, 0 }, { 3, 3, 15, 6, 5, 0 }, { 2, 2, 0, 15, 5, -10 } };
+        // Baker's Lane corner grocery: cheap basics
+        constexpr bn::string_view lane_labels[] = { "Apple $1", "Cheese roll $2", "Tea $1", "Sardine tin $2" };
+        constexpr shop_item lane_items[] = {
+            { 1, 1, 6, 1, 0, 0 }, { 2, 1, 14, 3, 0, 0 }, { 1, 1, 0, 8, 3, -5 }, { 2, 1, 16, 2, -2, 0 } };
+
+        // Rosa's market stall on Cobble Street
+        constexpr bn::string_view stall_labels[] = { "Rosa's loaf $2", "Orange $1", "Rye loaf $3" };
+        constexpr shop_item stall_items[] = { { 2, 1, 15, 3, 0, 0 }, { 1, 1, 6, 1, 2, 0 }, { 3, 2, 20, 4, 0, 0 } };
+
+        // One table row per shop: the menu title, labels, items and the gifts it sells (indices into gift_defs).
+        struct shop_set
+        {
+            const char* title;
+            const bn::string_view* labels;
+            const shop_item* items;
+            int count;
+            const int* gifts;
+            int gift_count;
+            bool diner;                 // coffee voucher + "Work a shift" apply
+        };
+
+        constexpr int market_gifts[] = { 0, 1, 3, 4 };
+        constexpr int diner_gifts[] = { 2, 3 };
+        constexpr int bakery_gifts[] = { 1, 3 };
+        constexpr int lane_gifts[] = { 0, 4 };
+        constexpr shop_set market_set = { "Corner Market", market_labels, market_items, 4, market_gifts, 4, false };
+        constexpr shop_set vaultmart_set = { "VaultMart", cold_labels, cold_items, 5, nullptr, 0, false };
+        constexpr shop_set diner_set = { "Diner", diner_labels, diner_items, 3, diner_gifts, 2, true };
+        constexpr shop_set bakery_set = { "Bellini Bakery", bakery_labels, bakery_items, 4, bakery_gifts, 2, false };
+        constexpr int stall_gifts[] = { 0 };
+        constexpr shop_set stall_set = { "Rosa's Stall", stall_labels, stall_items, 3, stall_gifts, 1, false };
+        constexpr shop_set lane_set = { "Lane Grocery", lane_labels, lane_items, 4, lane_gifts, 2, false };
+
+        [[nodiscard]] const shop_set& shop_for(interactable_kind kind, map_id map)
+        {
+            switch(kind)
+            {
+            case interactable_kind::shop_diner: return diner_set;
+            case interactable_kind::shop_bakery: return bakery_set;
+            case interactable_kind::shop_lane: return lane_set;
+            case interactable_kind::shop_stall: return stall_set;
+            default: return map == map_id::vaultmart ? vaultmart_set : market_set;
+            }
+        }
+
         constexpr bn::string_view toilet_options[] = { "Use toilet" };
         constexpr bn::string_view bin_options[] = { "Search the bin" };
         constexpr bn::string_view sink_options[] = { "Wash hands", "Drink water" };
@@ -194,7 +243,9 @@ namespace tl
         _npcs.load(*_map, id, _day, _minutes);
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _story_check_due = true;
+        _update_gates();
         _deposit.load(*_map);
+        _map_sprites.load(*_map);
         _collect.load(*_map);
         _pool_sprites.clear();
         _car_clear();
@@ -274,6 +325,7 @@ namespace tl
         _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
         _npcs.update(_cam_x, _cam_y);
         _deposit.update(*_map, _cam_x, _cam_y);
+        _map_sprites.update(*_map, _cam_x, _cam_y);
         _collect.update(*_map, _cam_x, _cam_y);
 
         int x0, y0, x1, y1, depth;
@@ -299,6 +351,7 @@ namespace tl
             _npcs.set_lighting(_light);
             _critters.set_lighting(_light);
             _deposit.set_lighting(_light);
+            _map_sprites.set_lighting(_light);
             _collect.set_lighting(_light);
 
             bool lamps_on = _map->outdoor && _light.night >= 128;
@@ -889,6 +942,9 @@ namespace tl
 
         case interactable_kind::shop_market:
         case interactable_kind::shop_diner:
+        case interactable_kind::shop_bakery:
+        case interactable_kind::shop_lane:
+        case interactable_kind::shop_stall:
             if(best->kind == interactable_kind::shop_market && _map_id == map_id::vaultmart)
             {
                 // the robot voice of the self-checkout kiosk
@@ -988,6 +1044,19 @@ namespace tl
             _show_info("Storeroom", "You carry the rye loaf.", "Take it to Mr. Pimm.", "");
             break;
 
+        case interactable_kind::sign:
+        case interactable_kind::flap:
+        case interactable_kind::hatch:
+        case interactable_kind::chess:
+        case interactable_kind::garden:
+        case interactable_kind::hoop:
+        case interactable_kind::washer:
+        case interactable_kind::oven:
+            _menu_mode = menu_mode::none;
+            _menu_target = nullptr;
+            _use_old_block(*best);
+            break;
+
         default:
             _menu_mode = menu_mode::none;
             _menu_target = nullptr;
@@ -1004,21 +1073,21 @@ namespace tl
         static bn::string_view options[menu::max_options];
         static bn::string_view voucher_label = "Coffee (voucher)";
         static bn::string_view shift_label = "Work a shift";
-        bool market = target.kind == interactable_kind::shop_market;
-        bool cold = market && _map_id == map_id::vaultmart;
-        int count = market ? (cold ? 5 : 4) : 3;
+        const shop_set& set = shop_for(target.kind, _map_id);
+        bool cold = set.gift_count == 0;
+        int count = set.count;
 
         for(int index = 0; index < count; ++index)
         {
-            options[index] = market ? (cold ? cold_labels[index] : market_labels[index]) : diner_labels[index];
+            options[index] = set.labels[index];
         }
 
-        if(! market && story().flag(story_flag::has_coffee_voucher) && ! story().flag(story_flag::voucher_used))
+        if(set.diner && story().flag(story_flag::has_coffee_voucher) && ! story().flag(story_flag::voucher_used))
         {
             options[0] = voucher_label;
         }
 
-        _shop_has_shift = ! market && story().flag(story_flag::diner_job);
+        _shop_has_shift = set.diner && story().flag(story_flag::diner_job);
 
         if(_shop_has_shift)
         {
@@ -1050,8 +1119,8 @@ namespace tl
             options[count++] = gifts_label;
         }
 
-        _shop_items = market ? (cold ? 5 : 4) : 3;
-        _menu.open(market ? (cold ? "VaultMart" : "Corner Market") : "Diner", options, count);
+        _shop_items = set.count;
+        _menu.open(set.title, options, count);
     }
 
     void field::_show_info(const char* title, const char* line_a, const char* line_b, const char* line_c)
@@ -1071,12 +1140,10 @@ namespace tl
     // Gifts sold per shop (docs/features_backlog.md): gift index into gift_defs (Flowers, Chocolate, Hot sauce, Cookies, Newspaper).
     void field::_open_gift_shop(const interactable& target)
     {
-        static constexpr int market_gifts[] = { 0, 1, 3, 4 };
-        static constexpr int diner_gifts[] = { 2, 3 };
         static bn::string_view options[4];
-        bool market = target.kind == interactable_kind::shop_market;
-        const int* ids = market ? market_gifts : diner_gifts;
-        _gift_offer = market ? 4 : 2;
+        const shop_set& set = shop_for(target.kind, _map_id);
+        const int* ids = set.gifts;
+        _gift_offer = set.gift_count;
 
         for(int index = 0; index < _gift_offer; ++index)
         {
@@ -1229,10 +1296,9 @@ namespace tl
 
     void field::_buy(const interactable& target, int choice)
     {
-        bool market = target.kind == interactable_kind::shop_market;
-        bool cold = market && _map_id == map_id::vaultmart;
-        shop_item item = market ? (cold ? cold_items[choice] : market_items[choice]) : diner_items[choice];
-        bool voucher = ! market && choice == 0 && story().flag(story_flag::has_coffee_voucher) && ! story().flag(story_flag::voucher_used);
+        const shop_set& set = shop_for(target.kind, _map_id);
+        shop_item item = set.items[choice];
+        bool voucher = set.diner && choice == 0 && story().flag(story_flag::has_coffee_voucher) && ! story().flag(story_flag::voucher_used);
 
         if(voucher)
         {
@@ -2029,6 +2095,7 @@ namespace tl
 
         case state::playing:
             _rng.update();      // the outcome of random events depends on when the player acts
+            _update_gates();
 
             if(_version_frames > 0 && --_version_frames == 0)
             {

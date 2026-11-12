@@ -18,12 +18,9 @@ namespace tl
     void deposit::load(const map_info& map)
     {
         clear();
-        _city = &map == &get_map(map_id::city_centre);
-
-        if(_city)
-        {
-            _rebuild();
-        }
+        _map = int(&map - &get_map(map_id(0)));
+        _city = true;       // any map may hold spots; _rebuild only shows those of the current map
+        _rebuild();
     }
 
     void deposit::clear()
@@ -31,6 +28,7 @@ namespace tl
         _sprites.clear();
         _sprite_spot.clear();
         _city = false;
+        _map = -1;
     }
 
     void deposit::set_lighting(const light_params& params)
@@ -53,7 +51,7 @@ namespace tl
 
         for(int index = 0; index < pickup_spots_count && ! _sprites.full(); ++index)
         {
-            if(spot[index])
+            if(spot[index] && int(pickup_spots[index].map) == _map)
             {
                 bn::sprite_ptr sprite = bn::sprite_items::pickups.create_sprite(0, 0);
                 sprite.set_bg_priority(3);          // behind the objects layer (under benches), above the floor
@@ -141,7 +139,7 @@ namespace tl
 
         for(int index = 0; index < pickup_spots_count; ++index)
         {
-            if(spot[index])
+            if(spot[index] && int(pickup_spots[index].map) == _map)
             {
                 int dx = pickup_spots[index].x - x;
                 int dy = pickup_spots[index].y - y;

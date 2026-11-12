@@ -162,7 +162,7 @@ namespace tl
     {
 
     public:
-        static constexpr int max_flags = 64;
+        static constexpr int max_flags = 80;
         static constexpr int name_max = 10;
         static constexpr int daily_talk_cap = 12;       // friendship points per NPC and day from small talk
 

@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cast  # noqa: E402
 import story_data  # noqa: E402
 
-MAPS = ["city_centre", "corner_market", "diner", "community_centre", "vaulttech_lobby", "public_toilet", "player_room", "vaultmart", "clinic"]
+MAPS = ["city_centre", "corner_market", "diner", "community_centre", "vaulttech_lobby", "public_toilet", "player_room", "vaultmart", "clinic", "old_block", "laundromat", "bakery", "mia_flat", "lane_shop"]
 
 
 class Save(ct.Structure):
@@ -27,11 +27,11 @@ class Save(ct.Structure):
                 ("day", ct.c_uint16), ("minutes", ct.c_uint16), ("minute_frames", ct.c_uint16),
                 ("pad_world", ct.c_uint16), ("total_minutes", ct.c_int32), ("money", ct.c_int32),
                 ("need_raw", ct.c_int32 * 5), ("bladder_boost", ct.c_int16), ("pad_needs", ct.c_uint16),
-                ("bin_emptied", ct.c_int32 * 160), ("player_name", ct.c_char * 12),
-                ("story_flags", ct.c_uint8 * 64), ("mission_id", ct.c_uint16), ("pad_mission", ct.c_uint16),
+                ("bin_emptied", ct.c_int32 * 256), ("player_name", ct.c_char * 12),
+                ("story_flags", ct.c_uint8 * 80), ("mission_id", ct.c_uint16), ("pad_mission", ct.c_uint16),
                 ("friendship", ct.c_uint8 * 16),
                 ("deposit_init", ct.c_uint8), ("deposit_cans", ct.c_uint8), ("deposit_bottles", ct.c_uint8),
-                ("deposit_credit", ct.c_uint8), ("deposit_spot", ct.c_uint8 * 32), ("social_valid", ct.c_uint8), ("social", ct.c_uint8), ("items", ct.c_uint8 * 5),
+                ("deposit_credit", ct.c_uint8), ("deposit_spot", ct.c_uint8 * 64), ("social_valid", ct.c_uint8), ("social", ct.c_uint8), ("items", ct.c_uint8 * 5),
                 ("gift_day", ct.c_uint8 * 8), ("gossip", ct.c_uint8 * 8), ("scratch_day", ct.c_uint8), ("scratch_count", ct.c_uint8),
                 ("spare", ct.c_uint8 * 3),
                 ("topic_mem", (ct.c_uint8 * 8) * 8), ("talk_day", ct.c_uint8 * 8), ("gain_day", ct.c_uint8 * 8),
@@ -46,7 +46,7 @@ class Save(ct.Structure):
 def make(path, a):
     s = Save()
     s.magic = 0x56534C54
-    s.version = 3
+    s.version = 4
     s.size = ct.sizeof(Save)
     s.map = MAPS.index(a.map)
     s.facing = a.facing

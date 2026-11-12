@@ -104,7 +104,19 @@ namespace tl
         kiosk,          // newspaper boxes at the bus stop: scratch cards and newspapers (s63)
         shower,         // s64: shower cubicle of the public toilet ($1 coin slot)
         clinic,         // s64: City Clinic reception desk (check-up, pay the bill, talk to the doctor)
-        couch           // s64: the exam couch (info text; fainting patients wake up here)
+        couch,          // s64: the exam couch (info text; fainting patients wake up here)
+        // s75 Old Block (quality = index of the text in the field's info table where noted)
+        shop_bakery,    // Bellini Bakery counter
+        shop_lane,      // Baker's Lane corner grocery counter
+        shop_stall,     // Rosa's market stall on Cobble Street
+        sign,           // info page, quality = text index
+        flap,           // fence flap of the sneak route (before sneak_route: just a fence)
+        hatch,          // NODE 7 hatch at the demolition site
+        chess,          // watch the chess game
+        garden,         // water the community garden
+        hoop,           // shoot hoops on the court
+        washer,         // laundromat washing machine
+        oven            // bakery oven (warm up)
     };
 
     struct interactable
@@ -159,6 +171,27 @@ namespace tl
         int y;
     };
 
+    // Gated solids (Old Block): sub-cell aligned rectangles that are solid in the ROM collision grid (closed state) and
+    // walkable while `gate_open[gate]` is true (field::_update_gates sets it from story flags).
+    enum class gate_id : uint8_t
+    {
+        sneak,          // fence flap + bush lane (flag sneak_route)
+        barrier,        // gap in the barrier line (flag barrier_moved)
+        bridge          // Teo's door bridge over the trench (flag door_bridge)
+    };
+
+    constexpr int max_gates = 8;
+    inline bool gate_open[max_gates] = {};
+
+    struct gate_rect
+    {
+        int x0;         // world units, half-open [x0, x1) x [y0, y1)
+        int y0;
+        int x1;
+        int y1;
+        gate_id gate;
+    };
+
     struct map_info
     {
         const char* name;
@@ -185,6 +218,8 @@ namespace tl
         const lamp* lamps;
         int lamps_count;
         bool outdoor;   // day/night lighting applies
+        const gate_rect* gates;
+        int gates_count;
 
         [[nodiscard]] constexpr int to_image_x(int x, int y) const
         {
@@ -198,18 +233,33 @@ namespace tl
 
         // Returns true if the given world point is blocked (outside the map counts as blocked).
         // The collision grid has solid_res sub-cells per map cell (row-major, width * solid_res columns).
-        [[nodiscard]] constexpr bool solid_at(int x, int y) const
+        [[nodiscard]] bool solid_at(int x, int y) const
         {
             if(x < 0 || y < 0 || x >= width * cell_size || y >= height * cell_size)
             {
                 return true;
             }
 
-            return solid[((y / solid_cell) * (width * solid_res)) + (x / solid_cell)] != 0;
+            if(solid[((y / solid_cell) * (width * solid_res)) + (x / solid_cell)] == 0)
+            {
+                return false;
+            }
+
+            for(int index = 0; index < gates_count; ++index)
+            {
+                const gate_rect& g = gates[index];
+
+                if(gate_open[int(g.gate)] && x >= g.x0 && x < g.x1 && y >= g.y0 && y < g.y1)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         // Returns true if any sub-cell touched by the square around (x, y) is blocked.
-        [[nodiscard]] constexpr bool solid_around(int x, int y, int radius) const
+        [[nodiscard]] bool solid_around(int x, int y, int radius) const
         {
             for(int sy = y - radius; ; sy += solid_cell)
             {

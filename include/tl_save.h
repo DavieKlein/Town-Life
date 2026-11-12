@@ -14,8 +14,8 @@ namespace tl
     struct save_data
     {
         static constexpr uint32_t magic_value = 0x56534C54;     // "TLSV"
-        static constexpr uint16_t save_version = 3;
-        static constexpr int max_maps = 10;                     // bin cooldown slots reserved per map index
+        static constexpr uint16_t save_version = 4;
+        static constexpr int max_maps = 16;                     // bin cooldown slots reserved per map index
         static constexpr int bins_per_map = 16;
         static constexpr int needs_count = 5;
         static constexpr int name_size = 12;
@@ -50,7 +50,7 @@ namespace tl
 
         // reserved for the future
         char player_name[name_size] = {};
-        uint8_t story_flags[64] = {};
+        uint8_t story_flags[80] = {};
         uint16_t mission_id = 0;
         uint16_t pad_mission = 0;
         uint8_t friendship[npc_slots] = {};
@@ -59,7 +59,7 @@ namespace tl
         uint8_t deposit_cans = 0;               // bag
         uint8_t deposit_bottles = 0;
         uint8_t deposit_credit = 0;             // 0 or 1
-        uint8_t deposit_spot[32] = {};          // per pickup spot: 0 = none, kind (1 can, 2 bottle) | variant << 2
+        uint8_t deposit_spot[64] = {};          // per pickup spot: 0 = none, kind (1 can, 2 bottle) | variant << 2
         // s63 (carved out of the spare bytes): Social need, gift inventory, gifts given, gossip state, scratch cards
         uint8_t social_valid = 0;               // 1 once `social` is valid (old saves start at 60)
         uint8_t social = 0;

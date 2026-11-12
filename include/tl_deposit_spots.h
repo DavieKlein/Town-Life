@@ -2,6 +2,8 @@
 #ifndef TL_DEPOSIT_SPOTS_H
 #define TL_DEPOSIT_SPOTS_H
 
+#include "tl_map_id.h"
+
 namespace tl
 {
     struct pickup_spot
@@ -11,35 +13,36 @@ namespace tl
         bool can_ok;
         bool bottle_ok;
         bool bush;          // Hygiene -2 instead of -1
+        map_id map;         // the map the spot lies on
     };
 
     constexpr pickup_spot pickup_spots[] = {
-        { 86, 644, true, true, false },
-        { 214, 640, true, true, false },
-        { 22, 649, true, true, false },
-        { 132, 595, true, false, false },
-        { 190, 683, true, true, true },
-        { 110, 707, true, true, true },
-        { 222, 723, false, true, false },
-        { 83, 747, true, true, true },
-        { 176, 656, true, false, false },
-        { 92, 347, true, true, false },
-        { 262, 347, true, true, false },
-        { 838, 347, true, true, false },
-        { 1078, 347, true, true, false },
-        { 662, 312, true, false, false },
-        { 630, 504, true, true, false },
-        { 755, 529, true, false, false },
-        { 672, 544, true, true, false },
-        { 803, 600, true, true, false },
-        { 928, 619, true, true, false },
-        { 784, 729, true, true, false },
-        { 912, 710, true, true, false },
-        { 848, 702, false, true, false },
-        { 160, 809, true, true, false },
-        { 384, 809, true, true, false },
-        { 752, 809, true, true, false },
-        { 992, 809, true, true, false },
+        { 86, 644, true, true, false, map_id::city_centre },
+        { 214, 640, true, true, false, map_id::city_centre },
+        { 22, 649, true, true, false, map_id::city_centre },
+        { 132, 595, true, false, false, map_id::city_centre },
+        { 190, 683, true, true, true, map_id::city_centre },
+        { 110, 707, true, true, true, map_id::city_centre },
+        { 222, 723, false, true, false, map_id::city_centre },
+        { 83, 747, true, true, true, map_id::city_centre },
+        { 176, 656, true, false, false, map_id::city_centre },
+        { 92, 347, true, true, false, map_id::city_centre },
+        { 262, 347, true, true, false, map_id::city_centre },
+        { 838, 347, true, true, false, map_id::city_centre },
+        { 1078, 347, true, true, false, map_id::city_centre },
+        { 662, 312, true, false, false, map_id::city_centre },
+        { 630, 504, true, true, false, map_id::city_centre },
+        { 755, 529, true, false, false, map_id::city_centre },
+        { 672, 544, true, true, false, map_id::city_centre },
+        { 803, 600, true, true, false, map_id::city_centre },
+        { 928, 619, true, true, false, map_id::city_centre },
+        { 784, 729, true, true, false, map_id::city_centre },
+        { 912, 710, true, true, false, map_id::city_centre },
+        { 848, 702, false, true, false, map_id::city_centre },
+        { 160, 809, true, true, false, map_id::city_centre },
+        { 384, 809, true, true, false, map_id::city_centre },
+        { 752, 809, true, true, false, map_id::city_centre },
+        { 992, 809, true, true, false, map_id::city_centre },
     };
 
     constexpr int pickup_spots_count = int(sizeof(pickup_spots) / sizeof(pickup_spot));

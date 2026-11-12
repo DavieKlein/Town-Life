@@ -70,8 +70,10 @@ FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "
          # s64: clinic
          "met_okafor", "faint_told", "sick_told", "clinic_paid",
          # s71: Lou's crates job (odd job from the community centre board)
-         "crates_go"]
-assert len(FLAGS) <= 64
+         "crates_go",
+         # s75: Old Block gates (sneak route, barrier gap after M13, Teo's door bridge)
+         "sneak_route", "barrier_moved", "door_bridge"]
+assert len(FLAGS) <= 80
 
 # ---------------------------------------------------------------------------------------------------- missions
 # cond: None (finished by a `done <id>` effect), ("talk", npc), ("map", map), ("money", n), ("flag", name),
