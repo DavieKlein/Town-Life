@@ -213,7 +213,7 @@ namespace tl
         draw_keys();
         bn::core::update();
 
-        static bn::string<24> confirm_line;
+        static bn::string<32> confirm_line;   // 10-char name + "? Is that right?" = 26
 
         while(true)
         {
