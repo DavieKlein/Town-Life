@@ -322,7 +322,11 @@ namespace tl
         _objects_bg->set_view(_cam_x, _cam_y);
         _car_update();
         _player.update_sprite(_cam_x, _cam_y);
-        _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
+        if(! _conversation.active())        // s76: the critters' frame changes churn sprite tile blocks; frozen during talks (VRAM fragmentation)
+        {
+            _critters.update(_player.x(), _player.y(), _cam_x, _cam_y);
+        }
+
         _npcs.update(_cam_x, _cam_y);
         _deposit.update(*_map, _cam_x, _cam_y);
         _map_sprites.update(*_map, _cam_x, _cam_y);
@@ -1918,7 +1922,12 @@ namespace tl
         _player.face_towards(nx, ny);
         _npcs.face_towards(npc_index, _player.x(), _player.y());
         _npcs.focus(npc_index);
-        _map_sprites.clear();           // s76: frees the barrier / bridge sprite tiles while talking (choice layout needs the VRAM)
+        // s76: free every ambient world sprite while talking: the small-talk choice layout (96 px portrait, meter, options) needs a lot of
+        // sprite VRAM in contiguous blocks, and Rosa's stall / Old Block ran out of it ("Sprite tiles allocate failed"). Restored in _end_conversation.
+        _critters.clear();
+        _deposit.clear();
+        _collect.clear();
+        _map_sprites.clear();
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         npc_index = 0;
         story().set_crates_open(_crates_open());
@@ -1952,7 +1961,13 @@ namespace tl
         int npc = _conversation.partner();
         _npcs.reset_facings();
         _npcs.unfocus();
+        _critters.load(*_map);
+        _deposit.load(*_map);
+        _collect.load(*_map);
         _map_sprites.load(*_map);
+        _critters.set_lighting(_light);
+        _deposit.set_lighting(_light);
+        _collect.set_lighting(_light);
         _set_hud_hidden(false);
         _money += story().take_money();
         _needs.add_social(story().take_social());
