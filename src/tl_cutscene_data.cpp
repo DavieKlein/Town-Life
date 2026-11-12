@@ -96,6 +96,7 @@ namespace tl
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // back_for_lunch
         { cs_op::fade_out, 12, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::warp, int(map_id::city_centre), 650, 314, 3, 0, nullptr },  // vault_day
+        { cs_op::music_stop, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::car_spawn, 1056, 377, 3, 0, 0, nullptr },  // vault_day
         { cs_op::pan, 720, 374, 0, 0, 0, nullptr },  // vault_day
@@ -226,9 +227,9 @@ namespace tl
         { cs_op::say, dlg::faint_wake, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::get_up, 0, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::wait, 10, 0, 0, 0, 0, nullptr },  // faint
-        { cs_op::ifflag, story_flag::clinic_paid, 1, 220, 0, 0, nullptr },  // faint
+        { cs_op::ifflag, story_flag::clinic_paid, 1, 221, 0, 0, nullptr },  // faint
         { cs_op::say, dlg::faint_debt, 0, 0, 0, 0, nullptr },  // faint
-        { cs_op::jump, 221, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::jump, 222, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::say, dlg::faint_pay, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::actor_face_player, int(npc_id::okafor), 0, 0, 0, 0, nullptr },  // faint
         { cs_op::scene_end, 0, 0, 0, 0, 0, nullptr },  // faint
@@ -245,10 +246,10 @@ namespace tl
             { 70, 6 },
             { 76, 6 },
             { 82, 3 },
-            { 85, 114 },
-            { 199, 3 },
-            { 202, 2 },
-            { 204, 21 },
+            { 85, 115 },
+            { 200, 3 },
+            { 203, 2 },
+            { 205, 21 },
         };
         constexpr cs_cond all_conds[] = {
             { cs_cond_kind::map, int(map_id::player_room), 0 },

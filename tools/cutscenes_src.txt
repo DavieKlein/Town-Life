@@ -116,6 +116,7 @@ script vault_day
   # beat 1: outside, the golden car glides in along the avenue and stops at the Corner Market kerb
   fade_out 12
   warp city_centre 40.6 19.6 right
+  music_stop
   scene_begin
   car_spawn 66.0 23.55 nw
   pan 45.0 23.4

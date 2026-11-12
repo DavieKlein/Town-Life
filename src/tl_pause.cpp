@@ -1,4 +1,5 @@
 #include "tl_pause.h"
+#include "tl_audio.h"
 
 #include "bn_keypad.h"
 #include "tl_story.h"
@@ -113,16 +114,19 @@ namespace tl
         if(bn::keypad::up_pressed() && _selected > 0)
         {
             --_selected;
+            audio::play(audio::sfx::blip);
             _draw_options();
         }
         else if(bn::keypad::down_pressed() && _selected < _options_count - 1)
         {
             ++_selected;
+            audio::play(audio::sfx::blip);
             _draw_options();
         }
 
         if(bn::keypad::a_pressed())
         {
+            audio::play(audio::sfx::confirm);
             int chosen = _selected;
             close();
             return chosen;
@@ -130,6 +134,7 @@ namespace tl
 
         if(bn::keypad::b_pressed())
         {
+            audio::play(audio::sfx::back);
             close();
             return cancelled;
         }
@@ -293,21 +298,25 @@ namespace tl
         if(bn::keypad::up_pressed() && _selected > 0)
         {
             --_selected;
+            audio::play(audio::sfx::blip);
             _draw_options();
         }
         else if(bn::keypad::down_pressed() && _selected < options_count - 1)
         {
             ++_selected;
+            audio::play(audio::sfx::blip);
             _draw_options();
         }
 
         if(bn::keypad::a_pressed())
         {
+            audio::play(audio::sfx::confirm);
             return _selected;
         }
 
         if(bn::keypad::b_pressed() || bn::keypad::start_pressed())
         {
+            audio::play(audio::sfx::back);
             return resume;
         }
 

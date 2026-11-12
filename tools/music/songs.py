@@ -55,8 +55,8 @@ def city_day(out):
     insts += [kit[k] for k in ("kick", "snare", "rim", "hat", "ohat", "shaker")]
     song = Song("City Centre day", 104, 24, 8, insts, swing=2)
     song.master = 1.1
-    song.gain = {"epiano": 1.5, "shaker": 1.6, "clav": 1.8, "vibes": 1.3, "kick": 1.2, "snare": 1.3, "hat": 1.3, "rim": 1.3,
-                 "ohat": 1.3, "bass": 0.9}
+    song.gain = {"epiano": 1.5, "shaker": 2.6, "clav": 2.2, "vibes": 1.5, "kick": 1.1, "snare": 1.5, "hat": 2.6, "rim": 1.6,
+                 "ohat": 2.2, "bass": 0.75, "whistle": 1.35, "marimba": 1.15}
 
     F9 = C("F2", "A3", "Eb4", "F A C Eb G")
     Bb9 = C("Bb2", "Ab3", "D4", "Bb D F Ab C")
@@ -107,7 +107,9 @@ def city_day(out):
         elif sect in (1, 2, 5):
             d(0, b, kicks[b % 2], "kick", {"x": 58})
             d(0, b, snr_a if b % 2 == 0 else snr_b, "snare", {"s": 42, "g": 15})
-            d(1, b, shake, "shaker", {"A": 30, "b": 22, "c": 15})
+            d(1, b, shake, "shaker", {"A": 34, "b": 26, "c": 18})
+            for rr in (2, 6, 10, 14):
+                song.put(1, b, rr, 60, "hat", 30, None)
         else:           # B: lighter, hats on 8ths, kick on 1 and 3-and
             d(0, b, "x.....x...x.....", "kick", {"x": 52})
             d(0, b, "............s...", "rim", {"s": 30}) if b % 2 else None
@@ -216,7 +218,7 @@ def old_block(out):
     insts += [kit[k] for k in ("kick", "snare", "swish", "shaker", "clave")]
     song = Song("Old Block street", 96, 24, 8, insts, swing=2)
     song.master = 1.3
-    song.gain = {"guitar": 1.9, "mandolin": 1.7, "tuba": 1.4, "bass_up": 0.75, "kick": 1.3, "snare": 1.4, "shaker": 1.6, "swish": 1.6}
+    song.gain = {"guitar": 1.9, "mandolin": 1.7, "tuba": 1.4, "bass_up": 0.75, "kick": 0.9, "snare": 1.4, "shaker": 1.6, "swish": 1.6}
 
     D = C("D2", "A3", "F#4", "D F# A")
     G = C("G2", "B3", "G4", "G B D")
@@ -227,7 +229,7 @@ def old_block(out):
     A7s = C("A2", "D4", "G4", "A D E G")
     # bass roots: oom-pah octave for guitar-friendly register
     for ch in (D, G, Em7, A7, Bm, A, A7s):
-        ch["root"] += 0
+        ch["root"] += 12   # an octave up: phone speakers lose < 150 Hz
     prog = []
     P1 = [[(0, 16, D)], [(0, 16, G)], [(0, 16, D)], [(0, 8, Em7), (8, 16, A7)]]
     P2 = [[(0, 16, D)], [(0, 16, G)], [(0, 16, Bm)], [(0, 8, Em7), (8, 16, A7)]]
@@ -329,15 +331,15 @@ def old_block(out):
     for b in (7, 11, 15, 19, 23):
         chd = chord_at[(b, 0)] if len(prog[b]) == 1 else chord_at[(b, 8)]
         r = chd["root"]
-        song.put(6, b, 12, r + 12, "tuba", 36, 1)
-        song.put(6, b, 14, r + 19, "tuba", 36, 1)
+        song.put(6, b, 12, r, "tuba", 36, 1)
+        song.put(6, b, 14, r + 7, "tuba", 36, 1)
     for b in (3, 9, 22):
         pass
     # tuba doubles the bass root on 1 in P4/P5
     for b in range(16, 24):
         for (r0, r1, chd) in prog[b]:
             if b % 4 != 3:
-                song.put(6, b, r0, chd["root"] + 12, "tuba", 30, 3)
+                song.put(6, b, r0, chd["root"], "tuba", 30, 3)
 
     cl = [(b, r0, r1, ch["pcs"]) for b, bar in enumerate(prog) for (r0, r1, ch) in bar]
     sc = {2, 4, 6, 7, 9, 11, 0, 1}

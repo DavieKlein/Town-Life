@@ -192,6 +192,8 @@ namespace tl
         int _day = 1;                   // day counter, +1 at midnight
         int _minute_frames = 0;
         int _money = 20;
+        int _audio_money = 0;
+        bool _audio_money_valid = false;
         int _total_minutes = 0;         // game minutes since the start (bin cooldowns)
         bn::random _rng;
         bool _accident_pending = false;

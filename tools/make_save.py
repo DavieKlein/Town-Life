@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cast  # noqa: E402
 import story_data  # noqa: E402
 
-MAPS = ["city_centre", "corner_market", "diner", "community_centre", "vaulttech_lobby", "public_toilet", "player_room", "vaultmart", "clinic", "old_block", "laundromat", "bakery", "mia_flat", "lane_shop"]
+MAPS = ["city_centre", "corner_market", "diner", "community_centre", "vaulttech_lobby", "public_toilet", "player_room", "vaultmart", "clinic", "old_block", "laundromat", "bakery", "mia_flat", "lane_shop", "sewer"]
 
 
 class Save(ct.Structure):

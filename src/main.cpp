@@ -12,6 +12,7 @@
 #include "tl_name_entry.h"
 #include "tl_minigame.h"
 #include "tl_blackbox.h"
+#include "tl_audio.h"
 
 #ifdef TL_DEBUG_CPU
 #include "bn_core.h"
@@ -171,6 +172,7 @@ int main()
             tl::blackbox::note_scene(1);
             field.reset();
             bn::core::update();
+            tl::audio::set_track(tl::audio::track::market, 60, true);     // the shop loop keeps playing during the minigame (no per-frame fades there)
             tl::minigame_result result = tl::run_minigame(request);
             tl::apply_minigame_result(snapshot, request, result);
             bn::core::update();

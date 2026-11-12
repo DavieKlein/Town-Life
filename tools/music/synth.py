@@ -108,7 +108,7 @@ def plucked_loop(root_midi, P, partials, T_loop=0.35, vol=64, name=""):
 
 
 # ---------------------------------------------------------------- one-shot melodic voices
-def epiano_sample(root_midi, R=12000, dur=0.8, bright=1.0):
+def epiano_sample(root_midi, R=12000, dur=0.8, bright=2.5):
     f = mtof(root_midi)
     n = int(R * dur)
     t = np.arange(n) / R
@@ -129,8 +129,8 @@ def marimba_sample(root_midi, R=12000, dur=0.55):
     n = int(R * dur)
     t = np.arange(n) / R
     x = (np.sin(2 * math.pi * f * t) * np.exp(-t / 0.28)
-         + 0.55 * np.sin(2 * math.pi * f * 3.97 * t) * np.exp(-t / 0.055)
-         + 0.15 * np.sin(2 * math.pi * f * 9.9 * t) * np.exp(-t / 0.02))
+         + 0.9 * np.sin(2 * math.pi * f * 3.97 * t) * np.exp(-t / 0.07)
+         + 0.35 * np.sin(2 * math.pi * f * 9.9 * t) * np.exp(-t / 0.03))
     x = ramp_in(x, int(R * 0.002))
     x = fade_out(x, int(n * 0.3))
     return root_sample(norm(x), R, root_midi, name="marimba")
@@ -241,7 +241,7 @@ def rim():
 def hat_closed():
     n = int(DR * 0.07)
     t = np.arange(n) / DR
-    x = highpass(noise(n), 0.55) * np.exp(-t / 0.016)
+    x = highpass(highpass(noise(n), 0.6), 0.6) * np.exp(-t / 0.016)
     return drum(fade_out(x, 150), "hat")
 
 
@@ -255,7 +255,7 @@ def hat_open():
 def shaker():
     n = int(DR * 0.11)
     t = np.arange(n) / DR
-    x = highpass(lowpass(noise(n), 0.7), 0.25) * np.minimum(t / 0.012, 1) * np.exp(-t / 0.035)
+    x = highpass(noise(n), 0.45) * np.minimum(t / 0.008, 1) * np.exp(-t / 0.03)
     return drum(fade_out(x, 200), "shaker")
 
 
@@ -314,17 +314,30 @@ def inst_glock():
     return Instrument("glock", [glock_sample(84)], env=ENV_SHORT)
 
 
+def zoned_additive(name, zones, parts, attack_periods, detune_k=None, reps=1, env=None, vib=None):
+    """Band-limited looped voice: one sample per key zone (lo_midi, hi_midi, root_midi). The period length P is chosen
+    so that the highest note of the zone plays at <= 1 sample step per mixer sample (no decimation aliasing) and only
+    harmonics below the mixer Nyquist are kept."""
+    samples, km = [], [0] * 96
+    for zi, (lo, hi, root) in enumerate(zones):
+        P = max(10, int(15768 / mtof(hi)))
+        kept = [(h, a) for h, a in parts if h < P / 2 and h * mtof(hi) < 7200]
+        samples.append(additive_loop(root, P, kept, attack_periods=attack_periods, reps=reps,
+                                     detune_k=detune_k, name=name))
+    for idx in range(96):
+        m = idx + 12
+        km[idx] = max(i for i, z in enumerate(zones) if z[0] <= m)
+    return Instrument(name, samples, km, env=env or ENV_SHORT, vib=vib)
+
+
 def inst_whistle():
-    P = 28
-    s = additive_loop(79, P, [(1, 1.0), (2, 0.10), (3, 0.04)], attack_periods=14, reps=6, name="whistle")
-    return Instrument("whistle", [s], env=ENV_SHORT, vib=(28, 2, 22))
+    return zoned_additive("whistle", [(0, 74, 70), (75, 108, 80)],
+                          [(1, 1.0), (2, 0.3), (3, 0.15), (4, 0.07)], attack_periods=14, reps=6, vib=(28, 2, 22))
 
 
 def inst_accordion():
-    P = 28
     parts = [(1, 1.0), (2, 0.8), (3, 0.55), (4, 0.42), (5, 0.28), (6, 0.2), (7, 0.1), (8, 0.08)]
-    s = additive_loop(74, P, parts, attack_periods=12, detune_k=60, name="accordion")
-    return Instrument("accordion", [s], env=ENV_SHORT)
+    return zoned_additive("accordion", [(0, 69, 66), (70, 76, 73), (77, 108, 80)], parts, attack_periods=12, detune_k=60)
 
 
 def inst_bass(upright=False):
@@ -334,8 +347,9 @@ def inst_bass(upright=False):
     else:
         parts = [(1, 1.0, 0.85, 0.30), (2, 0.7, 0.35, 0.10), (3, 0.45, 0.15, 0.08), (4, 0.28, 0.06, 0.06),
                  (5, 0.16, 0.02, 0.05), (6, 0.1, 0.0, 0.04)]
-    s = plucked_loop(36, P, parts, T_loop=0.32, name="bass")
-    return Instrument("bass_up" if upright else "bass", [s], env=ENV_SHORT)
+    lo = plucked_loop(36, P, parts, T_loop=0.32, name="bass")
+    hi = plucked_loop(48, P // 2, parts, T_loop=0.32, name="bass")
+    return Instrument("bass_up" if upright else "bass", [lo, hi], split(48), env=ENV_SHORT)
 
 
 def inst_tuba():

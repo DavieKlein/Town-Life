@@ -1,4 +1,5 @@
 #include "tl_dialogue.h"
+#include "tl_audio.h"
 
 #include "bn_keypad.h"
 #include "bn_sprite_items_ui_tag.h"
@@ -679,16 +680,19 @@ namespace tl
         if(bn::keypad::up_pressed() && _selected > 0)
         {
             --_selected;
+            audio::play(audio::sfx::blip);
             _draw_choices();
         }
         else if(bn::keypad::down_pressed() && _selected < _options_count - 1)
         {
             ++_selected;
+            audio::play(audio::sfx::blip);
             _draw_choices();
         }
 
         if(TL_A_PRESSED())
         {
+            audio::play(audio::sfx::confirm);
             int chosen = _selected;
 #ifdef TL_DEBUG_AUTO_TALK
             for(int index = 0; index < _options_count; ++index)

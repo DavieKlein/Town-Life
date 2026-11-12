@@ -12,6 +12,7 @@
 #include "bn_sprite_palettes.h"
 
 #include "tl_cutscene.h"
+#include "tl_audio.h"
 #include "tl_car_data.h"
 #include "bn_sprite_items_car_se.h"
 #include "bn_sprite_items_car_nw.h"
@@ -744,6 +745,18 @@ namespace tl
 
         case cs_op::pan_player:
             _pan_mode = 2;
+            break;
+
+        case cs_op::music:
+            audio::set_track(audio::track(step.a), step.b ? step.b : 100, false);
+            break;
+
+        case cs_op::music_stop:
+            audio::stop(false);
+            break;
+
+        case cs_op::sfx:
+            audio::play(audio::sfx(step.a));
             break;
 
         case cs_op::time:

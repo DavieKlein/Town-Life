@@ -1,4 +1,5 @@
 #include "tl_menu.h"
+#include "tl_audio.h"
 
 #include "bn_keypad.h"
 
@@ -108,16 +109,19 @@ namespace tl
         if(bn::keypad::up_pressed() && _selected > 0)
         {
             --_selected;
+            audio::play(audio::sfx::blip);
             _draw_rows();
         }
         else if(bn::keypad::down_pressed() && _selected < _options_count - 1)
         {
             ++_selected;
+            audio::play(audio::sfx::blip);
             _draw_rows();
         }
 
         if(bn::keypad::a_pressed())
         {
+            audio::play(audio::sfx::confirm);
             int chosen = _selected;
             close();
             return chosen;
@@ -125,6 +129,7 @@ namespace tl
 
         if(bn::keypad::b_pressed())
         {
+            audio::play(audio::sfx::back);
             close();
             return cancelled;
         }

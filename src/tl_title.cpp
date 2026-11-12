@@ -1,4 +1,5 @@
 #include "tl_title.h"
+#include "tl_audio.h"
 
 #include "bn_core.h"
 #include "bn_color.h"
@@ -120,11 +121,13 @@ namespace tl
                 if(bn::keypad::up_pressed() && selected > 0)
                 {
                     --selected;
+                    audio::play(audio::sfx::blip);
                     draw();
                 }
                 else if(bn::keypad::down_pressed() && selected < options_count - 1)
                 {
                     ++selected;
+                    audio::play(audio::sfx::blip);
                     draw();
                 }
 

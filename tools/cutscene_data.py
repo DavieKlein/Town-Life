@@ -53,6 +53,9 @@ FORMAT of cutscenes_src.txt (one statement per line, '#' starts a comment, inden
     hook car_arrival           (kept, unused: the car is real now)
     clinic_care <0>            s64: after a faint: 2 hours pass, needs are patched up, the $20 fee is paid (flag clinic_paid = 1) or becomes a debt (0)
     vaultmart_swap             HOOK: the cold VaultMart look of Corner Market (design pending) - for now a cold palette + flash
+    music <city|old_block|market|none> [volume%]   s78: switch the music track (fades; the next map change picks the track by place again)
+    music_stop                 fade the music out
+    sfx <blip|confirm|back|coin|cash|door_bell|mission>   play a sound effect
     jump <label> / ifflag <flag> <n> <label>      jump (always / when the flag value >= n)
     end                        end of the script
 """
@@ -77,7 +80,7 @@ OPS = {
     "flag": "Fn?", "mission": "M", "done": "M", "money": "n", "money_rank": "", "objective": "s", "objective_clear": "",
     "minigame": "k", "letterbox": "b", "pan": "cc", "pan_player": "", "time": "nn", "next_day": "nn", "needs": "nnnnn",
     "eat": "nnn", "lie_bed": "", "get_up": "", "hook": "h", "vaultmart_swap": "", "jump": "L", "ifflag": "FnL", "end": "",
-    "label": "L", "car_spawn": "ccf", "car_move": "ccnn", "car_remove": "", "clinic_care": "n", "pan_now": "cc",
+    "label": "L", "music": "tn?", "music_stop": "", "sfx": "x", "car_spawn": "ccf", "car_move": "ccnn", "car_remove": "", "clinic_care": "n", "pan_now": "cc",
 }
 COND_KINDS = ["map", "flag", "noflag", "flag_ge", "day_eq", "day_ge", "time_ge", "time_lt", "mission"]
 
@@ -158,6 +161,10 @@ def convert_args(op, args, ln):
             vals.append("1" if a == "on" else "0")
         elif kind == "k":
             vals.append({"stock": "0", "dishes": "1"}[a])
+        elif kind == "t":
+            vals.append({"none": "0", "city": "1", "old_block": "2", "market": "3"}[a])
+        elif kind == "x":
+            vals.append({"blip": "0", "confirm": "1", "back": "2", "coin": "3", "cash": "4", "door_bell": "5", "mission": "6"}[a])
         elif kind == "h":
             vals.append({"car_arrival": "0"}[a])
         elif kind == "L":

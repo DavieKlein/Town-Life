@@ -1,4 +1,5 @@
 #include "tl_phone.h"
+#include "tl_audio.h"
 
 #include "bn_keypad.h"
 
@@ -497,11 +498,13 @@ namespace tl
                 {
                     --_sel;
                     moved = true;
+                    audio::play(audio::sfx::blip);
                 }
                 else if(bn::keypad::down_pressed() && _sel < _count - 1)
                 {
                     ++_sel;
                     moved = true;
+                    audio::play(audio::sfx::blip);
                 }
 
                 if(moved)
@@ -519,6 +522,11 @@ namespace tl
                 }
 
                 bool back = bn::keypad::b_pressed() || bn::keypad::select_pressed();
+
+                if(back || bn::keypad::a_pressed())
+                {
+                    audio::play(back ? audio::sfx::back : audio::sfx::confirm);
+                }
 
                 if(_state == state::home)
                 {

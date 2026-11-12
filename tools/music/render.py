@@ -30,6 +30,13 @@ def render(xm, mp3, loops=2, gain=0.0):
     rms = np.sqrt(np.mean(x ** 2))
     print(f"{os.path.basename(mp3)}: {len(x)/RATE:.1f} s, peak {20*np.log10(peak+1e-9):.1f} dBFS, rms {20*np.log10(rms+1e-9):.1f} dBFS, "
           f"clipped samples {int(np.sum(np.abs(x) > 0.999))}")
+    n = len(x) // loops
+    seg = x[:n]
+    sp = np.abs(np.fft.rfft(seg * np.hanning(n))) ** 2
+    f = np.fft.rfftfreq(n, 1 / RATE)
+    low = 100 * sp[f < 150].sum() / sp.sum()
+    high = 100 * sp[f >= 2000].sum() / sp.sum()
+    print(f"   energy below 150 Hz: {low:.1f} %, above 2 kHz: {high:.1f} %")
     return x
 
 

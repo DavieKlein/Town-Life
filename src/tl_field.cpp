@@ -17,6 +17,7 @@
 #include "tl_deposit_spots.h"
 #include "tl_story_ids.h"
 #include "tl_cutscene_ids.h"
+#include "tl_audio.h"
 
 namespace tl
 {
@@ -240,6 +241,7 @@ namespace tl
         _player.place(*_map, x, y, facing);
         _critters.load(*_map);
         _map_id = id;
+        audio::set_map(id);
         _npcs.load(*_map, id, _day, _minutes);
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _story_check_due = true;
@@ -2090,11 +2092,16 @@ namespace tl
 
         _set_hud_hidden(true);
         ui::set_night(is_night(_minutes));
+        audio::play(audio::sfx::mission);
         _conversation.start_message(_story_text.c_str());
     }
 
     void field::update()
     {
+        audio::duck(_pause_mode != pause_mode::none || _conversation.active() || _menu.is_open() || _phone_open);
+        audio::set_night(is_night(_minutes));
+        audio::update();
+
         switch(_state)
         {
 
@@ -2402,6 +2409,7 @@ namespace tl
             {
                 _state = state::fading_out;
                 _fade_counter = 0;
+                audio::set_map(_pending_warp->target);      // the music fades while the screen fades
             }
             break;
 
@@ -2451,6 +2459,19 @@ namespace tl
         default:
             break;
         }
+
+        // s78: coin / cash sound whenever the money changes (shops, pay, deposit, fees); the first frame only records it
+        if(_audio_money != _money)
+        {
+            if(_audio_money_valid)
+            {
+                audio::play(_money > _audio_money ? audio::sfx::coin : audio::sfx::cash);
+            }
+
+            _audio_money = _money;
+        }
+
+        _audio_money_valid = true;
 
 #ifdef TL_DEBUG_POS
         // s73 headless tests: a state dump that tools/drv.py finds in a savestate by its magic

@@ -2,6 +2,7 @@
 // Kept apart from tl_field.cpp. See docs/features_backlog.md "Built in s64".
 
 #include "tl_field.h"
+#include "tl_audio.h"
 
 #include "bn_keypad.h"
 #include "bn_sprite_items_ui_icons.h"
@@ -354,6 +355,7 @@ namespace tl
             story().add_friendship(reward.friend_npc, reward.friend_gain);
             _act.message = false;
             _story_text = reward.name;
+            audio::play(audio::sfx::mission);
             _story_text.append(" complete! Reward: $");
             _story_text.append(bn::to_string<6>(reward.money));
 
