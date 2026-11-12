@@ -117,7 +117,7 @@ PLACEMENTS = [
     # VaultMart: Dex in the grey blazer paces the aisles (a static figure for now), nobody at the checkout
     ("dex_vault", "vaultmart", 9.6, 11.4, "sw", "6:00", "22:00", 1, 255, "vault_scene", None),
     ("mia", "diner", 9.3, 4.7, "sw", "7:00", "12:00", 2, 255, None, None, "mia_diner"),              # waitress shift
-    ("mia", "city_centre", 50.4, 38.9, "w", "12:00", "12:30", 2, 255),     # lunch break at the fountain square bench
+    ("mia", "city_centre", 45.5, 38.9, "e", "12:00", "12:30", 2, 255),     # lunch break at the fountain square bench
     ("mia", "diner", 9.3, 4.7, "sw", "12:30", "15:00", 2, 255, None, None, "mia_diner"),
     ("lou", "diner", 6.4, 2.6, "sw", "6:00", "22:00", 1, 255),             # behind the counter (counter y 3.2..4.1)
     ("pimm", "community_centre", 4.9, 7.4, "ne", "13:00", "16:00", 1, 1, None, None, "pimm_library"),   # library, beside the reading table (Day 1 after the shop)
@@ -126,9 +126,9 @@ PLACEMENTS = [
     ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "19:30", 1, 255, None, None, "pimm_pond"),   # City Park pond, feeding the pigeons
 
     # ---- s76: Old Block residents (map old_block, cells; the bakery / laundromat interiors) ----
-    ("pruitt", "old_block", 8.6, 19.9, "se", "0:00", "23:59", 1, 255),                # folding chair on a drum at the VaultLink cable works
+    ("pruitt", "old_block", 8.5, 20.9, "se", "0:00", "23:59", 1, 255),                # folding chair on a drum at the VaultLink cable works
     ("trench_e", "old_block", 12.3, 21.3, "sw", "0:00", "23:59", 1, 255),             # digging in the trench
-    ("valdez", "old_block", 18.5, 18.9, "sw", "8:00", "21:00", 1, 255),               # under her balcony (house 16.5..21)
+    ("valdez", "old_block", 18.0, 18.8, "sw", "8:00", "21:00", 1, 255),               # under her balcony (house 16.5..21)
     ("captain", "old_block", 19.8, 18.9, "sw", "8:00", "21:00", 1, 255),              # parrot on his perch next to her
     ("teo", "old_block", 20.5, 22.0, "se", "10:00", "19:00", 1, 255, None, None, "teo_round"),
     ("grigor", "old_block", 33.1, 28.2, "sw", "10:00", "18:00", 1, 255),              # stool at the chess table
@@ -140,6 +140,6 @@ PLACEMENTS = [
     ("duchess", "old_block", 36.0, 21.5, "e", "12:00", "13:00", 1, 255, None, None, "duchess_walk"),
     ("duchess", "old_block", 35.8, 16.0, "e", "13:00", "22:00", 1, 255),
     ("nella", "bakery", 4.9, 1.8, "sw", "6:00", "18:00", 1, 255),                     # behind the counter (counter y 2.2..3.1)
-    ("rosa", "old_block", 65.0, 21.6, "sw", "8:00", "17:00", 1, 255, "old_block_open", None),   # her stall at the street end
-    ("kessler", "city_centre", 30.0, 49.4, "sw", "6:00", "22:00", 1, 255, None, "bridge_open"),   # in front of the closed bridge barrier
+    ("rosa", "old_block", 65.6, 21.0, "sw", "8:00", "17:00", 1, 255, "old_block_open", None),   # her stall at the street end
+    ("kessler", "city_centre", 33.4, 49.2, "sw", "6:00", "22:00", 1, 255, None, "bridge_open"),   # in front of the closed bridge barrier
 ]

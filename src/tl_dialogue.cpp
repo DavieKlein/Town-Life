@@ -380,6 +380,22 @@ namespace tl
         _next_page();
     }
 
+    void dialogue_box::skip_to_last_page()
+    {
+        _a_icon.reset();
+
+        for(int guard = 0; guard < 16 && _pos < _text.size(); ++guard)
+        {
+            if(! _next_page())
+            {
+                break;
+            }
+        }
+
+        _shown = _total;
+        _draw_lines(true);
+    }
+
     bool dialogue_box::_next_page()
     {
         int length = _text.size();
@@ -517,18 +533,18 @@ namespace tl
         }
     }
 
-    bool dialogue_box::update_text()
+    bool dialogue_box::update_text(bool b_advances)
     {
         if(_shown < _total)
         {
-            if(TL_A_PRESSED() || bn::keypad::b_pressed())
+            if(TL_A_PRESSED() || (b_advances && bn::keypad::b_pressed()))
             {
                 _shown = _total;
                 _draw_lines(false);
             }
             else
             {
-                _shown += bn::keypad::b_held() ? 3 : 1;
+                _shown += b_advances && bn::keypad::b_held() ? 3 : 1;
 
                 if(_shown > _total)
                 {
@@ -555,7 +571,7 @@ namespace tl
 
         _a_icon->set_visible(((_blink / 24) & 1) == 0);
 
-        if(TL_A_PRESSED() || bn::keypad::b_pressed())
+        if(TL_A_PRESSED() || (b_advances && bn::keypad::b_pressed()))
         {
             _a_icon.reset();
 
@@ -657,6 +673,20 @@ namespace tl
         }
 
         _draw_choices();
+    }
+
+    int dialogue_box::cancel_choice()
+    {
+        if(! _choosing)
+        {
+            return -1;
+        }
+
+        int chosen = _options_count - 1;
+        _choosing = false;
+        _choice_bar.clear();
+        _choice_labels.clear();
+        return chosen;
     }
 
     void dialogue_box::_draw_choices()
@@ -1393,6 +1423,154 @@ namespace tl
         _step = step::end;
     }
 
+    // s79: harmless answers that B may pick on a story choice (last option, no effects): everything else stays mandatory.
+    bool conversation::_cancel_ok() const
+    {
+        int last = _box.option_count() - 1;
+
+        if(last < 1)
+        {
+            return false;
+        }
+
+        const bn::string_view& text = _box.option(last);
+        return text == "Not now." || text == "Just looking.";
+    }
+
+    void conversation::_apply_choice(int choice)
+    {
+        const dlg_node& n = dialogue_nodes()[_node];
+        const dlg_choice& c = dialogue_choices()[n.choices_first + choice];
+        _apply_choice_effects(c);
+
+        if(c.next >= 0)
+        {
+            _show_node(c.next);
+        }
+        else
+        {
+            _end();
+        }
+    }
+
+    void conversation::_apply_topic_choice(int choice)
+    {
+        if(choice == _story_row && _story_node >= 0)
+        {
+            _phase = phase::script;
+            _after_script_talk = true;
+            _skip_used = _story_node == dlg::ask_skip_pimm || _story_node == dlg::ask_skip_lunch;
+            _show_node(_story_node);
+        }
+        else if(choice == _gift_row)
+        {
+            _gift_page = 0;
+            _phase = phase::gift_ask;
+            _show_node(dlg::gift_ask);
+        }
+        else if(choice >= _menu_topics)
+        {
+            _phase = phase::leave;
+            int bye = dialogue_bye_nodes[_npc];
+
+            if(bye >= 0)
+            {
+                _show_node(bye);
+            }
+            else
+            {
+                _finish_small_talk();
+            }
+        }
+        else
+        {
+            _begin_topic(_topic_ids[choice]);
+        }
+    }
+
+    // s79: B on a page. Small talk ends politely (what was gained stays; the farewell is skipped, a coin reward is still paid).
+    // Scripts: the rest of the chain is skipped but every effect of the skipped nodes is applied, so no flag or mission is lost;
+    // it stops at the next node with choices (shown normally, A continues).
+    void conversation::_skip_rest()
+    {
+        if(_node < 0 || _message)
+        {
+            _end();
+            return;
+        }
+
+        if(_small_talk && _phase != phase::script)
+        {
+            if(_phase == phase::leave || _phase == phase::coins || _phase == phase::tail)
+            {
+                _end();
+            }
+            else
+            {
+                _finish_small_talk();
+            }
+
+            return;
+        }
+
+        int node = _node;
+
+        for(int guard = 0; guard < 48; ++guard)
+        {
+            const dlg_node& n = dialogue_nodes()[node];
+
+            if(n.choices_count)
+            {
+                _box.skip_to_last_page();   // straight to the question; A then opens the choices
+                return;
+            }
+
+            int next = -1;
+
+            if(n.cond_flag >= 0 && ((story().flag(n.cond_flag) != 0) != (n.cond_negated != 0)))
+            {
+                next = n.cond_next;
+            }
+            else if(n.next >= 0 && ! (n.next == dlg::hint_talk && story().flag(story_flag::hint_talk_seen)))
+            {
+                next = n.next;
+            }
+
+            if(next < 0)
+            {
+                break;
+            }
+
+            if(dialogue_nodes()[next].choices_count)
+            {
+                _show_node(next);           // a question: shown normally (its effects apply now), B jumps to its last page
+                _box.skip_to_last_page();
+                return;
+            }
+
+            node = next;
+            _node = node;
+            _apply_effects(dialogue_nodes()[node]);
+
+            if(node == dlg::hint_talk)
+            {
+                story().set_flag(story_flag::hint_talk_seen, 1);
+            }
+        }
+
+        _node = node;
+
+        if(_small_talk)
+        {
+            _after_script_talk = false;
+            _finish_small_talk();
+        }
+        else
+        {
+            _end();
+        }
+    }
+
     bool conversation::update()
     {
         if(_step == step::idle)
@@ -1407,7 +1585,11 @@ namespace tl
         {
 
         case step::page:
-            if(_box.update_text())
+            if(bn::keypad::b_pressed())
+            {
+                _skip_rest();           // s79: B leaves the conversation / skips the rest of the script
+            }
+            else if(_box.update_text(false))
             {
                 _after_page();
             }
@@ -1417,20 +1599,15 @@ namespace tl
             {
                 int choice = _box.update_choice();
 
+                // s79: B takes a harmless "no thanks" answer ("Not now.", "Just looking."); story choices stay mandatory (B does nothing)
+                if(choice < 0 && bn::keypad::b_pressed() && _cancel_ok())
+                {
+                    choice = _box.cancel_choice();
+                }
+
                 if(choice >= 0)
                 {
-                    const dlg_node& n = dialogue_nodes()[_node];
-                    const dlg_choice& c = dialogue_choices()[n.choices_first + choice];
-                    _apply_choice_effects(c);
-
-                    if(c.next >= 0)
-                    {
-                        _show_node(c.next);
-                    }
-                    else
-                    {
-                        _end();
-                    }
+                    _apply_choice(choice);
                 }
             }
             break;
@@ -1439,39 +1616,14 @@ namespace tl
             {
                 int choice = _box.update_choice();
 
+                if(choice < 0 && bn::keypad::b_pressed())
+                {
+                    choice = _box.cancel_choice();      // s79: B = "Bye"
+                }
+
                 if(choice >= 0)
                 {
-                    if(choice == _story_row && _story_node >= 0)
-                    {
-                        _phase = phase::script;
-                        _after_script_talk = true;
-                        _skip_used = _story_node == dlg::ask_skip_pimm || _story_node == dlg::ask_skip_lunch;
-                        _show_node(_story_node);
-                    }
-                    else if(choice == _gift_row)
-                    {
-                        _gift_page = 0;
-                        _phase = phase::gift_ask;
-                        _show_node(dlg::gift_ask);
-                    }
-                    else if(choice >= _menu_topics)
-                    {
-                        _phase = phase::leave;
-                        int bye = dialogue_bye_nodes[_npc];
-
-                        if(bye >= 0)
-                        {
-                            _show_node(bye);
-                        }
-                        else
-                        {
-                            _finish_small_talk();
-                        }
-                    }
-                    else
-                    {
-                        _begin_topic(_topic_ids[choice]);
-                    }
+                    _apply_topic_choice(choice);
                 }
             }
             break;
@@ -1480,7 +1632,12 @@ namespace tl
             {
                 int choice = _box.update_choice();
 
-                if(choice >= 0)
+                if(choice < 0 && bn::keypad::b_pressed())
+                {
+                    _box.cancel_choice();               // s79: B goes back to the topics
+                    _open_topic_menu();
+                }
+                else if(choice >= 0)
                 {
                     if(choice < _gift_shown)
                     {

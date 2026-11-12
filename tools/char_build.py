@@ -68,7 +68,7 @@ B["rosa"] = dict(
     extras=[("Torso", "sphere", (0.0, -0.1, 3.60), (0.40, 0.25, 0.20), "#7a2236")])         # fuller bosom under the dress
 
 B["dex"] = dict(
-    model="Male_Shirt", height=1.88,
+    model="Male_Shirt", height=1.72,
     colours=dict(cdef.CHARS["dex"]["colours"]),
     props=[("box", (0, -0.118, 1.02), (0.25, 0.03, 0.42), "#2f7a45"),                       # green apron (narrow, he is thin)
            ("box", (0.09, -0.139, 1.15), (0.07, 0.01, 0.04), "#f0e0a0")],
@@ -113,7 +113,7 @@ B["lou"] = dict(
     extras=[])
 
 B["victor"] = dict(
-    model="Male_Suit", height=1.84,
+    model="Male_Suit", height=1.80,
     colours=dict(cdef.CHARS["victor"]["colours"], Skin="#b9774a"),       # deeper tan: the face stands out from the gold coat at 1x
     props=[("torus", (0, -0.07, 1.395), (0.125, 0.125, 0.014), "#f6d874", (62, 0, 0)),     # gold chain
            ("cyl", (0, -0.150, 1.27), (0.042, 0.042, 0.012), "#f6d874", (90, 0, 0)),
@@ -129,7 +129,7 @@ B["victor"] = dict(
             ("Torso", "sphere", (-0.64, 0.0, 3.74), (0.20, 0.22, 0.12), "#d9ab36")])
 
 B["okafor"] = dict(
-    model="Female_Alternative", height=1.73,
+    model="Female_Alternative", height=1.70,
     colours=dict(cdef.CHARS["okafor"]["colours"]),
     props=[("torus", (0, -0.035, 1.43), (0.085, 0.085, 0.012), "#2a2a34"),                  # stethoscope
            ("cyl", (0.0, -0.14, 1.22), (0.03, 0.03, 0.012), "#c8d0d8", (90, 0, 0)),
@@ -256,7 +256,7 @@ B["pruitt"] = dict(
 
 # --- Kessler: VaultTech bridge guard (M15). Tall, thin, stiff as a rule book, oversized badge, worried.
 B["kessler"] = dict(
-    model="Male_Suit", height=1.90,
+    model="Male_Suit", height=1.84,
     colours={"Shirt": "#9aa3ad", "Pants": "#59616e", "Details": "#e2b53a", "TieTexture": "#e6e9ee", "Hair": "#9a7440", "Skin": "#f0c4a4",
              "Eyes": "#202024", "Shoes": "#1c1f26"},
     props=[("cyl", (0.0, -0.01, 1.745), (0.150, 0.155, 0.05), "#59616e"),                      # stiff cap, tall front

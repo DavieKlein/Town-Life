@@ -51,11 +51,26 @@ namespace tl
         void say(const char* text);
 
         // Returns true when the player has gone past the last page of the text.
-        [[nodiscard]] bool update_text();
+        // b_advances: B also turns the page (minigame pages); conversations pass false and handle B themselves (s79).
+        [[nodiscard]] bool update_text(bool b_advances = true);
+
+        // s79: jumps to the last page of the current text (the question of a choice) with all of it shown.
+        void skip_to_last_page();
 
         // Choices (2-4 options, the strings must stay valid while shown): switches to layout 2. update_choice() returns the index or -1.
         void choose(const bn::string_view* options, int count);
         [[nodiscard]] int update_choice();
+
+        // B on a choice: picks the LAST option (the "Bye" / "Never mind" row) and returns its index, -1 when not choosing (s79).
+        [[nodiscard]] int cancel_choice();
+        [[nodiscard]] const bn::string_view& option(int index) const
+        {
+            return _options[index];
+        }
+        [[nodiscard]] int option_count() const
+        {
+            return _options_count;
+        }
 
         [[nodiscard]] bool choosing() const
         {
@@ -246,6 +261,10 @@ namespace tl
         void _finish_small_talk();
         [[nodiscard]] int _resolve_speaker(int speaker) const;
         void _end();
+        void _skip_rest();                  // s79: B on a page
+        [[nodiscard]] bool _cancel_ok() const;
+        void _apply_choice(int choice);
+        void _apply_topic_choice(int choice);
     };
 }
 

@@ -119,7 +119,7 @@ script vault_day
   music_stop
   scene_begin
   car_spawn 66.0 23.55 nw
-  pan 45.0 23.4
+  pan_now 45.0 23.4
   letterbox on
   fade_in 14
   wait 20
@@ -142,7 +142,7 @@ script vault_day
   spawn mia 13.9 13.4 sw
   spawn rosa 12.4 13.4 sw
   spawn dex 9.6 11.4 sw
-  pan 11.2 14.6
+  pan_now 11.2 14.6
   letterbox on
   fade_in 14
   wait 30

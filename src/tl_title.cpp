@@ -192,7 +192,7 @@ namespace tl
             {
                 int fade = frame < 12 ? 12 - frame : (frame >= 142 ? frame - 142 : 0);
                 bn::sprite_palettes::set_fade(bn::color(0, 0, 0), bn::fixed(fade) / 12);
-                skipped = frame > 20 && bn::keypad::a_pressed();
+                skipped = frame > 20 && (bn::keypad::a_pressed() || bn::keypad::b_pressed() || bn::keypad::start_pressed());
                 bn::core::update();
             }
 

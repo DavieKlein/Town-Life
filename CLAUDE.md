@@ -979,6 +979,27 @@ Owner-approved proposal `tools/proposals/s77/` (entrance variant A) is built; th
   docs/music_plan.md. Debug: `-DTL_AUDIO_OFF` = no sound (CPU baseline).
 - Not done: title / name-entry music, night tracks, Victor's theme, minigame result stingers, volume options in the pause menu, footsteps, a real bass recording.
 
+## s79: NPC visibility audit and "B gets you out" (branch `claude/intelligent-hawking-y0vl2t`)
+
+- **Half-visible cast at scene starts (root cause):** cutscene beats that warp + spawn + `pan` showed the cast cut off at the screen edge during the fade-in
+  (camera still on the player, smooth pan only after the fade). `vault_day` beats 1 and 2 now use `pan_now` (camera is on the cast before `fade_in`). Rule: after
+  every `warp` + `spawn` use `pan_now`, never `pan`, before `fade_in`.
+- **Sprite frames:** tall cast members clipped the 32x64 frame at the top (Dex 1.88 m, Kessler 1.90, Okafor 1.73, Victor 1.84): `tools/char_build.py` heights are now
+  Dex 1.72, Kessler 1.84, Okafor 1.70, Victor 1.80 (re-render with `TL_CAST_ONLY=dex,... python3 -c "import build_assets as b; b.build_cast(True, False)"` from `tools/`,
+  ~10 min per character). Check: no sheet row 0 / 63 may contain pixels. Walk frames of the w/e facings still touch the left/right edge by 1-2 px (stride wider than 32 px;
+  not fixed, would need 48 px frames).
+- **Placements moved** (tools/cast.py, run `build_assets.write_cast_header()`): Kessler 33.4,49.2 (the CLOSED sign covered him), Valdez 18.0,18.8 (lamp post at 19.0,19.1),
+  Pruitt 8.5,20.9 (the cable drum hid his legs), Rosa at her stall 65.6,21.0 (crate stack), Mia's fountain lunch 45.5,38.9 (the basin rim hid her legs).
+  NPCs only use the coarse occluder test (`npcs::_set_priority`), no per-pixel depth: a thin pole / low counter in front still covers part of an NPC who stands behind
+  it, so place NPCs at least ~1 cell away from poles, crates and basins (check with a headless shot, `python3 tools/npc_audit.py ROM OUTDIR TAG` makes contact sheets of every placement).
+- **B in conversations:** `dialogue_box::update_text(false)` (conversations) no longer lets B turn pages (minigame pages keep B = next). `conversation::_skip_rest()`:
+  small talk -> B ends it politely (what was gained stays, coin reward still paid); scripts -> B skips the rest of the chain but APPLIES the effects of every skipped
+  node (flags, missions, money, friendship), stops at the next node with choices (shows its question, `skip_to_last_page`). Choices: topic menu B = "Bye", gift list B =
+  back to the topics, story choice B = last option only if it is "Not now." or "Just looking." (`_cancel_ok`), every other story choice is MANDATORY (B does nothing:
+  intro_mia/pimm/lou, pro_vault_3 Rosa, pro_goodbye Mia, Lou's job "Deal?"). System messages: B closes. Verified headless: B mashed through wake_up, briefing, vault_day
+  (stops at the two mandatory choices, all flags set afterwards). Title intro cards also skip with B / START. Unchanged: name entry (B deletes a letter, START done, the
+  confirm dialog B = No), minigame play (B is an action button; start cards / result pages B = continue), activities (B interrupts).
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

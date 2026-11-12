@@ -99,7 +99,7 @@ namespace tl
         { cs_op::music_stop, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::car_spawn, 1056, 377, 3, 0, 0, nullptr },  // vault_day
-        { cs_op::pan, 720, 374, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::pan_now, 720, 374, 0, 0, 0, nullptr },  // vault_day
         { cs_op::letterbox, 1, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // vault_day
@@ -121,7 +121,7 @@ namespace tl
         { cs_op::spawn, int(npc_id::mia), 222, 214, 1, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::rosa), 198, 214, 1, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::dex), 154, 182, 1, 0, nullptr },  // vault_day
-        { cs_op::pan, 179, 234, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::pan_now, 179, 234, 0, 0, 0, nullptr },  // vault_day
         { cs_op::letterbox, 1, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 30, 0, 0, 0, 0, nullptr },  // vault_day
