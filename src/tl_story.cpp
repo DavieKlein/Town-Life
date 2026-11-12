@@ -225,7 +225,7 @@ namespace tl
 
         if(! (_coin70 & bit))
         {
-            _coin70 = uint8_t(_coin70 | bit);
+            _coin70 = _coin70 | uint32_t(bit);
             amount = 3;
         }
         else if(first_talk_today && ((day - _coin_day[npc]) & 255) >= 3)
@@ -407,7 +407,8 @@ namespace tl
 
         out.scratch_day = _scratch_day;
         out.scratch_count = _scratch_count;
-        out.coin70 = _coin70;
+        out.coin70 = uint16_t(_coin70 & 0xFFFF);
+        out.coin70_hi = uint16_t(_coin70 >> 16);
         out.coins = _coins;
         out.mission_id = _mission;
         out.missions_done = _done_mask;
@@ -471,7 +472,7 @@ namespace tl
         _scratch_day = in.scratch_day;
         _scratch_count = in.scratch_count > 3 ? 3 : in.scratch_count;
         _social_delta = 0;
-        _coin70 = in.coin70;
+        _coin70 = uint32_t(in.coin70) | (uint32_t(in.coin70_hi) << 16);
         _coins = in.coins;
         _mission = in.mission_id <= mission_count ? in.mission_id : 0;
         _done_mask = in.missions_done;

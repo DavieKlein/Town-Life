@@ -21,7 +21,7 @@ namespace tl
     {
 
     public:
-        static constexpr int max_npcs = 6;
+        static constexpr int max_npcs = 8;
 
         // Places everybody who is on this map at that time.
         void load(const map_info& map, map_id id, int day, int minutes);
@@ -81,6 +81,10 @@ namespace tl
         // point, stop for a player or another NPC in the way and when `talk_index` (the NPC being talked to, or -1) is theirs.
         void wander(int player_x, int player_y, int talk_index);
 
+        // s76: a conversation keeps only its partner's sprite; unfocus() brings the nearby NPCs back.
+        void focus(int index);
+        void unfocus();
+
         // Back to the placement's own facing (after a conversation).
         void reset_facings();
 
@@ -111,7 +115,8 @@ namespace tl
             int wait = 0;           // frames to wait at a route point
             bool walking = false;
             bn::fixed anim = 0;     // distance walked (walk animation)
-            int frame = 0;          // 0 = idle, 1..8 = walk frames
+            int frame = 0;          // 0 = idle, 1..12 = walk frames (props: animation frame)
+            int tick = 0;           // s76: ambient animation counter of the props
         };
 
         bn::vector<npc, max_npcs> _npcs;
@@ -124,6 +129,14 @@ namespace tl
         bool _scripted = false;         // actors exist / NPCs were hidden: the schedule is frozen
         bool _suppress = false;
         unsigned _wander_seed = 12345;
+        bool _focused = false;
+        bool _have_pos = false;         // s76: the player's position is known (sprites only for NPCs near the screen)
+        int _pos_x = 0;
+        int _pos_y = 0;
+        int _cull_tick = 0;
+        int _day = 1;
+        int _minutes = 0;
+        unsigned _present = 0;          // hash of the placements present at the last build
 
         [[nodiscard]] int _index_of(npc_id who) const;
         void _add_actor(npc_id who, int x, int y, int facing);
@@ -132,7 +145,11 @@ namespace tl
         void _make_upper(npc& n);
         void _walked(npc& n, bn::fixed distance);
         void _stopped(npc& n);
+        void _ambient(npc& n);
         void _build(int day, int minutes);
+        void _cull(int px, int py);
+        void _spawn_placement(int index);
+        [[nodiscard]] unsigned _present_hash(int day, int minutes) const;
         void _apply_palettes();
     };
 }

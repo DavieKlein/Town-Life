@@ -16,7 +16,8 @@ import cast  # noqa: E402
 
 # ---------------------------------------------------------------------------------------------------- speakers
 SPEAKER_IDS = {"MIA": "mia", "ROSA": "rosa", "DEX": "dex", "PIMM": "pimm", "LOU": "lou", "HALLORAN": "halloran",
-               "DEXV": "dex_vault", "VICTOR": "victor", "VALET": "robot", "OKAFOR": "okafor"}
+               "DEXV": "dex_vault", "VICTOR": "victor", "VALET": "robot", "OKAFOR": "okafor",
+               "INES": "ines", "TEO": "teo", "GRIGOR": "grigor", "VALDEZ": "valdez", "PRUITT": "pruitt", "NELLA": "nella", "KESSLER": "kessler"}
 SP_PLAYER, SP_NPC, SP_SYSTEM = 253, 252, 254
 
 TOPICS = ["weather", "work", "music", "sports", "gossip", "compliment", "joke", "complain"]
@@ -38,6 +39,17 @@ NPC_INFO = {
     "victor": ("Victor Vault", "neutral", "NNNNNNNN", 0, "NNNNN"),
     "robot": ("Valet", "neutral", "NNNNNNNN", 0, "NNNNN"),
     "okafor": ("Dr. Okafor", "neutral", "LLNNDNLD", 0, "LLNFN"),
+    # s76: Old Block residents (likes order: weather work music sports gossip compliment joke complain; gifts: Flowers Chocolate Hot sauce Cookies Newspaper)
+    "ines": ("Ines", "good", "NNLDLLNN", 10, "LNNFN"),
+    "teo": ("Teo", "good", "NDLLNNLN", 5, "DLLNN"),
+    "grigor": ("Grigor", "neutral", "LNLNDNND", 5, "NNLNF"),
+    "valdez": ("Mrs. Valdez", "neutral", "NNLNLLND", 0, "FLNNN"),
+    "pruitt": ("Pruitt", "neutral", "NDNNLNLL", 0, "NLNFN"),
+    "nella": ("Nella", "good", "NLLNLLND", 10, "LFNLN"),
+    "kessler": ("Kessler", "neutral", "LLNNDNDN", 0, "NNNLN"),
+    "trench_e": ("TRENCH-E 3", "neutral", "NNNNNNNN", 0, "NNNNN"),
+    "duchess": ("Duchess", "neutral", "NNNNNNNN", 0, "NNNNN"),
+    "captain": ("Captain", "neutral", "NNNNNNNN", 0, "NNNNN"),
 }
 # Gifts (docs/features_backlog.md): name, price. The NPC string above has one letter per gift in this order:
 # F favourite (+10 friendship), L likes (+4), N neutral (+1), D dislikes (-3). One gift per NPC and day.
@@ -55,7 +67,7 @@ GOSSIP = [
     ("work_lou", ("topic", "lou", "work"), "pimm", "gossip_work_lou"),
 ]
 assert len(GOSSIP) <= 8
-TALKERS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "okafor"]       # have small talk
+TALKERS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "okafor", "ines", "teo", "grigor", "valdez", "pruitt", "nella", "kessler"]       # have small talk
 
 # ---------------------------------------------------------------------------------------------------- story flags
 FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "met_lou", "met_halloran", "hint_talk_seen",
@@ -72,7 +84,9 @@ FLAGS = ["lou_tip", "lou_asked", "met_pimm", "met_mia", "met_rosa", "met_dex", "
          # s71: Lou's crates job (odd job from the community centre board)
          "crates_go",
          # s75: Old Block gates (sneak route, barrier gap after M13, Teo's door bridge)
-         "sneak_route", "barrier_moved", "door_bridge"]
+         "sneak_route", "barrier_moved", "door_bridge",
+         # s76: met flags of the Old Block residents (first talk plays intro_<npc>)
+         "met_ines", "met_teo", "met_grigor", "met_valdez", "met_pruitt", "met_nella", "met_kessler"]
 assert len(FLAGS) <= 80
 
 # ---------------------------------------------------------------------------------------------------- missions

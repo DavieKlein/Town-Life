@@ -327,7 +327,7 @@ namespace tl
         uint8_t _gain_day[save_data::talk_slots] = {};
         uint8_t _gained[save_data::talk_slots] = {};
         uint8_t _coin_day[save_data::talk_slots] = {};
-        uint8_t _coin70 = 0;
+        uint32_t _coin70 = 0;
         uint16_t _coins = 0;
         uint16_t _mission = 0;
         uint32_t _done_mask = 0;

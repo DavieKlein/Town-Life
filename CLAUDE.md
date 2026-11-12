@@ -899,6 +899,31 @@ interiors `laundromat`, `bakery`, `mia_flat`, `lane_shop` (Baker's Lane cottage 
 - Scene render cache key covers BOTH layers: any primitive change re-renders floor + objects (~25 min each at 192 spp). Collision / warps / gates / interactions / critters / deposit spots are NOT hashed.
 - Playtest and open points: docs/playtest_s75.md. Map ids: old_block 9, laundromat 10, bakery 11, mia_flat 12, lane_shop 13.
 
+## s76: Old Block residents built (branch `claude/intelligent-hawking-y0vl2t`)
+
+Owner-approved looks from `tools/proposals/s75/` are in the game: Ines Okoro, Teo, Grigor, Mrs. Valdez, Guard Pruitt, Kessler, Nella Bellini (rigged humans, `char_build.B` + `face_cfg.FACE` + `cast.CHARS`;
+Ines has `gloves` support in `char72.dress`), TRENCH-E 3 (64x64 tracked robot, 8 facings x idle / dig up / dig down), Duchess (corgi 32x32: stand, walkA, walkB, sit, drawn facing right and mirrored)
+and Captain (parrot 32x32: perch, flap). Props come from `tools/blender_residents.py` (`build_assets.build_resident_props`, sheets `graphics/npc_trench_e|duchess|captain.bmp`);
+`TL_CAST_ONLY=a,b build_assets.build_cast()` renders only some cast ids. Rough spots fixed: aprons (Ines, Nella) are ellipsoid bodies with a darker hem, waist tie, straps and pocket (volume at 1x),
+Valdez's portrait has a real tall updo with a gold comb, TRENCH-E's cyan eye sits on a housing OUTSIDE the dome (visible from the front), the dig arm is about 1.5x bigger.
+- **Ids / save:** `cast.IDS` has 20 ids (ines 10, teo 11, grigor 12, valdez 13, pruitt 14, nella 15, kessler 16, trench_e 17, duchess 18, captain 19). **Save version 5:** `talk_slots` 20, `npc_slots` 24,
+  `coin70` widened to 32 bit (`coin70` + `coin70_hi`). Old saves are ignored. `tools/make_save.py` follows (version 5). Seven new flags `met_<npc>` (flags 74/80, intro plays on the first talk).
+- **Dialogue:** `tools/dialogue_src.txt` bottom: intro, 3 greetings, bye and 8 topic answers for each of the 7 humans; likes / start friendship in `story_data.NPC_INFO` (Ines likes Gossip, Music,
+  Compliment, dislikes Sports, favourite gift Cookies; Teo likes Sports, Music, Joke, dislikes Work). TRENCH-E, Duchess and Captain are props: `npcs::find` skips them (no talk, no cue).
+- **Portraits:** `tools/portraits/parts_res.py` (dispatch on `kind`, incl. a new Nella) and `chars.RES_CH`; `portraits.CHARS` lists them (`pt_/pq_<id>` graphics, ids in `build_portraits`).
+- **Placements** (`cast.PLACEMENTS`, bottom): Pruitt + TRENCH-E at the cable works, Valdez + Captain under the balcony (8:00-21:00), Teo on `teo_round` (10:00-19:00), Grigor at the chess table (10:00-18:00),
+  Ines outside the laundromat 7-12 / 14-17 and inside 12-14 / 17-21, Duchess in the yard (walks the street 12:00-13:00), Nella behind the bakery counter 6:00-18:00 (counter covers her legs, like Lou),
+  Rosa at her stall (flag `old_block_open`, 8:00-17:00), Kessler in front of the closed bridge (until `bridge_open`).
+- **Engine (`tl_npcs`):** 8 NPC slots; sprites only exist for placements near the screen (`_cull`, margins 140 x 104 px, hysteresis 200 x 150) because every NPC has its own palette and Old Block would need 8 of the
+  16; `refresh` compares a hash of the present placements. `npcs::focus(i)` / `unfocus()` (called by `field::_start_conversation` / `_end_conversation`) keep only the talking partner's sprite, and the map sprites
+  (barriers, bridge) are cleared during a talk: without that the small-talk choice layout ran out of sprite VRAM in Old Block ("Sprite tiles allocate failed"). Props: `is_prop`, `feet_of`, `height_of`,
+  `graphic_of`, `_ambient` (TRENCH-E digs, Duchess sits now and then, Captain flaps), flip for left facings.
+- **Build tool:** `build_assets.py --only MAPS --no-actors` reuses the palettes / engine info of the other maps from the existing `src/tl_world_data.cpp` + `data/*.bin` and renders only the listed scenes
+  (`--only none` = regenerate only the gameplay tables; the output was byte-identical for all other maps). Needed because `art_cache/` is not in git and a fresh container has no cached renders.
+- **Bakery:** the flower pot moved from the doorway to (47.0, 19.1); the re-render of the `old_block` map is committed.
+- Playtest (headless, `-DTL_DEBUG_POS`, `tools/playtest_driver.py`, debug state dump now 80 flags / 20 friendships): every resident visited, talked to (intro, small talk with the choice layout, friendship meter), depth behind the
+  bakery counter checked, no VRAM errors. Open points: docs/residents_build_notes.md.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)
@@ -950,7 +975,7 @@ Update the checkboxes at the end of each session.
 - [ ] NPC class (simple wander pattern, collision with player, talking)
 - [x] Dialogue box at the bottom with text paging (A = next) and simple choices (+ friendship meter, small talk)
 - [x] Dialogue data in a compact table format (tools/dialogue_src.txt)
-- [ ] Original NPCs: Corner Market coworkers, regular customers, Old Block residents
+- [x] Original NPCs: Corner Market coworkers; Old Block residents built in s76 (regular customers still open)
 
 1.4 Missions + mission log — IN PROGRESS
 - [x] Mission data: id, objective text, conditions (talk to X, go to Y, earn $Z), rewards

@@ -14,13 +14,13 @@ namespace tl
     struct save_data
     {
         static constexpr uint32_t magic_value = 0x56534C54;     // "TLSV"
-        static constexpr uint16_t save_version = 4;
+        static constexpr uint16_t save_version = 5;                  // s76: 5 = 20 talk slots, 24 friendship slots, 17-bit coin mask
         static constexpr int max_maps = 16;                     // bin cooldown slots reserved per map index
         static constexpr int bins_per_map = 16;
         static constexpr int needs_count = 5;
         static constexpr int name_size = 12;
-        static constexpr int npc_slots = 16;
-        static constexpr int talk_slots = 8;        // NPCs with small-talk memory
+        static constexpr int npc_slots = 24;
+        static constexpr int talk_slots = 20;       // NPCs with small-talk memory
 
         // header
         uint32_t magic = magic_value;
@@ -76,8 +76,8 @@ namespace tl
         uint8_t gain_day[talk_slots] = {};      // day (mod 256) `gained` belongs to
         uint8_t gained[talk_slots] = {};
         uint8_t coin_day[talk_slots] = {};
-        uint8_t coin70 = 0;                     // bit per NPC: friendship reached 70 once
-        uint8_t pad_story = 0;
+        uint16_t coin70 = 0;                   // bit per NPC: friendship reached 70 once
+        uint16_t coin70_hi = 0;                 // bits 16.. of the coin mask (s76)
         uint16_t coins = 0;
         uint32_t missions_done = 0;
         // s64 (save version 3): collectibles, sickness, clinic bill, phone

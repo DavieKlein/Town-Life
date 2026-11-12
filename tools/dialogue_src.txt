@@ -561,3 +561,209 @@ node checkup_pay_ok
 SYSTEM| Dr. Okafor takes the fee. You feel better.
 node bills_info
 SYSTEM| Bills by post will arrive once you have a home. Until then you pay at the desk.
+
+# ---------------------------------------------------------------------------------------------------- Old Block residents (s76)
+# Ines Okoro (laundromat), Teo (messenger), Grigor (chess table), Mrs. Valdez (balcony), Guard Pruitt (cable works),
+# Nella Bellini (bakery), Kessler (bridge guard). Minimal small talk; story scenes come with the Chapter 1 missions.
+node intro_ines
+INES:happy| Come in, come in! I'm Ines. Two dollars a wash, advice is free.
+INES| Clean shirts, clean souls, that's what I say. You look like you could use both!
+goto hint_talk
+node greet_ines_good
+INES:happy| {NAME}! My favourite customer! Sit, sit. Have you eaten?
+node greet_ines_neutral
+INES| Ah, {NAME}. Mind the wet floor. And the dog.
+node greet_ines_grumpy
+INES:angry| Somebody put red socks in my whites again. Talk fast.
+node bye_ines
+INES:happy| Go, go! And come back with dirty laundry!
+node talk_ines_weather
+INES| Rain is good for business. Everyone wants dry clothes, hah!
+node talk_ines_work
+INES| Twelve machines, one Ines. The machines complain less.
+node talk_ines_music
+INES:happy| Radio is on from six. I sing in two languages. Neither is good.
+node talk_ines_sports
+INES:angry| Sports? Grown men in tiny shorts. Everything smells afterwards.
+node talk_ines_gossip
+INES:happy| Oh, sit down. Mrs. Valdez says the cat is on a diet. The cat disagrees.
+node talk_ines_compliment
+INES:happy| You flatter an old woman! Take a sock. A clean one.
+node talk_ines_joke
+INES| Ha! Ha! Hmm. I will tell it to the machines later.
+node talk_ines_complain
+INES| Life is long, dear. Complain here, then leave it with the lint.
+
+node intro_teo
+TEO:happy| Boss! Teo. I carry notes, I carry news. Do not ask where I got the orange.
+TEO| Old Block runs on messages. And me. Mostly me.
+goto hint_talk
+node greet_teo_good
+TEO:happy| Boss! You are just in time. I was getting bored. Dangerously bored.
+node greet_teo_neutral
+TEO| Oh. Hi. I'm on a very important errand. A little bit.
+node greet_teo_grumpy
+TEO:angry| My wheel is stuck and Pruitt will not lend me his chair. Ugh.
+node bye_teo
+TEO:happy| Later, boss! Don't tell Ines about the orange!
+node talk_teo_weather
+TEO| Rain is bad. Puddles are good. It evens out.
+node talk_teo_work
+TEO:angry| Work? That is a bad word. Say deliveries instead.
+node talk_teo_music
+TEO:happy| I hum when I roll. The wheels have a rhythm. Bum-bum, bum-bum.
+node talk_teo_sports
+TEO:happy| I did a whole kerb yesterday. Whole one! Almost without falling!
+node talk_teo_gossip
+TEO| I know everything. Nothing is free though. Maybe an orange.
+node talk_teo_compliment
+TEO:surprised| Me? Cool. Yes. I know. Thanks, boss.
+node talk_teo_joke
+TEO:happy| Ha! Good one. I'm stealing it. Borrowing! Borrowing.
+node talk_teo_complain
+TEO:sad| Grown-ups always say "later". Later is never.
+
+node intro_grigor
+GRIGOR| Ah. A new face at the chess table. Grigor. Retired. Ferry captain, thirty years.
+GRIGOR| Sit, if you like. I will lose slowly. A pigeon beats me on Fridays anyway.
+goto hint_talk
+node greet_grigor_good
+GRIGOR:happy| Good morning, {NAME}. The wind is kind today. So am I.
+node greet_grigor_neutral
+GRIGOR| Hm? Ah, {NAME}. Mind the pieces. They are older than you.
+node greet_grigor_grumpy
+GRIGOR:angry| Sixth game, sixth loss. Do not mention the pigeon.
+node bye_grigor
+GRIGOR| Fair winds, {NAME}.
+node talk_grigor_weather
+GRIGOR:happy| I can smell tomorrow's weather. Salt means rain. Always.
+node talk_grigor_work
+GRIGOR| I carried people across the water. Nobody asked where they were going.
+node talk_grigor_music
+GRIGOR| The old ferry bell. Dong, dong. Best tune ever made.
+node talk_grigor_sports
+GRIGOR| Rowing, once. Now only my knees row. Slowly, in circles.
+node talk_grigor_gossip
+GRIGOR:angry| Gossip is for harbours. Fine. The Docks bridge will open one day.
+node talk_grigor_compliment
+GRIGOR:happy| Ha. Thank you. The beard does most of the work.
+node talk_grigor_joke
+GRIGOR| A captain, a parrot and a pigeon walk into a bar. I forgot the rest.
+node talk_grigor_complain
+GRIGOR:sad| The sea is far and the benches are hard. That is all I will say.
+
+node intro_valdez
+VALDEZ| Hello, dear. I am Mrs. Valdez. That is my balcony and that is my parrot.
+VALDEZ:happy| Captain! Say hello! He will not. He only repeats rude things.
+goto hint_talk
+node greet_valdez_good
+VALDEZ:happy| {NAME}, dear! What a lovely day for being nosy.
+node greet_valdez_neutral
+VALDEZ| Oh, hello dear. Mind the geraniums, they bite.
+node greet_valdez_grumpy
+VALDEZ:angry| Biscuit is missing again. I am not in the mood, dear.
+node bye_valdez
+VALDEZ:happy| Goodbye, dear. Wave at Captain on your way out.
+node talk_valdez_weather
+VALDEZ| My knee says rain. My knee has never been wrong.
+node talk_valdez_work
+VALDEZ| I worked at the cannery for forty years. Now I work on Captain.
+node talk_valdez_music
+VALDEZ:happy| Boleros! Captain learned one. Badly. Out of tune. Dear, he is proud.
+node talk_valdez_sports
+VALDEZ| Teo plays something with a skateboard. I close my eyes. It helps.
+node talk_valdez_gossip
+VALDEZ:happy| Oh, you do want to hear. Come close. The baker and the guard... never mind.
+node talk_valdez_compliment
+VALDEZ:happy| Such manners! Take an orange. Teo has too many.
+node talk_valdez_joke
+VALDEZ| Hm. Funny. Not as funny as Captain. He says "NEXT CUSTOMER".
+node talk_valdez_complain
+VALDEZ:angry| Complain? Dear, I could fill a notebook. Sit down.
+
+node intro_pruitt
+PRUITT| Evening. Or morning. Hard to tell here. Pruitt, VaultTech Security.
+PRUITT| I'm not allowed to let you in. Or say anything. Seven across: "Not allowed". Five letters.
+goto hint_talk
+node greet_pruitt_good
+PRUITT:happy| Oh, hi. Nice. Somebody to talk to besides the trench.
+node greet_pruitt_neutral
+PRUITT| Hm? Oh. Hello. Don't tell anyone I'm talking.
+node greet_pruitt_grumpy
+PRUITT:angry| Eleven across. Six letters. "Cold, grey, overpaid." Ugh.
+node bye_pruitt
+PRUITT| Careful. Not that I saw you.
+node talk_pruitt_weather
+PRUITT| Same as yesterday. Sitting in it, though. That's the shift.
+node talk_pruitt_work
+PRUITT:sad| Eight hours on a drum. The best part is lunch at Lou's.
+node talk_pruitt_music
+PRUITT| The robot hums. Off key. I've started humming along.
+node talk_pruitt_sports
+PRUITT| I follow the league in the paper. Crossword's on the back page.
+node talk_pruitt_gossip
+PRUITT:happy| I hear things. A guard on a drum hears everything. Whisper.
+node talk_pruitt_compliment
+PRUITT:surprised| The cap? It's too big, I know. Everybody says.
+node talk_pruitt_joke
+PRUITT:happy| Ha! Quiet, the boss has cameras. Funny though.
+node talk_pruitt_complain
+PRUITT:happy| Finally. Somebody who gets it. The chair is wobbly, the cap is huge...
+
+node intro_nella
+NELLA:happy| Fresh bread? Today is rye and rolls. I am Nella. My sister is Rosa. Yes, she told you off.
+NELLA| She does that. It means she likes you.
+goto hint_talk
+node greet_nella_good
+NELLA:happy| {NAME}! Just in time. The first tray is out. Smell that.
+node greet_nella_neutral
+NELLA| Hello, {NAME}. Flour everywhere, sorry. What can I get you?
+node greet_nella_grumpy
+NELLA:angry| Third tray burnt. The oven has moods. Talk fast.
+node bye_nella
+NELLA:happy| Come back tomorrow. Bread keeps better than promises.
+node talk_nella_weather
+NELLA| Rainy days I sell more soup bread. Sunny days, more rolls.
+node talk_nella_work
+NELLA| Up at three. Dough doesn't wait. It also doesn't answer back.
+node talk_nella_music
+NELLA:happy| Radio plays while I knead. Rhythm helps the dough. Honest.
+node talk_nella_sports
+NELLA| I run to the oven and back. That's my sport.
+node talk_nella_gossip
+NELLA:happy| Customers talk while they wait. I just listen and slice.
+node talk_nella_compliment
+NELLA:happy| Oh! Flour in my hair, and you say that. Take a roll.
+node talk_nella_joke
+NELLA| Ha ha. Rosa would say: "Don't waste your breath, it is for the bread."
+node talk_nella_complain
+NELLA:sad| Prices go up, customers go to VaultMart. We stay stubborn.
+
+node intro_kessler
+KESSLER| Halt. State your... Ah. You are not Valet. Good. I am Kessler, bridge security.
+KESSLER| Rule seven: no unauthorised crossing. Rule eight: ask nicely. Rule nine: nobody follows rule nine.
+goto hint_talk
+node greet_kessler_good
+KESSLER:happy| Good morning, citizen. Nothing to report. Wonderful. Nothing is my favourite.
+node greet_kessler_neutral
+KESSLER| Citizen. Please do not touch the barrier. It is... touchy.
+node greet_kessler_grumpy
+KESSLER:angry| Valet checked me again. I have forms in triplicate. Triplicate!
+node bye_kessler
+KESSLER| Move along. Orderly. Thank you.
+node talk_kessler_weather
+KESSLER| Weather is not in my instructions. I prefer it dry. Paper, you know.
+node talk_kessler_work
+KESSLER:sad| I like rules. I do not like the job. Both are true. It is a puzzle.
+node talk_kessler_music
+KESSLER| The robot plays hold music when I call it. It is not a joke. Almost.
+node talk_kessler_sports
+KESSLER| Standing still counts as sport in my department.
+node talk_kessler_gossip
+KESSLER:surprised| Gossip is against regulations. Section twelve. Yes? What did you hear?
+node talk_kessler_compliment
+KESSLER:surprised| Oh. The badge? Thank you. It is the largest in the company.
+node talk_kessler_joke
+KESSLER:angry| Humour is not in my instructions. ...Do another.
+node talk_kessler_complain
+KESSLER:sad| The robot is always right. I am always wrong. That is policy.

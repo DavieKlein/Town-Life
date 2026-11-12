@@ -11,7 +11,7 @@ from pt import *
 import chars
 from pt import hexc
 
-CHARS = ["player", "mia", "rosa", "dex", "dex_vault", "pimm", "lou", "victor", "robot", "okafor"]
+CHARS = ["player", "mia", "rosa", "dex", "dex_vault", "pimm", "lou", "victor", "robot", "okafor", "ines", "teo", "grigor", "valdez", "pruitt", "kessler", "nella"]
 NAMES = {"player": "Sam", "mia": "Mia", "rosa": "Rosa", "dex": "Dex", "dex_vault": "Dex", "pimm": "Mr. Pimm", "lou": "Big Lou", "victor": "Victor Vault", "robot": "Valet"}
 EXS = ["neutral", "happy", "angry", "sad", "surprised"]
 N = 128

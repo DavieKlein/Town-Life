@@ -33,7 +33,7 @@ def getstate():
     r.core.retro_serialize(b,ct.c_size_t(n)); d=b.raw
     i=d.find(b'TLDB')
     if i<0: return None
-    return struct.unpack_from('<4s13i64B5i8i',d,i)
+    return struct.unpack_from('<4s13i80B5i20i',d,i)
 DIRS=[((1,0),'down+right'),((-1,0),'up+left'),((0,1),'down+left'),((0,-1),'up+right'),((1,-1),'right'),((-1,1),'left'),((1,1),'down'),((-1,-1),'up')]
 def goto(tx,ty,tol=0.35,maxit=160,run=True):
     import math, random
@@ -63,12 +63,12 @@ def state():
     r.core.retro_serialize(b,ct.c_size_t(n)); d=b.raw
     i=d.find(b'TLDB')
     if i<0: print('STATE: none'); return
-    v=struct.unpack_from('<4s13i64B5i8i',d,i)
+    v=struct.unpack_from('<4s13i80B5i20i',d,i)
     import story_data as sd
     x,y,mp,day,mn,money,mis,menu,conv,act,scr,st,frm=v[1:14]
-    fl=v[14:78]; needs=v[78:83]; fr=v[83:91]
-    names=[sd.FLAGS[k] if k<len(sd.FLAGS) else 'f%d'%k for k in range(64)]
-    on=[names[k]+('=%d'%fl[k] if fl[k]>1 else '') for k in range(64) if fl[k]]
+    fl=v[14:94]; needs=v[94:99]; fr=v[99:119]
+    names=[sd.FLAGS[k] if k<len(sd.FLAGS) else 'f%d'%k for k in range(80)]
+    on=[names[k]+('=%d'%fl[k] if fl[k]>1 else '') for k in range(80) if fl[k]]
     mname=sd.MISSIONS[mis-1][0] if 0<mis<=len(sd.MISSIONS) else str(mis)
     print('STATE map%d pos(%.2f,%.2f) day%d %02d:%02d $%d mission %s menu%d conv%d act%d script%d st%d needs%s fr%s'%(mp,x/16,y/16,day,mn//60,mn%60,money,mname,menu,conv,act,scr,st,list(needs),list(fr)))
     print('  flags:',' '.join(on))

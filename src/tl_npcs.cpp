@@ -17,6 +17,16 @@
 #include "bn_sprite_items_npc_victor.h"
 #include "bn_sprite_items_npc_robot.h"
 #include "bn_sprite_items_npc_okafor.h"
+#include "bn_sprite_items_npc_ines.h"
+#include "bn_sprite_items_npc_teo.h"
+#include "bn_sprite_items_npc_grigor.h"
+#include "bn_sprite_items_npc_valdez.h"
+#include "bn_sprite_items_npc_pruitt.h"
+#include "bn_sprite_items_npc_kessler.h"
+#include "bn_sprite_items_npc_nella.h"
+#include "bn_sprite_items_npc_trench_e.h"
+#include "bn_sprite_items_npc_duchess.h"
+#include "bn_sprite_items_npc_captain.h"
 
 namespace tl
 {
@@ -25,9 +35,38 @@ namespace tl
         constexpr int feet_offset_y = 54 - 32;  // feet relative to the sprite centre (32x64 frames)
 
         // Sprite sheets: humans have 13 frames per facing (idle + 12 walk frames, same cycle as the player); the hovering robot only the idle one.
+        // s76: TRENCH-E 3 is a 64x64 tracked robot (3 frames per facing: idle, dig up, dig down); Duchess and Captain are 32x32 animals drawn
+        // facing right (mirrored for left facings; 4 / 2 frames in total, no facings).
+        [[nodiscard]] bool is_prop(npc_id who)
+        {
+            return who == npc_id::trench_e || who == npc_id::duchess || who == npc_id::captain;
+        }
+
         [[nodiscard]] int frames_per_facing(npc_id who)
         {
-            return who == npc_id::robot ? 1 : 13;
+            return who == npc_id::robot ? 1 : who == npc_id::trench_e ? 3 : who == npc_id::duchess ? 4 : who == npc_id::captain ? 2 : 13;
+        }
+
+        // feet relative to the sprite centre, sprite height, and the first graphic of a facing / frame
+        [[nodiscard]] int feet_of(npc_id who)
+        {
+            return who == npc_id::trench_e ? 50 - 32 : (who == npc_id::duchess || who == npc_id::captain) ? 23 - 16 : feet_offset_y;
+        }
+
+        [[nodiscard]] int height_of(npc_id who)
+        {
+            return who == npc_id::trench_e ? 50 : (who == npc_id::duchess || who == npc_id::captain) ? 20 : 56;
+        }
+
+        [[nodiscard]] int graphic_of(npc_id who, int facing, int frame)
+        {
+            if(who == npc_id::duchess || who == npc_id::captain)
+            {
+                return frame;
+            }
+
+            int per = frames_per_facing(who);
+            return (facing * per) + (per > 1 ? frame : 0);
         }
 
         constexpr bn::fixed step_length = 2.42;     // world units walked per walk frame (1.36 m stride cycle = 29 units, 12 frames)
@@ -54,6 +93,26 @@ namespace tl
                 return &bn::sprite_items::npc_robot;
             case npc_id::okafor:
                 return &bn::sprite_items::npc_okafor;
+            case npc_id::ines:
+                return &bn::sprite_items::npc_ines;
+            case npc_id::teo:
+                return &bn::sprite_items::npc_teo;
+            case npc_id::grigor:
+                return &bn::sprite_items::npc_grigor;
+            case npc_id::valdez:
+                return &bn::sprite_items::npc_valdez;
+            case npc_id::pruitt:
+                return &bn::sprite_items::npc_pruitt;
+            case npc_id::kessler:
+                return &bn::sprite_items::npc_kessler;
+            case npc_id::nella:
+                return &bn::sprite_items::npc_nella;
+            case npc_id::trench_e:
+                return &bn::sprite_items::npc_trench_e;
+            case npc_id::duchess:
+                return &bn::sprite_items::npc_duchess;
+            case npc_id::captain:
+                return &bn::sprite_items::npc_captain;
             default:
                 return nullptr;     // Halloran has no look yet
             }
@@ -81,68 +140,213 @@ namespace tl
         clear();
         _map = &map;
         _map_id = id;
+        _have_pos = false;
         _build(day, minutes);
+    }
+
+    // s76: only NPCs near the screen get sprites (the 16 sprite palettes cannot hold every resident of a busy map). `_build` clears the
+    // set and remembers which placements are present at this time; `_cull` (every few frames while the player walks free) adds the
+    // present placements that came near and removes those that left, with hysteresis.
+    namespace
+    {
+        [[nodiscard]] bool near_screen(int x, int y, int px, int py, int margin_x, int margin_y)
+        {
+            int sx = (x - px) - (y - py);
+            int sy = ((x - px) + (y - py)) / 2;
+            sx = sx < 0 ? -sx : sx;
+            sy = sy < 0 ? -sy : sy;
+            return sx < margin_x && sy < margin_y;
+        }
+    }
+
+    unsigned npcs::_present_hash(int day, int minutes) const
+    {
+        unsigned h = 17;
+
+        for(int index = 0; index < npc_placements_count; ++index)
+        {
+            if(present(npc_placements[index], _map_id, day, minutes) && item_of(npc_placements[index].who))
+            {
+                h = (h * 31u) + unsigned(index) + 1u;
+            }
+        }
+
+        return h;
+    }
+
+    void npcs::_spawn_placement(int index)
+    {
+        const npc_placement& p = npc_placements[index];
+        const bn::sprite_item* item = item_of(p.who);
+
+        if(! item || _npcs.full())
+        {
+            return;
+        }
+
+        bn::sprite_ptr sprite = item->create_sprite(0, 0, graphic_of(p.who, p.facing, 0));
+        _npcs.push_back(npc{ bn::move(sprite), bn::optional<bn::sprite_ptr>(), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
+                             120 + int(index * 37 % 90), false });
+        _blockers[_npcs.size() - 1] = { p.x, p.y };
+        _set_priority(_npcs.back());
+        _set_frame(_npcs.back());
     }
 
     void npcs::_build(int day, int minutes)
     {
         _npcs.clear();
+        _day = day;
+        _minutes = minutes;
+        _present = _present_hash(day, minutes);
 
-        for(int index = 0; index < npc_placements_count && ! _npcs.full() && ! _suppress; ++index)
+        if(_have_pos && ! _suppress)
         {
-            const npc_placement& p = npc_placements[index];
-
-            if(! present(p, _map_id, day, minutes))
+            for(int index = 0; index < npc_placements_count && ! _npcs.full(); ++index)
             {
-                continue;
+                const npc_placement& p = npc_placements[index];
+
+                if(present(p, _map_id, day, minutes) && near_screen(p.x, p.y, _pos_x, _pos_y, 140, 104))
+                {
+                    _spawn_placement(index);
+                }
             }
-
-            const bn::sprite_item* item = item_of(p.who);
-
-            if(! item)
-            {
-                continue;
-            }
-
-            bn::sprite_ptr sprite = item->create_sprite(0, 0, p.facing * frames_per_facing(p.who));
-            _npcs.push_back(npc{ bn::move(sprite), bn::optional<bn::sprite_ptr>(), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
-                                 120 + int(index * 37 % 90), false });
-            _blockers[_npcs.size() - 1] = { p.x, p.y };
-            _set_priority(_npcs.back());
         }
 
         _apply_palettes();
         update(_last_cam_x, _last_cam_y);
     }
 
-    void npcs::refresh(int day, int minutes)
+    void npcs::focus(int index)
     {
-        if(! _map || _scripted || _suppress)
+        // s76: during a conversation only the partner keeps a sprite (VRAM is needed for the portrait pieces and the choice layout)
+        if(_scripted || index < 0 || index >= _npcs.size())
         {
             return;
         }
 
-        // rebuild only when the set of present placements changed
-        bool same = true;
-        int found = 0;
+        bn::vector<npc, max_npcs> keep;
+        keep.push_back(bn::move(_npcs[index]));
+        _npcs = bn::move(keep);
+        _blockers[0] = { _npcs[0].x, _npcs[0].y };
+        _focused = true;
+        _apply_palettes();
+    }
 
-        for(int index = 0; index < npc_placements_count; ++index)
+    void npcs::unfocus()
+    {
+        if(! _focused)
         {
-            const npc_placement& p = npc_placements[index];
+            return;
+        }
 
-            if(present(p, _map_id, day, minutes) && item_of(p.who))
+        _focused = false;
+
+        for(int pass = 0; pass < max_npcs; ++pass)
+        {
+            int before = _npcs.size();
+            _cull(_pos_x, _pos_y);
+
+            if(_npcs.size() <= before)
             {
-                if(found >= _npcs.size() || _npcs[found].placement != index)
+                break;
+            }
+        }
+    }
+
+    void npcs::_cull(int px, int py)
+    {
+        if(_focused)
+        {
+            return;
+        }
+
+        _pos_x = px;
+        _pos_y = py;
+
+        if(! _have_pos)
+        {
+            _have_pos = true;
+            _build(_day, _minutes);
+            return;
+        }
+
+        bool changed = false;
+
+        // remove placed NPCs that are far away (keep the order of the others: the blockers array follows it)
+        for(int index = 0; index < _npcs.size(); ++index)
+        {
+            const npc& n = _npcs[index];
+
+            if(n.placement >= 0 && ! n.walking && ! near_screen(n.x, n.y, px, py, 200, 150))
+            {
+                bn::vector<npc, max_npcs> keep;
+
+                for(int other = 0; other < _npcs.size(); ++other)
                 {
-                    same = false;
-                    break;
+                    if(other != index)
+                    {
+                        keep.push_back(bn::move(_npcs[other]));
+                    }
                 }
 
-                ++found;
+                _npcs = bn::move(keep);
+                changed = true;
+                break;      // one per call is enough (called every few frames)
             }
         }
 
-        if(same && found == _npcs.size())
+        if(! changed)
+        {
+            for(int index = 0; index < npc_placements_count && ! _npcs.full(); ++index)
+            {
+                const npc_placement& p = npc_placements[index];
+
+                if(! present(p, _map_id, _day, _minutes) || ! near_screen(p.x, p.y, px, py, 140, 104))
+                {
+                    continue;
+                }
+
+                bool exists = false;
+
+                for(const npc& n : _npcs)
+                {
+                    exists = exists || n.placement == index;
+                }
+
+                if(! exists && item_of(p.who))
+                {
+                    // a wandering NPC that left its spot is not respawned on top of the player
+                    _spawn_placement(index);
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        if(changed)
+        {
+            for(int other = 0; other < _npcs.size(); ++other)
+            {
+                _blockers[other] = { _npcs[other].x, _npcs[other].y };
+            }
+
+            _apply_palettes();
+            update(_last_cam_x, _last_cam_y);
+        }
+    }
+
+    void npcs::refresh(int day, int minutes)
+    {
+        if(! _map || _scripted || _suppress || _focused)
+        {
+            return;
+        }
+
+        _day = day;
+        _minutes = minutes;
+
+        // rebuild only when the set of present placements changed
+        if(_present_hash(day, minutes) == _present)
         {
             return;
         }
@@ -176,7 +380,7 @@ namespace tl
         {
             int screen_x = _map->to_image_x(n.x, n.y) - cam_x - 120;
             int screen_y = _map->to_image_y(n.x, n.y) - cam_y - 80;
-            int sprite_y = screen_y - feet_offset_y - (frames_per_facing(n.who) == 1 ? (n.bob / 6) % 2 : 0);
+            int sprite_y = screen_y - feet_of(n.who) - (n.who == npc_id::robot ? (n.bob / 6) % 2 : 0);
             n.sprite.set_position(screen_x, sprite_y);
 
             if(n.upper)
@@ -193,6 +397,11 @@ namespace tl
 
         for(int index = 0; index < _npcs.size(); ++index)
         {
+            if(is_prop(_npcs[index].who))
+            {
+                continue;       // TRENCH-E 3, Duchess and Captain cannot be talked to
+            }
+
             int dx = x - _npcs[index].x;
             int dy = y - _npcs[index].y;
             int distance = (dx * dx) + (dy * dy);
@@ -242,8 +451,12 @@ namespace tl
 
     void npcs::_set_frame(npc& n)
     {
-        int per = frames_per_facing(n.who);
-        n.sprite.set_tiles(item_of(n.who)->tiles_item(), (n.facing * per) + (per > 1 ? n.frame : 0));
+        n.sprite.set_tiles(item_of(n.who)->tiles_item(), graphic_of(n.who, n.facing, n.frame));
+
+        if(n.who == npc_id::duchess || n.who == npc_id::captain)
+        {
+            n.sprite.set_horizontal_flip(n.facing >= 1 && n.facing <= 3);      // the art faces right; sw, w, nw look left
+        }
 
         if(n.upper)
         {
@@ -256,8 +469,9 @@ namespace tl
     // overlaps his sprite, the legs (full sprite, priority 3) stay behind the counter and the top half (priority 2) is drawn over it.
     void npcs::_set_priority(npc& n)
     {
-        bool behind = _map->player_hidden(n.x, n.y, 12, 56);
-        bool split = ! behind && _map->player_hidden(n.x, n.y, 12, 56, true);
+        int height = height_of(n.who);
+        bool behind = _map->player_hidden(n.x, n.y, 12, height);
+        bool split = height == 56 && ! behind && _map->player_hidden(n.x, n.y, 12, 56, true);
         n.sprite.set_bg_priority(behind || split ? 3 : 2);
 
         if(split)
@@ -301,8 +515,22 @@ namespace tl
     void npcs::_walked(npc& n, bn::fixed distance)
     {
         // walk animation driven by the distance walked: frames 1..12, the idle frame 0 when standing
-        if(frames_per_facing(n.who) == 1)
+        if(frames_per_facing(n.who) == 1 || n.who == npc_id::trench_e || n.who == npc_id::captain)
         {
+            return;
+        }
+
+        if(n.who == npc_id::duchess)
+        {
+            n.anim += distance;
+            int dframe = 1 + (n.anim / 5).floor_integer() % 2;     // walkA, walkB
+
+            if(dframe != n.frame)
+            {
+                n.frame = dframe;
+                _set_frame(n);
+            }
+
             return;
         }
 
@@ -334,11 +562,18 @@ namespace tl
             return;
         }
 
+        if(! _have_pos || ++_cull_tick >= 8)
+        {
+            _cull_tick = 0;
+            _cull(player_x, player_y);
+        }
+
         bool moved = false;
 
         for(int index = 0; index < _npcs.size(); ++index)
         {
             npc& n = _npcs[index];
+            _ambient(n);
 
             if(n.route < 0 || n.placement < 0 || index == talk_index)
             {
@@ -440,6 +675,38 @@ namespace tl
         }
     }
 
+    // s76: idle loops of the props. TRENCH-E 3 digs (idle, up, idle, down); Duchess sits down now and then; Captain flaps his wings.
+    void npcs::_ambient(npc& n)
+    {
+        if(! is_prop(n.who) || n.walking)
+        {
+            return;
+        }
+
+        ++n.tick;
+        int frame = n.frame;
+
+        if(n.who == npc_id::trench_e)
+        {
+            static constexpr int cycle[] = { 0, 1, 1, 0, 2, 2 };
+            frame = cycle[(n.tick / 24) % 6];
+        }
+        else if(n.who == npc_id::duchess)
+        {
+            frame = ((n.tick + n.placement * 97) / 300) % 3 == 2 ? 3 : 0;      // stands, then sits for a while
+        }
+        else
+        {
+            frame = (n.tick % 360) < 10 ? 1 : 0;                                    // a short wing flap every six seconds
+        }
+
+        if(frame != n.frame)
+        {
+            n.frame = frame;
+            _set_frame(n);
+        }
+    }
+
     void npcs::reset_facings()
     {
         for(npc& n : _npcs)
@@ -485,10 +752,11 @@ namespace tl
             return;
         }
 
-        bn::sprite_ptr sprite = item->create_sprite(0, 0, facing * frames_per_facing(who));
+        bn::sprite_ptr sprite = item->create_sprite(0, 0, graphic_of(who, facing, 0));
         _npcs.push_back(npc{ bn::move(sprite), bn::optional<bn::sprite_ptr>(), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y), -1, 0, 0, false });
         _blockers[_npcs.size() - 1] = { x, y };
         _set_priority(_npcs.back());
+        _set_frame(_npcs.back());
         _apply_palettes();
         update(_last_cam_x, _last_cam_y);
     }

@@ -83,6 +83,62 @@
 #include "bn_sprite_items_pq_okafor_b.h"
 #include "bn_sprite_items_pq_okafor_c.h"
 #include "bn_sprite_items_pq_okafor_d.h"
+#include "bn_sprite_items_pt_ines_a.h"
+#include "bn_sprite_items_pt_ines_b.h"
+#include "bn_sprite_items_pt_ines_c.h"
+#include "bn_sprite_items_pt_ines_d.h"
+#include "bn_sprite_items_pq_ines_a.h"
+#include "bn_sprite_items_pq_ines_b.h"
+#include "bn_sprite_items_pq_ines_c.h"
+#include "bn_sprite_items_pq_ines_d.h"
+#include "bn_sprite_items_pt_teo_a.h"
+#include "bn_sprite_items_pt_teo_b.h"
+#include "bn_sprite_items_pt_teo_c.h"
+#include "bn_sprite_items_pt_teo_d.h"
+#include "bn_sprite_items_pq_teo_a.h"
+#include "bn_sprite_items_pq_teo_b.h"
+#include "bn_sprite_items_pq_teo_c.h"
+#include "bn_sprite_items_pq_teo_d.h"
+#include "bn_sprite_items_pt_grigor_a.h"
+#include "bn_sprite_items_pt_grigor_b.h"
+#include "bn_sprite_items_pt_grigor_c.h"
+#include "bn_sprite_items_pt_grigor_d.h"
+#include "bn_sprite_items_pq_grigor_a.h"
+#include "bn_sprite_items_pq_grigor_b.h"
+#include "bn_sprite_items_pq_grigor_c.h"
+#include "bn_sprite_items_pq_grigor_d.h"
+#include "bn_sprite_items_pt_valdez_a.h"
+#include "bn_sprite_items_pt_valdez_b.h"
+#include "bn_sprite_items_pt_valdez_c.h"
+#include "bn_sprite_items_pt_valdez_d.h"
+#include "bn_sprite_items_pq_valdez_a.h"
+#include "bn_sprite_items_pq_valdez_b.h"
+#include "bn_sprite_items_pq_valdez_c.h"
+#include "bn_sprite_items_pq_valdez_d.h"
+#include "bn_sprite_items_pt_pruitt_a.h"
+#include "bn_sprite_items_pt_pruitt_b.h"
+#include "bn_sprite_items_pt_pruitt_c.h"
+#include "bn_sprite_items_pt_pruitt_d.h"
+#include "bn_sprite_items_pq_pruitt_a.h"
+#include "bn_sprite_items_pq_pruitt_b.h"
+#include "bn_sprite_items_pq_pruitt_c.h"
+#include "bn_sprite_items_pq_pruitt_d.h"
+#include "bn_sprite_items_pt_kessler_a.h"
+#include "bn_sprite_items_pt_kessler_b.h"
+#include "bn_sprite_items_pt_kessler_c.h"
+#include "bn_sprite_items_pt_kessler_d.h"
+#include "bn_sprite_items_pq_kessler_a.h"
+#include "bn_sprite_items_pq_kessler_b.h"
+#include "bn_sprite_items_pq_kessler_c.h"
+#include "bn_sprite_items_pq_kessler_d.h"
+#include "bn_sprite_items_pt_nella_a.h"
+#include "bn_sprite_items_pt_nella_b.h"
+#include "bn_sprite_items_pt_nella_c.h"
+#include "bn_sprite_items_pt_nella_d.h"
+#include "bn_sprite_items_pq_nella_a.h"
+#include "bn_sprite_items_pq_nella_b.h"
+#include "bn_sprite_items_pq_nella_c.h"
+#include "bn_sprite_items_pq_nella_d.h"
 
 namespace tl
 {
@@ -98,6 +154,13 @@ namespace tl
         constexpr portrait_set set_victor = { { &bn::sprite_items::pt_victor_a, &bn::sprite_items::pt_victor_b, &bn::sprite_items::pt_victor_c, &bn::sprite_items::pt_victor_d }, { &bn::sprite_items::pq_victor_a, &bn::sprite_items::pq_victor_b, &bn::sprite_items::pq_victor_c, &bn::sprite_items::pq_victor_d } };
         constexpr portrait_set set_robot = { { &bn::sprite_items::pt_robot_a, &bn::sprite_items::pt_robot_b, &bn::sprite_items::pt_robot_c, &bn::sprite_items::pt_robot_d }, { &bn::sprite_items::pq_robot_a, &bn::sprite_items::pq_robot_b, &bn::sprite_items::pq_robot_c, &bn::sprite_items::pq_robot_d } };
         constexpr portrait_set set_okafor = { { &bn::sprite_items::pt_okafor_a, &bn::sprite_items::pt_okafor_b, &bn::sprite_items::pt_okafor_c, &bn::sprite_items::pt_okafor_d }, { &bn::sprite_items::pq_okafor_a, &bn::sprite_items::pq_okafor_b, &bn::sprite_items::pq_okafor_c, &bn::sprite_items::pq_okafor_d } };
+        constexpr portrait_set set_ines = { { &bn::sprite_items::pt_ines_a, &bn::sprite_items::pt_ines_b, &bn::sprite_items::pt_ines_c, &bn::sprite_items::pt_ines_d }, { &bn::sprite_items::pq_ines_a, &bn::sprite_items::pq_ines_b, &bn::sprite_items::pq_ines_c, &bn::sprite_items::pq_ines_d } };
+        constexpr portrait_set set_teo = { { &bn::sprite_items::pt_teo_a, &bn::sprite_items::pt_teo_b, &bn::sprite_items::pt_teo_c, &bn::sprite_items::pt_teo_d }, { &bn::sprite_items::pq_teo_a, &bn::sprite_items::pq_teo_b, &bn::sprite_items::pq_teo_c, &bn::sprite_items::pq_teo_d } };
+        constexpr portrait_set set_grigor = { { &bn::sprite_items::pt_grigor_a, &bn::sprite_items::pt_grigor_b, &bn::sprite_items::pt_grigor_c, &bn::sprite_items::pt_grigor_d }, { &bn::sprite_items::pq_grigor_a, &bn::sprite_items::pq_grigor_b, &bn::sprite_items::pq_grigor_c, &bn::sprite_items::pq_grigor_d } };
+        constexpr portrait_set set_valdez = { { &bn::sprite_items::pt_valdez_a, &bn::sprite_items::pt_valdez_b, &bn::sprite_items::pt_valdez_c, &bn::sprite_items::pt_valdez_d }, { &bn::sprite_items::pq_valdez_a, &bn::sprite_items::pq_valdez_b, &bn::sprite_items::pq_valdez_c, &bn::sprite_items::pq_valdez_d } };
+        constexpr portrait_set set_pruitt = { { &bn::sprite_items::pt_pruitt_a, &bn::sprite_items::pt_pruitt_b, &bn::sprite_items::pt_pruitt_c, &bn::sprite_items::pt_pruitt_d }, { &bn::sprite_items::pq_pruitt_a, &bn::sprite_items::pq_pruitt_b, &bn::sprite_items::pq_pruitt_c, &bn::sprite_items::pq_pruitt_d } };
+        constexpr portrait_set set_kessler = { { &bn::sprite_items::pt_kessler_a, &bn::sprite_items::pt_kessler_b, &bn::sprite_items::pt_kessler_c, &bn::sprite_items::pt_kessler_d }, { &bn::sprite_items::pq_kessler_a, &bn::sprite_items::pq_kessler_b, &bn::sprite_items::pq_kessler_c, &bn::sprite_items::pq_kessler_d } };
+        constexpr portrait_set set_nella = { { &bn::sprite_items::pt_nella_a, &bn::sprite_items::pt_nella_b, &bn::sprite_items::pt_nella_c, &bn::sprite_items::pt_nella_d }, { &bn::sprite_items::pq_nella_a, &bn::sprite_items::pq_nella_b, &bn::sprite_items::pq_nella_c, &bn::sprite_items::pq_nella_d } };
     }
 
     const portrait_set* portrait_for(int speaker)
@@ -124,6 +187,20 @@ namespace tl
             return &set_robot;
         case int(npc_id::okafor):
             return &set_okafor;
+        case int(npc_id::ines):
+            return &set_ines;
+        case int(npc_id::teo):
+            return &set_teo;
+        case int(npc_id::grigor):
+            return &set_grigor;
+        case int(npc_id::valdez):
+            return &set_valdez;
+        case int(npc_id::pruitt):
+            return &set_pruitt;
+        case int(npc_id::kessler):
+            return &set_kessler;
+        case int(npc_id::nella):
+            return &set_nella;
         default:
             return nullptr;
         }

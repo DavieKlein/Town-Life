@@ -62,6 +62,20 @@ namespace tl
                 return story_flag::met_halloran;
             case int(npc_id::okafor):
                 return story_flag::met_okafor;
+            case int(npc_id::ines):
+                return story_flag::met_ines;
+            case int(npc_id::teo):
+                return story_flag::met_teo;
+            case int(npc_id::grigor):
+                return story_flag::met_grigor;
+            case int(npc_id::valdez):
+                return story_flag::met_valdez;
+            case int(npc_id::pruitt):
+                return story_flag::met_pruitt;
+            case int(npc_id::nella):
+                return story_flag::met_nella;
+            case int(npc_id::kessler):
+                return story_flag::met_kessler;
             default:
                 return -1;
             }

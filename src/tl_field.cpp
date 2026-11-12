@@ -25,9 +25,9 @@ namespace tl
     {
         char magic[4];
         int x, y, map, day, minutes, money, mission, menu, conv, act, script, state, frame;
-        unsigned char flags[64];
+        unsigned char flags[80];
         int needs[5];
-        int friends[8];
+        int friends[20];
     };
 
     volatile dbg_state_t dbg_state;
@@ -1917,6 +1917,10 @@ namespace tl
         int ny = _npcs.y_of(npc_index);
         _player.face_towards(nx, ny);
         _npcs.face_towards(npc_index, _player.x(), _player.y());
+        _npcs.focus(npc_index);
+        _map_sprites.clear();           // s76: frees the barrier / bridge sprite tiles while talking (choice layout needs the VRAM)
+        _player.set_blockers(_npcs.blockers(), _npcs.count());
+        npc_index = 0;
         story().set_crates_open(_crates_open());
         _set_hud_hidden(true);
         ui::set_night(is_night(_minutes));
@@ -1947,6 +1951,8 @@ namespace tl
     {
         int npc = _conversation.partner();
         _npcs.reset_facings();
+        _npcs.unfocus();
+        _map_sprites.load(*_map);
         _set_hud_hidden(false);
         _money += story().take_money();
         _needs.add_social(story().take_social());
@@ -2399,7 +2405,7 @@ namespace tl
             dbg_state.state = int(_state);
             dbg_state.frame = dbg_state.frame + 1;
 
-            for(int i = 0; i < 64; ++i)
+            for(int i = 0; i < 80; ++i)
             {
                 dbg_state.flags[i] = (unsigned char)story().flag(i);
             }
@@ -2409,7 +2415,7 @@ namespace tl
                 dbg_state.needs[i] = _needs.values[i].round_integer();
             }
 
-            for(int i = 0; i < 8; ++i)
+            for(int i = 0; i < 20; ++i)
             {
                 dbg_state.friends[i] = story().friendship(i);
             }

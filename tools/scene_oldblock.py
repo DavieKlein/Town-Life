@@ -933,7 +933,7 @@ def street_dressing(s, rnd):
         pole(s, px, py, 4.6)
         cloth_line(s, px, 18.1, 4.8, px, py, 4.5, 6, rnd)
     bunting(s, 25.5, 18.15, 4.3, 34.0, 18.15, 4.3, 9, rnd, sag=0.15)
-    for (x, y) in ((17.7, 19.2), (45.6, 19.1), (55.1, 19.2)):
+    for (x, y) in ((17.7, 19.2), (47.0, 19.1), (55.1, 19.2)):
         potted_plant(s, x, y, "flowers")
     crate_stack(s, 26.0, 19.0, 2)
     for (x, y) in ((17.0, 24.9), (36.0, 19.8), (49.0, 24.8)):
@@ -1153,7 +1153,6 @@ def old_block():
     s.set_solid(31.8, 17.0, 33.1, 17.999, False)
     s.warp(31.8, 17.0, 33.1, 18.0, "laundromat", 7.0, 8.4, "up")
     s.set_solid(44.95, 17.0, 46.05, 17.999, False)
-    s.set_solid(45.3, 18.8, 45.9, 19.4, False)     # TODO(re-render): the flower pot at (45.6, 19.1) stands in the bakery doorway; move it, then drop this line
     s.warp(44.95, 17.0, 46.05, 18.0, "bakery", 5.0, 6.4, "up")
     s.warp(48.0, 51.9, 49.2, 53.1, "lane_shop", 4.0, 5.4, "up")
     s.sun_strength = 4.0

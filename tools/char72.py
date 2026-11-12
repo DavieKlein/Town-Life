@@ -413,6 +413,15 @@ def dress(L, sc):
     face.make_anchors()
     for bone, kind, loc, size, col, *r in BD["extras"]:
         add_extra(arm, bone, kind, loc, size, col, r[0] if r else (0, 0, 0))
+    if BD.get("gloves"):                                          # s76: rubber gloves (Ines): two spheres per hand
+        arm.data.pose_position = "REST"
+        bpy.context.view_layer.update()
+        for sd in "LR":
+            pal = arm.data.bones["Palm." + sd]
+            tip = arm.data.bones["Fingers.%s_end" % sd]
+            mid = (Vector(pal.head_local) + Vector(tip.tail_local)) / 2
+            add_extra(arm, "Palm." + sd, "sphere", tuple(mid), (0.125, 0.125, 0.125), BD["gloves"])
+            add_extra(arm, "Palm." + sd, "sphere", tuple(Vector(pal.head_local)), (0.105, 0.105, 0.105), BD["gloves"])
     arm.data.pose_position = "POSE"
     for o in sc.objects:                                      # V1 Soft: smooth shading + one subdivision level on the bodies
         if o.type == "MESH" and any(m.type == "ARMATURE" for m in o.modifiers):

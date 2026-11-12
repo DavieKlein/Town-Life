@@ -68,13 +68,30 @@ ROBOT = dict(label="Valet", model="ROBOT", height=1.34, colours={}, props=[], pc
 
 CHARS["robot"]=ROBOT
 
+# s76: Old Block residents. Looks are in char_build.B (unique builds), faces in face_cfg.FACE; these rows give label/model/skin/colours
+# for the sprite pipeline (blender_cast.py / build_assets.build_cast). TRENCH-E 3, Duchess and Captain are not rigged humans: they are
+# sprite-only props rendered by tools/blender_residents.py (RESIDENT_PROPS below).
+def _res(label, model, height, colours):
+    return dict(label=label, model=model, height=height, colours=colours, props=[])
+CHARS["ines"] = _res("Ines Okoro", "Female_Casual", 1.62, {"Shirt": "#e2982c", "Pants": "#5a4a78", "Hair": "#1c1410", "HairBase": "#1c1410", "Skin": "#8a5836", "Shoes": "#2e2a32", "Socks": "#f2efe6"})
+CHARS["teo"] = _res("Teo", "Male_Casual", 1.30, {"Shirt": "#3f9a6a", "Pants": "#6e7f98", "Hair": "#1c1410", "Skin": "#c28a5e", "Shoes": "#d8402e", "Socks": "#f2efe6"})
+CHARS["grigor"] = _res("Grigor", "Male_LongSleeve", 1.76, {"Shirt": "#27384f", "Pants": "#3a3f46", "Hair": "#e8e8ee", "Skin": "#d79b78", "Shoes": "#2a2420", "Socks": "#d8d8d0", "Eyes": "#2a2420"})
+CHARS["valdez"] = _res("Mrs. Valdez", "Female_Dress", 1.57, {"Dress": "#d86a70", "Hair": "#3a3036", "Skin": "#c98e6a", "Shoes": "#4a2a3a"})
+CHARS["pruitt"] = _res("Guard Pruitt", "Male_Shirt", 1.76, {"Shirt": "#8f98a6", "Shirt2": "#eef0f3", "Pants": "#3a404c", "Hair": "#3a281c", "Hair2": "#3a281c", "Skin": "#e2b08a", "Shoes": "#25252b", "Socks": "#222222", "Eyes": "#202020"})
+CHARS["kessler"] = _res("Kessler", "Male_Suit", 1.90, {"Shirt": "#9aa3ad", "Pants": "#59616e", "Details": "#e2b53a", "TieTexture": "#e6e9ee", "Hair": "#9a7440", "Skin": "#f0c4a4", "Eyes": "#202024", "Shoes": "#1c1f26"})
+CHARS["nella"] = _res("Nella Bellini", "Female_Casual", 1.66, {"Shirt": "#8fb59a", "Pants": "#4a5266", "Hair": "#4a3a34", "HairBase": "#4a3a34", "Skin": "#e2b490", "Shoes": "#5a3a2a", "Socks": "#f2efe6"})
+# sprite-only residents (name -> (sheet width, sheet height, frames per facing or total, facings used)); see build_assets.build_resident_props
+RESIDENT_PROPS = ["trench_e", "duchess", "captain"]
+HUMAN_RESIDENTS = ["ines", "teo", "grigor", "valdez", "pruitt", "kessler", "nella"]
+
 
 # Sprite sheets / portraits built by build_assets.py (graphics/npc_<id>.bmp, graphics/portrait_<id>.bmp).
 PORTRAIT_ONLY = ["player"]       # the player only needs a portrait (his sprites are rendered by blender_actor.py)
-ORDER = ["player", "mia", "rosa", "dex", "pimm", "lou", "dex_vault", "victor", "robot", "okafor"]
+ORDER = ["player", "mia", "rosa", "dex", "pimm", "lou", "dex_vault", "victor", "robot", "okafor"] + HUMAN_RESIDENTS
 
 # Every NPC id of the game (index = npc_id in C++ = friendship slot in the save). Halloran has no look yet (Docks).
-IDS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "okafor", "dex_vault", "victor", "robot"]
+IDS = ["mia", "rosa", "dex", "pimm", "lou", "halloran", "okafor", "dex_vault", "victor", "robot",
+       "ines", "teo", "grigor", "valdez", "pruitt", "nella", "kessler", "trench_e", "duchess", "captain"]   # s76: 20 ids (talk slots 20)
 
 # Placements: (npc, map, x, y, facing, from, to, first day, last day) - cells, 24 h clock, days 1..255.
 # Daily whereabouts follow docs/story_chapter1.md section 1.11. Rosa, Dex, Victor and Valet only appear in story scenes
@@ -85,6 +102,9 @@ ROUTES = {
     "pimm_pond": [(20.0, 42.2), (24.0, 42.2), (24.0, 40.2), (18.5, 40.2)],       # City Park, round the pond path
     "pimm_library": [(4.9, 7.4), (4.9, 4.4), (3.2, 4.4), (3.2, 7.4)],            # community centre, between the shelves
     "mia_diner": [(9.3, 4.7), (9.3, 7.6)],                                       # diner, along the east wall of the dining room
+    # s76: Old Block (docs/old_block_design.md section 6). Points must be walkable on the street (y 19.5..24.5).
+    "teo_round": [(20.5, 22.0), (36.0, 22.5), (56.0, 22.0), (36.0, 21.5)],        # Cobble Street, west to east and back
+    "duchess_walk": [(36.0, 21.5), (41.0, 22.6)],                                # the corgi's lunchtime walk on the street
 }
 
 PLACEMENTS = [
@@ -104,4 +124,22 @@ PLACEMENTS = [
     ("pimm", "community_centre", 4.9, 7.4, "ne", "8:00", "16:00", 2, 255, None, None, "pimm_library"),
     ("okafor", "clinic", 7.2, 2.5, "sw", "8:00", "20:00", 1, 255),           # behind the reception counter (counter y 3.1..4.0)
     ("pimm", "city_centre", 20.0, 42.2, "ne", "16:00", "19:30", 1, 255, None, None, "pimm_pond"),   # City Park pond, feeding the pigeons
+
+    # ---- s76: Old Block residents (map old_block, cells; the bakery / laundromat interiors) ----
+    ("pruitt", "old_block", 8.6, 19.9, "se", "0:00", "23:59", 1, 255),                # folding chair on a drum at the VaultLink cable works
+    ("trench_e", "old_block", 12.3, 21.3, "sw", "0:00", "23:59", 1, 255),             # digging in the trench
+    ("valdez", "old_block", 18.5, 18.9, "sw", "8:00", "21:00", 1, 255),               # under her balcony (house 16.5..21)
+    ("captain", "old_block", 19.8, 18.9, "sw", "8:00", "21:00", 1, 255),              # parrot on his perch next to her
+    ("teo", "old_block", 20.5, 22.0, "se", "10:00", "19:00", 1, 255, None, None, "teo_round"),
+    ("grigor", "old_block", 33.1, 28.2, "sw", "10:00", "18:00", 1, 255),              # stool at the chess table
+    ("ines", "old_block", 34.2, 19.5, "sw", "7:00", "12:00", 1, 255),                 # outside the laundromat door
+    ("ines", "laundromat", 6.8, 3.6, "sw", "12:00", "14:00", 1, 255),
+    ("ines", "old_block", 34.2, 19.5, "sw", "14:00", "17:00", 1, 255),
+    ("ines", "laundromat", 6.8, 3.6, "sw", "17:00", "21:00", 1, 255),
+    ("duchess", "old_block", 35.8, 16.0, "e", "7:00", "12:00", 1, 255),               # her bed in the laundromat yard
+    ("duchess", "old_block", 36.0, 21.5, "e", "12:00", "13:00", 1, 255, None, None, "duchess_walk"),
+    ("duchess", "old_block", 35.8, 16.0, "e", "13:00", "22:00", 1, 255),
+    ("nella", "bakery", 4.9, 1.8, "sw", "6:00", "18:00", 1, 255),                     # behind the counter (counter y 2.2..3.1)
+    ("rosa", "old_block", 65.0, 21.6, "sw", "8:00", "17:00", 1, 255, "old_block_open", None),   # her stall at the street end
+    ("kessler", "city_centre", 30.0, 49.4, "sw", "6:00", "22:00", 1, 255, None, "bridge_open"),   # in front of the closed bridge barrier
 ]

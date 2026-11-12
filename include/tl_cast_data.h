@@ -20,6 +20,16 @@ namespace tl
         dex_vault,
         victor,
         robot,
+        ines,
+        teo,
+        grigor,
+        valdez,
+        pruitt,
+        nella,
+        kessler,
+        trench_e,
+        duchess,
+        captain,
         count
     };
 
@@ -52,6 +62,8 @@ namespace tl
         { 4, { 320, 384, 384, 296 }, { 675, 675, 643, 643 } },   // pimm_pond
         { 4, { 78, 78, 51, 51 }, { 118, 70, 70, 118 } },   // pimm_library
         { 2, { 148, 148, 0, 0 }, { 75, 121, 0, 0 } },   // mia_diner
+        { 4, { 328, 576, 896, 576 }, { 352, 360, 352, 344 } },   // teo_round
+        { 2, { 576, 656, 0, 0 }, { 344, 361, 0, 0 } },   // duchess_walk
     };
 
     constexpr npc_placement npc_placements[] = {
@@ -67,6 +79,22 @@ namespace tl
         { npc_id::pimm, map_id::community_centre, 5, 2, 255, 78, 118, 480, 960, -1, -1, 1 },
         { npc_id::okafor, map_id::clinic, 1, 1, 255, 115, 40, 480, 1200, -1, -1, -1 },
         { npc_id::pimm, map_id::city_centre, 5, 1, 255, 320, 675, 960, 1170, -1, -1, 0 },
+        { npc_id::pruitt, map_id::old_block, 7, 1, 255, 137, 318, 0, 1439, -1, -1, -1 },
+        { npc_id::trench_e, map_id::old_block, 1, 1, 255, 196, 340, 0, 1439, -1, -1, -1 },
+        { npc_id::valdez, map_id::old_block, 1, 1, 255, 296, 302, 480, 1260, -1, -1, -1 },
+        { npc_id::captain, map_id::old_block, 1, 1, 255, 316, 302, 480, 1260, -1, -1, -1 },
+        { npc_id::teo, map_id::old_block, 7, 1, 255, 328, 352, 600, 1140, -1, -1, 3 },
+        { npc_id::grigor, map_id::old_block, 1, 1, 255, 529, 451, 600, 1080, -1, -1, -1 },
+        { npc_id::ines, map_id::old_block, 1, 1, 255, 547, 312, 420, 720, -1, -1, -1 },
+        { npc_id::ines, map_id::laundromat, 1, 1, 255, 108, 57, 720, 840, -1, -1, -1 },
+        { npc_id::ines, map_id::old_block, 1, 1, 255, 547, 312, 840, 1020, -1, -1, -1 },
+        { npc_id::ines, map_id::laundromat, 1, 1, 255, 108, 57, 1020, 1260, -1, -1, -1 },
+        { npc_id::duchess, map_id::old_block, 6, 1, 255, 572, 256, 420, 720, -1, -1, -1 },
+        { npc_id::duchess, map_id::old_block, 6, 1, 255, 576, 344, 720, 780, -1, -1, 4 },
+        { npc_id::duchess, map_id::old_block, 6, 1, 255, 572, 256, 780, 1320, -1, -1, -1 },
+        { npc_id::nella, map_id::bakery, 1, 1, 255, 78, 28, 360, 1080, -1, -1, -1 },
+        { npc_id::rosa, map_id::old_block, 1, 1, 255, 1040, 345, 480, 1020, 17, -1, -1 },
+        { npc_id::kessler, map_id::city_centre, 1, 1, 255, 480, 790, 360, 1320, -1, 23, -1 },
     };
 
     constexpr int npc_placements_count = int(sizeof(npc_placements) / sizeof(npc_placement));

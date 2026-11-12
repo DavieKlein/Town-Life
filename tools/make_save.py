@@ -29,24 +29,24 @@ class Save(ct.Structure):
                 ("need_raw", ct.c_int32 * 5), ("bladder_boost", ct.c_int16), ("pad_needs", ct.c_uint16),
                 ("bin_emptied", ct.c_int32 * 256), ("player_name", ct.c_char * 12),
                 ("story_flags", ct.c_uint8 * 80), ("mission_id", ct.c_uint16), ("pad_mission", ct.c_uint16),
-                ("friendship", ct.c_uint8 * 16),
+                ("friendship", ct.c_uint8 * 24),
                 ("deposit_init", ct.c_uint8), ("deposit_cans", ct.c_uint8), ("deposit_bottles", ct.c_uint8),
                 ("deposit_credit", ct.c_uint8), ("deposit_spot", ct.c_uint8 * 64), ("social_valid", ct.c_uint8), ("social", ct.c_uint8), ("items", ct.c_uint8 * 5),
-                ("gift_day", ct.c_uint8 * 8), ("gossip", ct.c_uint8 * 8), ("scratch_day", ct.c_uint8), ("scratch_count", ct.c_uint8),
+                ("gift_day", ct.c_uint8 * 20), ("gossip", ct.c_uint8 * 8), ("scratch_day", ct.c_uint8), ("scratch_count", ct.c_uint8),
                 ("spare", ct.c_uint8 * 3),
-                ("topic_mem", (ct.c_uint8 * 8) * 8), ("talk_day", ct.c_uint8 * 8), ("gain_day", ct.c_uint8 * 8),
-                ("gained", ct.c_uint8 * 8), ("coin_day", ct.c_uint8 * 8), ("coin70", ct.c_uint8),
-                ("pad_story", ct.c_uint8), ("coins", ct.c_uint16), ("missions_done", ct.c_uint32),
+                ("topic_mem", (ct.c_uint8 * 8) * 20), ("talk_day", ct.c_uint8 * 20), ("gain_day", ct.c_uint8 * 20),
+                ("gained", ct.c_uint8 * 20), ("coin_day", ct.c_uint8 * 20), ("coin70", ct.c_uint16),
+                ("coin70_hi", ct.c_uint16), ("coins", ct.c_uint16), ("missions_done", ct.c_uint32),
                 ("collect_mask", ct.c_uint16), ("collect_paid", ct.c_uint8), ("sick", ct.c_uint8), ("zero_min", ct.c_uint16 * 4),
                 ("red_min", ct.c_uint16), ("sick_rest", ct.c_uint16), ("debt", ct.c_int16), ("debt_day", ct.c_uint8), ("faints", ct.c_uint8),
-                ("msg_seen", ct.c_uint16), ("msg_read", ct.c_uint16), ("call_day", ct.c_uint8 * 8), ("delivery_item", ct.c_int8),
+                ("msg_seen", ct.c_uint16), ("msg_read", ct.c_uint16), ("call_day", ct.c_uint8 * 20), ("delivery_item", ct.c_int8),
                 ("pad_s64", ct.c_uint8), ("delivery_due", ct.c_int32)]
 
 
 def make(path, a):
     s = Save()
     s.magic = 0x56534C54
-    s.version = 4
+    s.version = 5
     s.size = ct.sizeof(Save)
     s.map = MAPS.index(a.map)
     s.facing = a.facing

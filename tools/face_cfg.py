@@ -17,4 +17,12 @@ FACE = {
     "pimm":      dict(iris="#5a7a8a", brow="#d8d8d0", lips="#b0685c", plips="#a2605a", female=False, hair="#f2f2ee", glasses=None),
     "okafor":    dict(iris="#2a1a0e", brow="#140c08", lips="#8a3a42", plips="#7c343c", female=True,  hair="#1c1410", glasses=None),
     "lou":       dict(iris="#4a3020", brow="#3a2a1e", lips="#b0584c", plips="#a2504a", female=False, hair="#3a2a1e", glasses=None),
+    # s76: Old Block residents
+    "ines": dict(iris="#2a1a0e", brow="#140c08", lips="#8a3a42", plips="#7c343c", female=True, hair="#1c1410", glasses=None),
+    "teo": dict(iris="#2a1a0e", brow="#1c1410", lips="#b0584c", plips="#a2504a", female=False, hair="#1c1410", glasses=None),
+    "grigor": dict(iris="#3a5a78", brow="#d8d8e0", lips="#b0685c", plips="#a2605a", female=False, hair="#e8e8ee", glasses=None),
+    "valdez": dict(iris="#2a1a0e", brow="#3a3036", lips="#a8404e", plips="#9a3a48", female=True, hair="#3a3036", glasses=None),
+    "pruitt": dict(iris="#3a2a1c", brow="#3a281c", lips="#b0685c", plips="#a2605a", female=False, hair="#3a281c", glasses=None),
+    "kessler": dict(iris="#4a6a88", brow="#9a7440", lips="#b0685c", plips="#a2605a", female=False, hair="#9a7440", glasses=None),
+    "nella": dict(iris="#4a3020", brow="#4a3a34", lips="#b0505a", plips="#a84850", female=True, hair="#4a3a34", glasses=None),
 }
