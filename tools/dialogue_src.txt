@@ -432,7 +432,7 @@ PLAYER| Old Block. That's where Rosa and Mia live. I should see them.
 
 node pro_mia_tip
 MIA:happy| You made it! And you look... bench-ish. Listen, a tip.
-MIA| The green machine by the park toilets, RETURN and EARN. Cans are fifty cents, bottles a dollar.
+MIA| The green machine by the park toilets, RETURN and EARN. Every can and every bottle is a dollar.
 MIA| People drop them everywhere. Pick them up, feed the machine. Free money, {NAME}.
 ! flag deposit_tip, friend mia +2
 MIA| Oh, and Lou needs a dish washer. Ask him. Wash your hands first, he's picky.

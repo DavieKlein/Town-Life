@@ -20,6 +20,13 @@ namespace tl
 
     constexpr map_sprite map_sprite_table[] = {
         { map_id(255), 0, 0, 0, 0, 0, -1, -1 },        // sentinel (never matches a map)
+        { map_id::old_block, 0, 168, 296, 44, 16, -1, -1 },
+        { map_id::old_block, 0, 168, 324, 44, 16, -1, 65 },
+        { map_id::old_block, 0, 168, 352, 44, 16, -1, 65 },
+        { map_id::old_block, 0, 168, 380, 44, 16, -1, -1 },
+        { map_id::old_block, 1, 168, 268, 44, 16, 65, -1 },
+        { map_id::old_block, 1, 168, 408, 44, 16, 65, -1 },
+        { map_id::old_block, 2, 180, 340, 22, 4, 66, -1 },
     };
 
     constexpr int map_sprite_count = int(sizeof(map_sprite_table) / sizeof(map_sprite));

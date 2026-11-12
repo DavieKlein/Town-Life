@@ -133,6 +133,7 @@ class Scene:
         self.warps = []
         self.occluders = []
         self.lights = []
+        self.gates = []      # gated solids (Old Block): (gate_id name, x0, y0, x1, y1) in cells; solid in the grid when closed
         self.lamps = []      # night light pools on the ground: (x, y) in cells
         self.sun = True
 
@@ -248,6 +249,12 @@ class Scene:
         for sy in range(max(0, math.floor(y0 * r + 1e-6)), min(self.h * r, math.ceil(y1 * r - 1e-6))):
             for sx in range(max(0, math.floor(x0 * r + 1e-6)), min(self.w * r, math.ceil(x1 * r - 1e-6))):
                 self.solid[sy][sx] = value
+
+    def gate(self, name, x0, y0, x1, y1):
+        """Gated solid (s75, Old Block): the rect is solid in the collision grid (closed state); the game opens it while the gate's
+        story flag is set (include/tl_world.h gate_id, src/tl_field_oldblock.cpp). Rects must lie on quarter cells."""
+        self.set_solid(x0, y0, x1, y1)
+        self.gates.append((name, x0, y0, x1, y1))
 
     def occluder(self, x0, y0, x1, y1, height_m):
         """Footprint in cells + height in metres (screen bbox is computed by the asset builder)."""
@@ -767,6 +774,15 @@ def city_centre():
         s.kit("Sidewalk_Planter", x, AV0 - 1.4, solid=True, occlude=False)
         tree(s, x, AV0 - 1.4, 0.95)
     hydrant(s, CS1 + 1.2, AV0 - 1.0)
+    # s75: direction sign at the east end of the avenue (the avenue continues into Old Block)
+    s.box(69.4, AV0 - 1.55, 69.52, AV0 - 1.43, 0.0, 2.1, "metal_dark")
+    s.box(67.9, AV0 - 1.6, 71.0, AV0 - 1.44, 1.75, 2.35, "sign_blue")
+    s.text("OLD BLOCK >", 69.45, AV0 - 1.42, 2.05, 0.2, "robot_white", face="left")
+    s.set_solid(69.35, AV0 - 1.6, 69.6, AV0 - 1.4)
+    # s75: east edge of the avenue = the way into Old Block (warp bands, the arrival spot keeps the player's row; Old Block is 4 cells higher)
+    for k in range(4):
+        wy0 = 18.0 + k * 4.0
+        s.warp(70.9, wy0, 72.0, wy0 + 4.0, "old_block", 1.9, wy0 - 2.0, "right")
     bus_stop(s, 40.0, 44.0, AV1 + 3.2)
     for x in (5.5, 20.5, 57.0, 63.5):
         street_tree(s, x, AV1 + 2.4)
@@ -789,7 +805,7 @@ def city_centre():
     s.box(14.5, 43.5, 20.5, 46.8, -0.1, 0.09, "pond_edge", layer="floor")
     s.box(14.8, 43.8, 20.2, 46.5, -0.1, 0.1, "pond_surface", layer="floor")
     s.set_solid(14.5, 43.5, 20.499, 46.799)
-    for (x, y, sc) in ((7.6, 36.2, 1.0), (19.5, 36.5, 1.1), (4.0, 45.5, 1.05), (7.5, 46.0, 0.85), (21.0, 41.0, 0.9)):
+    for (x, y, sc) in ((7.6, 36.2, 1.0), (19.5, 36.5, 1.1), (7.5, 46.0, 0.85), (21.0, 43.6, 0.9)):    # s75: tree A moved (21.0, 43.6), tree B (4.0, 45.5) removed
         tree(s, x, y, sc)
     for (x, y) in ((6.0, 43.5), (13.5, 36.8)):
         planter(s, x, y)
@@ -3155,3 +3171,8 @@ def clinic():
 
 
 SCENES.append(clinic)
+
+
+# s75: Old Block + its interiors (tools/scene_oldblock.py); appended last so the ids of the existing maps stay stable
+import scene_oldblock  # noqa: E402
+scene_oldblock.register(SCENES)

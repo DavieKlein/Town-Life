@@ -73,7 +73,22 @@ namespace tl
         {
             if(spot[index])
             {
-                total += (spot[index] & 3) == 2 ? 2 : 1;
+                ++total;        // every can and every bottle is worth exactly $1
+            }
+        }
+
+        return total;
+    }
+
+    int deposit::loose_on_map(int map) const
+    {
+        int total = 0;
+
+        for(int index = 0; index < pickup_spots_count; ++index)
+        {
+            if(spot[index] && int(pickup_spots[index].map) == map)
+            {
+                ++total;
             }
         }
 
@@ -82,24 +97,18 @@ namespace tl
 
     void deposit::top_up(bn::random& rng)
     {
-        for(int attempt = 0; attempt < 80; ++attempt)
+        // at most max_loose_per_map items lie around on each map
+        for(int attempt = 0; attempt < 160; ++attempt)
         {
-            int missing = max_loose_credits - loose_credits();
-
-            if(missing <= 0)
-            {
-                break;
-            }
-
             int index = rng.get_unbiased_int(pickup_spots_count);
 
-            if(spot[index])
+            if(spot[index] || loose_on_map(int(pickup_spots[index].map)) >= max_loose_per_map)
             {
                 continue;
             }
 
             const pickup_spot& place = pickup_spots[index];
-            bool bottle = missing >= 2 && rng.get_unbiased_int(100) < 40;
+            bool bottle = rng.get_unbiased_int(100) < 40;
 
             if(bottle && ! place.bottle_ok)
             {
@@ -108,7 +117,7 @@ namespace tl
 
             if(! bottle && ! place.can_ok)
             {
-                if(missing >= 2 && place.bottle_ok)
+                if(place.bottle_ok)
                 {
                     bottle = true;
                 }
@@ -183,11 +192,11 @@ namespace tl
 
     int deposit::return_all()
     {
-        int credits = bag_credits() + credit;
+        int dollars = bag_total();
         bag_cans = 0;
         bag_bottles = 0;
-        credit = credits % 2;
-        return credits / 2;
+        credit = 0;
+        return dollars;
     }
 
     void deposit::update(const map_info& map, int cam_x, int cam_y)

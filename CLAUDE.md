@@ -305,14 +305,13 @@ fixtures you can use, the shopkeeper Mia, fine collision, a 3D-rendered player a
     round rubber port, lit sign) stands against the east wall of the park toilet; interactable kind `deposit` at (6.2, 37.9).
     **The park bench next to the hut was removed** (it stood where the machine is); the sleeping bench is the one at
     (15.3, 39.4) (plus the four fountain-square benches).
-    Rules: can = 1 credit ($0.50), bottle = 2 credits ($1.00); 2 credits pay $1, the remainder (0/1) stays as credit.
-    **Loose pickups in the district never exceed 7 credits ($3.50)**; `deposit::top_up` fills free spots (about 40 % bottles)
+    Rules (s75, WHOLE DOLLARS ONLY): every can and every bottle is worth exactly $1, no credit/cents. **At most 4 loose items per map** (`max_loose_per_map`); `deposit::top_up` fills free spots (about 40 % bottles)
     at game start and at 6:00 each day (`field::_tick_minute`). Bag max 10 items. A on a pickup (reach 20 units, the nearest
     object or pickup wins): ~1.2 s bend-down (`search` action, B cancels, partial need change stays), Energy -0.5, Hygiene -1
     (-2 at spots flagged `bush`), toast "Picked up a can. / Bag 5/10"; full bag: "Bag full" info. Machine menu: Return all (N) /
-    Check credit / Leave; result text shows the exact value and the new credit. Pickup sprites use bg priority 3 (under the
+    Check bag / Leave; result "You get $N.". Pickup sprites use bg priority 3 (under the
     objects layer) and the day/night palette transform. A cue over pickups (12 px) and the machine (54 px). Pause screen line
-    "Bag N/10   Credit x/2". Save: `deposit_init/cans/bottles/credit/spot[32]` carved out of `spare` (size unchanged, version
+    "Bag N/10   Coins n". Save: `deposit_init/cans/bottles/credit(ignored, always 0)/spot[64]` carved out of `spare` (size unchanged, version
     unchanged; a save without `deposit_init` gets a fresh top-up). Numbers: docs/story_chapter1.md section 4.7a.
   - **"A" cue:** `field::_update_cue` draws a bobbing gold bubble (`ui_icons` frame 2, bob 0/1/2/1 px per 8 frames)
     above the nearest interactable in reach (same reach rules as the menu, `field::_find_target`) while walking;

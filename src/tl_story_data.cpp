@@ -282,7 +282,7 @@ namespace tl
             { "\"Reimagined.\" That's a nice word for \"bulldozed\".", 253, 0, 47, 189, 0, 20, 0, -1, 0, -1 },
             { "Old Block. That's where Rosa and Mia live. I should see them.", 253, 0, 47, -1, 0, 20, 0, -1, 0, -1 },
             { "You made it! And you look... bench-ish. Listen, a tip.", 0, 0, 47, 191, 0, 20, 1, -1, 0, -1 },
-            { "The green machine by the park toilets, RETURN and EARN. Cans are fifty cents, bottles a dollar.", 0, 0, 47, 192, 0, 20, 0, -1, 0, -1 },
+            { "The green machine by the park toilets, RETURN and EARN. Every can and every bottle is a dollar.", 0, 0, 47, 192, 0, 20, 0, -1, 0, -1 },
             { "People drop them everywhere. Pick them up, feed the machine. Free money, {NAME}.", 0, 2, 47, 193, 0, 20, 0, -1, 0, -1 },
             { "Oh, and Lou needs a dish washer. Ask him. Wash your hands first, he's picky.", 0, 0, 49, -1, 0, 20, 0, -1, 0, -1 },
             { "Not now, buddy. Efficiency audit. I'm very efficient.", 7, 0, 49, -1, 0, 20, 0, -1, 0, -1 },

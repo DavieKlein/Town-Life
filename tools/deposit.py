@@ -4,8 +4,7 @@ editing them never forces a Blender re-render. build_assets writes include/tl_de
 
 Each spot: (x, y, kinds, bush, place). kinds: c = a can may lie there, b = a bottle may lie there. bush = 1 when the
 spot is in or next to bushes / hedges / flower beds (picking up costs Hygiene -2 instead of -1).
-Game rules (src/tl_deposit.cpp): can = 1 credit ($0.50), bottle = 2 credits ($1.00); the district never holds more than
-7 credits ($3.50) of loose pickups; top-up at 6:00 every day; the bag holds 10 items.
+Game rules (src/tl_deposit.cpp): every can and bottle = $1 (whole dollars only); at most 4 loose items per map; top-up at 6:00 every day; the bag holds 10 items.
 
 check(): every spot must be on a free (non-solid) fine-grid cell:  python3 tools/deposit.py
 """
@@ -34,7 +33,7 @@ SPOTS = [
     (62.0, 50.6, "cb", 0, "by the railing"),
 ]
 # s75 Old Block spots (6th element = map): meadow / orchard / pond / lane / street / court (owner: cans also in the meadow and orchard).
-# Same global cap of 7 loose credits, so these only widen where the pickups can show up.
+# Same cap of 4 loose items per map, so these only widen where the pickups can show up.
 OB = "old_block"
 SPOTS += [
     (49.6, 30.5, "cb", 0, "lane gutter", OB), (49.6, 38.0, "cb", 0, "lane gutter", OB), (54.9, 34.4, "cb", 0, "lane east kerb", OB),

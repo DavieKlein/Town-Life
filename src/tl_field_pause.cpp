@@ -393,7 +393,7 @@ namespace tl
             int bottles = in.deposit_bottles > deposit::bag_max - cans ? deposit::bag_max - cans : in.deposit_bottles;
             _deposit.bag_cans = cans;
             _deposit.bag_bottles = bottles;
-            _deposit.credit = in.deposit_credit ? 1 : 0;
+            _deposit.credit = 0;      // whole dollars only: no credit any more
 
             for(int index = 0; index < deposit::max_spots; ++index)
             {

@@ -775,8 +775,8 @@ def court(s, x0, y0, x1, y1, rnd):
         s.box(a, b, c, d, 0.022, 0.03, "paint_white", layer="floor")
     xm = (ox0 + ox1) / 2
     s.box(xm - lw / 2, oy0, xm + lw / 2, oy1, 0.022, 0.03, "paint_white", layer="floor")
-    s.cyl(xm, (oy0 + oy1) / 2, 0.022, 0.03, 1.5, "paint_white", layer="floor", verts=28)
-    s.cyl(xm, (oy0 + oy1) / 2, 0.03, 0.04, 1.36, "court_green", layer="floor", verts=28)
+    s.cyl(xm, (oy0 + oy1) / 2, 0.0225, 0.0315, 1.5, "paint_white", layer="floor", verts=28)       # distinct tops: coplanar faces render black
+    s.cyl(xm, (oy0 + oy1) / 2, 0.0315, 0.0435, 1.36, "court_green", layer="floor", verts=28)
     for kx0, kx1 in ((ox0, ox0 + 3.4), (ox1 - 3.4, ox1)):                                   # keys
         s.box(kx0, (oy0 + oy1) / 2 - 1.5, kx1, (oy0 + oy1) / 2 + 1.5, 0.022, 0.03, "paint_white", layer="floor")
         s.box(kx0 + (lw if kx0 == ox0 else 0), (oy0 + oy1) / 2 - 1.5 + lw, kx1 - (0 if kx0 == ox0 else lw), (oy0 + oy1) / 2 + 1.5 - lw,
@@ -1153,6 +1153,7 @@ def old_block():
     s.set_solid(31.8, 17.0, 33.1, 17.999, False)
     s.warp(31.8, 17.0, 33.1, 18.0, "laundromat", 7.0, 8.4, "up")
     s.set_solid(44.95, 17.0, 46.05, 17.999, False)
+    s.set_solid(45.3, 18.8, 45.9, 19.4, False)     # TODO(re-render): the flower pot at (45.6, 19.1) stands in the bakery doorway; move it, then drop this line
     s.warp(44.95, 17.0, 46.05, 18.0, "bakery", 5.0, 6.4, "up")
     s.warp(48.0, 51.9, 49.2, 53.1, "lane_shop", 4.0, 5.4, "up")
     s.sun_strength = 4.0
@@ -1225,9 +1226,9 @@ def laundromat_room():
         s.box(11.4, ya, 12.9, yb, 0, 0.18 * (i + 1) - 0.04, "wood_dark")
         s.box(11.37, ya - 0.02, 12.93, yb, 0.18 * (i + 1) - 0.04, 0.18 * (i + 1), "wood")
     s.box(11.4, 0.0, 12.9, 0.2, 0, 1.44, "wood_dark")
-    s.set_solid(11.35, 0.0, 12.95, 2.6)
+    s.set_solid(11.35, 0.0, 12.95, 2.5)
     s.occluder(11.35, 0.0, 12.95, 2.6, 1.7)
-    s.warp(11.5, 2.55, 12.8, 3.1, "mia_flat", 3.4, 4.6, "up")
+    s.warp(11.5, 2.5, 12.8, 3.25, "mia_flat", 3.4, 4.6, "up")
     s.box(10.6, 1.0, 11.35, 1.03, 0.0, 2.1, "wood_dark")
     s.text("RESIDENTS", 11.0, 1.05, 1.9, 0.12, "chalk", face="left") if False else None
     sc.potted_plant(s, 13.0, 4.6, "bay")

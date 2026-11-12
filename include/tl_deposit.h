@@ -11,8 +11,8 @@
 namespace tl
 {
     // Can & bottle deposit ("RETURN & EARN"): loose pickups in the City Centre (sprites with a 2-frame twinkle), the
-    // bag and the credit. Rules: can = 1 credit ($0.50), bottle = 2 credits ($1.00); 2 credits pay $1, the remainder
-    // (0 or 1) stays as credit. The district never holds more than max_loose_credits ($3.50) of loose pickups; the
+    // bag. Rules (whole dollars only): every can and every bottle is worth $1, paid at the machine. A map never holds more
+    // than max_loose_per_map loose items; the
     // field tops them up at 6:00 every day. The bag holds bag_max items.
     class deposit
     {
@@ -20,7 +20,7 @@ namespace tl
     public:
         static constexpr int bag_max = 10;
         static constexpr int max_spots = 64;
-        static constexpr int max_loose_credits = 7;          // $3.50 of pickups at once
+        static constexpr int max_loose_per_map = 4;         // loose items per map; every can and bottle is worth $1
 
         // The save keeps one byte per spot: 0 = nothing, else kind (1 can, 2 bottle) | variant << 2.
         uint8_t spot[max_spots] = {};
@@ -37,6 +37,7 @@ namespace tl
         void top_up(bn::random& rng);
 
         [[nodiscard]] int loose_credits() const;
+        [[nodiscard]] int loose_on_map(int map) const;
         [[nodiscard]] int bag_total() const
         {
             return bag_cans + bag_bottles;
@@ -44,7 +45,7 @@ namespace tl
 
         [[nodiscard]] int bag_credits() const
         {
-            return bag_cans + (2 * bag_bottles);
+            return bag_cans + bag_bottles;
         }
 
         // Nearest pickup within `reach` world units of (x, y) on the loaded map, or -1; d2 gets the squared distance.

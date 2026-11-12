@@ -1413,20 +1413,11 @@ namespace tl
 
     namespace
     {
-        // "$2" or "$2.50" for a number of credits (2 credits = $1).
-        void append_dollars(bn::string<24>& text, int credits)
+        // "$2" for a number of items (every can / bottle is worth exactly $1)
+        void append_dollars(bn::string<24>& text, int dollars)
         {
             text.append('$');
-            text.append(bn::to_string<8>(credits / 2));
-
-            if(credits % 2)
-            {
-                text.append(".50");
-            }
-            else if(credits == 0)
-            {
-                text.append(".00");
-            }
+            text.append(bn::to_string<8>(dollars));
         }
 
         void append_items(bn::string<24>& text, int cans, int bottles)
@@ -1489,7 +1480,7 @@ namespace tl
         _deposit_label.append(bn::to_string<4>(_deposit.bag_total()));
         _deposit_label.append(")");
         options[0] = _deposit_label;
-        options[1] = "Check credit";
+        options[1] = "Check bag";
         options[2] = "Leave";
         _menu.open("Return & Earn", options, 3);
     }
@@ -1498,7 +1489,7 @@ namespace tl
     {
         if(choice == 0)
         {
-            if(_deposit.bag_total() == 0 && _deposit.credit == 0)
+            if(_deposit.bag_total() == 0)
             {
                 _show_info("Return & Earn", "Your bag is empty.", "Collect cans and", "bottles around town.");
                 return;
@@ -1506,30 +1497,16 @@ namespace tl
 
             int cans = _deposit.bag_cans;
             int bottles = _deposit.bag_bottles;
-            int credits = _deposit.bag_credits() + _deposit.credit;
             int paid = _deposit.return_all();
             _money += paid;
             _redraw_hud_text();
             _info_line_a = "";
             append_items(_info_line_a, cans, bottles);
             _info_line_a.append(":");
-            _info_line_b = "";
-
-            if(credits % 2)
-            {
-                append_dollars(_info_line_b, credits);
-                _info_line_b.append(" -> $");
-                _info_line_b.append(bn::to_string<8>(paid));
-                _info_line_b.append(" paid,");
-                _info_line_c = "credit 1/2. Thanks!";
-            }
-            else
-            {
-                _info_line_b.append("$");
-                _info_line_b.append(bn::to_string<8>(paid));
-                _info_line_b.append(" paid.");
-                _info_line_c = "Thanks!";
-            }
+            _info_line_b = "You get $";
+            _info_line_b.append(bn::to_string<8>(paid));
+            _info_line_b.append(".");
+            _info_line_c = "Thanks!";
 
             _show_info("Return & Earn", _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
         }
@@ -1541,9 +1518,7 @@ namespace tl
             _info_line_a.append(bn::to_string<4>(deposit::bag_max));
             _info_line_b = "Worth ";
             append_dollars(_info_line_b, _deposit.bag_credits());
-            _info_line_c = "Credit saved: ";
-            _info_line_c.append(bn::to_string<4>(_deposit.credit));
-            _info_line_c.append("/2");
+            _info_line_c = "";
             _show_info("Return & Earn", _info_line_a.c_str(), _info_line_b.c_str(), _info_line_c.c_str());
         }
     }

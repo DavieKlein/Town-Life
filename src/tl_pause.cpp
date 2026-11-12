@@ -243,9 +243,7 @@ namespace tl
         {
             bn::string<32> bag("Bag ");
             bag.append(bn::to_string<8>(info.bag));
-            bag.append("/10   Credit ");
-            bag.append(bn::to_string<8>(info.credit));
-            bag.append("/2  Coins ");
+            bag.append("/10   Coins ");
             bag.append(bn::to_string<8>(info.coins));
 
             if(info.debt > 0)

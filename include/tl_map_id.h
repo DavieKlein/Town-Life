@@ -15,9 +15,14 @@ namespace tl
         player_room,
         vaultmart,
         clinic,
+        old_block,
+        laundromat,
+        bakery,
+        mia_flat,
+        lane_shop,
     };
 
-    constexpr int maps_count = 9;
+    constexpr int maps_count = 14;
 }
 
 #endif
