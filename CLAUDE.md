@@ -885,6 +885,20 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
   It is now `BN_DATA_EWRAM_BSS static` in EWRAM. Keep big objects off the stack. Also: `save_data` has default member initialisers, so statics holding it
   need raw storage (`raw<T>` in tl_blackbox.cpp) to stay out of static constructors.
 
+## s75: Old Block built (branch `claude/intelligent-hawking-y0vl2t`)
+
+Design: docs/old_block_design.md (owner-approved rev 2). Built: map `old_block` (80x64, `tools/scene_oldblock.py`, imported at the end of scene.py, which calls `register(SCENES)`),
+interiors `laundromat`, `bakery`, `mia_flat`, `lane_shop` (Baker's Lane cottage with a "LANE GROCERY" door; back room = Chapter 2, not built). Details:
+- **Gated solids:** `Scene.gate(name, x0, y0, x1, y1)` (quarter-cell rects, solid in the ROM grid), generated `map_info::gates`, `gate_open[]`, `field::_update_gates` (tl_field_oldblock.cpp):
+  `sneak` (flag sneak_route OR current mission X1 for now), `barrier` (barrier_moved), `bridge` (door_bridge). Flags 80 (3 new), save version 4 (16 maps, 64 deposit spots).
+- **Sprites by flag:** `tools/map_sprites.py` + `tl_map_sprites.*`: 4 barrier pieces (+2 laundry variants) and Teo's door bridge (64x32 frames, bg priority 3).
+- **Shop sets:** `shop_set` table in tl_field.cpp (market, vaultmart, diner, bakery, lane, stall); new kinds sign/flap/hatch/chess/garden/hoop/washer/oven (`_use_old_block`).
+  Bins must stay within the first 16 interactables of a map (cooldown slot = index & 15).
+- **Furniture catalog** got washer, dryer tower, folding table, plastic chair, round table, bakery counter, bread shelf, kitchenette, crates, grocery shelf and counter; placements in `OB_FURNITURE`.
+- **Deposit:** per-map spots (`pickup_spot::map`), 24 Old Block spots, **whole dollars only: every can/bottle = $1, max 4 loose items per map, no credit.**
+- Scene render cache key covers BOTH layers: any primitive change re-renders floor + objects (~25 min each at 192 spp). Collision / warps / gates / interactions / critters / deposit spots are NOT hashed.
+- Playtest and open points: docs/playtest_s75.md. Map ids: old_block 9, laundromat 10, bakery 11, mia_flat 12, lane_shop 13.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

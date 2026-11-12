@@ -1,4 +1,4 @@
-# Old Block - design (s74, revision 2 after owner feedback; nothing built, nothing added to `SCENES`)
+# Old Block - design (s74, revision 2 after owner feedback; BUILT in s75: map + laundromat, bakery, Mia's flat, Lane Grocery interiors, gates, barrier sprites; see CLAUDE.md s75 and docs/playtest_s75.md)
 
 Owner feedback: "All OK, warm neighbourhood. It may be BIGGER than the City Centre. More room to walk around. Buildings don't all have to stand next to each other."
 Decisions: cable works inside the Old Block map; laundromat, bakery and Mia's flat enterable in Chapter 1, back room in Chapter 2; **no per-area palette blend** (warm
