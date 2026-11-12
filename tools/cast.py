@@ -140,6 +140,6 @@ PLACEMENTS = [
     ("duchess", "old_block", 36.0, 21.5, "e", "12:00", "13:00", 1, 255, None, None, "duchess_walk"),
     ("duchess", "old_block", 35.8, 16.0, "e", "13:00", "22:00", 1, 255),
     ("nella", "bakery", 4.9, 1.8, "sw", "6:00", "18:00", 1, 255),                     # behind the counter (counter y 2.2..3.1)
-    ("rosa", "old_block", 65.6, 21.0, "sw", "8:00", "17:00", 1, 255, "old_block_open", None),   # her stall at the street end
+    ("rosa", "old_block", 64.4, 23.7, "ne", "8:00", "17:00", 1, 255, "old_block_open", None),   # her stall at the street end
     ("kessler", "city_centre", 33.4, 49.2, "sw", "6:00", "22:00", 1, 255, None, "bridge_open"),   # in front of the closed bridge barrier
 ]

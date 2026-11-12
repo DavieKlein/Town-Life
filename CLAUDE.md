@@ -990,8 +990,14 @@ Owner-approved proposal `tools/proposals/s77/` (entrance variant A) is built; th
   not fixed, would need 48 px frames).
 - **Placements moved** (tools/cast.py, run `build_assets.write_cast_header()`): Kessler 33.4,49.2 (the CLOSED sign covered him), Valdez 18.0,18.8 (lamp post at 19.0,19.1),
   Pruitt 8.5,20.9 (the cable drum hid his legs), Rosa at her stall 65.6,21.0 (crate stack), Mia's fountain lunch 45.5,38.9 (the basin rim hid her legs).
-  NPCs only use the coarse occluder test (`npcs::_set_priority`), no per-pixel depth: a thin pole / low counter in front still covers part of an NPC who stands behind
-  it, so place NPCs at least ~1 cell away from poles, crates and basins (check with a headless shot, `python3 tools/npc_audit.py ROM OUTDIR TAG` makes contact sheets of every placement).
+  Rosa's stall spot is now 64.4,23.7 (street side of the cart).
+- **Per-pixel depth for NPC sprites (s80, replaces the occluder test and the s73 two-part counter hack):** every NPC sprite owns its tiles (`npc::own_tiles`) at bg
+  priority 2. `npcs::_compute_mask` builds a hidden-pixel bitmap (`npc_hide[npc_id]`, 1 bit per sprite pixel) from the objects layer depth data (same format as
+  `streamed_bg::update_front`): a pixel is hidden when an opaque objects pixel has iso depth > the NPC's feet depth (x + y). `_refresh_tiles` copies the ROM frame and clears
+  the hidden pixels. The bitmap is recomputed when the NPC moved 6+ units or the Duchess/Captain flip changed (one recompute per frame, in `npcs::update`), the tiles are
+  rebuilt on every frame change. TRENCH-E's depth gets +40 because his placeholder model is still baked into Old Block (remove it at the next re-render, then drop the bias).
+  Known limit: the player's front layer (priority 1) can still draw over an NPC who is in front of an object that is in front of the player. CPU (TL_DEBUG_CPU, 780 frames of
+  walking): Old Block 13 -> 18 missed frames, avg 42.8 -> 43.8 %; diner and City Centre unchanged; sprite tiles peak slightly lower (no upper half sprite).
 - **B in conversations:** `dialogue_box::update_text(false)` (conversations) no longer lets B turn pages (minigame pages keep B = next). `conversation::_skip_rest()`:
   small talk -> B ends it politely (what was gained stays, coin reward still paid); scripts -> B skips the rest of the chain but APPLIES the effects of every skipped
   node (flags, missions, money, friendship), stops at the next node with choices (shows its question, `skip_to_last_page`). Choices: topic menu B = "Bye", gift list B =

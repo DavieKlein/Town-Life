@@ -185,11 +185,11 @@ namespace tl
         }
 
         bn::sprite_ptr sprite = item->create_sprite(0, 0, graphic_of(p.who, p.facing, 0));
-        _npcs.push_back(npc{ bn::move(sprite), bn::optional<bn::sprite_ptr>(), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
+        _npcs.push_back(npc{ bn::move(sprite), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
                              120 + int(index * 37 % 90), false });
         _blockers[_npcs.size() - 1] = { p.x, p.y };
-        _set_priority(_npcs.back());
         _set_frame(_npcs.back());
+        _set_priority(_npcs.back());
     }
 
     void npcs::_build(int day, int minutes)
@@ -382,10 +382,23 @@ namespace tl
             int screen_y = _map->to_image_y(n.x, n.y) - cam_y - 80;
             int sprite_y = screen_y - feet_of(n.who) - (n.who == npc_id::robot ? (n.bob / 6) % 2 : 0);
             n.sprite.set_position(screen_x, sprite_y);
+        }
 
-            if(n.upper)
+        // s80: one bitmap recompute per frame (it walks the objects cells); rebuilding the tiles of a changed frame is cheap
+        int budget = 1;
+
+        for(npc& n : _npcs)
+        {
+            if(n.mask_dirty && budget > 0)
             {
-                n.upper->set_position(screen_x, sprite_y - 16);
+                _compute_mask(n);
+                --budget;
+                n.tiles_dirty = true;
+            }
+
+            if(n.tiles_dirty)
+            {
+                _refresh_tiles(n);
             }
         }
     }
@@ -451,65 +464,222 @@ namespace tl
 
     void npcs::_set_frame(npc& n)
     {
-        n.sprite.set_tiles(item_of(n.who)->tiles_item(), graphic_of(n.who, n.facing, n.frame));
+        bool flip = false;
 
         if(n.who == npc_id::duchess || n.who == npc_id::captain)
         {
-            n.sprite.set_horizontal_flip(n.facing >= 1 && n.facing <= 3);      // the art faces right; sw, w, nw look left
+            flip = n.facing >= 1 && n.facing <= 3;      // the art faces right; sw, w, nw look left
+            n.sprite.set_horizontal_flip(flip);
         }
 
-        if(n.upper)
+        if(flip != n.mask_flip)
         {
-            _make_upper(n);
+            n.mask_dirty = true;
         }
+
+        n.tiles_dirty = true;
     }
 
-    // s73: the objects layer has ONE priority, so an NPC behind a counter used to be hidden completely (the back wall behind the
-    // counter is taller than the NPC) or drawn in front of it entirely. When an NPC stands behind a low occluder but a taller one
-    // overlaps his sprite, the legs (full sprite, priority 3) stay behind the counter and the top half (priority 2) is drawn over it.
+    // s80: per-pixel depth for NPCs (replaces the s73 two-part counter hack). The sprite always stands at bg priority 2 (in front of the
+    // objects layer); its own copy of the frame loses every pixel that lies under an opaque objects pixel whose iso depth (x + y) is
+    // greater than the NPC's feet depth, i.e. objects in front of him cover him, objects behind him do not. Same depth data as the
+    // player's front layer (streamed_bg::update_front). The hidden pixels are a bitmap per NPC kind (computed when he moved 6+ units),
+    // applied to every new frame (cheap).
     void npcs::_set_priority(npc& n)
     {
-        int height = height_of(n.who);
-        bool behind = _map->player_hidden(n.x, n.y, 12, height);
-        bool split = height == 56 && ! behind && _map->player_hidden(n.x, n.y, 12, 56, true);
-        n.sprite.set_bg_priority(behind || split ? 3 : 2);
+        n.sprite.set_bg_priority(2);
+        int moved = (n.x > n.mask_x ? n.x - n.mask_x : n.mask_x - n.x) + (n.y > n.mask_y ? n.y - n.mask_y : n.mask_y - n.y);
 
-        if(split)
+        if(moved >= 6)
         {
-            if(! n.upper)
-            {
-                _make_upper(n);
-                _apply_palettes();
-            }
+            n.mask_dirty = true;
         }
-        else
+
+        if(! n.own_tiles)
         {
-            n.upper.reset();
+            _compute_mask(n);           // first time: at once (no frame with wrong tiles)
+            _refresh_tiles(n);
         }
     }
 
-    void npcs::_make_upper(npc& n)
+    namespace
+    {
+        constexpr int hide_words = 128;                 // 64 rows x up to 2 words (64 px wide TRENCH-E)
+        BN_DATA_EWRAM_BSS uint32_t npc_hide[int(npc_id::count)][hide_words];
+        BN_DATA_EWRAM_BSS uint32_t nibble_mask[256];     // 8 hidden-pixel bits -> 8 nibbles of 0xF
+        bool nibble_mask_ready = false;
+    }
+
+    void npcs::_compute_mask(npc& n)
     {
         const bn::sprite_item* item = item_of(n.who);
-        int per = frames_per_facing(n.who);
-        int graphic = (n.facing * per) + (per > 1 ? n.frame : 0);
-        bn::span<const bn::tile> frame = item->tiles_item().graphics_tiles_ref(graphic);
-        // allocated (not created from ROM data): the ROM frame is already registered as a 32-tile graphic
-        bn::sprite_tiles_ptr tiles = n.upper ? n.upper->tiles() : bn::sprite_tiles_ptr::allocate(16, bn::bpp_mode::BPP_4);
-        bn::span<bn::tile> vram = *tiles.vram();
+        int w = item->shape_size().width();
+        int h = item->shape_size().height();
+        uint32_t* hide = npc_hide[int(n.who)];
 
-        for(int index = 0; index < 16; ++index)
+        for(int index = 0; index < hide_words; ++index)
         {
-            vram[index] = frame[index];
+            hide[index] = 0;
         }
 
-        if(! n.upper)
+        n.mask_dirty = false;
+        n.mask_x = n.x;
+        n.mask_y = n.y;
+        const layer_data& layer = _map->objects;
+        bool flip = n.who == npc_id::duchess || n.who == npc_id::captain ? (n.facing >= 1 && n.facing <= 3) : false;
+        n.mask_flip = flip;
+
+        if(! layer.depth)
         {
-            bn::sprite_builder builder(bn::sprite_shape_size(bn::sprite_shape::SQUARE, bn::sprite_size::BIG), bn::move(tiles), n.sprite.palette());
-            builder.set_bg_priority(2);
-            builder.set_position(n.sprite.position().x(), n.sprite.position().y() - 16);
-            n.upper = builder.release_build();
+            return;
         }
+
+        int row_words = w >> 5 ? w >> 5 : 1;
+        // TRENCH-E's placeholder model is still baked into the Old Block map under his sprite (x - 0.7..x + 1.5, y +- 0.5 cells): his own
+        // depth is moved in front of it so the old geometry does not eat his pixels (remove the baked model with the next Old Block re-render).
+        int depth = n.x + n.y + (n.who == npc_id::trench_e ? 40 : 0);
+        int left = _map->to_image_x(n.x, n.y) - (w / 2);                        // image coordinates of sprite column 0 / row 0
+        int top = _map->to_image_y(n.x, n.y) - (h / 2) - feet_of(n.who);
+        int columns = _map->image_width >> 3;
+        int rows = _map->image_height >> 3;
+        int cx0 = left < 0 ? 0 : left >> 3;
+        int cy0 = top < 0 ? 0 : top >> 3;
+        int cx1 = (left + w + 7) >> 3;
+        int cy1 = (top + h + 7) >> 3;
+        cx1 = cx1 > columns ? columns : cx1;
+        cy1 = cy1 > rows ? rows : cy1;
+
+        for(int cy = cy0; cy < cy1; ++cy)
+        {
+            for(int cx = cx0; cx < cx1; ++cx)
+            {
+                int cell_index = (cy * columns) + cx;
+                uint32_t cell = layer.cells[cell_index];
+                int tile_id = int(cell & 0xFFFF);
+
+                if(! tile_id)
+                {
+                    continue;
+                }
+
+                uint32_t info = layer.depth[cell_index];
+                int base = int(info & 0xFFF);
+                int max_offset = int((info >> 12) & 0xF) * 17;
+                int block = int(info >> 16);
+                bool uniform = block == 0xFFFF;
+
+                if(uniform ? base <= depth : base + max_offset <= depth)
+                {
+                    continue;           // nothing of this cell is nearer than the NPC
+                }
+
+                const uint8_t* offsets = uniform ? nullptr : layer.depth_pixels + (block * 64);
+                const uint32_t* source = layer.tiles + (tile_id * 8);
+                bool hflip = (cell >> 16) & 1;
+                bool vflip = (cell >> 17) & 1;
+                int threshold = depth - base;
+
+                for(int row = 0; row < 8; ++row)
+                {
+                    int sprite_row = (cy * 8) + row - top;
+
+                    if(sprite_row < 0 || sprite_row >= h)
+                    {
+                        continue;
+                    }
+
+                    uint32_t word = source[vflip ? 7 - row : row];
+
+                    if(! word)
+                    {
+                        continue;
+                    }
+
+                    for(int col = 0; col < 8; ++col)
+                    {
+                        int sprite_col = (cx * 8) + col - left;
+
+                        if(sprite_col < 0 || sprite_col >= w)
+                        {
+                            continue;
+                        }
+
+                        if(((word >> ((hflip ? 7 - col : col) * 4)) & 0xF) == 0)
+                        {
+                            continue;       // transparent object pixel
+                        }
+
+                        if(offsets)
+                        {
+                            int offset = offsets[(row * 8) + col];
+
+                            if(offset == 255 || offset <= threshold)
+                            {
+                                continue;   // no pixel, or not nearer than the NPC
+                            }
+                        }
+
+                        int target_col = flip ? w - 1 - sprite_col : sprite_col;
+                        hide[(sprite_row * row_words) + (target_col >> 5)] |= uint32_t(1) << (target_col & 31);
+                    }
+                }
+            }
+        }
+    }
+
+    void npcs::_refresh_tiles(npc& n)
+    {
+        const bn::sprite_item* item = item_of(n.who);
+        int graphic = graphic_of(n.who, n.facing, n.frame);
+        bn::span<const bn::tile> src = item->tiles_item().graphics_tiles_ref(graphic);
+        int count = int(src.size());
+        int w = item->shape_size().width();
+        int tiles_per_row = w >> 3;
+        int row_words = w >> 5 ? w >> 5 : 1;
+
+        if(! n.own_tiles)
+        {
+            n.own_tiles = bn::sprite_tiles_ptr::allocate(count, bn::bpp_mode::BPP_4);
+            n.sprite.set_tiles(*n.own_tiles);
+        }
+
+        if(! nibble_mask_ready)
+        {
+            for(int bits = 0; bits < 256; ++bits)
+            {
+                uint32_t value = 0;
+
+                for(int bit = 0; bit < 8; ++bit)
+                {
+                    if(bits & (1 << bit))
+                    {
+                        value |= uint32_t(0xF) << (bit * 4);
+                    }
+                }
+
+                nibble_mask[bits] = value;
+            }
+
+            nibble_mask_ready = true;
+        }
+
+        bn::span<bn::tile> dst = *n.own_tiles->vram();
+        const uint32_t* hide = npc_hide[int(n.who)];
+
+        for(int index = 0; index < count; ++index)
+        {
+            int tile_row = index / tiles_per_row;
+            int tile_col = index % tiles_per_row;
+            int shift = (tile_col & 3) * 8;
+
+            for(int word = 0; word < 8; ++word)
+            {
+                uint32_t bits = (hide[(((tile_row * 8) + word) * row_words) + (tile_col >> 2)] >> shift) & 0xFF;
+                dst[index].data[word] = src[index].data[word] & ~nibble_mask[bits];
+            }
+        }
+
+        n.tiles_dirty = false;
     }
 
     void npcs::_walked(npc& n, bn::fixed distance)
@@ -753,10 +923,10 @@ namespace tl
         }
 
         bn::sprite_ptr sprite = item->create_sprite(0, 0, graphic_of(who, facing, 0));
-        _npcs.push_back(npc{ bn::move(sprite), bn::optional<bn::sprite_ptr>(), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y), -1, 0, 0, false });
+        _npcs.push_back(npc{ bn::move(sprite), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y), -1, 0, 0, false });
         _blockers[_npcs.size() - 1] = { x, y };
-        _set_priority(_npcs.back());
         _set_frame(_npcs.back());
+        _set_priority(_npcs.back());
         _apply_palettes();
         update(_last_cam_x, _last_cam_y);
     }

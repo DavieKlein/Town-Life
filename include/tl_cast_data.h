@@ -93,7 +93,7 @@ namespace tl
         { npc_id::duchess, map_id::old_block, 6, 1, 255, 576, 344, 720, 780, -1, -1, 4 },
         { npc_id::duchess, map_id::old_block, 6, 1, 255, 572, 256, 780, 1320, -1, -1, -1 },
         { npc_id::nella, map_id::bakery, 1, 1, 255, 78, 28, 360, 1080, -1, -1, -1 },
-        { npc_id::rosa, map_id::old_block, 1, 1, 255, 1049, 336, 480, 1020, 17, -1, -1 },
+        { npc_id::rosa, map_id::old_block, 5, 1, 255, 1030, 379, 480, 1020, 17, -1, -1 },
         { npc_id::kessler, map_id::city_centre, 1, 1, 255, 534, 787, 360, 1320, -1, 23, -1 },
     };
 

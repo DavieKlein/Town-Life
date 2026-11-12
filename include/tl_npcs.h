@@ -5,6 +5,7 @@
 #include "bn_fixed.h"
 #include "bn_optional.h"
 #include "bn_sprite_ptr.h"
+#include "bn_sprite_tiles_ptr.h"
 
 #include "tl_world.h"
 #include "tl_cast_data.h"
@@ -98,7 +99,6 @@ namespace tl
         struct npc
         {
             bn::sprite_ptr sprite;
-            bn::optional<bn::sprite_ptr> upper;     // s73: head and torso (top 32 rows) at priority 2 while `sprite` (priority 3) stands behind a counter
             npc_id who;
             int x;
             int y;
@@ -117,6 +117,14 @@ namespace tl
             bn::fixed anim = 0;     // distance walked (walk animation)
             int frame = 0;          // 0 = idle, 1..12 = walk frames (props: animation frame)
             int tick = 0;           // s76: ambient animation counter of the props
+            // s80: per-pixel depth. The sprite owns its tiles (copied from the ROM frame); every pixel where the objects layer has an
+            // opaque pixel nearer to the camera than the NPC's feet is cleared, so the sprite is always drawn at priority 2.
+            bn::optional<bn::sprite_tiles_ptr> own_tiles;
+            int mask_x = -100000;   // feet position / graphic the tiles were masked for
+            int mask_y = 0;
+            bool mask_flip = false;
+            bool mask_dirty = true;     // the hidden-pixel bitmap (npc_hide[who]) must be recomputed (moved / flipped)
+            bool tiles_dirty = true;    // the sprite tiles must be rebuilt from the ROM frame and the bitmap (new frame)
         };
 
         bn::vector<npc, max_npcs> _npcs;
@@ -142,7 +150,8 @@ namespace tl
         void _add_actor(npc_id who, int x, int y, int facing);
         void _set_frame(npc& n);
         void _set_priority(npc& n);
-        void _make_upper(npc& n);
+        void _compute_mask(npc& n);       // s80: bitmap of the sprite pixels under nearer objects (per-pixel depth)
+        void _refresh_tiles(npc& n);      // s80: copy the ROM frame and clear the hidden pixels
         void _walked(npc& n, bn::fixed distance);
         void _stopped(npc& n);
         void _ambient(npc& n);
