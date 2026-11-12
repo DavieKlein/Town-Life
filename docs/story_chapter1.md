@@ -409,8 +409,15 @@ Scripted in section 2. Summary of data: M01 ends when the player leaves the room
 - **Trigger:** First diner shift done and Mia talked to at the diner.
   **Objective:** "Follow Mia to Old Block."
 - MIA| Hey, {NAME}. Shift's / over. Come with me. / I want you to see this.
-- *Fade. Mia walks ahead along the avenue; the camera follows. At the east end of the avenue the city-centre map transitions
-  to Old Block (warm, crowded, patched). Scene: row houses, laundromat, Ines in a window, Teo on a skateboard, a chess table.*
+- *Fade. Mia walks ahead along the avenue; the camera follows to its east end, where the VaultLink cable works block the way (s77, sewer version): Teo's cone and chalk arrow mark a crooked manhole in the road.*
+- MIA| Not that way. / Follow me.
+- *Mia lifts the cover (the cover sprite swaps to the open well; flag `sneak_route`).*
+- MIA| It's a "survey gap". / Teo surveys it daily.
+- {NAME}| That's a manhole.
+- MIA| Ladies first. Mind the rats. / Don't name them.
+- *Crouch, fade, the sewer tunnel (Mia walks ahead: a Pruitt bark through the street grate, TRENCH-E's rumble overhead, the orange cable on the wall: "That's Vault's cable. It goes all the way to the Hall."). At the east ladder the player climbs up; Teo's head pops out of the Old Block manhole on Cobble Street.*
+- TEO| Boss! Welcome to the / secret entrance. It's / secret. Don't say it.
+- *Then Old Block (warm, crowded, patched). Scene: row houses, laundromat, Ines in a window, Teo on a skateboard, a chess table.*
 - MIA| Old Block. Cracked / pavement, loud neighbours, / best people in town.
 - MIA| That's Ines. She does / your laundry and your / life advice.
 - INES| Hello, new face! Your / shirt needs me. Badly. / Two dollars!

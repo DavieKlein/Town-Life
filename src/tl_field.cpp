@@ -629,6 +629,11 @@ namespace tl
                 _deposit.collect(_act.pickup);
             }
 
+            if(finished && _act.climb_dest && _climb_manhole)
+            {
+                _begin_descent(*_climb_manhole);
+            }
+
             if(finished && _act.collectible >= 0)
             {
                 _collectible_found(_act.collectible);
@@ -850,6 +855,14 @@ namespace tl
                 height = 54;
                 break;
 
+            case interactable_kind::manhole:
+                height = 22;
+                break;
+
+            case interactable_kind::ladder:
+                height = 46;
+                break;
+
             default:      // toilet, shop counters
                 height = 38;
                 break;
@@ -1046,6 +1059,11 @@ namespace tl
             story().set_flag(story_flag::has_rye, 1);
             _sync_objective();
             _show_info("Storeroom", "You carry the rye loaf.", "Take it to Mr. Pimm.", "");
+            break;
+
+        case interactable_kind::manhole:
+        case interactable_kind::ladder:
+            _use_sewer(*best);
             break;
 
         case interactable_kind::sign:
@@ -1631,6 +1649,12 @@ namespace tl
         if(target->kind == interactable_kind::clinic)
         {
             _clinic_choice(choice);
+            return;
+        }
+
+        if(target->kind == interactable_kind::manhole || target->kind == interactable_kind::ladder)
+        {
+            _sewer_choice(*target, choice);
             return;
         }
 
@@ -2342,6 +2366,13 @@ namespace tl
 
             _pending_warp = _map->warp_at(_player.x(), _player.y());
 
+            if(_climb_go)
+            {
+                // s77: the crouch at a manhole is over: go down into the sewer (_begin_descent)
+                _climb_go = false;
+                _pending_warp = &_climb_warp;
+            }
+
             if(_pending_warp && _pending_warp->target == map_id::corner_market && story().flag(story_flag::vault_scene))
             {
                 // after the firing the shop door leads into VaultMart (the cold, regimented Corner Market)
@@ -2395,7 +2426,26 @@ namespace tl
                 _pending_warp = nullptr;
                 _load_map(w.target, w.target_x, w.target_y, w.facing);
                 _state = state::fading_in;
+
+                if(_climb_arrive == 1)
+                {
+                    // arriving in the sewer: the player climbs down the ladder while the screen fades in
+                    _climb_arrive = 0;
+                    _begin_climb_down();
+                }
+                else if(_climb_arrive == 2)
+                {
+                    // climbed out of a manhole: the sewer leaves its mark
+                    _climb_arrive = 0;
+                    _player.set_visible(true);
+                    _needs.add(needs::hygiene, -3);
+                    _update_bars();
+                }
             }
+            break;
+
+        case state::climbing:
+            _update_climb();
             break;
 
         default:

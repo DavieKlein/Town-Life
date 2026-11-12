@@ -29,10 +29,13 @@ namespace tl
 
     void field::_update_gates()
     {
-        // The sneak route opens with the flag; until the Old Block missions exist it is also open while the
-        // "Explore the city" mission X1 is the current one (so the district can be visited in the sandbox).
-        bool sneak = story().flag(story_flag::sneak_route) || story().mission() == mission_id::X1;
-        gate_open[int(gate_id::sneak)] = sneak;
+        // s77: the sneak route is the sewer (tl_field_sewer.cpp). It opens with the flag sneak_route; until the Old Block missions
+        // exist the sandbox mission X1 "Explore the city" sets that flag, so the district can be visited.
+        if(story().mission() == mission_id::X1 && ! story().flag(story_flag::sneak_route))
+        {
+            story().set_flag(story_flag::sneak_route, 1);
+        }
+
         gate_open[int(gate_id::barrier)] = story().flag(story_flag::barrier_moved) != 0;
         gate_open[int(gate_id::bridge)] = story().flag(story_flag::door_bridge) != 0;
     }
@@ -56,14 +59,7 @@ namespace tl
             break;
 
         case interactable_kind::flap:
-            if(gate_open[int(gate_id::sneak)])
-            {
-                _show_info("Fence", "The flap swings open.", "Squeeze through the", "bushes.");
-            }
-            else
-            {
-                _show_info("Fence", "Just a fence.", "And a lot of bushes.", "");
-            }
+            _show_info("Fence", "Just a fence.", "And a lot of bushes.", "");
             break;
 
         case interactable_kind::hatch:

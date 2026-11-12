@@ -3176,3 +3176,8 @@ SCENES.append(clinic)
 # s75: Old Block + its interiors (tools/scene_oldblock.py); appended last so the ids of the existing maps stay stable
 import scene_oldblock  # noqa: E402
 scene_oldblock.register(SCENES)
+
+
+# s77: the Old Block sewer (tools/scene_sewer.py), appended after Old Block so every existing map id stays stable
+import scene_sewer  # noqa: E402
+scene_sewer.register(SCENES)

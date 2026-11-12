@@ -110,13 +110,16 @@ namespace tl
         shop_lane,      // Baker's Lane corner grocery counter
         shop_stall,     // Rosa's market stall on Cobble Street
         sign,           // info page, quality = text index
-        flap,           // fence flap of the sneak route (before sneak_route: just a fence)
+        flap,           // the fence of the old sneak lane (s77: just a fence now)
         hatch,          // NODE 7 hatch at the demolition site
         chess,          // watch the chess game
         garden,         // water the community garden
         hoop,           // shoot hoops on the court
         washer,         // laundromat washing machine
-        oven            // bakery oven (warm up)
+        oven,           // bakery oven (warm up)
+        // s77 sewer route
+        manhole,        // road manhole (City Centre / Old Block): climb down once the route is open
+        ladder          // sewer shaft ladder, quality 0 = west (City Centre), 1 = east (Old Block)
     };
 
     struct interactable
@@ -175,7 +178,6 @@ namespace tl
     // walkable while `gate_open[gate]` is true (field::_update_gates sets it from story flags).
     enum class gate_id : uint8_t
     {
-        sneak,          // fence flap + bush lane (flag sneak_route)
         barrier,        // gap in the barrier line (flag barrier_moved)
         bridge          // Teo's door bridge over the trench (flag door_bridge)
     };

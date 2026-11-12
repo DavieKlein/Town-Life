@@ -124,7 +124,7 @@ first one is found (the entries stay hidden until then: "???"). Each secret is a
 
 | # | Secret | How you find it | Reward | Art |
 |---|--------|-----------------|--------|-----|
-| 1 | **Mothball's Midnight Sweets** (sewer, 00:00) | loose manhole + rumours (see 2.1) | buff sweets and (expensive) permanent skill points, one per night | NEEDS PROPOSAL (sewer room, character, portrait) |
+| 1 | **Mothball's Midnight Sweets** (the Old Block sewer, 00:00-00:30) | the sewer route (s77: manhole at the end of the avenue, see 2.1) + rumours | buff sweets and (expensive) permanent skill points, one per night | sewer + nook BUILT (nook empty, CLOSED sign); NEEDS PROPOSAL (character, portrait, stall) |
 | 2 | **Lou's secret menu: "The Usual"** | friendship with Lou 40+, order "the usual" at the counter | Burger Deluxe $8: Hunger +55, Energy +10, Fun +5, buff Full | none (menu row + text) |
 | 3 | **Rooftop of the community centre** | fire-escape ladder in the back alley (a rumour from Pimm: "the best view in town") | sit on the roof at night: Fun +20 over 10 s, Social +5, a collectible "Skyline" | NEEDS PROPOSAL (ladder, roof scene) |
 | 4 | **Ivo, the night chess hustler** | under the fountain-square lamp 1:00-4:00 only | plays "pigeon chess" for $2 stakes (a coin toss with banter), sells 1 gossip tip per night ($1) that sets a rumour flag | NEEDS PROPOSAL (sprite, portrait) |
@@ -143,6 +143,8 @@ first one is found (the entries stay hidden until then: "???"). Each secret is a
 **Character: Mothball** (original). A small, round, very polite sewer-dweller in a patched yellow raincoat, a miner's lantern on a string of fairy lights, a tray
 of paper-wrapped sweets hung round the neck. Speaks in whispers, apologises to the rats, calls the player "dear customer". Never says where he came from
 ("Down. Mostly down."). He likes Joke and Weather, dislikes Gossip ("The pipes carry everything."). He is not a small-talk NPC; he has a shop menu and 4 scripted chats.
+
+**Where he is (s77, owner: yes):** his shop IS the **nook in the Old Block sewer** (`sewer` map, back walkway x 21.2..25.2: brick niche, brass hooks, dead fairy lights, "CLOSED" sign), not a separate 8x6 shop room. At 00:00-00:30 he hangs the lights and opens a small stall there (counter y ~1.5, NPC spot (23.2, 0.9) are left free); outside that window the niche stays dark with the CLOSED sign. The sewer is reached through the route manholes (City Centre avenue end, Old Block Cobble Street) once `sneak_route` is set; the fountain-square lid below is just one more way down to the west ladder.
 
 **Finding the entrance:**
 - The loose **manhole** in the fountain square (one of the existing manholes; its lid sits a little crooked and has a chalk smiley, visible from the start but inert).

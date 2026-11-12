@@ -27,6 +27,10 @@ namespace tl
         { map_id::old_block, 1, 168, 268, 44, 16, 65, -1 },
         { map_id::old_block, 1, 168, 408, 44, 16, 65, -1 },
         { map_id::old_block, 2, 180, 340, 22, 4, 66, -1 },
+        { map_id::city_centre, 3, 1062, 441, 28, 15, -1, 64 },
+        { map_id::city_centre, 4, 1062, 441, 28, 15, 64, -1 },
+        { map_id::old_block, 5, 310, 361, 22, 15, -1, 64 },
+        { map_id::old_block, 6, 310, 361, 22, 15, 64, -1 },
     };
 
     constexpr int map_sprite_count = int(sizeof(map_sprite_table) / sizeof(map_sprite));

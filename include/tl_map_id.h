@@ -20,9 +20,10 @@ namespace tl
         bakery,
         mia_flat,
         lane_shop,
+        sewer,
     };
 
-    constexpr int maps_count = 14;
+    constexpr int maps_count = 15;
 }
 
 #endif

@@ -691,6 +691,8 @@ def main():
             out.append("        " + ",".join("1" if s.solid[cy][cx] else "0" for cx in range(s.w * scn.SOLID_RES)) + ",")
         out.append("    };")
         out.append(f"    constexpr warp {s.ident}_warps[] = {{")
+        if not s.warps:
+            out.append("        { 0, 0, 0, 0, map_id::city_centre, 0, 0, direction::down },      // s77: a map without warps (the sewer) gets one empty rect")
         for (x0, y0, x1, y1, target, tx, ty, facing) in s.warps:
             assert target in names, target
             out.append(f"        {{ {int(x0 * 16)}, {int(y0 * 16)}, {int((x1 - x0) * 16)}, {int((y1 - y0) * 16)}, "
@@ -794,6 +796,7 @@ def main():
         build_player(force, fast)
         build_player_actions(force, fast)
         build_player_acts(force, fast)
+        build_player_climb(force, fast)
         build_critters(force, fast)
         build_collectibles(force, fast)
         build_cast(force, fast)
@@ -984,6 +987,28 @@ def build_player_acts(force, fast):
         frames = [sprite_frame(os.path.join(out_dir, s + ".png"), ss, 64, 64) for s in stems]
         write_face_sheet("player_" + act, frames, stems, [f for f in FACINGS for i in range(4)], 64, 64,
                          anchors, "player", PLAYER_COLOURS["Skin"])
+
+
+def build_player_climb(force, fast):
+    """s77: ladder climb of the sewer route (tools/blender_climb.py): graphics/player_climb.bmp, 4 frames of 64x64, back view, feet at (32, 58)."""
+    import json
+    ss, samples = (2, 16) if fast else (4, 48)
+    colours = json.dumps(PLAYER_COLOURS)
+    fbx = os.path.join(ROOT, "art_source", "quaternius_characters", PLAYER_MODEL + ".fbx")
+    h = hashlib.sha1()
+    tools_hash(h, ("blender_climb.py", "blender_acts.py") + FACE_TOOLS)
+    h.update(f"climb{ss}{samples}{colours}{PLAYER_MODEL}".encode())
+    out_dir = os.path.join(CACHE, "player_climb_" + h.hexdigest()[:12])
+    last = os.path.join(out_dir, "climb_3.png")
+    if force or not os.path.exists(last):
+        print("rendering the ladder climb...", flush=True)
+        r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_climb.py"),
+                            "--", fbx, out_dir, str(ss), str(samples), colours], capture_output=True, text=True)
+        if not os.path.exists(last):
+            print(r.stdout[-3000:], r.stderr[-3000:])
+            raise RuntimeError("climb render failed")
+    frames = [sprite_frame(os.path.join(out_dir, f"climb_{i}.png"), ss, 64, 64) for i in range(4)]
+    write_sprite_sheet("player_climb", frames, 64, 64)
 
 
 def build_collectibles(force, fast):

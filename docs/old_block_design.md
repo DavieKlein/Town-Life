@@ -14,7 +14,7 @@ You enter from the avenue and meet **cold** first: the VaultTech cable works (ba
 (OLD BLOCK - EST. 1931) the **warm** Cobble Street begins and the neighbourhood opens up: detached houses and shops with gaps, **an alley with Teo's den, a laundromat yard, a small
 square with a basin**, a second street, **Baker's Lane**, running south past spaced-out cottages with front yards, a **pond park**, the **community garden**, a **chess plaza**, a **court**,
 an **two orchard / allotment blocks** and a **meadow with footpaths**. The street ends at the **fenced demolition site** with the derelict Co-op Hall and the humming NODE 7 hatch. The way in
-changes the feeling: first a fence flap and a bush lane (M09), later the front gate (M13).
+changes the feeling: first the **sewer route** (a road manhole at the east end of the City Centre avenue -> sewer tunnel -> manhole on Cobble Street, M09; s77, replaces the old fence flap and bush lane), later the front gate (M13).
 
 ## 2. Map facts
 
@@ -46,7 +46,7 @@ ASCII plan (1 char = 2 x 2 cells; the PNG plan has exact coordinates):
 | Zone | Area | What is there |
 |------|------|---------------|
 | **A. Cable works (cold)** | x 0..14.5, y 14..34 | hoarding (y 15) with VaultTech posters + gold V, portaloo, 3 + 4 cable drums, orange/white **barrier line x 10.5** with amber lamps + SURVEY IN PROGRESS board, **trench x 11.3..13.3** with a cable, TRENCH-E 3, Guard Pruitt on a chair on a drum (8.6, 19.9), camera pole, grey fence south to the map edge |
-| **A2. Sneak route** | x 9..18, y 27..34 | hedge hides the **fence flap** (10.5, 30.2..31.2). Behind it the **bush thicket** with a one-cell lane (10.9 -> 17.0 at y 30.35..31.05, then north x 16.4..17.1 to y 27) that exits just inside the arch |
+| **A2. Fence + thicket (plain scenery since s77)** | x 9..18, y 27..34 | chain-link fence (10.5) with a hedge and the dense bush thicket behind it: all solid, nothing to enter any more (the flap / lane were removed; `flap` interactable = "Just a fence.") |
 | **B. Arch** | x 14.5..15.7 | brick pillars + beam, iron sign "OLD BLOCK / EST. 1931" half covered by VaultTech posters (readable on the +x face) |
 | **C. Cobble Street** | x 15.7..68, y 19.5..24.5 | 52 cells long (was 35), kerbs, 3 curved lamps (x 19 / 38 / 57), bins, hydrant, newspaper box, flower pots, 2 washing lines + bunting (sparse on purpose) |
 | **D. North row, spaced** | facade y 18 | **Valdez house** (16.5..21, balcony + Captain) - **alley** (21..25.5, Teo's den lean-to, barrel) - **Ines's Laundromat** (25.5..34, 3 storeys) - **yard + back-room annex** (34..40.5) - **Bellini Bakery** (40.5..47, Okafor's flat above) - **pocket square** (47..53: stone basin, benches, poster wall) - **row house 4** (53..57.5) - **alley** (57.5..61) - **house 5** (61..65.5) |
@@ -74,7 +74,8 @@ The rear zone behind the north row is closed except through the alleys, yard and
 | Kind | Where | What |
 |------|-------|------|
 | `sign*` | barrier (10.2, 21), arch (14, 22), gate (67.3, 22) | info pages |
-| `flap*` | (9.3, 30.7) | before `sneak_route`: "Just a fence. And a lot of bushes."; after: squeeze through |
+| `flap*` | (9.3, 30.7) | always: "Just a fence. And a lot of bushes." (s77) |
+| `manhole` | (19.4, 22.6) | Cobble Street, just inside the arch: "Climb down" into the sewer east ladder once `sneak_route` is set (sprite cover, closed / open frames, no map re-render) |
 | `hatch*` | (69, 22.5) reach +1.5 | "A steel hatch. It hums. It is warm. Warmer than the street." |
 | `shop_stall*` | (63.2, 23.6) | Rosa's loaf, Orange, Rye loaf, Flowers $3 |
 | `chess*`, `garden*`, `hoop*` x2 | (32.2, 28.9), (23, 30), (57.4 / 65.6, 33.5) | watch the game; water the plants (Fun +4, once a day friendship with Ines); shoot hoops (Fitness +, Fun +) |
@@ -117,14 +118,12 @@ Cast slots: Ines, Teo, Grigor, Pruitt need talk slots (8 -> 12). Duchess, TRENCH
 | State | Flags | Barriers (x 10.5) | Trench | Flap | Lane | Front |
 |-------|-------|-------------------|--------|------|------|-------|
 | A (start) | - | solid | solid | solid | solid | closed |
-| B (after M09 scene) | `old_block_open`, `sneak_route` | solid | solid | open | walkable, half speed, leaf particles | closed |
+| B (after M09 scene) | `old_block_open`, `sneak_route` | solid | solid | solid (fence) | solid (thicket); the way in is the **sewer** (both manholes open) | closed |
 | C (after M13) | `barrier_moved`, `door_bridge` | middle pieces moved aside with laundry on them | door bridge walkable (x 11.3..13.3, y 21.3..22.7) | stays | walkable | open |
 
 **Decision (owner): sprite-built barrier gap.** The barrier line is NOT part of the map tiles: it is 4 sprites (3 pieces + 1 for the moved state; laundry-draped variants), placed by flag,
 so the gap is visible and no second render is needed. Teo's door bridge is one 32x16 sprite. The tile map stays state-A-free at the barrier line (the floor trench stays).
-**Engine need (small): gated solids**: `{rect, flag, invert}` rows evaluated on map load and flag change (`field::_refresh_gates`) for lane, flap, hedge pocket, barrier gap, bridge.
-**Squeeze effect:** half speed on lane cells, 4 drifting leaf sprites, 2 px camera sway, the player passes behind 3 taller bush clumps (the camera-side rows are kept low on purpose:
-at 2:1 isometric anything 0.75 m tall hides about 2.5 cells of ground behind it).
+**Engine need (small): gated solids** (`field::_update_gates`) for barrier gap and bridge. The old lane / flap gates (`gate_id::sneak`) and the planned squeeze effect were dropped in s77.
 
 ## 9. Warm neighbourhood, cold VaultTech parts (decision: no palette blend)
 
@@ -179,3 +178,16 @@ Measured with the real quantizer (`tilecount.py`, full 80x64 map, 24 spp):
 1. Cottages along Baker's Lane are closed shells in Chapter 1 (front gardens, no interiors). OK, or should one of them be a shop (e.g. a tool repair) already in Chapter 1?
 2. The long street makes the walk Mia -> Rosa in M09 about 50 cells (~25 s). Fine, or add a bike/skate shortcut (Teo's ramp) later?
 3. Do the meadow and orchard carry the RETURN & EARN cans (more spots, same global cap) or stay purely scenic?
+
+
+## 10. The sewer route (s77, BUILT: map `sewer`, CLAUDE.md "s77")
+
+Replaces the fence flap + bush lane. **Entrance A (owner decision):** a crooked road manhole at the east end of the City Centre avenue (66.4, 27.6, south lane) with Teo's traffic cone and a
+chalk arrow (all flag-driven map sprites over the existing asphalt: no City Centre re-render). **Exit:** a manhole on Cobble Street (19.4, 22.6), 4 cells inside the arch (sprite cover, no Old Block re-render).
+- **Sewer map** (30 x 9 cells, indoor-style cutaway tunnel, `tools/scene_sewer.py`): two round shafts with iron ladders (west = City Centre, east = Old Block, painted "OLD BLOCK >>>"), a murky channel with two grate
+  foot bridges and a collapsed piece of back walkway (detour: bridge 1 -> front walkway -> bridge 2), pipes, caged amber lamps and the orange VaultLink cable (AURUM Trunk 7) along the wall, rats, a "WATER BOARD No. 4 1931" plate.
+- **Mothball's nook** (x 21.2..25.2, back walkway; owner: YES, it becomes his secret shop 00:00-00:30, replacing the separate shop room of docs/progression.md): brick niche with a dead string of fairy lights, two brass hooks
+  and a hanging "CLOSED" sign. Empty for now. The walkway in front is 2 cells deep and free of solids: room for a small stall counter (y ~1.5, x 22.0..24.4) and an NPC spot at (23.2, 0.9) later. His character still needs its own design proposal.
+- **Use:** A at a manhole -> "Climb down" (before `sneak_route`: "The cover is stuck." + a chalk-arrow hint; the sandbox mission X1 sets the flag), crouch, fade, the player climbs down the ladder (4-frame back-view climb sheet `player_climb`).
+  In the sewer, A at a shaft ladder -> "Climb up": climb animation + fade, arrive beside the manhole, **Hygiene -3** (HUD "-" marker). Usable both ways at any time once open; stays usable after M13.
+- Not changed: M09 pacing otherwise (Mia leads, Teo meets you), thicket + fence stay solid scenery, flag `sneak_route` is reused (all 80 story flags are in use).

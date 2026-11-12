@@ -890,7 +890,7 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
 Design: docs/old_block_design.md (owner-approved rev 2). Built: map `old_block` (80x64, `tools/scene_oldblock.py`, imported at the end of scene.py, which calls `register(SCENES)`),
 interiors `laundromat`, `bakery`, `mia_flat`, `lane_shop` (Baker's Lane cottage with a "LANE GROCERY" door; back room = Chapter 2, not built). Details:
 - **Gated solids:** `Scene.gate(name, x0, y0, x1, y1)` (quarter-cell rects, solid in the ROM grid), generated `map_info::gates`, `gate_open[]`, `field::_update_gates` (tl_field_oldblock.cpp):
-  `sneak` (flag sneak_route OR current mission X1 for now), `barrier` (barrier_moved), `bridge` (door_bridge). Flags 80 (3 new), save version 4 (16 maps, 64 deposit spots).
+  `barrier` (barrier_moved), `bridge` (door_bridge). (The old `sneak` fence-flap / bush-lane gate was removed in s77: the sneak route is the sewer.) Flags 80 (3 new), save version 4 (16 maps, 64 deposit spots).
 - **Sprites by flag:** `tools/map_sprites.py` + `tl_map_sprites.*`: 4 barrier pieces (+2 laundry variants) and Teo's door bridge (64x32 frames, bg priority 3).
 - **Shop sets:** `shop_set` table in tl_field.cpp (market, vaultmart, diner, bakery, lane, stall); new kinds sign/flap/hatch/chess/garden/hoop/washer/oven (`_use_old_block`).
   Bins must stay within the first 16 interactables of a map (cooldown slot = index & 15).
@@ -923,6 +923,20 @@ Valdez's portrait has a real tall updo with a gold comb, TRENCH-E's cyan eye sit
 - **Bakery:** the flower pot moved from the doorway to (47.0, 19.1); the re-render of the `old_block` map is committed.
 - Playtest (headless, `-DTL_DEBUG_POS`, `tools/playtest_driver.py`, debug state dump now 80 flags / 20 friendships): every resident visited, talked to (intro, small talk with the choice layout, friendship meter), depth behind the
   bakery counter checked, no VRAM errors. Open points: docs/residents_build_notes.md.
+
+## s77: the sewer route to Old Block (branch `claude/intelligent-hawking-y0vl2t`)
+
+Owner-approved proposal `tools/proposals/s77/` (entrance variant A) is built; the fence flap + bush lane are gone (thicket + fence stay as plain solid scenery, `flap` = "Just a fence."). Details: docs/old_block_design.md section 10.
+- **Map `sewer`** (id 14, 30 x 9, indoor cutaway, `tools/scene_sewer.py`, materials `NEW_MATERIALS` registered in blender_render with an `# s75-materials` line, appended to SCENES by scene.py): tunnel with two shaft ladders, channel, two grate
+  bridges + a collapsed back walkway (detour), orange VaultLink cable, rats, Mothball's nook (x 21.2..25.2, EMPTY with a CLOSED sign; owner: it is his secret shop 00:00-00:30 later, keep the walkway in front free for a stall counter
+  (y ~1.5) and an NPC spot (23.2, 0.9); his character needs its own proposal first; docs/progression.md 2.1).
+- **Interactable kinds `manhole` / `ladder`** (`tools/interactions.py` bottom, `src/tl_field_sewer.cpp`): City Centre manhole (66.4, 27.6), Old Block manhole (19.4, 22.6), sewer ladders (2.4, 0.6) west and (27.4, 0.6) east (quality 0 / 1).
+  Route open = flag `sneak_route` (the sandbox mission X1 sets it in `_update_gates`); closed: "The cover is stuck." Manhole -> "Climb down" -> crouch (pickup action, `_act.climb_dest`) -> `_climb_go` (turned into `_pending_warp` in `field::update` because the
+  warp is recomputed every frame) -> fade -> `state::climbing` descent (sprite `player_climb` goes down the ladder while the fade opens) -> player at the ladder foot. Ladder -> "Climb up": `state::climbing` ascent + fade, warp to the other
+  map beside the manhole, `_climb_arrive == 2` applies **Hygiene -3** (HUD marker). Both directions any time once open.
+- **Sprites:** `tools/map_sprites.py` frames 3-6 (City Centre closed / open with Teo's cone + chalk arrow, Old Block closed / open), flag-driven by `sneak_route` (closed while it is NOT set, open once it is): no City Centre / Old Block re-render.
+  `player_climb` (64x64 x 4, back view, feet (32, 58)) from `tools/blender_climb.py` (`build_assets.build_player_climb`; it executes the helper part of blender_acts.py so that file's art cache key is unchanged).
+- Build: `python3 tools/build_assets.py --only sewer --no-actors` (a map without warps gets one empty warp rect in the generated table). Playtest evidence: docs/sewer_build_notes.md.
 
 ## Roadmap / status
 

@@ -1288,6 +1288,7 @@ def id_materials():
         nt.links.new(em.outputs[0], out.inputs["Surface"])
         m.blend_method = "OPAQUE"
 MATERIALS.update(__import__('scene_oldblock').NEW_MATERIALS)  # s75-materials
+MATERIALS.update(__import__('scene_sewer').NEW_MATERIALS)  # s75-materials
 
 
 def main():

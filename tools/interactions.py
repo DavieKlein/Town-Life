@@ -142,3 +142,12 @@ def _ob_things(ident):
 for _ident in ("laundromat", "bakery", "mia_flat", "lane_shop"):
     INTERACTABLES[_ident] = _ob_things(_ident)
 
+
+
+# ---------------------------------------------------------------------------------------------------------------- s77: the sewer route
+#   ("manhole", x, y)   road manhole of the secret route (City Centre, Old Block): "Climb down" once the route is open (flag sneak_route).
+#   ("ladder", x, y, 0, side)   shaft ladder in the sewer: "Climb up"; side 0 = west (to the City Centre), 1 = east (to Old Block).
+# City Centre manhole at the east end of the avenue (variant A); Old Block manhole on Cobble Street just inside the arch.
+INTERACTABLES["city_centre"].append(("manhole", 66.4, 27.6))
+INTERACTABLES["old_block"].append(("manhole", 19.4, 22.6))
+INTERACTABLES["sewer"] = [("ladder", 2.4, 0.6, 0, 0), ("ladder", 27.4, 0.6, 0, 1)]

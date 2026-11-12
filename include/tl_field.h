@@ -129,7 +129,8 @@ namespace tl
             fading_in,
             playing,
             fading_out,
-            loading
+            loading,
+            climbing        // s77: ladder climb in the sewer (up: before the fade out, down: after the fade in)
         };
 
         bn::optional<streamed_bg> _floor_bg;
@@ -218,6 +219,7 @@ namespace tl
             int pickup = -1;                    // deposit pickup spot collected at the end
             int collectible = -1;               // collectible item found at the end (s64)
             int odd_bit = 0;                    // odd job done flag set when the activity finishes (s71)
+            int climb_dest = 0;                 // s77: 1 = crouch at a manhole, then climb down into the sewer (see _begin_descent)
         };
 
         activity_state _act;
@@ -351,6 +353,19 @@ namespace tl
         int _gate_cooldown = 0;
         warp _redirect_warp = {};
 
+        // s77 sewer route (tl_field_sewer.cpp)
+        warp _climb_warp = {};
+        int _climb_arrive = 0;          // 1 = after the next map load play the climb down, 2 = arrive at a manhole (Hygiene -3)
+        int _climb_t = 0;
+        bool _climb_go = false;
+        bool _climb_up = false;
+        int _climb_from_x = 0;          // player position when the climb starts / lands (world units)
+        int _climb_from_y = 0;
+        int _climb_ladder_x = 0;        // the ladder's foot (world units)
+        int _climb_ladder_y = 0;
+        bn::optional<bn::sprite_ptr> _climb_sprite;
+        const interactable* _climb_manhole = nullptr;
+
         // Victor Vault's golden car (cutscene actor, see tl_car_data.h): 32x32 sprite pieces + blended shadow blobs
         bn::vector<bn::sprite_ptr, 12> _car;
         bn::vector<bn::sprite_ptr, 6> _car_shadow;
@@ -471,6 +486,14 @@ namespace tl
         void _show_window();
         void _use_old_block(const interactable& target);      // tl_field_oldblock.cpp
         void _update_gates();
+        void _use_sewer(const interactable& target);                  // tl_field_sewer.cpp: manhole / ladder menus
+        void _sewer_choice(const interactable& target, int choice);
+        void _begin_descent(const interactable& manhole);             // after the crouch at a manhole: fade, then climb down
+        void _begin_climb_up(const interactable& ladder);
+        void _begin_climb_down();
+        void _update_climb();
+        void _end_climb();
+        [[nodiscard]] bool _route_open() const;
         void _update_lighting(bool force);
         void _update_lamps();
         static void _set_fade(int counter);

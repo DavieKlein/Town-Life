@@ -619,12 +619,8 @@ def sneak_fence_and_bushes(s, rnd):
     # roses Ines counts
     for (x, y) in ((13.0, 31.6), (14.4, 29.7)):
         s.sphere(x, y, 1.0, 0.1, "flower_red")
-    # thicket + fence flap are all solid; the lane is a set of gated solids (gate "sneak", flag sneak_route / mission X1 for now).
-    # Gate rects are aligned to quarter cells: the lane is exactly 4 sub-cells wide (player hitbox 0.5 cell).
+    # s77: thicket + fence are plain solid scenery now (the sneak route goes through the sewer; the old lane gates are gone).
     s.set_solid(10.75, 27.4, 18.25, 34.5)
-    s.gate("sneak", 10.25, 30.25, 10.75, 31.25)       # fence flap
-    s.gate("sneak", 10.75, 30.25, 17.25, 31.25)       # lane, west -> east
-    s.gate("sneak", 16.25, 27.0, 17.25, 31.25)        # lane, north to the street (exit just inside the arch)
 
 
 def plane_tree(s, x, y, sc=1.25):
