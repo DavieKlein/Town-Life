@@ -1300,6 +1300,8 @@ namespace tl
         _info_line_a.append(s[2]);
         _info_line_a.append(" ]");
 
+        audio::play(audio::sfx::scratch);
+
         if(prize)
         {
             _money += prize;
@@ -1522,6 +1524,7 @@ namespace tl
             int cans = _deposit.bag_cans;
             int bottles = _deposit.bag_bottles;
             int paid = _deposit.return_all();
+            audio::play(audio::sfx::whirr);
             _money += paid;
             _redraw_hud_text();
             _info_line_a = "";
@@ -2101,6 +2104,7 @@ namespace tl
         audio::duck(_pause_mode != pause_mode::none || _conversation.active() || _menu.is_open() || _phone_open);
         audio::set_night(is_night(_minutes));
         audio::update();
+        _update_audio_sfx();
 
         switch(_state)
         {

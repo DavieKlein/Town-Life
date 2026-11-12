@@ -1,4 +1,5 @@
 #include "tl_minigame.h"
+#include "tl_audio.h"
 
 #include "bn_core.h"
 #include "bn_color.h"
@@ -478,6 +479,7 @@ namespace tl
 
                 if(item == section)
                 {
+                    audio::play(audio::sfx::mg_good);
                     ++_streak;
                     ++_stocked;
                     _best_combo = _streak > _best_combo ? _streak : _best_combo;
@@ -491,6 +493,7 @@ namespace tl
                     if(_counts[section] >= shelf_capacity)
                     {
                         _score += 50;
+                        audio::play(audio::sfx::coin);
                         _banner.set_centre(ui::font11, 120, 86, "SECTION DONE! +50", ui::role::hud_money);
                         _banner_timer = 70;
                         _sparkle_section(section);
@@ -508,6 +511,7 @@ namespace tl
                 }
                 else
                 {
+                    audio::play(audio::sfx::mg_bad);
                     ++_mistakes;
                     _streak = 0;
                     _frames_left -= 2 * 60;
@@ -1119,6 +1123,7 @@ namespace tl
 
             void _break(dish_plate& p, bool crash_text)
             {
+                audio::play(audio::sfx::mg_bad);
                 p.broken = true;
                 p.timer = 36;
                 ++_broken;
@@ -1171,6 +1176,7 @@ namespace tl
                 }
 
                 ++_streak;
+                audio::play(perfect ? audio::sfx::mg_good : audio::sfx::mg_clink);
                 _set_popup(zone, perfect ? "PERFECT!" : "GOOD", p.x.round_integer(), 82, perfect);
                 _pose = 1 + zone;
                 _pose_timer = 9;

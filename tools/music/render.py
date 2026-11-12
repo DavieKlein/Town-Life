@@ -7,7 +7,7 @@ import sys
 import wave
 import numpy as np
 
-RATE = 15768  # one of the maxmod GBA mixing rates
+RATE = 21024  # maxmod mixing rate (Makefile)
 
 
 def render(xm, mp3, loops=2, gain=0.0):

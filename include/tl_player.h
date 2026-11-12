@@ -99,6 +99,11 @@ namespace tl
             return _activity;
         }
 
+        [[nodiscard]] action_kind current_action_kind() const
+        {
+            return _act_kind;
+        }
+
         // True during the frame a timed activity (action or toilet) ends by itself.
         [[nodiscard]] bool action_finished() const
         {

@@ -102,7 +102,7 @@ def plucked_loop(root_midi, P, partials, T_loop=0.35, vol=64, name=""):
         env = sus + (1 - sus) * np.exp(-t / tau)
         env[Ltr:] = sus
         x += a * env * np.sin(2 * math.pi * h * i / P)
-    x = ramp_in(x, 24)
+    x = ramp_in(x, max(24, int(0.008 * R)))
     x = norm(x)
     return root_sample(x, R, root_midi, loop=(Ltr, P), vol=vol, name=name)
 
@@ -343,13 +343,12 @@ def inst_accordion():
 def inst_bass(upright=False):
     P = 112
     if upright:
-        parts = [(1, 1.0, 0.75, 0.30), (2, 0.55, 0.25, 0.09), (3, 0.30, 0.08, 0.06), (4, 0.15, 0.03, 0.04)]
+        parts = [(1, 1.0, 0.8, 0.30), (2, 0.35, 0.2, 0.10), (3, 0.10, 0.05, 0.06)]
     else:
-        parts = [(1, 1.0, 0.85, 0.30), (2, 0.7, 0.35, 0.10), (3, 0.45, 0.15, 0.08), (4, 0.28, 0.06, 0.06),
-                 (5, 0.16, 0.02, 0.05), (6, 0.1, 0.0, 0.04)]
+        parts = [(1, 1.0, 0.8, 0.25), (2, 0.5, 0.35, 0.12), (3, 0.2, 0.1, 0.08), (4, 0.08, 0.03, 0.05)]
     lo = plucked_loop(36, P, parts, T_loop=0.32, name="bass")
     hi = plucked_loop(48, P // 2, parts, T_loop=0.32, name="bass")
-    return Instrument("bass_up" if upright else "bass", [lo, hi], split(48), env=ENV_SHORT)
+    return Instrument("bass_up" if upright else "bass", [lo, hi], split(48), env=[(0, 64), (5, 0)])
 
 
 def inst_tuba():

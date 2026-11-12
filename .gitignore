@@ -14,3 +14,4 @@ Thumbs.db
 __pycache__/
 art_cache/
 build_*/
+art_source/audio/vcsl/

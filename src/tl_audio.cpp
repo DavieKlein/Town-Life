@@ -2,6 +2,8 @@
 
 #include "bn_fixed.h"
 #include "bn_music.h"
+#include "bn_optional.h"
+#include "bn_sound_handle.h"
 #include "bn_music_items.h"
 #include "bn_sound_items.h"
 
@@ -74,6 +76,14 @@ namespace tl::audio
                 bn::music_items::market.play(0);
                 break;
 
+            case track::stock_it:
+                bn::music_items::stock_it.play(0);
+                break;
+
+            case track::plate_rush:
+                bn::music_items::plate_rush.play(0);
+                break;
+
             default:
                 break;
             }
@@ -143,9 +153,26 @@ namespace tl::audio
             return;
         }
 
-        if(_has_map && is_outdoor(_last_map) && has_door_bell(id))
+        if(_has_map)
         {
-            play(sfx::door_bell);
+            if(id == map_id::sewer)
+            {
+                play(sfx::manhole);
+                play(sfx::ladder);
+            }
+            else if(_last_map == map_id::sewer)
+            {
+                play(sfx::ladder);
+            }
+            else if(is_outdoor(_last_map) && has_door_bell(id))
+            {
+                play(sfx::door_bell);        // shops ring the bell (plus the door)
+                play(sfx::door);
+            }
+            else
+            {
+                play(sfx::door);
+            }
         }
 
         _has_map = true;
@@ -208,44 +235,62 @@ namespace tl::audio
         _ducked = on;
     }
 
+    namespace
+    {
+        bn::optional<bn::sound_handle> play_handle(sfx s)
+        {
+            using namespace bn::sound_items;
+            const bn::fixed v = sfx_volume;
+
+            switch(s)
+            {
+            case sfx::blip: return menu_blip.play(v);
+            case sfx::confirm: return confirm.play(v);
+            case sfx::back: return menu_back.play(v);
+            case sfx::coin: return coin.play(v);
+            case sfx::cash: return cash.play(v);
+            case sfx::door_bell: return door_bell.play(v);
+            case sfx::mission: return mission_complete.play(1);
+            case sfx::water: return water.play(0.5);
+            case sfx::shower: return shower.play(0.45);
+            case sfx::munch: return munch.play(0.7);
+            case sfx::gulp: return gulp.play(0.6);
+            case sfx::flush: return flush.play(0.55);
+            case sfx::page: return page.play(0.6);
+            case sfx::rustle: return rustle.play(0.55);
+            case sfx::clink: return clink.play(0.7);
+            case sfx::whirr: return whirr.play(0.6);
+            case sfx::snore: return snore.play(0.35);
+            case sfx::thud: return thud.play(0.6);
+            case sfx::door: return door.play(0.6);
+            case sfx::beep: return beep.play(0.6);
+            case sfx::scratch: return scratch.play(0.6);
+            case sfx::ladder: return ladder.play(0.7);
+            case sfx::manhole: return manhole.play(0.7);
+            case sfx::mg_good: return mg_good.play(0.6);
+            case sfx::mg_bad: return mg_bad.play(0.6);
+            case sfx::mg_clink: return mg_clink.play(0.6);
+            default: break;
+            }
+
+            return bn::nullopt;
+        }
+
+        sfx _loop = sfx::none;
+        bn::optional<bn::sound_handle> _loop_handle;
+    }
+
     void play(sfx s)
     {
 #ifdef TL_AUDIO_OFF
         return;
 #endif
-        switch(s)
-        {
-        case sfx::blip:
-            bn::sound_items::menu_blip.play(sfx_volume);
-            break;
+        play_handle(s);
+    }
 
-        case sfx::confirm:
-            bn::sound_items::confirm.play(sfx_volume);
-            break;
-
-        case sfx::back:
-            bn::sound_items::menu_back.play(sfx_volume);
-            break;
-
-        case sfx::coin:
-            bn::sound_items::coin.play(sfx_volume);
-            break;
-
-        case sfx::cash:
-            bn::sound_items::cash.play(sfx_volume);
-            break;
-
-        case sfx::door_bell:
-            bn::sound_items::door_bell.play(sfx_volume);
-            break;
-
-        case sfx::mission:
-            bn::sound_items::mission_complete.play(1);
-            break;
-
-        default:
-            break;
-        }
+    void set_loop(sfx s)
+    {
+        _loop = s;
     }
 
     void update()
@@ -253,6 +298,20 @@ namespace tl::audio
 #ifdef TL_AUDIO_OFF
         return;
 #endif
+        // looping activity sound: restart the clip when it ended, stop it as soon as it is not wanted any more
+        if(_loop == sfx::none)
+        {
+            if(_loop_handle)
+            {
+                _loop_handle->stop();
+                _loop_handle.reset();
+            }
+        }
+        else if(! _loop_handle || ! _loop_handle->active())
+        {
+            _loop_handle = play_handle(_loop);
+        }
+
         if(_playing != _wanted)
         {
             // fade the old track out, then switch

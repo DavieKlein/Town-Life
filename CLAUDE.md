@@ -945,29 +945,39 @@ Owner-approved proposal `tools/proposals/s77/` (entrance variant A) is built; th
 
 ## s78: music and sound (tl_audio, tools/music) - plan: docs/music_plan.md
 
-- **Pipeline (all synthesised, original):** `python3 tools/music/build_audio.py` writes `audio/*.xm` (city_day, old_block, market) and the SFX
-  `audio/*.wav` (menu_blip, menu_back, confirm, coin, cash, door_bell, mission_complete); commit the output (deterministic, no Blender; Butano's
-  mmutil builds the soundbank, `bn::music_items::<name>` / `bn::sound_items::<name>`). Sources: `synth.py` (instruments), `songs.py` (the 3 tracks,
-  data tables: chords, bass/comp/drum patterns, hook notes; `check_melody` prints off-chord notes), `sfx.py`, `xm.py` (XM writer), `engine.py`.
-  Preview tools: `render.py in.xm out.mp3` (libopenmpt via `apt-get install openmpt123`; GBA-like mono 15.8 kHz no interpolation, prints
-  energy below 150 Hz / above 2 kHz), `stems.py`, `selftest.py` (FFT pitch check of every instrument). Loops are exact (2nd pass correlates 1.000).
-  Shared "Town motif" (3 5 8 | b7 5) in all warm tracks. Phone speakers: keep < 20 % energy below 150 Hz.
-- **`tl_audio.h/.cpp`** (namespace `tl::audio`): `set_map(id)` (called when a warp starts and in `_load_map`: fades to the map's track; same track
-  = no restart, only the volume; rings the shop door bell when a shop/diner/bakery/laundromat is entered from City Centre/Old Block),
-  `track_for(map)` / `volume_for(map)`: City Centre = city_day, Old Block = old_block, Corner Market + Lane Grocery + bakery + diner = market loop
-  (85 %), community centre / laundromat / Mia's flat / player room / clinic = market loop at 35 %, VaultMart, VaultTech lobby, public toilet and
-  sewer = silence (cold on purpose). Outdoor tracks play at 70 % at night (`set_night`, no night track yet). `duck(bool)`: 45 % while a dialogue,
-  menu, pause screen or phone is open (set every frame in `field::update`). `set_track/stop(instant)` for scripts and minigames; `play(sfx)`.
-  `audio::update()` runs at the top of `field::update` (fade down 12 frames, up 28); blocking loops (minigames, title, name entry) do not call
-  it, so `main.cpp` hard-cuts to the market loop (60 %) before a minigame; the field restores the place's track when rebuilt.
-- **SFX hooks:** blip / confirm / back in `tl_menu`, `tl_pause` (pause screen + dialog), `tl_dialogue` choices, `tl_phone`, `tl_title`;
-  coin (money up) / cash (money down) from one check at the end of `field::update` (every shop, pay, deposit payout, fee); mission jingle in
-  `_handle_story_events` and the clinic reward page; door bell in `set_map`.
-- **Cutscene ops (tools/cutscene_data.py):** `music <city|old_block|market|none> [vol%]`, `music_stop`, `sfx <blip|confirm|back|coin|cash|door_bell|mission>`.
-  `vault_day` stops the shop music when the golden car arrives (no track returns until the next map change).
-- **Build flags (Makefile `USERFLAGS`):** `BN_CFG_AUDIO_MAX_MUSIC_CHANNELS=8`, `MAX_SOUND_CHANNELS=2`, mixing rate per the measurements in
-  docs/music_plan.md (maxmod does not allow mono: `BN_CFG_AUDIO_STEREO` must stay true). Debug: `-DTL_AUDIO_OFF` = no sound (CPU baseline).
-- Not done: title/name-entry music, night tracks, Victor's theme, minigame tracks, volume options in the pause menu, footsteps/ambience SFX.
+- **Pipeline (original compositions, recorded CC0 instruments):** `python3 tools/music/build_audio.py` writes `audio/*.xm` (city_day, old_block, market,
+  stock_it, plate_rush) and the SFX `audio/*.wav`; commit the output (deterministic, no Blender; Butano's mmutil builds the soundbank,
+  `bn::music_items::<name>` / `bn::sound_items::<name>`). **Round 3 (owner: "too coarse / not smooth"):** the instruments are now real recordings from the
+  CC0 Versilian Community Sample Library (`tools/music/fetch_vcsl.py` downloads ~35 MB into git-ignored `art_source/audio/vcsl/`; list + licence check in
+  `art_source/audio/SOURCES.md`): FM e-piano (TX81Z patch), soft-mallet vibraphone, marimba, harmonica (the "accordion" voice), strumstick (the "guitar"),
+  cajon, shaker, kick, snare, hats, claves... `tools/music/sampler.py` resamples them with soxr to the mixing rate (`MIX_RATE` = 21024, must equal the
+  Makefile rate), measures each sample's pitch (autocorrelation) and corrects it through relative note / finetune, band-limits (lowpass), normalises to full
+  8-bit scale (volume is the volume column), fades every tail, and cross-fades a whole-period loop for sustained instruments. Only the bass (`synth.py`) and the
+  SFX (`sfx.py`) are synthesised. Arrangements (`songs.py`): fewer parts, long legato notes with 6-tick releases, quiet shaker / cajon instead of snare / hats,
+  vibraphone / marimba lead with a baked-in echo (same notes 3 rows later at 25 % on a spare channel), per-song `gain`/`master` balance (stems checked with
+  `stems.py`). Tracks: City Centre 104 BPM F mixolydian 24 bars; Old Block 96 BPM D mixolydian (harmonica + strumstick, bass an octave up: 10 % energy < 150 Hz);
+  market loop 108 BPM C; STOCK IT! 128 BPM G straight, 16 bars; PLATE RUSH 136 BPM D swung, 16 bars. Shared "Town motif" (3 5 8 | b7 5) in all of them.
+  Modules are 350-500 KB each (samples are duplicated per module).
+- **Measuring on the real mixer:** `-DTL_DEBUG_MUSIC=1` ROM (`src/main.cpp`; A = next track) + `tools/music/capture.py ROM PREFIX 1,2,3,4,5 [loops]` records the
+  mGBA output (what Lemuroid plays), writes MP3s and prints level / band / >8 kHz metrics; `-DTL_DEBUG_SFX` + `capture_sfx.py` does the same for every SFX;
+  `render.py` (libopenmpt reference render), `stems.py`, `selftest.py` (pitch) are the offline tools. `apt-get install openmpt123 libretro-mgba`.
+- **`tl_audio.h/.cpp`** (namespace `tl::audio`): `set_map(id)` (warp start + `_load_map`: fades to the map's track, same track = only a volume change; plays the
+  door sound, the shop bell for shops entered from the street, manhole + ladder for the sewer), `track_for(map)` / `volume_for(map)`: City Centre = city_day,
+  Old Block = old_block, Corner Market + Lane Grocery + bakery + diner = market loop (85 %), community centre / laundromat / Mia's flat / player room / clinic =
+  market loop at 35 %, VaultMart, VaultTech lobby, public toilet and sewer = silence (cold on purpose). Outdoor tracks play at 70 % at night. `duck(bool)`: 45 % in
+  dialogues / menus / pause / phone. `set_track/stop(instant)` for scripts, minigames (`main.cpp`: STOCK IT! and PLATE RUSH have their own loops at 90 %, hard cut)
+  and debug builds; `play(sfx)`; `set_loop(sfx)` = the looping activity sound (the clip is replayed back to back while wanted, stops at once when not).
+  `audio::update()` runs at the top of `field::update` (fade down 12 frames, up 28).
+- **Activity sounds (`src/tl_field_audio.cpp`, `field::_update_audio_sfx`, called every frame):** derived from the player's state, so loops stop by themselves
+  when an activity ends or B cancels: wash = water, eat = munch, drink = gulp, read = page turns, bin search = rustle, shower = shower loop, sleeping = soft
+  breathing; one-shots: sit / lie down = thud, toilet done or cancelled = flush, can pickup = clink; elsewhere: deposit machine = whirr (+ coin), scratch card =
+  scratch, phone = beep, doors = door (+ bell for shops), sewer = manhole + ladder clangs, money in / out = coin / cash (one check at the end of `field::update`),
+  mission = jingle, menus = blip / confirm / back, minigames = mg_good / mg_bad / mg_clink / coin (`tl_minigame.cpp`).
+- **Cutscene ops (tools/cutscene_data.py):** `music <city|old_block|market|none> [vol%]`, `music_stop`, `sfx <name>` (first 7 names only); `vault_day` stops the
+  shop music when the golden car arrives.
+- **Build flags (Makefile `USERFLAGS`):** 8 music channels, 3 sound channels, mixing rate 21 kHz (maxmod allows neither mono nor dynamic mixing). CPU numbers:
+  docs/music_plan.md. Debug: `-DTL_AUDIO_OFF` = no sound (CPU baseline).
+- Not done: title / name-entry music, night tracks, Victor's theme, minigame result stingers, volume options in the pause menu, footsteps, a real bass recording.
 
 ## Roadmap / status
 

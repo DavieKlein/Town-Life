@@ -81,6 +81,139 @@ def make():
         parts.append((0.56, pad(m, 1.9), g))
     parts.append((0.56, gl(96, 1.2), 0.25))
     fx["mission_complete"] = finish(place(parts, 2.5))
+    fx.update(make_activity())
+    return fx
+
+
+# ---------------------------------------------------------------------------------------------- activity sounds (s78 round 3)
+# Soft, short, mixed under the music. Looping ones are cross-faded so the repeat has no click.
+def lp(x, a):
+    return S.lowpass(x, a)
+
+
+def hp(x, a):
+    return S.highpass(x, a)
+
+
+def make_loop(x, fade_s=0.08):
+    f = int(R * fade_s)
+    t = np.linspace(0, 1, f)
+    y = x[:len(x) - f].copy()
+    y[:f] = x[:f] * np.sqrt(t) + x[len(x) - f:] * np.sqrt(1 - t)
+    return y
+
+
+def slow_noise(n, hz):
+    """smooth random envelope 0..1"""
+    k = max(2, int(R / hz))
+    pts = S.RNG.uniform(0, 1, n // k + 3)
+    return np.interp(np.arange(n), np.arange(len(pts)) * k, pts)
+
+
+def burst(d, a_low, a_high, decay, attack=0.004):
+    t = t_(d)
+    x = hp(lp(S.noise(len(t)), a_low), a_high)
+    return x * np.exp(-t / decay) * np.minimum(t / attack, 1)
+
+
+def make_activity():
+    fx = {}
+    # washing: soft splashing, bubbling water
+    n = int(R * 1.0)
+    x = hp(lp(S.noise(n), 0.30), 0.03) * (0.35 + 0.65 * slow_noise(n, 14) ** 1.5)
+    fx["water"] = finish(make_loop(x), 0.8)
+    # shower: broad soft hiss, gentle movement
+    n = int(R * 1.4)
+    x = hp(lp(S.noise(n), 0.55), 0.10) * (0.7 + 0.3 * slow_noise(n, 6))
+    fx["shower"] = finish(make_loop(x, 0.12), 0.8)
+    # eating: three soft crunches
+    parts = [(0.00, burst(0.09, 0.45, 0.05, 0.022), 1.0), (0.25, burst(0.09, 0.40, 0.05, 0.020), 0.8), (0.50, burst(0.09, 0.45, 0.05, 0.022), 0.9)]
+    for at in (0.0, 0.25, 0.5):
+        t = t_(0.06)
+        parts.append((at, np.sin(2 * math.pi * 140 * t) * np.exp(-t / 0.02), 0.5))
+    fx["munch"] = finish(place(parts, 0.75), 0.8)
+    # drinking: two gulps (falling pitch blips with a little water)
+    def gulp(d=0.16):
+        t = t_(d)
+        f = 260 - 120 * (t / d)
+        ph = 2 * math.pi * np.cumsum(f) / R
+        return np.sin(ph) * np.sin(math.pi * t / d) ** 2 + 0.25 * lp(S.noise(len(t)), 0.25) * np.sin(math.pi * t / d)
+    fx["gulp"] = finish(place([(0.0, gulp(), 1.0), (0.32, gulp(0.18), 0.85)], 0.65), 0.8)
+    # toilet flush: swell of water, then a gurgling decay
+    n = int(R * 2.2)
+    t = t_(2.2)
+    env = np.minimum(t / 0.35, 1) * np.exp(-np.maximum(t - 0.5, 0) / 0.9)
+    x = hp(lp(S.noise(n), 0.5), 0.04) * env * (0.7 + 0.3 * slow_noise(n, 9))
+    x += 0.4 * np.sin(2 * math.pi * (120 + 60 * np.sin(2 * math.pi * 2.3 * t)) * t) * np.exp(-np.maximum(t - 1.0, 0) / 0.5) * (t > 1.0)
+    fx["flush"] = finish(x, 0.85)
+    # reading: a soft page turn
+    t = t_(0.18)
+    sw = hp(lp(S.noise(len(t)), 0.6), 0.12) * np.sin(math.pi * t / 0.18) ** 2
+    flap = burst(0.03, 0.5, 0.2, 0.01)
+    fx["page"] = finish(place([(0.05, sw, 1.0), (0.22, flap, 0.5)], 1.5), 0.6)
+    # bin search: rustling, crackling paper
+    n = int(R * 0.9)
+    crack = np.zeros(n)
+    for _ in range(26):
+        at = int(S.RNG.uniform(0, n - 500))
+        b = burst(0.03, 0.55, 0.15, 0.008)
+        crack[at:at + len(b)] += b * S.RNG.uniform(0.3, 1.0)
+    x = crack + 0.35 * hp(lp(S.noise(n), 0.5), 0.1) * slow_noise(n, 12)
+    fx["rustle"] = finish(make_loop(x, 0.06), 0.75)
+    # can / bottle pickup: a little clink
+    t = t_(0.4)
+    x = (np.sin(2 * math.pi * 2350 * t) * np.exp(-t / 0.09) + 0.6 * np.sin(2 * math.pi * 3620 * t) * np.exp(-t / 0.05)
+         + 0.35 * np.sin(2 * math.pi * 5100 * t) * np.exp(-t / 0.03))
+    fx["clink"] = finish(x, 0.8)
+    # deposit machine: motor whirr, rattle, clunk
+    t = t_(1.3)
+    f = 70 + 55 * np.minimum(t / 0.9, 1)
+    ph = 2 * math.pi * np.cumsum(f) / R
+    saw = (2 * ((ph / (2 * math.pi)) % 1) - 1)
+    x = lp(saw, 0.25) * np.minimum(t / 0.1, 1) * (1 - 0.6 * (t > 1.0)) + 0.2 * hp(lp(S.noise(len(t)), 0.4), 0.1) * np.sin(2 * math.pi * 17 * t) ** 2
+    x[int(R * 1.05):] *= np.exp(-(np.arange(len(x) - int(R * 1.05))) / (R * 0.05))
+    clunk = np.sin(2 * math.pi * 95 * t_(0.12)) * np.exp(-t_(0.12) / 0.03)
+    fx["whirr"] = finish(place([(0, x, 1.0), (1.1, clunk, 1.4)], 1.3), 0.8)
+    # sleeping: slow, soft breathing (subtle)
+    t = t_(3.2)
+    cyc = (np.sin(math.pi * np.clip(t / 1.4, 0, 1)) ** 2) * (t < 1.4) + 0.8 * (np.sin(math.pi * np.clip((t - 1.6) / 1.4, 0, 1)) ** 2) * (t >= 1.6)
+    n = len(t)
+    x = lp(S.noise(n), 0.09) * cyc + 0.5 * np.sin(2 * math.pi * 62 * t) * cyc * (1 + 0.5 * np.sin(2 * math.pi * 24 * t))
+    fx["snore"] = finish(make_loop(x, 0.15), 0.6)
+    # sitting down: a soft thud
+    t = t_(0.16)
+    fx["thud"] = finish(np.sin(2 * math.pi * (95 - 30 * t / 0.16) * t) * np.exp(-t / 0.04) + 0.3 * lp(S.noise(len(t)), 0.2) * np.exp(-t / 0.02), 0.8)
+    # door: latch click + soft swish
+    t = t_(0.55)
+    sw = hp(lp(S.noise(len(t)), 0.3), 0.04) * np.sin(math.pi * np.clip((t - 0.05) / 0.45, 0, 1)) ** 2 * 0.5
+    fx["door"] = finish(place([(0, burst(0.03, 0.5, 0.12, 0.006), 1.0), (0.0, sw, 1.0), (0.46, burst(0.03, 0.4, 0.1, 0.008), 0.8)], 0.55), 0.7)
+    # phone: two soft beeps
+    fx["beep"] = finish(place([(0, tone(1320, 0.07, "sin", 0.05, 0.004), 1.0), (0.09, tone(1760, 0.09, "sin", 0.06, 0.004), 1.0)], 0.2), 0.8)
+    # scratch card
+    n = int(R * 0.6)
+    t = t_(0.6)
+    x = hp(lp(S.noise(n), 0.65), 0.2) * (np.sin(2 * math.pi * 38 * t) ** 2) * np.minimum(t / 0.03, 1) * np.exp(-t / 0.6)
+    fx["scratch"] = finish(x, 0.7)
+    # metal ladder: three dull clangs
+    def clang(f, d=0.35):
+        t = t_(d)
+        return (np.sin(2 * math.pi * f * t) * np.exp(-t / 0.12) + 0.5 * np.sin(2 * math.pi * f * 2.32 * t) * np.exp(-t / 0.07)
+                + 0.25 * np.sin(2 * math.pi * f * 4.1 * t) * np.exp(-t / 0.04))
+    fx["ladder"] = finish(place([(0.0, clang(610), 1.0), (0.26, clang(760), 0.85), (0.55, clang(540), 0.9)], 0.95), 0.8)
+    # manhole cover scraping
+    t = t_(0.8)
+    f = 110 + 60 * np.sin(math.pi * np.clip(t / 0.7, 0, 1))
+    ph = 2 * math.pi * np.cumsum(f) / R
+    x = (lp(S.noise(len(t)), 0.25) * 0.8 + 0.3 * np.sin(ph)) * np.sin(math.pi * np.clip(t / 0.7, 0, 1)) ** 1.2
+    clunk = np.sin(2 * math.pi * 80 * t_(0.14)) * np.exp(-t_(0.14) / 0.04)
+    fx["manhole"] = finish(place([(0, x, 1.0), (0.66, clunk, 1.2)], 0.8), 0.8)
+    # minigame sounds: good item, mistake, plate clink
+    fx["mg_good"] = finish(place([(0, tone(880, 0.08, "sin", 0.05, 0.003), 1.0), (0.06, tone(1319, 0.12, "sin", 0.07, 0.003), 1.0)], 0.2), 0.7)
+    t = t_(0.22)
+    saw = 2 * ((140 * t) % 1) - 1
+    fx["mg_bad"] = finish(lp(saw, 0.16) * np.exp(-t / 0.12) * np.minimum(t / 0.006, 1), 0.7)
+    t = t_(0.3)
+    fx["mg_clink"] = finish(np.sin(2 * math.pi * 3100 * t) * np.exp(-t / 0.07) + 0.5 * np.sin(2 * math.pi * 4700 * t) * np.exp(-t / 0.04), 0.7)
     return fx
 
 
@@ -98,7 +231,7 @@ if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "."
     os.makedirs(out, exist_ok=True)
     fx = make()
-    order = ["menu_blip", "menu_back", "confirm", "coin", "cash", "door_bell", "mission_complete"]
+    order = list(fx.keys())
     seq = []
     for k in order:
         n = write_wav(os.path.join(out, k + ".wav"), fx[k])

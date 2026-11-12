@@ -1,10 +1,11 @@
 # Town Life - music and sound plan (s71, docs only, nothing built)
 
-**Status s78: phase 1 + 2 built** (see CLAUDE.md "s78: music and sound"): 3 tracks (City Centre, Old Block, market/interior loop) + 7 SFX are generated
-by `tools/music/build_audio.py` into `audio/`, played by `tl_audio` (map tracks with fades, ducking, SFX hooks, cutscene ops). Measured (headless mGBA,
-`-DTL_DEBUG_CPU`, City Centre): avg CPU idle 23 -> 30 %, walk 30 -> 38 %, run 33 -> 41 % with music at 16 kHz / 8 channels; missed frames over 2400
-running frames 10 (no music) vs 13 (16 kHz) vs 18 (13 kHz) vs 13 (10 kHz), i.e. not measurably different, so the rate stays 16 kHz (best quality;
-maxmod allows neither mono nor dynamic mixing). Still open: title / minigame / Victor tracks, night variants, volume options, real-device check in Lemuroid.
+**Status s78 (round 3): built.** See CLAUDE.md "s78: music and sound". 5 tracks (City Centre, Old Block, market/interior loop, STOCK IT!, PLATE RUSH) from CC0 VCSL
+recordings + a synthesised bass, 26 SFX (UI, money, doors, every activity, minigames), played by `tl_audio` at a 21 kHz maxmod rate.
+CPU (headless mGBA, `-DTL_DEBUG_CPU`, City Centre running average / missed frames per 1180 frames): no audio 30.7 % / 7, 21 kHz 42.5 % / 20, 27 kHz 46.6 % / 24,
+31 kHz 49.2 % / 37 (Old Block idle 32 / 42 / 45 / 47 %). 21 kHz was chosen: the mixer's cost grows with the rate while the captured spectra of the three rates
+are almost identical (the artefacts come from the instruments and from skipping samples, which the sampler now avoids by resampling to the mixing rate).
+Still open: title / minigame-result / Victor tracks, night variants, volume options, a real-device check in Lemuroid.
 
 (Original text below.) Status: PROPOSAL. No audio exists yet (`audio/` and `dmg_audio/` are empty; the Makefile already has `AUDIOBACKEND := maxmod`,
 `DMGAUDIOBACKEND := default`). All music is **fully original**: we describe the *approach* of earlier life-sims, never reuse a melody,

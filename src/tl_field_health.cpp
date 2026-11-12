@@ -381,6 +381,7 @@ namespace tl
     // ---------------------------------------------------------------------------------------------------- phone
     void field::_open_phone()
     {
+        audio::play(audio::sfx::beep);
         phone::io data;
         data.day = _day;
         data.minutes = _minutes;

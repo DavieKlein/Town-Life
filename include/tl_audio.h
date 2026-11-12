@@ -11,7 +11,9 @@ namespace tl::audio
         none,
         city,           // City Centre streets
         old_block,      // Old Block streets
-        market          // shops / interiors loop
+        market,         // shops / interiors loop
+        stock_it,       // minigame STOCK IT!
+        plate_rush      // minigame PLATE RUSH
     };
 
     enum class sfx
@@ -22,7 +24,28 @@ namespace tl::audio
         coin,           // money in
         cash,           // money out
         door_bell,
-        mission
+        mission,
+        // activity sounds (round 3): looping ones are driven by set_loop, the others are one-shots
+        water,          // sink / fountain washing (loop)
+        shower,         // loop
+        munch,          // eating (loop)
+        gulp,           // drinking (loop)
+        flush,
+        page,           // reading (loop)
+        rustle,         // bin search (loop)
+        clink,          // can / bottle pickup
+        whirr,          // deposit machine
+        snore,          // sleeping (loop, subtle)
+        thud,           // sitting down
+        door,
+        beep,           // phone
+        scratch,        // scratch card
+        ladder,
+        manhole,
+        mg_good,        // minigames
+        mg_bad,
+        mg_clink,
+        none
     };
 
     // Which track plays where (see docs/music_plan.md "s78 status"), and how loud (0..100).
@@ -44,6 +67,10 @@ namespace tl::audio
     void duck(bool on);
 
     void play(sfx s);
+
+    // The looping activity sound that should be heard right now (sfx::none = silence). The clip is replayed back to back while it is
+    // wanted and stops at once when it is not (activity over or cancelled with B).
+    void set_loop(sfx s);
 
     // Called every frame by the field (and not during blocking loops: set_track(..., true) is used there).
     void update();

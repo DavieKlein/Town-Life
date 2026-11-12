@@ -291,6 +291,7 @@ namespace tl
         void _update_health_minute();
         void _cure_sickness();
         void _open_phone();
+        void _update_audio_sfx();           // s78: activity sounds (tl_field_audio.cpp)
         void _update_phone();
         void _update_hud_icons();
         void _update_pm();

@@ -4,6 +4,7 @@
  */
 
 #include "bn_core.h"
+#include "bn_keypad.h"
 #include "bn_optional.h"
 
 #include "tl_field.h"
@@ -70,6 +71,64 @@ int main()
     bn::core::init();
     tl::blackbox::init();
 
+#ifdef TL_DEBUG_SFX
+    // Debug build only: every A press plays the next sound effect (loops are held for 3 s, then stopped) - capture tests, tools/music/capture_sfx.py
+    {
+        int which = -1;
+        int hold = 0;
+
+        while(true)
+        {
+            if(bn::keypad::a_pressed())
+            {
+                which = (which + 1) % int(tl::audio::sfx::none);
+                hold = 180;
+                tl::audio::sfx s = tl::audio::sfx(which);
+                bool loops = s == tl::audio::sfx::water || s == tl::audio::sfx::shower || s == tl::audio::sfx::munch ||
+                             s == tl::audio::sfx::gulp || s == tl::audio::sfx::page || s == tl::audio::sfx::rustle || s == tl::audio::sfx::snore;
+
+                if(loops)
+                {
+                    tl::audio::set_loop(s);
+                }
+                else
+                {
+                    tl::audio::set_loop(tl::audio::sfx::none);
+                    tl::audio::play(s);
+                }
+            }
+
+            if(hold > 0 && --hold == 0)
+            {
+                tl::audio::set_loop(tl::audio::sfx::none);
+            }
+
+            tl::audio::update();
+            bn::core::update();
+        }
+    }
+#endif
+
+#ifdef TL_DEBUG_MUSIC
+    // Debug build only: plays one track from the start, nothing else (audio capture tests: tools/music/capture.py).
+    // 1 city, 2 old_block, 3 market, 4 stock_it, 5 plate_rush
+    {
+        int which = TL_DEBUG_MUSIC;
+        tl::audio::set_track(tl::audio::track(which), 100, true);
+
+        while(true)
+        {
+            if(bn::keypad::a_pressed())
+            {
+                which = which % 5 + 1;      // A = next track
+                tl::audio::set_track(tl::audio::track(which), 100, true);
+            }
+
+            bn::core::update();
+        }
+    }
+#endif
+
 #ifdef TL_DEBUG_MINIGAME
     // Debug build only: starts a minigame straight away (1 = STOCK IT!, 2 = PLATE RUSH) with a bot (TL_DEBUG_BOT) for headless tests.
     {
@@ -80,6 +139,7 @@ int main()
         request.bot = TL_DEBUG_BOT;
 #endif
         tl::blackbox::start(nullptr);       // reporter test without a field
+        tl::audio::set_track(request.kind == tl::minigame_kind::stock_it ? tl::audio::track::stock_it : tl::audio::track::plate_rush, 90, true);
         tl::run_minigame(request);
 
         while(true)
@@ -172,7 +232,8 @@ int main()
             tl::blackbox::note_scene(1);
             field.reset();
             bn::core::update();
-            tl::audio::set_track(tl::audio::track::market, 60, true);     // the shop loop keeps playing during the minigame (no per-frame fades there)
+            // each minigame has its own loop (no per-frame fades in the blocking minigame loop: hard cut)
+            tl::audio::set_track(request.kind == tl::minigame_kind::stock_it ? tl::audio::track::stock_it : tl::audio::track::plate_rush, 90, true);
             tl::minigame_result result = tl::run_minigame(request);
             tl::apply_minigame_result(snapshot, request, result);
             bn::core::update();
