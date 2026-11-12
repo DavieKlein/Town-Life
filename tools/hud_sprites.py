@@ -172,6 +172,130 @@ ICONS["social"] = [
 SOCIAL_COLOURS = {"W": (240, 240, 232), "G": (232, 176, 64)}
 
 
+# ---------------------------------------------------------------------------
+# s78 need icons (owner request): bed, knife+fork, shower, game controller, toilet, speech bubble.
+# 14 px wide max, centred in a 14x14 box; build_hud adds a 1 px dark outline (16x16 per slot icon).
+# Glyph letters: W white, s silver, S dark silver, b brown, B dark brown, n blue, L light blue,
+# G grey, d dark detail (cut-out), y gold.
+# Switch the look with HUD_ICON_STYLE: "A" = white / light-blue monochrome glyphs (owner choice, active),
+# "B" = small coloured icons, "OLD" = the s64 glyphs (kept for comparison). Env var TL_HUD_ICONS overrides it.
+# ---------------------------------------------------------------------------
+import os
+
+HUD_ICON_STYLE = "A"
+
+NEW_ICONS = {
+    "energy": [          # bed
+        "bb..........bb",
+        "bb..........bb",
+        "bb..........bb",
+        "bbWWWWnnnnnnbb",
+        "bbWWWWnnnnnnbb",
+        "bbbbbbbbbbbbbb",
+        "BBBBBBBBBBBBBB",
+        "bb..........bb",
+        "bb..........bb",
+    ],
+    "hunger": [          # fork + knife
+        "s.ss.s...ss",
+        "s.ss.s..sss",
+        "s.ss.s..sss",
+        "s.ss.s..sss",
+        "ssssss..sss",
+        "ssssss..sss",
+        "..ss....sss",
+        "..ss....sss",
+        "..SS.....SS",
+        "..SS.....SS",
+        "..SS.....SS",
+        "..SS.....SS",
+        "..SS.....SS",
+    ],
+    "bladder": [         # toilet bowl, side view
+        "SSSSS.........",
+        "WWWWW.........",
+        "WWWWW.........",
+        "WWWWW.........",
+        "SSSSSSSSSSSSSS",
+        "WWWWWWWWWWWWWW",
+        ".WWWWWWWWWWWSS",
+        "..WWWWWWWWWSS.",
+        "...WWWWWWWSS..",
+        "....WWWWWSS...",
+        "....WWWWS.....",
+        "...WWWWWWS....",
+    ],
+    "social": [          # speech bubble
+        ".WWWWWWWWWWW.",
+        "WWWWWWWWWWWWW",
+        "WWWWWWWWWWWWW",
+        "WWWdWWdWWdWWW",
+        "WWWWWWWWWWWWW",
+        "WWWWWWWWWWWWW",
+        ".WWWWWWWWWWW.",
+        "..WWWW.......",
+        "..WWW........",
+        "..WW.........",
+    ],
+    "fun": [             # game controller
+        ".GGGGGGGGGGGG.",
+        "GGGdGGGGGGGGGG",
+        "GGdddGGGyGyGGG",
+        "GGGdGGGGGGGGGG",
+        "GGGGGGGGGGGGGG",
+        ".GGGGGGGGGGGG.",
+        ".GGGG....GGGG.",
+        ".GGG......GGG.",
+        "..GG......GG..",
+    ],
+    "hygiene": [         # shower head with drops
+        "......ss......",
+        "......ss......",
+        "....ssssss....",
+        "..ssssssssss..",
+        "..SSSSSSSSSS..",
+        "..............",
+        ".LL..LL..LL...",
+        ".uu..uu..uu...",
+        "..............",
+        "...LL..LL..LL.",
+        "...uu..uu..uu.",
+        "..............",
+        ".LL..LL..LL...",
+        ".uu..uu..uu...",
+    ],
+}
+
+COL_B = {"W": (240, 240, 232), "s": (208, 216, 224), "S": (144, 152, 176), "b": (184, 120, 64), "B": (128, 80, 40),
+         "n": (88, 144, 216), "L": (144, 208, 248), "u": (56, 120, 216), "G": (160, 160, 176),
+         "d": (16, 16, 24), "y": (232, 176, 64)}
+SHADE_A = (160, 176, 224)
+COL_A = {"W": (240, 240, 232), "s": (240, 240, 232), "S": SHADE_A, "b": (240, 240, 232), "B": SHADE_A,
+         "n": SHADE_A, "L": (240, 240, 232), "u": SHADE_A, "G": (240, 240, 232), "d": (16, 16, 24), "y": (16, 16, 24)}
+OUTLINE = (16, 16, 24)
+
+
+def _icon_pixels(rows, cols):
+    """16x16 dict {(x, y): rgb}: glyph centred in 14x14 plus a 1 px (8-neighbour) outline."""
+    h = len(rows)
+    w = max(len(r) for r in rows)
+    ox = 1 + (14 - w) // 2
+    oy = 1 + (14 - h) // 2
+    fill = {}
+    for yy, row in enumerate(rows):
+        for xx, ch in enumerate(row):
+            if ch in cols:
+                fill[(ox + xx, oy + yy)] = cols[ch]
+    out = dict(fill)
+    for (x, y) in fill:
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                k = (x + dx, y + dy)
+                if k not in fill and 0 <= k[0] < 16 and 0 <= k[1] < 16:
+                    out[k] = OUTLINE
+    return out
+
+
 def build_hud():
     cv = Canvas(256, 256)
     top = 176
@@ -186,21 +310,25 @@ def build_hud():
     # s64 HUD variant A: six slim slots, 28 px wide at pitch 30 starting at bg x 62 (tl_field.cpp places the
     # hud_bar sprites at x = -46 + 30 * slot): Hunger, Energy, Hygiene, Fun, Bladder, Social.
     names = ["hunger", "energy", "hygiene", "fun", "bladder", "social"]
+    style = os.environ.get("TL_HUD_ICONS", HUD_ICON_STYLE)
     for i, n in enumerate(names):
         x = 62 + i * 30
         cv.rect(x, top + 2, 28, 28, panel)
         cv.rect(x, top + 2, 28, 1, panel_l)
-        for yy, row in enumerate(ICONS[n]):
-            for xx, ch in enumerate(row):
-                if ch == "#":
-                    cv.set(x + 6 + xx + 1, top + 3 + yy + 1, panel_d)
-                    cv.set(x + 6 + xx, top + 3 + yy, WHITE)
-        for yy, row in enumerate(ICONS[n]):
-            for xx, ch in enumerate(row):
-                if ch in SOCIAL_COLOURS:
-                    cv.set(x + 6 + xx, top + 3 + yy, SOCIAL_COLOURS[ch])
-                elif ch == "." and n == "social" and 0 < xx < 15:
-                    pass
+        if style == "OLD":
+            for yy, row in enumerate(ICONS[n]):
+                for xx, ch in enumerate(row):
+                    if ch == "#":
+                        cv.set(x + 6 + xx + 1, top + 3 + yy + 1, panel_d)
+                        cv.set(x + 6 + xx, top + 3 + yy, WHITE)
+            for yy, row in enumerate(ICONS[n]):
+                for xx, ch in enumerate(row):
+                    if ch in SOCIAL_COLOURS:
+                        cv.set(x + 6 + xx, top + 3 + yy, SOCIAL_COLOURS[ch])
+        else:
+            px = _icon_pixels(NEW_ICONS[n], COL_A if style == "A" else COL_B)
+            for (ix, iy), rgb in px.items():
+                cv.set(x + 6 + ix, top + 2 + iy, rgb)
         # bar background (22 px); the fill is a sprite (graphics/hud_bar.bmp) updated by the game
         cv.rect(x + 3, top + 22, 22, 5, (16, 16, 24))
     return cv
