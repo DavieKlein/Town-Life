@@ -1150,6 +1150,82 @@ namespace tl
         _menu.open(set.title, options, count);
     }
 
+    namespace
+    {
+        // s81 opening hours (minutes of the day) per enterable shop; maps not listed are always open (City Clinic, public toilet,
+        // player room, Mia's flat, sewer, pre-firing Corner Market). Owner schedules: tools/cast.py. Documented in CLAUDE.md.
+        struct opening_hours
+        {
+            map_id map;
+            int open;
+            int close;
+        };
+
+        constexpr opening_hours hours_table[] = {
+            { map_id::diner, 6 * 60, 22 * 60 },                // Big Lou 6:00-22:00
+            { map_id::community_centre, 8 * 60, 18 * 60 },     // library / notice board
+            { map_id::vaulttech_lobby, 8 * 60, 18 * 60 },      // reception, office hours
+            { map_id::vaultmart, 6 * 60, 22 * 60 },            // Dex 6:00-22:00
+            { map_id::laundromat, 7 * 60, 21 * 60 },           // Ines 7:00-21:00
+            { map_id::bakery, 6 * 60, 18 * 60 },               // Nella 6:00-18:00
+            { map_id::lane_shop, 8 * 60, 19 * 60 },            // corner grocery
+        };
+
+        char closed_line[32];
+    }
+
+    bool field::_shop_open(map_id target) const
+    {
+        for(const opening_hours& h : hours_table)
+        {
+            if(h.map == target)
+            {
+                return _minutes >= h.open && _minutes < h.close;
+            }
+        }
+
+        return true;
+    }
+
+    void field::_show_closed(map_id target)
+    {
+        for(const opening_hours& h : hours_table)
+        {
+            if(h.map == target)
+            {
+                const int hour = h.open / 60;
+                const char* suffix = hour < 12 ? " am." : " pm.";
+                const int shown = hour % 12 == 0 ? 12 : hour % 12;
+                int n = 0;
+                const char* prefix = "Opens at ";
+
+                while(*prefix)
+                {
+                    closed_line[n++] = *prefix++;
+                }
+
+                if(shown >= 10)
+                {
+                    closed_line[n++] = char('0' + shown / 10);
+                }
+
+                closed_line[n++] = char('0' + shown % 10);
+                closed_line[n++] = ':';
+                closed_line[n++] = char('0' + (h.open % 60) / 10);
+                closed_line[n++] = char('0' + (h.open % 60) % 10);
+
+                while(*suffix)
+                {
+                    closed_line[n++] = *suffix++;
+                }
+
+                closed_line[n] = 0;
+                _show_info("Closed", closed_line, "", "");
+                return;
+            }
+        }
+    }
+
     void field::_show_info(const char* title, const char* line_a, const char* line_b, const char* line_c)
     {
         // The message lines must outlive the open menu: keep them in static views.
@@ -2463,6 +2539,19 @@ namespace tl
                 {
                     _gate_cooldown = 150;
                     _show_info("VaultTech", "STAFF ONLY.", "VaultMart property.", "");
+                }
+            }
+
+            if(_pending_warp && _map->outdoor && ! _shop_open(_pending_warp->target))
+            {
+                // s81: the shop / cafe is closed (opening hours follow the owner's schedule in tools/cast.py)
+                const map_id closed_map = _pending_warp->target;
+                _pending_warp = nullptr;
+
+                if(_gate_cooldown <= 0)
+                {
+                    _gate_cooldown = 150;
+                    _show_closed(closed_map);
                 }
             }
 

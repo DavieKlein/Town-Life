@@ -597,9 +597,7 @@ namespace tl
         }
 
         int row_words = w >> 5 ? w >> 5 : 1;
-        // TRENCH-E's placeholder model is still baked into the Old Block map under his sprite (x - 0.7..x + 1.5, y +- 0.5 cells): his own
-        // depth is moved in front of it so the old geometry does not eat his pixels (remove the baked model with the next Old Block re-render).
-        int depth = n.x + n.y + (n.who == npc_id::trench_e ? 40 : 0);
+        int depth = n.x + n.y;
         int left = _map->to_image_x(n.x, n.y) - (w / 2);                        // image coordinates of sprite column 0 / row 0
         int top = _map->to_image_y(n.x, n.y) - (h / 2) - feet_of(n.who);
         int columns = _map->image_width >> 3;

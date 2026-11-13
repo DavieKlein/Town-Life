@@ -855,6 +855,36 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
   also faces the object (not for benches / seats / beds, which set their own pose).
 - `tools/make_save.py --odd day,mask` for odd-job tests. Mock-up for need-effect icons in menus (proposal only, not built): see the session scratchpad `icons/`.
 
+## s81 owner feedback round "ob_fixes" (doors, opening hours, toilet nooks, garden, alleys, NPC spots)
+
+- **Door warps (item 7):** NO exterior door has a walkable notch in the wall any more. The warp rect lies IN FRONT of the facade
+  (`(x0, wall_y, x1, wall_y + 0.6)`; the solid wall stays, so the feet stop 0.25 cells from the wall and trigger the warp: the sprite
+  never sinks into the frame). Done for the City Centre (Corner Market, diner, clinic, VaultTech lobby, public toilet; community centre keeps its
+  recess but the rect is `AV0-3.5..AV0-3.1`), Old Block laundromat / bakery (`y 18..18.6`) and the Lane Grocery (`x 49.0..49.6`, facade x = 49.0).
+  Arrival spots inside / outside are >= 1 cell clear of every rect. Interior exits keep the door-mat rect.
+- **Nothing in front of doors (item 1):** `tools/door_audit.py` lists props / solids in the 3-cell approach corridor of every exterior door
+  (flanking plants / bollards are reported but fine). Moved: City Centre bin 53 -> 56.2 (interactable too), parking meters 12.5 / 61.5 -> 14.2 / 66.5,
+  Old Block lamps 19 / 38 -> 21.3 / 39.6, pot 55.1 -> 53.6, Valdez stands at (20.6, 19.3) beside her stoop.
+- **Opening hours (item 8, `field::_shop_open`, table `hours_table` in tl_field.cpp):** applied only to door warps taken from an OUTDOOR map (leaving
+  a shop, Mia's stairs and cutscene warps are never blocked; someone inside at closing time just walks out). Closed: info box
+  "Closed" / "Opens at 6:00 am." (150-frame cooldown). Hours (owner schedules from cast.py): diner 6:00-22:00 (Lou), bakery 6:00-18:00 (Nella),
+  laundromat 7:00-21:00 (Ines), VaultMart 6:00-22:00 (Dex; the pre-firing Corner Market is always open), community centre / library 8:00-18:00,
+  VaultTech lobby 8:00-18:00 (office hours), Lane Grocery 8:00-19:00. Always open: City Clinic, public toilet, player's room, Mia's flat, sewer.
+- **Toilet nooks (item 6):** `scene.toilet_nook(s, key, W, wh)` + `scene.NOOKS` (diner, bakery): a door-less alcove in the back-right corner (low 0.5 m partition
+  with a 1.2 cell doorway, white tile floor, `toilet_white` + `sink_pedestal` catalog pieces, blue WC sign). The diner is now 15 x 10 (was 11), the bakery 15 x 8
+  (was 10): the east part holds an extra table. Interactables: diner `("toilet", 11.9, 1.5, 0, 1)`, `("sink", 13.4, 1.0)`, bakery via `OB_EXTRA_THINGS`.
+  A tall partition hides the back wall behind it in this projection (see the jukebox), so keep nook walls low. The diner "yellow cylinder" was the jukebox
+  with negative cylinder depths: rebuilt from boxes (cabinet, stepped arch, amber window, grille, buttons).
+- **Old Block (items 2, 3, 5):** `sneak_fence_and_bushes` + the thicket are gone; `works_edge()` closes x = 10.5 (y 14.5..18.5 and 25.5..34.5) with low striped
+  road-works barriers (a solid line is still needed so nobody walks round the barrier gap into the street). Garden redesigned (13..30 x 27.5..40, 8 neat low beds, gate,
+  central + cross path, shed, barrel, watering can, bench, scarecrow, no trees; the meadow dirt path starts at the garden's central path x 21.6..22.8).
+  Alleys: `alley_gate()` plank gates at y 14.6 close the north alley (21..25.5), the yard (37.4..40.5) and the east alley (57.5..61); Teo's den, the annex
+  and the yard crates are visible behind the gates but unreachable (the annex door has no interior yet). Yard bin moved to (35.2, 15.8). The pocket square stays open.
+  The baked TRENCH-E model and Duchess' baked bed are removed (Duchess' bed placement = pavement (30.6, 19.4) left of the laundromat door).
+  TRENCH-E depth bias (+40) in tl_npcs.cpp removed with the re-render.
+- **Tools:** `tools/reach_check.py [ids]` (flood fill of the collision grid: warps, interactables and NPC spots reachable; gates open for Old Block),
+  `tools/door_audit.py`. `build_assets.py --only city_centre,old_block,diner,bakery --no-actors` (about 2 h on 4 cores without art_cache).
+
 ## s73 playtest (headless, details: docs/playtest_s73.md)
 
 - The prologue plays from New Game to mission X1 and all systems were exercised headlessly; fixes: flyers info line cut off, an open menu is now

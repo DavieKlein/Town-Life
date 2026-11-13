@@ -731,7 +731,7 @@ def city_centre():
     s.box(12.9, AV0 - 3.3, 15.1, AV0 - 3.12, 1.85, 2.5, "sign_blue")
     s.text("COMMUNITY", 14.0, AV0 - 3.1, 2.28, 0.2, "robot_white", face="left")
     s.text("CENTRE", 14.0, AV0 - 3.1, 2.02, 0.2, "robot_white", face="left")
-    s.warp(11.2, AV0 - 3.7, 12.4, AV0 - 3.24, "community_centre", 9.5, 12.4, "up")
+    s.warp(11.2, AV0 - 3.5, 12.4, AV0 - 3.1, "community_centre", 9.5, 12.4, "up")
     for (x0, x1, mat) in ((2.2, 3.4, "poster_red"), (3.6, 4.6, "poster_yellow"), (17.4, 18.6, "poster_blue")):
         poster(s, x0, x1, AV0 - 4.0 + 0.62, 0.55, 2.0, mat)
     ivy(s, 0.3, 1.6, AV0 - 4.0 + 0.6, 2.6)
@@ -747,8 +747,8 @@ def city_centre():
     diner_building(s, 49.2, 57.4, AV0 - 4)
     s.box(54, 14, W, AV0 - 4, -0.1, 0.01, "plaza_gold", layer="floor")
     vaulttech_tower(s, 56, 2, 70, 14)
-    s.set_solid(61.5, 13.0, 64.5, 14.0, False)                                        # lobby entrance
-    s.warp(61.5, 13.3, 64.5, 14.0, "vaulttech_lobby", 9.0, 14.4, "up")
+    # s81: lobby entrance without a notch, the warp lies in front of the glass doors
+    s.warp(61.5, 14.0, 64.5, 14.6, "vaulttech_lobby", 9.0, 14.4, "up")
     for x in (58.8, 70.5):
         s.kit("Prop_Planter_Single", x, 16.5, solid=True, occlude=True)
     for x in (61, 65, 68):
@@ -758,9 +758,9 @@ def city_centre():
     for x in (3, 15, 51, 66):
         lamp_curved(s, x, AV0 - 0.8, arm="y")
         lamp_curved(s, x, AV1 + 0.8, arm="-y")
-    for x in (5.0, 17.0, 53.0, 68.0):
+    for x in (5.0, 17.0, 56.2, 68.0):                  # s81: bin moved from 53 (in front of the diner door)
         trash_can(s, x, AV0 - 0.9)
-    for x in (9.5, 12.5, 58.5, 61.5):
+    for x in (9.5, 14.2, 58.5, 66.5):                  # s81: meters moved off the community centre / VaultTech door lines
         parking_meter(s, x, AV0 - 0.7)
     newspaper_box(s, 45.0, AV1 + 2.6, "sign_blue")
     newspaper_box(s, 46.0, AV1 + 2.6, "red_paint")
@@ -985,9 +985,9 @@ def park_toilet(s, x0, y0, x1, y1):
     window_left(s, x0 + 0.25, x0 + 0.85, y1, 1.4, 2.1)
     window_left(s, x1 - 0.85, x1 - 0.25, y1, 1.4, 2.1)
     s.set_solid(x0, y0, x1 - 0.001, y1 - 0.001)
-    s.set_solid(xm - 0.6, y1 - 0.8, xm + 0.6, y1, False)                                 # doorway
+    # s81: no doorway notch
     s.occluder(x0, y0, x1, y1, h + 0.3)
-    s.warp(xm - 0.6, y1 - 0.5, xm + 0.6, y1, "public_toilet", 3.5, 4.3, "up")
+    s.warp(xm - 0.6, y1, xm + 0.6, y1 + 0.6, "public_toilet", 3.5, 4.3, "up")
     deposit_machine(s, x1 + 0.12, y0 + 2.3, "x")                                          # RETURN & EARN, east wall
 
 
@@ -1078,10 +1078,10 @@ def diner_building(s, x0, x1, fy):
     weeds(s, x0 + 0.4, fy + 0.5, 3)
     s.set_solid(x0, ya, xa - 0.001, yb)
     s.set_solid(x0, yb, x1 - 0.001, fy - 0.001)
-    s.set_solid(52.0, fy - 1.0, 53.999, fy - 0.001, False)                            # door cells walkable
+    # s81: no walkable notch in the wall: the door warp lies IN FRONT of the facade (player stops at the step)
     s.occluder(x0, yb, x1, fy, h + 0.8)
     s.occluder(x0, ya, xa, yb, h + 0.8)
-    s.warp(52.0, fy - 1.0, 54.0, fy, "diner", 5.5, 8.4, "up")
+    s.warp(52.0, fy, 54.0, fy + 0.6, "diner", 5.5, 8.4, "up")
 
 
 def corner_market_building(s, x0, fy):
@@ -1127,9 +1127,9 @@ def corner_market_building(s, x0, fy):
     potted_plant(s, x0 + 6.25, fy + 0.45, "bay")
     a_frame_sign(s, x0 + 7.4, fy + 1.6)
     s.set_solid(x0, y0, x1 - 0.001, fy - 0.001)
-    s.set_solid(x0 + 4, fy - 1, x0 + 5.999, fy - 0.001, False)                  # door cells walkable
+    # s81: no notch, the warp lies in front of the facade
     s.occluder(x0, y0, x1, fy, cm_h + 5.6)
-    s.warp(x0 + 4, fy - 1, x0 + 6, fy, "corner_market", 8.0, 16.4, "up")
+    s.warp(x0 + 4, fy, x0 + 6, fy + 0.6, "corner_market", 8.0, 16.4, "up")
 
 
 def window_left_shop(s, x0, x1, y_face, z0, z1):
@@ -1779,8 +1779,40 @@ def bench(s, x0, y0, x1, y1, seat="wood", legs="metal_dark", h=0.45):
 
 
 # ------------------------------------------------------------------ diner
+NOOKS = {
+    # s81: door-less toilet nooks of the eateries. (x of the nook's west half-wall, door gap y0..y1, WC x, sink x, nook depth y)
+    "diner": dict(wx=11.4, gap=(1.3, 2.5), wc=11.9, sink=13.4, depth=3.5),
+    "bakery": dict(wx=10.4, gap=(1.3, 2.5), wc=11.2, sink=13.0, depth=3.4),
+}
+
+
+def toilet_nook(s, key, W, wh):
+    """s81: a small toilet room WITHOUT a door in the back-right corner of an eatery: a half-height partition wall (so it never hides
+    the room behind it) with a 1.2 cell doorway, a low front stub, tiled floor, an open WC, a washbasin with mirror and a WC sign.
+    Interactables (toilet quality 1, sink) come from NOOKS in tools/interactions.py. Furniture = catalog pieces."""
+    import furniture
+    n = NOOKS[key]
+    wx, (g0, g1), depth = n["wx"], n["gap"], n["depth"]
+    paper = "wp_cream"
+    h = 0.5                                                                         # low cutaway partition: a taller wall hides the back wall behind it
+    for (a, b) in ((0.0, g0), (g1, depth)):
+        s.box(wx - 0.3, a, wx, b, 0, h, paper)
+        s.box(wx, a, wx + 0.035, b, 0.12, 0.42, "wood_green")
+        s.box(wx, a, wx + 0.05, b, 0, 0.12, "trim_white")
+        s.box(wx - 0.34, a, wx + 0.05, b, h, h + 0.09, "wall_cap")
+        s.set_solid(wx - 0.3, a, wx, b)
+    wall_stub_y(s, wx - 0.3, W, depth)
+    s.set_solid(wx - 0.3, depth - 0.4, W, depth)
+    s.box(wx, 0.0, W - 0.05, depth - 0.4, 0.0, 0.014, "tile_kitchen", layer="floor")                    # clean white tiles
+    furniture.place(s, "toilet_white", n["wc"], 0.0, 0)
+    furniture.place(s, "sink_pedestal", n["sink"], 0.0, 0)
+    s.box(n["wc"] - 0.7, 0.0, n["wc"] + 0.2, 0.05, 2.3, 2.9, "sign_blue")
+    s.text("WC", n["wc"] - 0.25, 0.08, 2.6, 0.5, "robot_white", face="left")
+    s.point_light(wx + 1.5, 1.6, 2.7, 90, colour=(0.95, 1.0, 1.0))
+
+
 def diner():
-    W, H = 11, 10
+    W, H = 15, 10
     s = std_room("diner", "Diner", W, H, "tile_bw", "wp_cream", "diner_red", 1.0, 3.2, (4, 7),
                  "city_centre", 53.0, 19.6, mat_cols=("diner_red", "rug_cream"))
     s.box(0.0, 0.0, W, 0.35, 0.0, 0.012, "diner_red", layer="floor")                 # red border strip at the back
@@ -1815,21 +1847,25 @@ def diner():
         s.text(ln, 4.25, 0.07, 2.05 - i * 0.2, 0.13, "chalk", face="left")
     wall_clock_y(s, 10.0, 0.0, 2.5, 0.28)
     # jukebox-like music box (own design): arched cabinet with glowing panel, speaker slats and lights
+    # s81: the old arch used negative cylinder depths (a flat yellow disc with a red rim); now a proper jukebox: wooden cabinet,
+    # arched top (half-round drum), glowing gold window, chrome sill, speaker grille, two buttons.
     jx0, jx1 = 9.1, 10.5
     jm = (jx0 + jx1) / 2
-    s.box(jx0, 0.05, jx1, 0.85, 0, 1.15, "wood_red")
-    s.cyl(jm, 0.45, 1.15, 0.8, 0.7, "wood_red", axis="y", verts=24)
-    s.cyl(jm, 0.9, 1.15, 0.03, 0.55, "neon_gold", axis="y", verts=24)
-    s.box(jx0 + 0.15, 0.85, jx1 - 0.15, 0.9, 0.12, 0.62, "metal_dark")
+    s.box(jx0, 0.05, jx1, 0.85, 0.1, 1.2, "wood_red")
+    s.box(jx0 - 0.04, 0.05, jx1 + 0.04, 0.89, 0, 0.1, "wood_dark")                        # plinth
+    s.box(jx0 + 0.12, 0.05, jx1 - 0.12, 0.85, 1.2, 1.62, "wood_red")                        # stepped arch (two narrower blocks)
+    s.box(jx0 + 0.3, 0.05, jx1 - 0.3, 0.85, 1.62, 1.8, "wood_red")
+    s.box(jx0 + 0.2, 0.85, jx1 - 0.2, 0.9, 0.82, 1.58, "lamp_amber")                        # glowing record window
+    s.box(jx0 + 0.3, 0.9, jx1 - 0.3, 0.93, 1.0, 1.4, "metal_dark")                          # record carousel (dark slot)
+    s.box(jx0 + 0.34, 0.9, jx0 + 0.42, 0.94, 1.0, 1.4, "chrome")
+    s.box(jx1 - 0.42, 0.9, jx1 - 0.34, 0.94, 1.0, 1.4, "chrome")
+    s.box(jx0 + 0.15, 0.85, jx1 - 0.15, 0.9, 0.2, 0.72, "metal_dark")                      # speaker grille
     for k in range(6):
-        s.box(jx0 + 0.18, 0.9, jx1 - 0.18, 0.92, 0.16 + k * 0.075, 0.2 + k * 0.075, "chrome")
-    s.box(jx0 + 0.1, 0.85, jx0 + 0.18, 0.9, 0.7, 1.1, "neon_blue")
-    s.box(jx1 - 0.18, 0.85, jx1 - 0.1, 0.9, 0.7, 1.1, "neon_red")
-    s.box(jm - 0.18, 0.85, jm + 0.18, 0.9, 0.7, 1.08, "tv_screen")
-    s.box(jm - 0.25, 0.85, jm + 0.25, 0.92, 1.4, 1.5, "chrome")
-    s.text("MUSIC", jm, 0.95, 1.45, 0.1, "metal_dark", face="left")
+        s.box(jx0 + 0.18, 0.9, jx1 - 0.18, 0.92, 0.24 + k * 0.08, 0.28 + k * 0.08, "chrome")
+    s.box(jx0 + 0.1, 0.85, jx0 + 0.18, 0.9, 0.8, 1.05, "neon_blue")
+    s.box(jx1 - 0.18, 0.85, jx1 - 0.1, 0.9, 0.8, 1.05, "neon_red")
     s.set_solid(jx0, 0.05, jx1 - 0.001, 0.849)
-    s.occluder(jx0, 0.05, jx1, 0.9, 1.9)
+    s.occluder(jx0, 0.05, jx1, 0.9, 1.95)
     # counter with pie case, coffee machine, register
     cx0, cx1 = 3.6, 8.8
     counter(s, cx0, 3.2, cx1, 4.1, 0.95, "diner_teal", "rug_cream", trim="chrome")
@@ -1887,7 +1923,14 @@ def diner():
         s.box(tx - 0.2, ty - 0.2, tx - 0.05, ty - 0.05, 0.7, 0.8, "goods_red")
         s.box(tx + 0.05, ty - 0.2, tx + 0.2, ty - 0.05, 0.7, 0.8, "goods_yellow")
     potted_plant(s, 9.4, 6.6, "bay")
-    for (lx, ly) in ((3, 5), (7, 5), (4, 8), (8, 8)):
+    # s81: second free table in the new east part of the dining room + the toilet nook (no door) in the back-right corner
+    s.prop("house/Table_RoundSmall", 12.8, 6.6, h=0.66)
+    s.prop("house/Chair_1", 12.8, 5.3, rot=0, h=1.05, colours={"Wood": "#e04030"})
+    s.prop("house/Chair_1", 12.8, 7.95, rot=180, h=1.05, colours={"Wood": "#e04030"})
+    s.box(12.6, 6.4, 12.75, 6.55, 0.7, 0.8, "goods_red")
+    potted_plant(s, 13.9, 4.6, "flowers")
+    toilet_nook(s, "diner", W, 3.2)
+    for (lx, ly) in ((3, 5), (7, 5), (4, 8), (8, 8), (12.8, 7)):
         s.point_light(lx, ly, 2.8, 120, colour=(1.0, 0.9, 0.75))
     s.point_light(7.0, 1.2, 2.0, 80, colour=(1.0, 0.8, 0.5))
     return s
@@ -3063,9 +3106,9 @@ def clinic_building(s, x0, x1, fy, y_back=11.0):
     potted_plant(s, x1 - 0.2, fy + 0.8, "bush")
     weeds(s, x0 + 0.3, fy + 0.5, 3)
     s.set_solid(x0, y_back, x1 - 0.001, fy - 0.001)
-    s.set_solid(dx0 - 0.1, fy - 1.0, dx1 + 0.1, fy - 0.001, False)                       # door cells walkable
+    # s81: no notch, the warp lies in front of the facade
     s.occluder(x0, y_back, x1, fy, h + 0.8)
-    s.warp(dx0, fy - 1.0, dx1, fy, "clinic", 6.0, 7.4, "up")
+    s.warp(dx0, fy, dx1, fy + 0.6, "clinic", 6.0, 7.4, "up")
 
 
 # ------------------------------------------------------------------ clinic interior (s64)

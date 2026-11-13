@@ -36,7 +36,6 @@ LAYOUT = [
     ("barrier", "BARRIERS", 10.2, 14.5, 10.8, 34.5, "w"),
     ("trench", "TRENCH", 11.3, 18.5, 13.3, 25.5, "w"),
     ("arch", "ARCH", 14.5, 18.5, 15.7, 25.5, "b"),
-    ("thicket", "BUSH THICKET (sneak lane)", 10.8, 27.5, 18.2, 34.5, "o"),
     ("street", "COBBLE STREET", 15.7, 19.5, 68.0, 24.5, "r"),
     ("lane", "BAKER'S LANE (N-S)", 50.0, 24.5, 55.0, 62.0, "r"),
     ("h1", "Valdez house", 16.5, 9.0, 21.0, 18.0, "b"),
@@ -525,7 +524,7 @@ def cable_works(s, rnd):
         cable_drum(s, x, y)
     # a cable laid into the trench
     s.tube([(11.5, 22.8, -0.3), (12.2, 22.9, -0.3), (13.1, 22.7, -0.3), (13.9, 22.9, -0.1)], 0.08, "notice_orange")
-    trench_e(s, 12.3, 21.3)
+    # s81: TRENCH-E 3 is a sprite NPC now; no baked placeholder model
     pruitt(s, 8.6, 19.9)
     # camera on a pole + plastic floodlight
     s.cyl(9.6, 25.9, 0, 3.4, 0.05, "metal_grey", verts=8)
@@ -571,56 +570,35 @@ def pruitt(s, x, y):
     s.occluder(x - 0.5, y - 0.5, x + 0.5, y + 0.5, 1.3)
 
 
-def sneak_fence_and_bushes(s, rnd):
-    """VaultTech chain-link fence x=10.5 from the barrier to y=34.5 with a bent-open flap at y 30.2..31.2, hidden by a hedge on the
-    player's side; behind the fence the overgrown thicket with a one-cell lane (see LANE_CELLS)."""
+def works_edge(s):
+    """s81: the old sneak-route fence, flap, hedge and bush thicket are gone (the sewer replaced the route). The cable-works site is still
+    closed along x = 10.5 (y 14.5..18.5 and 25.5..34.5; the middle part is the barrier line, see cable_works): low orange / white
+    road-works barriers on posts, so nobody can walk round the barrier; the space east of it (old thicket) is open lawn / garden."""
     bx = 10.5
-    chain_link_y(s, bx, 25.5, 30.2)
-    chain_link_y(s, bx, 31.2, 34.5)
-    chain_link_y(s, bx, 14.5, 18.5)
-    # the flap: bottom corner of the fence peeled up and bent aside
-    s.poly([(bx, 30.2, 0.05), (bx, 31.2, 0.05), (bx + 0.45, 31.0, 0.55), (bx + 0.45, 30.4, 0.7)], "chain_link")
-    s.cyl(bx, 30.2, 0, 2.05, 0.04, "metal_grey", verts=8)
-    s.cyl(bx, 31.2, 0, 2.05, 0.04, "metal_grey", verts=8)
-    s.box(bx - 0.04, 30.2, bx + 0.04, 31.2, 1.9, 2.0, "metal_grey")
-    # hedge on the player's side hiding the flap (with a hollow behind the leaves)
-    for yy in (28.9, 29.5, 30.1, 31.3, 31.9, 32.5):
-        bush_ball(s, bx - 0.8, yy, 0.55, rnd, h=1.4)
-    s.set_solid(bx - 1.5, 28.6, bx - 0.2, 30.0)
-    s.set_solid(bx - 1.5, 31.4, bx - 0.2, 33.0)
-    for yy in (30.5, 31.0):
-        s.sphere(bx - 0.75, yy, 1.2, 0.3, "leaves_light")               # the 'branch' Mia lifts
-    # VaultTech sign on the fence
-    s.box(bx - 0.06, 26.2, bx - 0.02, 28.2, 0.9, 1.7, "sign_blue")
-    s.text("VAULTTECH SITE", bx - 0.07, 27.2, 1.4, 0.2, "paint_white", face="left") if False else None
-    # THICKET: dense bushes everywhere x 10.9..18.2, y 27.4..34.5 except the lane
-    lane = [(10.9, 30.35, 17.0, 31.05), (16.4, 27.0, 17.1, 31.05)]
-    def in_lane(x, y):
-        for (a, b, c, d) in lane:
-            if a - 0.35 <= x <= c + 0.35 and b - 0.35 <= y <= d + 0.35:
-                return True
-        return False
-    for xx in [10.9 + 0.8 * i for i in range(10)]:
-        for yy in [27.5 + 0.8 * j for j in range(9)]:
-            x, y = xx + rnd.uniform(-0.2, 0.2), yy + rnd.uniform(-0.2, 0.2)
-            if in_lane(x, y):
-                continue
-            # camera-side rows (large y) stay lower so the squeezing player stays partly visible
-            if yy > 31.3:
-                # camera-side rows must stay LOW: at 2:1 iso anything 0.75 m tall hides ~2.5 cells of ground behind it
-                if rnd.random() < 0.22:
-                    bush_ball(s, x, y, 0.32, rnd, h=1.0)        # a few clumps the squeezing player can pass behind
-                else:
-                    s.sphere(x, y, 0.12, rnd.uniform(0.18, 0.26), rnd.choice(["leaves", "bush_dark", "leaves_light"]), sz=0.7)
-            else:
-                bush_ball(s, x, y, rnd.uniform(0.45, 0.62), rnd, h=1.6)
-    for (a, b, c, d) in lane:                                                                   # worn earth path of the lane
-        s.box(a, b + 0.1, c, d - 0.1, 0.0, 0.012, "path_dirt", layer="floor")
-    # roses Ines counts
-    for (x, y) in ((13.0, 31.6), (14.4, 29.7)):
-        s.sphere(x, y, 1.0, 0.1, "flower_red")
-    # s77: thicket + fence are plain solid scenery now (the sneak route goes through the sewer; the old lane gates are gone).
-    s.set_solid(10.75, 27.4, 18.25, 34.5)
+    for (y0, y1) in ((14.5, 18.5), (25.5, 34.5)):
+        n = max(2, int((y1 - y0) / 1.5))
+        step = (y1 - y0) / n
+        for k in range(n):
+            ya, yb = y0 + k * step, y0 + (k + 1) * step
+            for zz in (0.55, 0.95):                                                    # two striped rails
+                s.box(bx - 0.04, ya + 0.1, bx + 0.04, yb - 0.1, zz, zz + 0.16, "barrier_stripes")
+            s.cyl(bx, ya + 0.05, 0, 1.15, 0.05, "metal_dark", verts=8)               # posts
+        s.cyl(bx, y1 - 0.05, 0, 1.15, 0.05, "metal_dark", verts=8)
+        s.set_solid(bx - 0.25, y0, bx + 0.25, y1)
+        s.occluder(bx - 0.3, y0, bx + 0.3, y1, 1.2)
+    s.box(bx - 0.06, 28.0, bx - 0.02, 30.4, 1.2, 1.9, "sign_blue")                    # VaultLink works sign on the closed stretch
+
+
+ALLEY_GATE_Y = 14.6
+
+
+def alley_gate(s, x0, x1, y, fence_only=False):
+    """s81: closes the deep part of an alley / yard with a plank gate (the player used to walk into a narrow dark slot). Solid."""
+    fence_wood(s, x0, x1, y, h=1.9)
+    if not fence_only:
+        s.box((x0 + x1) / 2 - 0.5, y + 0.1, (x0 + x1) / 2 + 0.5, y + 0.16, 0.6, 0.9, "wood_dark")                # cross brace
+        s.box((x0 + x1) / 2 + 0.3, y + 0.1, (x0 + x1) / 2 + 0.45, y + 0.2, 0.9, 1.0, "brass")                      # padlock
+    s.set_solid(x0, y - 0.2, x1, y + 0.2)
 
 
 def plane_tree(s, x, y, sc=1.25):
@@ -680,84 +658,92 @@ def rosas_stall(s, x, y):
 
 
 def garden(s, x0, y0, x1, y1, rnd):
-    """Community garden: low fence, raised beds with crops, shed, rain barrel, compost, scarecrow, bench with a WATER ME sign."""
-    s.box(x0, y0, x1, y1, -0.1, 0.0, "grass_flat", layer="floor")
-    # dirt paths
-    s.box(x0 + 5.8, y0, x0 + 6.8, y1, 0.0, 0.01, "path_dirt", layer="floor")
-    s.box(x0, y0 + 5.0, x1, y0 + 5.8, 0.0, 0.01, "path_dirt", layer="floor")
-    s.box(x0 + 5.8, y0 - 1.0, x0 + 6.8, y0, 0.0, 0.01, "path_dirt", layer="floor")
-    # low wooden fence with a gate gap at the path
-    fence_wood(s, x0, x0 + 5.6, y0 + 0.05, h=0.85)
-    fence_wood(s, x0 + 7.0, x1, y0 + 0.05, h=0.85)
-    for xx in (x0 + 5.6, x0 + 7.0):
-        s.box(xx - 0.06, y0 - 0.05, xx + 0.06, y0 + 0.15, 0, 1.15, "wood_dark")
-    s.box(x0 + 5.5, y0 - 0.06, x0 + 7.1, y0 + 0.16, 1.1, 1.18, "wood_dark")
-    s.text("COMMUNITY GARDEN", x0 + 6.3, y0 + 0.17, 1.4, 0.2, "paint_white", face="left") if False else None
-    s.box(x0 + 3.6, y0 + 0.06, x0 + 5.3, y0 + 0.14, 0.9, 1.35, "wood_green")
-    s.text("GARDEN", x0 + 4.45, y0 + 0.15, 1.25, 0.2, "sign_cream", face="left", bold=True)
-    s.text("(water me - Ines)", x0 + 4.45, y0 + 0.15, 1.0, 0.1, "sign_cream", face="left")
-    fence_wood(s, x0 - 0.0, x0 + 0.1, y0 + 0.05, h=0.85) if False else None
-    # raised beds
-    beds = [(x0 + 0.8, y0 + 1.0), (x0 + 3.0, y0 + 1.0), (x0 + 7.4, y0 + 1.0), (x0 + 9.6, y0 + 1.0),
-            (x0 + 0.8, y0 + 6.4), (x0 + 3.0, y0 + 6.4), (x0 + 7.4, y0 + 6.4), (x0 + 9.6, y0 + 6.4)]
-    crops = ["tomato", "cabbage", "sunflower", "beans", "cabbage", "tomato", "flowers", "sunflower"]
-    for (bx, by), crop in zip(beds, crops):
-        bw, bd = 1.9, 3.4
-        s.box(bx, by, bx + bw, by + bd, 0.0, 0.42, "wood")
-        s.box(bx + 0.1, by + 0.1, bx + bw - 0.1, by + bd - 0.1, 0.4, 0.45, "soil")
-        for i in range(8):
-            px, py = bx + 0.3 + (i % 2) * 1.3 + rnd.uniform(-0.1, 0.1), by + 0.35 + (i // 2) * 0.8
-            if crop == "tomato":
-                s.cyl(px, py, 0.45, 1.6, 0.025, "wood_dark", verts=6)
-                s.sphere(px, py, 0.8, 0.22, "leaves")
-                s.sphere(px + 0.12, py + 0.1, 0.62, 0.08, "tomato")
-                s.sphere(px - 0.1, py + 0.05, 0.95, 0.08, "tomato")
-            elif crop == "cabbage":
-                s.sphere(px, py, 0.62, 0.22, "cabbage", sz=0.7)
-            elif crop == "sunflower":
-                s.cyl(px, py, 0.45, 1.9, 0.03, "leaves", verts=6)
-                s.cyl(px, py + 0.0, 1.9, 1.98, 0.17, "sunflower", verts=12)
-                s.sphere(px, py, 1.96, 0.09, "trunk", sz=0.4)
-            elif crop == "beans":
-                s.cyl(px, py, 0.45, 1.7, 0.02, "wood_dark", verts=6)
-                for k in range(3):
-                    s.sphere(px + rnd.uniform(-0.1, 0.1), py + rnd.uniform(-0.1, 0.1), 0.7 + k * 0.3, 0.12, "leaves_light")
-            else:
-                s.sphere(px, py, 0.6, 0.14, "leaves_light")
-                s.sphere(px, py, 0.72, 0.09, rnd.choice(FLOWERS))
-        s.set_solid(bx, by, bx + bw, by + bd)
-        s.occluder(bx, by, bx + bw, by + bd, 2.0 if crop in ("sunflower", "tomato", "beans") else 0.7)
-    # shed + rain barrel + compost + scarecrow + bench
-    sx, sy = x0 + 0.6, y1 - 3.4
-    s.box(sx, sy, sx + 3.0, sy + 2.6, 0, 2.1, "wood_green")
-    s.box(sx - 0.2, sy - 0.2, sx + 3.2, sy + 2.8, 2.1, 2.22, "tin_roof")
-    door_left(s, sx + 0.5, sx + 1.6, sy + 2.6, 1.7, mat="wood_dark", frame="wood")
-    s.set_solid(sx, sy, sx + 3.0, sy + 2.6)
-    s.occluder(sx - 0.2, sy - 0.2, sx + 3.2, sy + 2.8, 2.3)
-    s.cyl(sx + 3.6, sy + 0.5, 0, 0.9, 0.38, "barrel_blue", verts=14)
-    s.cyl(sx + 3.6, sy + 0.5, 0.9, 0.93, 0.34, "dirty_liquid", verts=14)
-    s.set_solid(sx + 3.2, sy + 0.1, sx + 4.0, sy + 0.9)
-    s.occluder(sx + 3.2, sy + 0.1, sx + 4.0, sy + 0.9, 0.95)
-    crate_stack(s, x1 - 2.6, y1 - 2.0, 3)
-    s.box(x1 - 2.6, y1 - 3.0, x1 - 1.6, y1 - 2.2, 0, 0.8, "cardboard_dark")                  # compost bin
-    s.set_solid(x1 - 2.6, y1 - 3.0, x1 - 1.6, y1 - 2.2)
-    s.cyl(x1 - 4.2, y0 + 4.2, 0, 1.7, 0.03, "wood_dark", verts=6)                            # scarecrow
-    s.box(x1 - 4.9, y0 + 4.18, x1 - 3.5, y0 + 4.22, 1.35, 1.4, "wood_dark")
-    s.sphere(x1 - 4.2, y0 + 4.2, 1.78, 0.14, "cloth_yellow")
-    s.cyl(x1 - 4.2, y0 + 4.2, 1.88, 1.92, 0.22, "wood_dark", verts=10)
-    s.cyl(x1 - 4.2, y0 + 4.2, 1.92, 2.08, 0.1, "wood_dark", verts=10)
-    s.box(x1 - 4.7, y0 + 4.1, x1 - 3.7, y0 + 4.3, 1.0, 1.35, "cloth_red")
-    s.set_solid(x1 - 4.4, y0 + 4.0, x1 - 4.0, y0 + 4.4)
-    bench_along_x(s, x0 + 5.0, x0 + 6.6, y0 + 9.6)
-    s.box(x0 + 5.1, y0 + 9.3, x0 + 6.5, y0 + 9.35, 0.9, 1.25, "sign_cream")
-    s.text("WATER ME", x0 + 5.8, y0 + 9.36, 1.07, 0.13, "red_paint", face="left", bold=True)
-    for (px, py) in ((x0 + 0.2, y0 + 5.2), (x1 - 0.5, y0 + 5.4)):
-        potted_plant(s, px, py, "flowers")
-    # fence on the other sides
-    fence_wood(s, x0, x1, y1 + 0.2, h=0.9) if False else None
-    for (px, py) in ((x0 + 12.0 - 0.8, y1 - 0.4),):
-        shrub(s, px, py, 0.5, "leaves")
-    s.box(x0 - 0.2, y1 - 0.1, x1, y1 + 0.1, 0.0, 0.6, "bush_dark")
+    """s81 COMMUNITY GARDEN, calmer and bigger (was 12 x 13 with 8 crowded beds + trees from the old thicket): 17 x 12.5 cells, a central
+    path from the north gate to the meadow, a cross path, EIGHT neat low beds in two rows (one crop each, nothing taller than 1.3 m except
+    the bean / tomato canes), a tool shed, rain barrel + watering can, compost bin, a scarecrow and the WATER ME bench. No trees.
+    Layout (x0 = 13): beds at x0+2.0 / +5.4 / +10.8 / +14.2 (2.2 wide), rows at y0+1.7 and y0+6.5 (3.0 deep), paths x0+8.6..9.8 and y0+4.7..6.5."""
+    s.box(x0, y0, x1, y1, -0.1, 0.003, "grass_flat", layer="floor")
+    pc0, pc1 = x0 + 8.6, x0 + 9.8
+    s.box(pc0, y0 - 1.0, pc1, y1 + 0.3, 0.0, 0.011, "path_dirt", layer="floor")                 # central path (into the meadow path at y 40)
+    s.box(x0 + 0.8, y0 + 4.7, x1 - 0.6, y0 + 6.5, 0.0, 0.013, "path_dirt", layer="floor")       # cross path (own top: never coplanar with the central path)
+    # north fence with a gate gap at the central path, posts and a little sign board over the gate
+    fence_wood(s, x0, pc0 - 0.15, y0 + 0.05, h=0.85)
+    fence_wood(s, pc1 + 0.15, x1, y0 + 0.05, h=0.85)
+    for xx in (pc0 - 0.15, pc1 + 0.15):
+        s.box(xx - 0.07, y0 - 0.06, xx + 0.07, y0 + 0.16, 0, 1.5, "wood_dark")
+        s.set_solid(xx - 0.1, y0 - 0.08, xx + 0.1, y0 + 0.18)
+    s.box(pc0 - 0.2, y0 - 0.06, pc1 + 0.2, y0 + 0.16, 1.5, 1.6, "wood_dark")
+    s.box(pc0 + 0.1, y0 + 0.05, pc1 - 0.1, y0 + 0.12, 1.15, 1.45, "wood_green")
+    s.text("GARDEN", (pc0 + pc1) / 2, y0 + 0.13, 1.3, 0.16, "sign_cream", face="left", bold=True)
+    potted_plant(s, pc0 - 0.7, y0 + 0.9, "flowers")
+    potted_plant(s, pc1 + 0.7, y0 + 0.9, "flowers")
+    # ---- eight neat beds, one crop per bed ----
+    cols = [x0 + 2.0, x0 + 5.4, x0 + 10.8, x0 + 14.2]
+    rows = [y0 + 1.7, y0 + 6.5]
+    crops = [["cabbage", "lettuce", "carrot", "flowers"], ["beans", "tomato", "cabbage", "lettuce"]]
+    for ri, by in enumerate(rows):
+        for ci, bx in enumerate(cols):
+            crop = crops[ri][ci]
+            bw, bd = 2.2, 3.0
+            s.box(bx, by, bx + bw, by + bd, 0.0, 0.4, "wood")
+            s.box(bx + 0.1, by + 0.1, bx + bw - 0.1, by + bd - 0.1, 0.38, 0.43, "soil")
+            for i in range(6):
+                px, py = bx + 0.6 + (i % 2) * 1.0, by + 0.5 + (i // 2) * 1.0
+                if crop == "cabbage":
+                    s.sphere(px, py, 0.6, 0.22, "cabbage", sz=0.7)
+                elif crop == "lettuce":
+                    s.sphere(px, py, 0.52, 0.17, "leaves_light", sz=0.5)
+                elif crop == "carrot":
+                    s.sphere(px, py, 0.52, 0.14, "leaves", sz=0.6)
+                elif crop == "flowers":
+                    s.sphere(px, py, 0.52, 0.12, "leaves_light", sz=0.6)
+                    s.sphere(px, py, 0.66, 0.08, FLOWERS[(i + ci) % len(FLOWERS)])
+                elif crop == "tomato":
+                    if i % 2 == 0:
+                        s.cyl(px, py, 0.43, 1.3, 0.02, "wood_dark", verts=6)
+                        s.sphere(px, py, 0.85, 0.17, "leaves", sz=1.1)
+                        s.sphere(px + 0.1, py + 0.08, 0.7, 0.07, "tomato")
+                else:                                                                    # beans: a row of canes along the bed's middle
+                    if i % 2 == 0:
+                        s.cyl(px + 0.5, py, 0.43, 1.25, 0.02, "wood_dark", verts=6)
+                        s.sphere(px + 0.5, py, 0.9, 0.13, "leaves_light", sz=1.2)
+            s.set_solid(bx, by, bx + bw, by + bd)
+            s.occluder(bx, by, bx + bw, by + bd, 0.7 if crop in ("cabbage", "lettuce", "carrot", "flowers") else 1.4)
+    # ---- south strip: tool shed (west), barrel + watering can, bench by the path, scarecrow, compost (east) ----
+    sx, sy = x0 + 1.0, y1 - 2.4
+    s.box(sx, sy, sx + 3.0, sy + 2.0, 0, 2.0, "wood_green")
+    s.box(sx - 0.2, sy - 0.2, sx + 3.2, sy + 2.2, 2.0, 2.12, "tin_roof")
+    door_left(s, sx + 0.6, sx + 1.7, sy + 2.0, 1.7, mat="wood_dark", frame="wood")
+    s.set_solid(sx, sy, sx + 3.0, sy + 2.0)
+    s.occluder(sx - 0.2, sy - 0.2, sx + 3.2, sy + 2.2, 2.2)
+    s.cyl(sx + 3.8, sy + 0.5, 0, 0.9, 0.38, "barrel_blue", verts=14)                    # rain barrel
+    s.cyl(sx + 3.8, sy + 0.5, 0.9, 0.93, 0.34, "dirty_liquid", verts=14)
+    s.set_solid(sx + 3.4, sy + 0.1, sx + 4.2, sy + 0.9)
+    s.occluder(sx + 3.4, sy + 0.1, sx + 4.2, sy + 0.9, 0.95)
+    wx, wy = sx + 4.2, sy + 1.5                                                         # watering can on the grass
+    s.cyl(wx, wy, 0.0, 0.3, 0.13, "metal_grey", verts=12)
+    s.tube([(wx + 0.1, wy, 0.18), (wx + 0.32, wy, 0.34), (wx + 0.42, wy, 0.4)], 0.025, "metal_grey")
+    s.tube([(wx - 0.12, wy, 0.12), (wx - 0.24, wy, 0.28), (wx - 0.1, wy, 0.34)], 0.02, "metal_grey")
+    bench_along_x(s, pc0 - 2.2, pc0 - 0.6, y1 - 1.1)                                    # WATER ME bench beside the path
+    s.box(pc0 - 2.1, y1 - 1.45, pc0 - 0.7, y1 - 1.4, 0.9, 1.25, "sign_cream")
+    s.text("WATER ME", pc0 - 1.4, y1 - 1.39, 1.07, 0.13, "red_paint", face="left", bold=True)
+    cx, cy = x1 - 3.0, y1 - 1.4                                                         # compost bin
+    s.box(cx, cy, cx + 1.0, cy + 0.8, 0, 0.8, "cardboard_dark")
+    s.set_solid(cx, cy, cx + 1.0, cy + 0.8)
+    s.occluder(cx, cy, cx + 1.0, cy + 0.8, 0.85)
+    ax, ay = x1 - 5.2, y1 - 1.3                                                         # scarecrow
+    s.cyl(ax, ay, 0, 1.7, 0.03, "wood_dark", verts=6)
+    s.box(ax - 0.65, ay - 0.02, ax + 0.65, ay + 0.02, 1.35, 1.4, "wood_dark")
+    s.sphere(ax, ay, 1.78, 0.14, "cloth_yellow")
+    s.cyl(ax, ay, 1.88, 1.92, 0.22, "wood_dark", verts=10)
+    s.cyl(ax, ay, 1.92, 2.08, 0.1, "wood_dark", verts=10)
+    s.box(ax - 0.4, ay - 0.1, ax + 0.4, ay + 0.1, 1.0, 1.35, "cloth_red")
+    s.set_solid(ax - 0.2, ay - 0.2, ax + 0.2, ay + 0.2)
+    # low hedge along the south edge with a gap for the path
+    s.box(x0 - 0.2, y1 - 0.1, pc0 - 0.2, y1 + 0.1, 0.0, 0.6, "bush_dark")
+    s.box(pc1 + 0.2, y1 - 0.1, x1, y1 + 0.1, 0.0, 0.6, "bush_dark")
+    s.set_solid(x0 - 0.2, y1 - 0.1, pc0 - 0.2, y1 + 0.1)
+    s.set_solid(pc1 + 0.2, y1 - 0.1, x1, y1 + 0.1)
 
 
 def court(s, x0, y0, x1, y1, rnd):
@@ -918,7 +904,7 @@ def hoarding_and_drums(s, rnd):
 
 def street_dressing(s, rnd):
     """Lamps, bins, hydrant, bunting, washing lines (kept sparse: dense detail fills the 624-slot tile window)."""
-    for x in (19.0, 38.0, 57.0):
+    for x in (21.3, 39.6, 57.0):                                    # s81: lamps moved off the Valdez door (18.6) and the yard gap (36.2..37.7)
         lamp_curved(s, x, 19.1, arm="y")
     for (x, y) in ((28.0, 26.2), (44.0, 25.8)):
         trash_can(s, x, y)
@@ -929,7 +915,7 @@ def street_dressing(s, rnd):
         pole(s, px, py, 4.6)
         cloth_line(s, px, 18.1, 4.8, px, py, 4.5, 6, rnd)
     bunting(s, 25.5, 18.15, 4.3, 34.0, 18.15, 4.3, 9, rnd, sag=0.15)
-    for (x, y) in ((17.7, 19.2), (47.0, 19.1), (55.1, 19.2)):
+    for (x, y) in ((17.6, 19.2), (47.2, 19.1), (53.6, 19.2)):      # s81: pot moved off the row-house door (55.1)
         potted_plant(s, x, y, "flowers")
     crate_stack(s, 26.0, 19.0, 2)
     for (x, y) in ((17.0, 24.9), (36.0, 19.8), (49.0, 24.8)):
@@ -976,7 +962,7 @@ def ground(s, rnd):
     for x in (26.5, 42.0):
         s.box(x, 24.0, x + 0.6, 24.4, 0.0, 0.015, "metal_dark", layer="floor")
     # south zone: chess plaza, pond park grass, meadow grass, court slab area
-    s.box(29.5, 26.2, 35.0, 32.0, -0.1, 0.0, "plaza_stone", layer="floor")
+    s.box(30.6, 26.2, 35.0, 32.0, -0.1, 0.0, "plaza_stone", layer="floor")
     s.box(16.0, 26.2, 17.0, 40.0, -0.1, 0.0, "slab_flat", layer="floor")
     s.box(17.0, 40.0, 49.2, H, -0.1, 0.0, "grass_flat", layer="floor")
     s.box(35.0, 26.2, 49.2, 40.0, -0.1, 0.0, "grass_flat", layer="floor")
@@ -985,7 +971,7 @@ def ground(s, rnd):
     s.box(0, 34.5, 10.5, H, -0.1, 0.0, "grass_flat", layer="floor")
     s.box(55.8, 26.2, 68.0, 40.0, -0.1, 0.0, "slab_flat", layer="floor")
     # dirt paths: garden -> meadow -> cottages -> lane, and through the orchard
-    for (a, b, c, d) in ((23.0, 40.0, 24.2, 52.0), (23.0, 52.0, 49.2, 53.2), (35.0, 40.0, 36.2, 52.0), (55.8, 50.0, 66.0, 51.2), (60.0, 40.0, 61.2, 62.0)):
+    for (a, b, c, d) in ((21.6, 40.0, 22.8, 52.0), (21.6, 52.0, 49.2, 53.2), (35.0, 40.0, 36.2, 52.0), (55.8, 50.0, 66.0, 51.2), (60.0, 40.0, 61.2, 62.0)):
         s.box(a, b, c, d, 0.0, 0.012, "path_dirt", layer="floor")
 
 
@@ -1051,7 +1037,7 @@ def old_block():
     # ---- zone A: cable works (cold), the arch ----
     hoarding_and_drums(s, rnd)
     cable_works(s, rnd)
-    sneak_fence_and_bushes(s, rnd)
+    works_edge(s)
     arch(s)
     # ---- north row, spread out with alleys and a square between the buildings ----
     row_house(s, 16.5, 21.0, FY, 3, "plaster_terra", 18.6, door_mat="wood_green", seed=11, shutters=True, extras=("stain",))
@@ -1061,11 +1047,14 @@ def old_block():
     # alley (21..25.5): Teo's den = a tiny lean-to shed, a barrel
     s.box(22.2, 9.2, 24.4, 11.2, 0, 1.7, "boards")
     s.box(22.0, 9.0, 24.6, 11.4, 1.7, 1.8, "tin_roof")
-    s.cyl(22.0, 14.0, 0, 0.9, 0.3, "barrel_blue", verts=12)
+    s.cyl(21.8, 16.0, 0, 0.9, 0.3, "barrel_blue", verts=12)
+    s.set_solid(21.5, 15.7, 22.1, 16.3)
     s.occluder(22.0, 9.0, 24.6, 11.4, 1.9)
+    alley_gate(s, 21.0, 25.5, ALLEY_GATE_Y)                                              # s81: closed off 3 cells in, no dark slot
     laundromat(s, 25.5, 34.0, FY)
     mural_east_wall(s, 34.0, 10.0, 18.0, 0.6)
     backroom_annex(s, 34.4, 9.5, 37.4, 14.5)
+    alley_gate(s, 37.4, 40.5, ALLEY_GATE_Y, fence_only=True)                              # s81: the yard is a shallow forecourt now
     fence_wood(s, 34.0, 36.2, 17.4, h=1.3)
     fence_wood(s, 37.9, 40.5, 17.4, h=1.3)
     s.box(36.2, 17.3, 36.35, 17.5, 0, 1.5, "wood_dark")
@@ -1076,9 +1065,8 @@ def old_block():
     pole(s, 39.3, 14.8, 3.8)
     pole(s, 39.3, 7.2, 3.8)
     cloth_line(s, 39.3, 7.2, 3.5, 39.3, 14.8, 3.5, 8, rnd)
-    s.cyl(35.8, 16.0, 0, 0.12, 0.45, "cloth_red", verts=14)
-    s.sphere(35.8, 16.0, 0.25, 0.22, "plaster_ochre", sz=0.7, sx=1.4)                   # Duchess (placeholder)
-    trash_can(s, 35.0, 11.2)
+    # s81: Duchess' baked bed + placeholder removed (she is a sprite NPC; her bed is now on the pavement beside the laundromat door)
+    trash_can(s, 35.2, 15.8)                                                            # yard bin (moved forward into the shallow yard)
     bakery(s, 40.5, 47.0, FY)
     # pocket square (47..53): stone basin, benches, poster wall for Mia's posters
     s.cyl(50.0, 14.5, 0, 0.5, 1.2, "stone", verts=20)
@@ -1091,13 +1079,14 @@ def old_block():
     s.box(52.0, 12.5, 52.95, 13.5, 0.7, 1.6, "poster_yellow")
     row_house(s, 53.0, 57.5, FY, 3, "plaster_blue", 55.1, door_mat="wood_red", seed=12, extras=("dish", "stain"))
     row_house(s, 61.0, 65.5, FY, 2, "plaster_teal", 63.1, door_mat="wood_green", seed=13, extras=("ac",))
+    alley_gate(s, 57.5, 61.0, ALLEY_GATE_Y)
     # ---- street end: Rosa's stall, Teo's door ramp ----
     rosas_stall(s, 63.2, 22.2)
     s.wedge(60.2, 24.5, 61.6, 26.3, 0.75, 0.0, "y", "wood_green")
     s.box(60.2, 24.3, 61.6, 24.5, 0, 0.75, "brick_red")
     # ---- south side: garden, chess, pond park ----
-    garden(s, 17.0, 27.0, 29.0, 40.0, rnd)
-    plane_tree(s, 31.0, 36.0, 1.0)
+    garden(s, 13.0, 27.5, 30.0, 40.0, rnd)                 # s81: bigger + calmer, uses the space of the removed thicket
+    plane_tree(s, 32.5, 37.5, 1.0)
     chess_table(s, 32.2, 28.2)
     pond_park(s, 36.0, 28.0, 47.0, 37.0, rnd)
     # ---- Baker's Lane: lamps and detached cottages on its west side (facades towards +x), spaced out ----
@@ -1112,7 +1101,6 @@ def old_block():
     s.box(49.1, 53.4, 49.7, 54.1, 0.0, 0.6, "wood")
     for k in range(4):
         s.sphere(49.4, 53.5 + k * 0.15, 0.68, 0.1, "tomato")
-    s.set_solid(48.0, 51.9, 49.2, 53.1, False)
     cottage(s, 49.0, 57.0, colours="orange")
     # ---- east of the lane: court, orchard ----
     court(s, 56.0, 28.5, 67.0, 37.5, rnd)
@@ -1134,7 +1122,7 @@ def old_block():
     s.set_solid(0, 0, 16.0, 14.4)
     s.set_solid(0, 34.5, 16.0, H)
     # rear zone behind the north row is closed; alleys, yard and pocket square stay open (their props keep their own solids)
-    keep = [(21.0, 8.0, 25.5, 18.0), (34.0, 6.0, 40.5, 18.0), (47.0, 12.0, 53.0, 18.0), (57.5, 10.0, 61.0, 18.0)]
+    keep = [(21.0, ALLEY_GATE_Y + 0.3, 25.5, 18.0), (34.0, ALLEY_GATE_Y + 0.3, 40.5, 18.0), (47.0, 12.0, 53.0, 18.0), (57.5, ALLEY_GATE_Y + 0.3, 61.0, 18.0)]
     saved = [row[:] for row in s.solid]
     s.set_solid(16.0, 0, 68.0, 17.9)
     r = sc.SOLID_RES
@@ -1146,16 +1134,14 @@ def old_block():
     for k in range(4):
         wy0 = 18.0 + k * 2.0
         s.warp(0.0, wy0, 1.0, wy0 + 2.0, "city_centre", 70.0, wy0 + 5.0, "left")
-    s.set_solid(31.8, 17.0, 33.1, 17.999, False)
-    s.warp(31.8, 17.0, 33.1, 18.0, "laundromat", 7.0, 8.4, "up")
-    s.set_solid(44.95, 17.0, 46.05, 17.999, False)
-    s.warp(44.95, 17.0, 46.05, 18.0, "bakery", 5.0, 6.4, "up")
-    s.warp(48.0, 51.9, 49.2, 53.1, "lane_shop", 4.0, 5.4, "up")
+    # s81: no notch in the wall; the warp lies in front of the facade (feet stop 0.25 cells from the wall)
+    s.warp(31.8, 18.0, 33.1, 18.6, "laundromat", 7.0, 8.4, "up")
+    s.warp(44.95, 18.0, 46.05, 18.6, "bakery", 5.0, 6.4, "up")
+    s.warp(49.0, 51.9, 49.6, 53.1, "lane_shop", 4.0, 5.4, "up")
     s.sun_strength = 4.0
     return s
 
 
-LANE_CELLS = [(10.9, 30.35, 17.0, 31.05), (16.4, 27.0, 17.1, 31.05)]
 
 
 # =====================================================================================================================
@@ -1171,7 +1157,8 @@ OB_FURNITURE = {
                    ("chair_plastic", 5.6, 5.4, 0)],
     "bakery": [("counter_bakery", 3.4, 2.2, 0), ("shelf_bread", 0.3, 0.0, 0), ("shelf_bread", 5.6, 0.0, 0),
                ("table_round", 1.6, 5.2, 0), ("table_round", 8.0, 5.2, 0), ("chair_plastic", 1.0, 4.3, 0), ("chair_plastic", 2.2, 4.3, 0),
-               ("chair_plastic", 7.4, 4.3, 0), ("chair_plastic", 8.6, 4.3, 0)],
+               ("chair_plastic", 7.4, 4.3, 0), ("chair_plastic", 8.6, 4.3, 0),
+               ("table_round", 12.4, 5.6, 0), ("chair_plastic", 11.8, 4.7, 0), ("chair_plastic", 13.0, 4.7, 0)],
     "mia_flat": [("kettle_unit", 0.4, 0.0, 0), ("sofa_small", 4.6, 1.4, 0), ("crate_stack", 0.4, 3.4, 90), ("crate_stack", 5.4, 4.4, 0)],
     "lane_shop": [("shop_shelf", 0.4, 0.0, 0), ("shop_shelf", 2.6, 0.0, 0), ("counter_shop", 4.6, 2.6, 0), ("crate_stack", 6.6, 0.4, 0)],
 }
@@ -1181,6 +1168,8 @@ OB_EXTRA_THINGS = [
     ("bakery", "oven", 8.9, 1.7, 0.5, 0),
     ("laundromat", "bin", 0.7, 6.4, 0.0, 0),
     ("bakery", "bin", 9.2, 6.6, 0.0, 0),
+    ("bakery", "toilet", 11.2, 1.5, 0.0, 1),      # s81 toilet nook
+    ("bakery", "sink", 13.0, 1.0, 0.0, 1),
     ("lane_shop", "bin", 0.7, 5.8, 0.0, 0),
 ]
 
@@ -1237,7 +1226,7 @@ def laundromat_room():
 
 def bakery_room():
     """BELLINI BAKERY (10 x 8): counter with display, bread shelves, ovens glowing in the back wall, two cafe tables."""
-    W, H = 10, 8
+    W, H = 15, 8                                                                              # s81: 10 -> 15: east part with a table + the toilet nook
     s = sc.std_room("bakery", "Bellini Bakery", W, H, "tile_cafe", "wp_cream", "wood_red", 1.0, 3.2, (4, 6),
                     "old_block", 45.5, 19.9, mat_cols=("mat_red", "rug_cream"))
     _place_all(s, "bakery")
@@ -1258,6 +1247,7 @@ def bakery_room():
         s.box(fx, fy, fx + 0.6, fy + 0.5, 0.0, 0.45, "cloth_white")
         s.set_solid(fx, fy, fx + 0.599, fy + 0.499)
     sc.potted_plant(s, 9.2, 4.2, "flowers")
+    sc.toilet_nook(s, "bakery", W, 3.2)
     sc.indoor_bin(s, 9.2, 6.6)
     sc.rug(s, 1.0, 4.6, 6.2, 7.0, "rug_terra", "rug_cream", "rug_terra")
     for (lx, ly) in ((2, 2), (6, 3), (8, 2), (3, 6), (7, 6)):

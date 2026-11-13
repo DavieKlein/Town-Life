@@ -492,6 +492,8 @@ namespace tl
         void _topup_pickups();
         void _handle_accident();
         void _show_info(const char* title, const char* line_a, const char* line_b, const char* line_c);
+        [[nodiscard]] bool _shop_open(map_id target) const;
+        void _show_closed(map_id target);
         void _update_zzz();
         void _finish_sleep();
         void _show_notes();

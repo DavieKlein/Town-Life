@@ -128,17 +128,17 @@ PLACEMENTS = [
     # ---- s76: Old Block residents (map old_block, cells; the bakery / laundromat interiors) ----
     ("pruitt", "old_block", 8.5, 20.9, "se", "0:00", "23:59", 1, 255),                # folding chair on a drum at the VaultLink cable works
     ("trench_e", "old_block", 12.3, 21.3, "sw", "0:00", "23:59", 1, 255),             # digging in the trench
-    ("valdez", "old_block", 18.0, 18.8, "sw", "8:00", "21:00", 1, 255),               # under her balcony (house 16.5..21)
-    ("captain", "old_block", 19.8, 18.9, "sw", "8:00", "21:00", 1, 255),              # parrot on his perch next to her
+    ("valdez", "old_block", 20.6, 19.3, "sw", "8:00", "21:00", 1, 255),               # s81: beside her stoop, NOT in front of the door (house 16.5..21, door 18.6)
+    ("captain", "old_block", 19.9, 18.7, "sw", "8:00", "21:00", 1, 255),              # parrot on his perch next to her (right of the door)
     ("teo", "old_block", 20.5, 22.0, "se", "10:00", "19:00", 1, 255, None, None, "teo_round"),
     ("grigor", "old_block", 33.1, 28.2, "sw", "10:00", "18:00", 1, 255),              # stool at the chess table
     ("ines", "old_block", 34.2, 19.5, "sw", "7:00", "12:00", 1, 255),                 # outside the laundromat door
     ("ines", "laundromat", 6.8, 3.6, "sw", "12:00", "14:00", 1, 255),
     ("ines", "old_block", 34.2, 19.5, "sw", "14:00", "17:00", 1, 255),
     ("ines", "laundromat", 6.8, 3.6, "sw", "17:00", "21:00", 1, 255),
-    ("duchess", "old_block", 35.8, 16.0, "e", "7:00", "12:00", 1, 255),               # her bed in the laundromat yard
+    ("duchess", "old_block", 30.6, 19.4, "e", "7:00", "12:00", 1, 255),               # s81: her bed on the pavement left of the laundromat door (was behind the yard fence)
     ("duchess", "old_block", 36.0, 21.5, "e", "12:00", "13:00", 1, 255, None, None, "duchess_walk"),
-    ("duchess", "old_block", 35.8, 16.0, "e", "13:00", "22:00", 1, 255),
+    ("duchess", "old_block", 30.6, 19.4, "e", "13:00", "22:00", 1, 255),
     ("nella", "bakery", 4.9, 1.8, "sw", "6:00", "18:00", 1, 255),                     # behind the counter (counter y 2.2..3.1)
     ("rosa", "old_block", 64.4, 23.7, "ne", "8:00", "17:00", 1, 255, "old_block_open", None),   # her stall at the street end
     ("kessler", "city_centre", 33.4, 49.2, "sw", "6:00", "22:00", 1, 255, None, "bridge_open"),   # in front of the closed bridge barrier
