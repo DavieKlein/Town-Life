@@ -1,5 +1,6 @@
 #include "tl_field.h"
 
+#include "bn_core.h"
 #include "bn_color.h"
 #include "bn_string.h"
 #include "bn_bg_palettes.h"
@@ -244,6 +245,7 @@ namespace tl
         audio::set_map(id);
         _npcs.load(*_map, id, _day, _minutes);
         _npcs.prime(x, y);
+        _optional_freed = false;        // the loads below recreate the optional sprites
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _story_check_due = true;
         _update_gates();
@@ -1946,11 +1948,56 @@ namespace tl
         }
     }
 
+    // s81: before a pause screen / phone / dialogue / report panel opens, everything that is only decoration frees its sprite tiles
+    // (the pause -> Mission log transition peaked at 954 / 1024 tiles). NPCs are handled by npcs::focus / focus_none.
+    void field::_make_room(bool scenery, bool wait)
+    {
+        _critters.clear();
+        _deposit.clear();
+        _collect.clear();
+        _pool_sprites.clear();
+
+        if(scenery)
+        {
+            _map_sprites.clear();
+        }
+
+        _optional_freed = true;
+
+        if(wait)
+        {
+            bn::core::update();     // Butano releases the tiles at the next update
+        }
+    }
+
+    void field::_sync_optional()
+    {
+        if(! _optional_freed)
+        {
+            return;
+        }
+
+        bool busy = _pause_mode != pause_mode::none || _phone_open || _conversation.active();
+
+        if(busy)
+        {
+            return;
+        }
+
+        _optional_freed = false;
+        _critters.load(*_map);
+        _deposit.load(*_map);
+        _collect.load(*_map);
+        _map_sprites.load(*_map);
+        _update_lighting(true);
+    }
+
     void field::_begin_message(const char* text)
     {
         if(! _script.active)
         {
             _npcs.focus_none();
+            _make_room(false);
         }
 
         _conversation.start_message(text);
@@ -1966,10 +2013,7 @@ namespace tl
         _npcs.focus(npc_index);
         // s76: free every ambient world sprite while talking: the small-talk choice layout (96 px portrait, meter, options) needs a lot of
         // sprite VRAM in contiguous blocks, and Rosa's stall / Old Block ran out of it ("Sprite tiles allocate failed"). Restored in _end_conversation.
-        _critters.clear();
-        _deposit.clear();
-        _collect.clear();
-        _map_sprites.clear();
+        _make_room(true);           // s81: also the light pools; the tiles are released before the box opens
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         npc_index = 0;
         story().set_crates_open(_crates_open());
@@ -2007,6 +2051,7 @@ namespace tl
         _deposit.load(*_map);
         _collect.load(*_map);
         _map_sprites.load(*_map);
+        _optional_freed = false;
         _critters.set_lighting(_light);
         _deposit.set_lighting(_light);
         _collect.set_lighting(_light);
@@ -2115,6 +2160,7 @@ namespace tl
     void field::update()
     {
         _update_letterbox();
+        _sync_optional();
         audio::duck(_pause_mode != pause_mode::none || _conversation.active() || _menu.is_open() || _phone_open);
         audio::set_night(is_night(_minutes));
         audio::update();

@@ -1027,9 +1027,16 @@ Owner-approved proposal `tools/proposals/s77/` (entrance variant A) is built; th
   tiles first, `make_sprite`: `allocate_optional`, placed NPCs need count + 170 free tiles, else they simply do not appear yet); `ui::label` pieces use `allocate_optional`
   and skip a piece when VRAM / OAM is short (text may vanish, never a crash); system messages (`field::_begin_message`: hints, mission pages) and the pause family
   (`_open_pause` .. `_close_pause`) drop all NPC sprites (`npcs::focus_none` / `unfocus`). Headless 10-minute soaks (36000 frames of random walking, START -> Mission log,
-  SELECT -> phone, needs 24-30 so every hint and the bladder accident fire) in Old Block and City Centre: peak used 954 / 1024 (lowest free 70) in Old Block, 902 (free 122)
-  in City Centre; the peaks are the pause -> Mission log transition (the log screen is the biggest consumer), no crash. Still NOT fail-safe: `ui::place` (panel pieces)
-  and the dialogue portrait pieces allocate with plain `create_tiles`; keep >= 300 tiles free before opening a dialogue box.
+  SELECT -> phone, needs 24-30 so every hint and the bladder accident fire). Before the second pass (below) the peak was 954 / 1024 (lowest free 70).
+- **Free optional sprites first (s81 round 2):** `field::_make_room(scenery)` frees critters, pickups, collectibles, light pools (and the map sprites for pause / phone /
+  talks) and waits one core update; it runs before the pause screen, the phone, every talk and every system message, and in `blackbox_make_room` (no wait there); NPCs go via
+  `npcs::focus` / `focus_none`. `_sync_optional()` (every frame) recreates them once no pause / phone / conversation is open. `ui::place`, `make_button`, `make_cue`,
+  `add_piece` and the dialogue portraits / meters use the `_optional` Butano calls: a piece that does not fit is skipped (a box without portrait, never a crash); expression
+  swaps keep the old frame when no tile block is free. Same soak (Old Block x2, City Centre, 36000 frames each, pause -> Mission log, phone, all hints): peak used 742-750,
+  lowest free 274-282 tiles (target >= 200 met), avg CPU unchanged.
+- **Bench-sleep page at 02:45 is not a bug:** it is `news_day2` ("Cold bench. Stiff back. Rock bottom, then." + newspaper) that starts when the bench sleeper wakes (Energy 100
+  after >= 4 h) with flag `news_due`. A random-input soak of the real prologue (AUTO_TALK + BOT build, 60000-90000 frames x 4 seeds from the wake-up) reached mission M04 / day 2
+  without a crash or hang; mission X1 was not reached by random input.
 - **Diner jukebox (item 5) was handed to another helper (the diner also gets a toilet room); my jukebox attempt was not committed.**
 
 ## Roadmap / status

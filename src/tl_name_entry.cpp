@@ -116,7 +116,7 @@ namespace tl
                 {
                     for(int c = 0; c < k.cells; ++c)
                     {
-                        key_bg.push_back(ui::make_piece(bn::sprite_items::ui_key, x + (c * cell) + 1, y, 0, false, 11));
+                        ui::add_piece(key_bg, bn::sprite_items::ui_key, x + (c * cell) + 1, y, 0, false, 11);
                     }
                 }
 

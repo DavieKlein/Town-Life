@@ -87,6 +87,9 @@ namespace tl
             {
                 _menu.close();
             }
+
+            _npcs.focus_none();             // s81: everything optional goes (the caller runs bn::core::update() afterwards)
+            _make_room(true, false);
         }
 
         // Cheap live values for the black box (map index, feet position, day, minutes, money, 1 = free play state).
@@ -265,6 +268,7 @@ namespace tl
         bn::string<200> _story_text;
         bool _story_check_due = true;
         bool _hud_hidden = false;
+        bool _optional_freed = false;
 
         // ---- s64: sickness, fainting, the clinic bill, the phone (tl_field_health.cpp)
         phone _phone;
@@ -459,6 +463,8 @@ namespace tl
         void _start_conversation(int npc_index);
         void _end_conversation();
         void _set_hud_hidden(bool hidden);
+        void _make_room(bool scenery, bool wait = true);       // s81: free every optional sprite (critters, pickups, collectibles, light pools, map sprites) before a big UI opens
+        void _sync_optional();               // s81: brings them back when no big UI is open
         void _begin_message(const char* text);      // s81: system message page; NPC sprites are dropped meanwhile (VRAM)
         void _handle_story_events(int talked_npc);
         void _sync_objective();

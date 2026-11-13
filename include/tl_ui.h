@@ -105,10 +105,11 @@ namespace tl::ui
     };
 
     // One sprite of a UI piece sheet in the current style palette (priority 0): x, y = top-left, `frame` = graphic index.
-    [[nodiscard]] bn::sprite_ptr make_piece(const bn::sprite_item& item, int x, int y, int frame, bool hflip, int z_order);
+    // (s81: optional: nothing is added when VRAM / OAM is short)
+    void add_piece(bn::ivector<bn::sprite_ptr>& list, const bn::sprite_item& item, int x, int y, int frame, bool hflip, int z_order);
 
     // Round A / B button icons (frame 0 = A, 1 = B), x, y = top-left of the 10 x 10 circle.
-    [[nodiscard]] bn::sprite_ptr make_button(int frame, int x, int y);
+    [[nodiscard]] bn::optional<bn::sprite_ptr> make_button(int frame, int x, int y);
 
     // "A  Choose   B  Back" (both) or "A  OK" row; x, y = top-left of the row (icons 10 px high).
     class hint_row
@@ -126,7 +127,7 @@ namespace tl::ui
     };
 
     // The bobbing "A" cue above an interactable (tip of the bubble tail at x, y).
-    [[nodiscard]] bn::sprite_ptr make_cue(int x, int y);
+    [[nodiscard]] bn::optional<bn::sprite_ptr> make_cue(int x, int y);
     void place_cue(bn::sprite_ptr& cue, int tip_x, int tip_y);
 }
 

@@ -34,7 +34,7 @@ namespace tl
         {
             // s81: the pause screen peaks at ~780 sprite tiles: no NPC keeps a sprite meanwhile (Old Block: 954 / 1024 with them)
             _npcs.focus_none();
-            bn::core::update();
+            _make_room(true);
         }
 
         // Free the HUD text sprites while the pause screen is up (the sprite budget is 128).

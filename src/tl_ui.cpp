@@ -103,15 +103,36 @@ namespace tl::ui
             return (code < 32 || code > 126) ? ('?' - 32) : (code - 32);
         }
 
-        [[nodiscard]] bn::sprite_ptr place(const bn::sprite_item& item, int x, int y, int graphics, bool hflip, int z)
+        // s81: every UI piece is optional: when VRAM / OAM is short the piece is simply not drawn (never a crash)
+        [[nodiscard]] bn::optional<bn::sprite_ptr> place(const bn::sprite_item& item, int x, int y, int graphics, bool hflip, int z)
         {
-            bn::sprite_ptr sprite = bn::sprite_ptr::create(
+            bn::optional<bn::sprite_tiles_ptr> tiles = item.tiles_item().create_tiles_optional(graphics);
+
+            if(! tiles)
+            {
+                return bn::nullopt;
+            }
+
+            bn::optional<bn::sprite_ptr> sprite = bn::sprite_ptr::create_optional(
                     x + (item.shape_size().width() / 2) - 120, y + (item.shape_size().height() / 2) - 80,
-                    item.shape_size(), item.tiles_item().create_tiles(graphics), style_palette());
-            sprite.set_bg_priority(0);
-            sprite.set_z_order(z);
-            sprite.set_horizontal_flip(hflip);
+                    item.shape_size(), bn::move(*tiles), style_palette());
+
+            if(sprite)
+            {
+                sprite->set_bg_priority(0);
+                sprite->set_z_order(z);
+                sprite->set_horizontal_flip(hflip);
+            }
+
             return sprite;
+        }
+
+        void add(bn::ivector<bn::sprite_ptr>& list, bn::optional<bn::sprite_ptr>&& sprite)
+        {
+            if(sprite && ! list.full())
+            {
+                list.push_back(bn::move(*sprite));
+            }
         }
     }
 
@@ -312,8 +333,8 @@ namespace tl::ui
         // stay clear of the rounded corners (start >= 4, end <= w - 4).
         auto row = [&](const bn::sprite_item& end_item, const bn::sprite_item& mid_item, int ry, int z)
         {
-            _sprites.push_back(place(end_item, x, ry, 0, false, z));
-            _sprites.push_back(place(end_item, x + w - 64, ry, 0, true, z));
+            add(_sprites, place(end_item, x, ry, 0, false, z));
+            add(_sprites, place(end_item, x + w - 64, ry, 0, true, z));
 
             if(w > 128)
             {
@@ -328,7 +349,7 @@ namespace tl::ui
                         sx = w - 68;
                     }
 
-                    _sprites.push_back(place(mid_item, x + sx, ry, 0, false, z + 1));
+                    add(_sprites, place(mid_item, x + sx, ry, 0, false, z + 1));
                 }
             }
         };
@@ -382,8 +403,8 @@ namespace tl::ui
         _x = x;
         _y = y;
         int top = y - 9;        // the bar is drawn on rows 9..21 of its 32-row pieces
-        _sprites.push_back(place(bn::sprite_items::ui_bar_l, x, top, 0, false, 10));
-        _sprites.push_back(place(bn::sprite_items::ui_bar_r, x + w - 16, top, 0, false, 10));
+        add(_sprites, place(bn::sprite_items::ui_bar_l, x, top, 0, false, 10));
+        add(_sprites, place(bn::sprite_items::ui_bar_r, x + w - 16, top, 0, false, 10));
         int count = ((w - 32) + 63) / 64;
 
         for(int index = 0; index < count; ++index)
@@ -395,23 +416,28 @@ namespace tl::ui
                 sx = w - 67;
             }
 
-            _sprites.push_back(place(bn::sprite_items::ui_bar_m, x + sx, top, 0, false, 11));
+            add(_sprites, place(bn::sprite_items::ui_bar_m, x + sx, top, 0, false, 11));
         }
     }
 
     // ---------------------------------------------------------------------------------------------------------
 
-    bn::sprite_ptr make_piece(const bn::sprite_item& item, int x, int y, int frame, bool hflip, int z_order)
+    void add_piece(bn::ivector<bn::sprite_ptr>& list, const bn::sprite_item& item, int x, int y, int frame, bool hflip, int z_order)
     {
-        return place(item, x, y, frame, hflip, z_order);
+        add(list, place(item, x, y, frame, hflip, z_order));
     }
 
-    bn::sprite_ptr make_button(int frame, int x, int y)
+    bn::optional<bn::sprite_ptr> make_button(int frame, int x, int y)
     {
         // The icon circle sits at (3, 3) of its 16 x 16 frame.
-        bn::sprite_ptr sprite = bn::sprite_items::ui_icons.create_sprite(x - 3 + 8 - 120, y - 3 + 8 - 80, frame);
-        sprite.set_bg_priority(0);
-        sprite.set_z_order(0);
+        bn::optional<bn::sprite_ptr> sprite = bn::sprite_items::ui_icons.create_sprite_optional(x - 3 + 8 - 120, y - 3 + 8 - 80, frame);
+
+        if(sprite)
+        {
+            sprite->set_bg_priority(0);
+            sprite->set_z_order(0);
+        }
+
         return sprite;
     }
 
@@ -438,12 +464,17 @@ namespace tl::ui
         _back.clear();
     }
 
-    bn::sprite_ptr make_cue(int x, int y)
+    bn::optional<bn::sprite_ptr> make_cue(int x, int y)
     {
-        bn::sprite_ptr sprite = bn::sprite_items::ui_icons.create_sprite(0, 0, 2);
-        sprite.set_bg_priority(0);
-        sprite.set_z_order(0);
-        place_cue(sprite, x, y);
+        bn::optional<bn::sprite_ptr> sprite = bn::sprite_items::ui_icons.create_sprite_optional(0, 0, 2);
+
+        if(sprite)
+        {
+            sprite->set_bg_priority(0);
+            sprite->set_z_order(0);
+            place_cue(*sprite, x, y);
+        }
+
         return sprite;
     }
 

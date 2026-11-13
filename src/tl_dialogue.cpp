@@ -12,6 +12,20 @@
 
 namespace tl
 {
+    namespace
+    {
+        // s81: swapping a frame needs a fresh tile block: when VRAM is short the old frame simply stays
+        void try_tiles(bn::sprite_ptr& sprite, const bn::sprite_item& item, int frame)
+        {
+            bn::optional<bn::sprite_tiles_ptr> tiles = item.tiles_item().create_tiles_optional(frame);
+
+            if(tiles)
+            {
+                sprite.set_tiles(*tiles);
+            }
+        }
+    }
+
 #ifdef TL_DEBUG_AUTO_TALK
     // headless tests: dialogue pages and choices advance by themselves every 30 frames
     namespace { int auto_frame = 0; bool auto_a() { return (++auto_frame % 30) == 0; } }
@@ -165,14 +179,14 @@ namespace tl
         int width = ui::text_width(ui::font9, name) + 18;
         int pieces = (width + 15) / 16;
         pieces = pieces < 2 ? 2 : pieces;
-        _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, x, y, 0, false, 5));
+        ui::add_piece(_tag_sprites, bn::sprite_items::ui_tag, x, y, 0, false, 5);
 
         for(int index = 1; index < pieces - 1; ++index)
         {
-            _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, x + (index * 16), y, 1, false, 5));
+            ui::add_piece(_tag_sprites, bn::sprite_items::ui_tag, x + (index * 16), y, 1, false, 5);
         }
 
-        _tag_sprites.push_back(ui::make_piece(bn::sprite_items::ui_tag, x + ((pieces - 1) * 16), y, 0, true, 5));
+        ui::add_piece(_tag_sprites, bn::sprite_items::ui_tag, x + ((pieces - 1) * 16), y, 0, true, 5);
         _tag_label.set_centre(ui::font9, x + (pieces * 8), y + 11, name, ui::role::name_tag);
     }
 
@@ -194,10 +208,17 @@ namespace tl
 
             for(int i = 0; i < 4; ++i)
             {
-                bn::sprite_ptr p = set->big[i]->create_sprite(qx[i] + 32 - 120, qy[i] + 32 - 80, _expr);
-                p.set_bg_priority(0);
-                p.set_z_order(10);
-                _pic.push_back(p);
+                bn::optional<bn::sprite_ptr> p = set->big[i]->create_sprite_optional(qx[i] + 32 - 120, qy[i] + 32 - 80, _expr);
+
+                if(! p)
+                {
+                    _pic.clear();           // s81: no room: the box is shown without its portrait
+                    break;
+                }
+
+                p->set_bg_priority(0);
+                p->set_z_order(10);
+                _pic.push_back(*p);
             }
         }
         else
@@ -210,11 +231,18 @@ namespace tl
 
             for(int i = 0; i < 4; ++i)
             {
-                bn::sprite_ptr p = set->small[i]->create_sprite(small_x + ox[i] + pw[i] / 2 - 120, small_y + oy[i] + ph[i] / 2 - 80, _expr);
-                p.set_horizontal_flip(true);
-                p.set_bg_priority(0);
-                p.set_z_order(10);
-                _pic.push_back(p);
+                bn::optional<bn::sprite_ptr> p = set->small[i]->create_sprite_optional(small_x + ox[i] + pw[i] / 2 - 120, small_y + oy[i] + ph[i] / 2 - 80, _expr);
+
+                if(! p)
+                {
+                    _pic.clear();
+                    break;
+                }
+
+                p->set_horizontal_flip(true);
+                p->set_bg_priority(0);
+                p->set_z_order(10);
+                _pic.push_back(*p);
             }
         }
     }
@@ -238,20 +266,28 @@ namespace tl
 
         if(! tall)
         {
-            _meter = bn::sprite_items::ui_meter.create_sprite(meter_x + 8 - 120, meter_y + 16 - 80, 0);
-            _meter->set_bg_priority(0);
-            _meter->set_z_order(8);
+            _meter = bn::sprite_items::ui_meter.create_sprite_optional(meter_x + 8 - 120, meter_y + 16 - 80, 0);
+
+            if(_meter)
+            {
+                _meter->set_bg_priority(0);
+                _meter->set_z_order(8);
+            }
         }
         else
         {
-            bn::sprite_ptr a = bn::sprite_items::ui_mt_top.create_sprite(tall_x + 8 - 120, tall_y + 16 - 80, 0);
-            bn::sprite_ptr b = bn::sprite_items::ui_mt_mid.create_sprite(tall_x + 8 - 120, tall_y + 32 + 16 - 80, 0);
-            bn::sprite_ptr c = bn::sprite_items::ui_mt_bot.create_sprite(tall_x + 8 - 120, tall_y + 64 + 8 - 80, 0);
-            a.set_bg_priority(0); b.set_bg_priority(0); c.set_bg_priority(0);
-            a.set_z_order(8); b.set_z_order(8); c.set_z_order(8);
-            _tall.push_back(a);
-            _tall.push_back(b);
-            _tall.push_back(c);
+            bn::optional<bn::sprite_ptr> a = bn::sprite_items::ui_mt_top.create_sprite_optional(tall_x + 8 - 120, tall_y + 16 - 80, 0);
+            bn::optional<bn::sprite_ptr> b = bn::sprite_items::ui_mt_mid.create_sprite_optional(tall_x + 8 - 120, tall_y + 32 + 16 - 80, 0);
+            bn::optional<bn::sprite_ptr> c = bn::sprite_items::ui_mt_bot.create_sprite_optional(tall_x + 8 - 120, tall_y + 64 + 8 - 80, 0);
+
+            if(a && b && c)
+            {
+                a->set_bg_priority(0); b->set_bg_priority(0); c->set_bg_priority(0);
+                a->set_z_order(8); b->set_z_order(8); c->set_z_order(8);
+                _tall.push_back(*a);
+                _tall.push_back(*b);
+                _tall.push_back(*c);
+            }
         }
 
         _draw_meter();
@@ -352,7 +388,7 @@ namespace tl
             for(int i = 0; i < _pic.size(); ++i)
             {
                 const bn::sprite_item* item = _layout == layout::two ? set->small[i] : set->big[i];
-                _pic[i].set_tiles(item->tiles_item(), _expr);
+                try_tiles(_pic[i], *item, _expr);
             }
         }
     }
@@ -569,7 +605,10 @@ namespace tl
             _blink = 0;
         }
 
-        _a_icon->set_visible(((_blink / 24) & 1) == 0);
+        if(_a_icon)
+        {
+            _a_icon->set_visible(((_blink / 24) & 1) == 0);
+        }
 
         if(TL_A_PRESSED() || (b_advances && bn::keypad::b_pressed()))
         {
@@ -795,12 +834,12 @@ namespace tl
             if(frame != _meter_frame)
             {
                 _meter_frame = frame;
-                _meter->set_tiles(bn::sprite_items::ui_meter.tiles_item(), frame);
+                try_tiles(*_meter, bn::sprite_items::ui_meter, frame);
             }
 
             _meter_label.set_centre(ui::font9, meter_x + 8, meter_y - 2, number, ui::role::hud_clock);
         }
-        else
+        else if(_tall.size() == 3)
         {
             int n = ((_meter_value * tall_frames) + 50) / 100;
             int top = n > 46 ? n - 46 : 0;
@@ -811,19 +850,19 @@ namespace tl
             if(_tall_frames[0] != top)
             {
                 _tall_frames[0] = top;
-                _tall[0].set_tiles(bn::sprite_items::ui_mt_top.tiles_item(), top);
+                try_tiles(_tall[0], bn::sprite_items::ui_mt_top, top);
             }
 
             if(_tall_frames[1] != mid)
             {
                 _tall_frames[1] = mid;
-                _tall[1].set_tiles(bn::sprite_items::ui_mt_mid.tiles_item(), mid);
+                try_tiles(_tall[1], bn::sprite_items::ui_mt_mid, mid);
             }
 
             if(_tall_frames[2] != bot)
             {
                 _tall_frames[2] = bot;
-                _tall[2].set_tiles(bn::sprite_items::ui_mt_bot.tiles_item(), bot);
+                try_tiles(_tall[2], bn::sprite_items::ui_mt_bot, bot);
             }
 
             _meter_label.set_centre(ui::font9, tall_x + 8, tall_y - 2, number, ui::role::hud_clock);

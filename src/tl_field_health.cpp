@@ -396,6 +396,8 @@ namespace tl
 
         data.can_order = _delivery_item < 0;
         _cue.reset();
+        _npcs.focus_none();
+        _make_room(true);
         ui::set_night(is_night(_minutes));
         _phone.open(data);
         _phone_open = true;
@@ -423,6 +425,8 @@ namespace tl
 
             _needs.add_social(story().take_social());
             _phone_open = false;
+            _npcs.unfocus();
+            _player.set_blockers(_npcs.blockers(), _npcs.count());
             _redraw_hud_text();
             _update_bars();
         }
