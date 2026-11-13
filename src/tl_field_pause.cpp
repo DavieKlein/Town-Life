@@ -16,6 +16,10 @@ namespace tl
         field(map_id(save.map), save.x, save.y, direction::down)
     {
         _apply_save(save);
+        // s81: the cast was built before the save's story flags / clock were applied: build it again
+        _npcs.load(*_map, _map_id, _day, _minutes);
+        _npcs.prime(_player.x(), _player.y());
+        _player.set_blockers(_npcs.blockers(), _npcs.count());
     }
 
     bool field::_can_pause() const
@@ -26,6 +30,13 @@ namespace tl
 
     void field::_open_pause()
     {
+        if(_pause_mode == pause_mode::none)
+        {
+            // s81: the pause screen peaks at ~780 sprite tiles: no NPC keeps a sprite meanwhile (Old Block: 954 / 1024 with them)
+            _npcs.focus_none();
+            bn::core::update();
+        }
+
         // Free the HUD text sprites while the pause screen is up (the sprite budget is 128).
         _clock_label.clear();
         _clock_small_label.clear();
@@ -100,6 +111,8 @@ namespace tl
         _collection.close();
         _dialog.close();
         _pause_mode = pause_mode::none;
+        _npcs.unfocus();
+        _player.set_blockers(_npcs.blockers(), _npcs.count());
         _redraw_hud_text();
     }
 

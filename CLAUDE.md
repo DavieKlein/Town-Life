@@ -1006,6 +1006,32 @@ Owner-approved proposal `tools/proposals/s77/` (entrance variant A) is built; th
   (stops at the two mandatory choices, all flags set afterwards). Title intro cards also skip with B / START. Unchanged: name entry (B deletes a letter, START done, the
   confirm dialog B = No), minigame play (B is an action button; start cards / result pages B = continue), activities (B interrupts).
 
+## s81: phone-test fixes (cutscene framing, letterbox, black cards, sleeping, jukebox, water)
+
+- **Letterbox / HUD (tl_field_script.cpp `_update_letterbox`, called every frame from `field::update`):** both bars vanish while a conversation is open (the dialogue box is
+  never covered, layouts 1 and 2); while a script runs the HUD background is hidden and a 16 px bottom bar covers the unmapped rows below the 144 px map window
+  (so no empty clock panel during scenes); `_end_script` resets the bars at once. The top letterbox bar is 16 px: keep actors' feet at screen y >= 72 (head >= 16).
+- **Black cards:** `ui::black_card_palette()` fades ALL sprite palettes to black and only the UI style palette is un-faded, so no actor / car / critter / prop sprite shows on
+  "Later..." cards (the old code un-faded every sprite palette).
+- **Framing rules for cutscenes:** the 128 px portrait covers screen x < 114, y > 32 while someone talks: speakers must stand right of x = 140 (screen x = 120 + ((x - y) -
+  (pan_x - pan_y)) * 16, screen y = 64 + ((x + y) - (pan_x + pan_y)) / 2 * 16), feet at y >= 72. Use `pan_now` (not `pan`) after warps / before fade-ins. Fixed: vault_day beat 1
+  (pan 40.65,18.35; Valet / Victor spawn on the pavement y 21.0, not beside the car roof), beat 2 (Dex 14.8,15.6 instead of behind the gondola, Valet 12.0,15.9, Victor
+  13.2,15.4, Rosa's last pay at 11.2,15.6 with `pan_now 8.1 14.4`), beat 3 (pan 41.6,18.4, Mia 43.6,19.5), briefing (Dex 13.8,15.6, pan 11.8,13.8).
+- **Sleeping:** bench, bed and naps run the clock 30x (2 frames per game minute: 1 game hour per 2 real seconds, was 4 / 8 frames); per-minute need effects are unchanged so
+  everything scales consistently; wake rules unchanged (Energy 100 after >= 4 h on the bench / 7:30, bed Energy 100, nap 60 min, D-pad or B).
+- **Drinking water** (fountain "Drink water", sinks): Hunger +5 over the 3 s activity on top of Hygiene -6 (fountain), Energy +3, Bladder -15.
+- **Cast fixes found by the cutscene audit:** `npcs::prime` (called from `_load_map` and again after a Continue save is applied) builds the placed cast right at load with a
+  190 px margin; before, a cutscene that started on the first frame (`spawn dex` freezes the schedule) never got Rosa / Mia (briefing without them). `staff_lunch` pans to
+  (11.5, 13.0) so the player is not cut at the top.
+- **VRAM safety (owner crash "Sprite tiles allocate failed. Tiles count: 8", Old Block + low Bladder):** NPC sprites are built with their own tiles directly (no ROM-frame
+  tiles first, `make_sprite`: `allocate_optional`, placed NPCs need count + 170 free tiles, else they simply do not appear yet); `ui::label` pieces use `allocate_optional`
+  and skip a piece when VRAM / OAM is short (text may vanish, never a crash); system messages (`field::_begin_message`: hints, mission pages) and the pause family
+  (`_open_pause` .. `_close_pause`) drop all NPC sprites (`npcs::focus_none` / `unfocus`). Headless 10-minute soaks (36000 frames of random walking, START -> Mission log,
+  SELECT -> phone, needs 24-30 so every hint and the bladder accident fire) in Old Block and City Centre: peak used 954 / 1024 (lowest free 70) in Old Block, 902 (free 122)
+  in City Centre; the peaks are the pause -> Mission log transition (the log screen is the biggest consumer), no crash. Still NOT fail-safe: `ui::place` (panel pieces)
+  and the dialogue portrait pieces allocate with plain `create_tiles`; keep >= 300 tiles free before opening a dialogue box.
+- **Diner jukebox (item 5) was handed to another helper (the diner also gets a toilet room); my jukebox attempt was not committed.**
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

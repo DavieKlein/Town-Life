@@ -4,6 +4,9 @@
 #include "bn_sprite_ptr.h"
 #include "bn_sprite_tiles_ptr.h"
 #include "bn_sprite_palette_ptr.h"
+#include "bn_sprite_palettes.h"
+#include "bn_sprites.h"
+#include "bn_optional.h"
 #include "bn_sprite_palette_item.h"
 #include "bn_sprite_items_ui_pan_te.h"
 #include "bn_sprite_items_ui_pan_tm.h"
@@ -110,6 +113,13 @@ namespace tl::ui
             sprite.set_horizontal_flip(hflip);
             return sprite;
         }
+    }
+
+    void black_card_palette()
+    {
+        bn::sprite_palettes::set_fade(bn::color(0, 0, 0), 1);
+        bn::sprite_palette_ptr palette = style_palette();
+        palette.set_fade(bn::color(0, 0, 0), 0);
     }
 
     void set_night(bool value)
@@ -227,7 +237,16 @@ namespace tl::ui
                 continue;
             }
 
-            bn::sprite_tiles_ptr tiles = bn::sprite_tiles_ptr::allocate(8, bn::bpp_mode::BPP_4);
+            // s81: optional text must never crash the game: when VRAM / OAM is short this piece of the text is simply not drawn
+            bn::optional<bn::sprite_tiles_ptr> maybe_tiles = bn::sprite_tiles_ptr::allocate_optional(8, bn::bpp_mode::BPP_4);
+
+            if(! maybe_tiles || bn::sprites::available_items_count() < 1)
+            {
+                continue;
+            }
+
+            bn::sprite_tiles_ptr tiles = *maybe_tiles;
+            maybe_tiles.reset();
             bn::span<bn::tile> vram = *tiles.vram();
 
             for(int ty = 0; ty < 2; ++ty)

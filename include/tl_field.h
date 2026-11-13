@@ -352,6 +352,8 @@ namespace tl
         int _fade_target = 0;
         int _letter = 0;                // letterbox bars (pixels)
         int _letter_target = 0;
+        int _win_top = 0;               // applied window bars (s81)
+        int _win_bottom = 0;
         ui::label _card_label[1];
         int _gate_cooldown = 0;
         warp _redirect_warp = {};
@@ -457,6 +459,7 @@ namespace tl
         void _start_conversation(int npc_index);
         void _end_conversation();
         void _set_hud_hidden(bool hidden);
+        void _begin_message(const char* text);      // s81: system message page; NPC sprites are dropped meanwhile (VRAM)
         void _handle_story_events(int talked_npc);
         void _sync_objective();
 

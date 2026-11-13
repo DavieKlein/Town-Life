@@ -26,6 +26,7 @@ namespace tl
 
         // Places everybody who is on this map at that time.
         void load(const map_info& map, map_id id, int day, int minutes);
+        void prime(int px, int py);     // s81: build the cast at the player's position right after load()
         void clear();
 
         // Call every game minute: changes who is present when a schedule entry starts or ends.
@@ -85,6 +86,7 @@ namespace tl
         // s76: a conversation keeps only its partner's sprite; unfocus() brings the nearby NPCs back.
         void focus(int index);
         void unfocus();
+        void focus_none();
 
         // Back to the placement's own facing (after a conversation).
         void reset_facings();
@@ -132,6 +134,7 @@ namespace tl
         const map_info* _map = nullptr;
         map_id _map_id = map_id(0);
         light_params _light;
+        int _spawn_margin = 140;        // s81: screen-distance margin (pixels) for building placed NPCs
         int _last_cam_x = 0;
         int _last_cam_y = 0;
         bool _scripted = false;         // actors exist / NPCs were hidden: the schedule is frozen

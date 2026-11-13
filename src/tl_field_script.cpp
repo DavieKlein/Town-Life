@@ -282,6 +282,7 @@ namespace tl
         _player.set_script_input(-2);
         _pan_mode = _pan_mode == 0 ? 0 : 2;
         _set_letterbox(0);
+        _letter = 0;
         _npcs.release(_day, _minutes);
         _car_clear();
         _player.set_blockers(_npcs.blockers(), _npcs.count());
@@ -296,8 +297,13 @@ namespace tl
         _letter_target = target;
     }
 
+    // s81 (phone test): the dialogue box must never be covered by a bar, and the HUD must not stand empty during a scene.
+    // While a script runs the HUD background is hidden (its text / bars are hidden anyway) and a 16 px bottom bar covers the unmapped
+    // rows below the 144 px map window; the letterbox adds the top bar and grows the bottom bar. Both bars are gone while somebody talks.
     void field::_update_letterbox()
     {
+        bool talking = _conversation.active();
+
         if(_letter < _letter_target)
         {
             ++_letter;
@@ -306,12 +312,24 @@ namespace tl
         {
             --_letter;
         }
-        else
+
+        if(_hud_bg)
+        {
+            _hud_bg->set_visible(! _script.active);
+        }
+
+        int top = talking ? 0 : _letter;
+        int bottom = talking ? 0 : (_script.active && _letter < 16 ? 16 : _letter);
+
+        if(top == _win_top && bottom == _win_bottom)
         {
             return;
         }
 
-        if(_letter == 0)
+        _win_top = top;
+        _win_bottom = bottom;
+
+        if(top == 0 && bottom == 0)
         {
             bn::window::outside().set_show_all();
             bn::rect_window::internal().set_boundaries(-80, -120, 80, 120);
@@ -320,7 +338,7 @@ namespace tl
         {
             bn::window::outside().set_show_nothing();
             bn::window::internal().set_show_all();
-            bn::rect_window::internal().set_boundaries(-80 + _letter, -120, 80 - _letter, 120);
+            bn::rect_window::internal().set_boundaries(-80 + top, -120, 80 - bottom, 120);
         }
     }
 
@@ -387,7 +405,6 @@ namespace tl
         _script_arrived_check();
         _player.update();
         _player.set_blockers(_npcs.blockers(), _npcs.count());
-        _update_letterbox();
         _update_camera();
         _update_lighting(false);
 
@@ -577,7 +594,8 @@ namespace tl
                 // the screen is black (BG fade): sprites are un-faded for the text, the player's sprite is hidden meanwhile
                 ui::set_night(true);
                 _card_label[0].set_centre(ui::font11, 120, 84, step.text, ui::role::hud_clock);
-                bn::sprite_palettes::set_fade(bn::color(0, 0, 0), 0);
+                bn::bg_palettes::set_fade(bn::color(0, 0, 0), 1);
+                ui::black_card_palette();       // s81: every sprite (actors, car, critters, map props) stays hidden by the black fade; only the card text shows
                 _script.counter = 150;
                 _script.wait = wait_kind::card;
             }
@@ -1093,7 +1111,7 @@ namespace tl
                 story().set_flag(h.flag, 1);
                 _set_hud_hidden(true);
                 ui::set_night(is_night(_minutes));
-                _conversation.start_message(h.text);
+                _begin_message(h.text);
                 return;
             }
         }

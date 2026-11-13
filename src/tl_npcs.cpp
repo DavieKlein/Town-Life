@@ -8,6 +8,9 @@
 #include "bn_sprite_builder.h"
 #include "bn_sprite_tiles_ptr.h"
 #include "bn_sprite_tiles_item.h"
+#include "bn_sprite_tiles.h"
+#include "bn_sprites.h"
+#include "bn_sprite_palette_item.h"
 #include "bn_sprite_items_npc_mia.h"
 #include "bn_sprite_items_npc_rosa.h"
 #include "bn_sprite_items_npc_dex.h"
@@ -144,6 +147,18 @@ namespace tl
         _build(day, minutes);
     }
 
+    // s81: build the placed NPCs right at the map load (a cutscene that starts on the first frame and spawns an actor froze the schedule
+    // before `wander` had built the cast: Rosa and Mia were missing during the briefing).
+    void npcs::prime(int px, int py)
+    {
+        _pos_x = px;
+        _pos_y = py;
+        _have_pos = true;
+        _spawn_margin = 190;        // a cutscene may pan the camera away from the player (kept below the 200 px removal margin of _cull)
+        _build(_day, _minutes);
+        _spawn_margin = 140;
+    }
+
     // s76: only NPCs near the screen get sprites (the 16 sprite palettes cannot hold every resident of a busy map). `_build` clears the
     // set and remembers which placements are present at this time; `_cull` (every few frames while the player walks free) adds the
     // present placements that came near and removes those that left, with hysteresis.
@@ -174,6 +189,32 @@ namespace tl
         return h;
     }
 
+    namespace
+    {
+        // s81: an NPC sprite always owns its tiles (allocated once, filled by _refresh_tiles); nothing crashes when VRAM or OAM is short:
+        // the NPC simply does not appear yet (placed NPCs keep `reserve` tiles free for the UI: a message box needs ~300).
+        [[nodiscard]] bn::optional<bn::sprite_ptr> make_sprite(const bn::sprite_item* item, int reserve, bn::optional<bn::sprite_tiles_ptr>& own)
+        {
+            int count = (item->shape_size().width() * item->shape_size().height()) / 64;
+
+            if(bn::sprite_tiles::available_tiles_count() < count + reserve || bn::sprites::available_items_count() < 4)
+            {
+                return bn::nullopt;
+            }
+
+            own = bn::sprite_tiles_ptr::allocate_optional(count, bn::bpp_mode::BPP_4);
+
+            if(! own)
+            {
+                return bn::nullopt;
+            }
+
+            bn::sprite_builder builder(item->shape_size(), bn::sprite_tiles_ptr(*own), bn::sprite_palette_ptr::create(item->palette_item()));
+            builder.set_bg_priority(2);
+            return builder.release_build();
+        }
+    }
+
     void npcs::_spawn_placement(int index)
     {
         const npc_placement& p = npc_placements[index];
@@ -184,9 +225,18 @@ namespace tl
             return;
         }
 
-        bn::sprite_ptr sprite = item->create_sprite(0, 0, graphic_of(p.who, p.facing, 0));
+        bn::optional<bn::sprite_tiles_ptr> own;
+        bn::optional<bn::sprite_ptr> made = make_sprite(item, 170, own);
+
+        if(! made)
+        {
+            return;
+        }
+
+        bn::sprite_ptr sprite = *made;
         _npcs.push_back(npc{ bn::move(sprite), p.who, p.x, p.y, p.facing, index, 0, 0, 0, 0, bn::fixed(p.x), bn::fixed(p.y), p.route, 0,
                              120 + int(index * 37 % 90), false });
+        _npcs.back().own_tiles = own;
         _blockers[_npcs.size() - 1] = { p.x, p.y };
         _set_frame(_npcs.back());
         _set_priority(_npcs.back());
@@ -205,7 +255,7 @@ namespace tl
             {
                 const npc_placement& p = npc_placements[index];
 
-                if(present(p, _map_id, day, minutes) && near_screen(p.x, p.y, _pos_x, _pos_y, 140, 104))
+                if(present(p, _map_id, day, minutes) && near_screen(p.x, p.y, _pos_x, _pos_y, _spawn_margin, _spawn_margin * 3 / 4))
                 {
                     _spawn_placement(index);
                 }
@@ -230,6 +280,18 @@ namespace tl
         _blockers[0] = { _npcs[0].x, _npcs[0].y };
         _focused = true;
         _apply_palettes();
+    }
+
+    // s81: during a system message (hint, mission page) no NPC keeps a sprite: the box needs ~300 tiles
+    void npcs::focus_none()
+    {
+        if(_scripted || _focused)
+        {
+            return;
+        }
+
+        _npcs.clear();
+        _focused = true;
     }
 
     void npcs::unfocus()
@@ -495,7 +557,7 @@ namespace tl
             n.mask_dirty = true;
         }
 
-        if(! n.own_tiles)
+        if(n.mask_x == -100000)
         {
             _compute_mask(n);           // first time: at once (no frame with wrong tiles)
             _refresh_tiles(n);
@@ -639,8 +701,7 @@ namespace tl
 
         if(! n.own_tiles)
         {
-            n.own_tiles = bn::sprite_tiles_ptr::allocate(count, bn::bpp_mode::BPP_4);
-            n.sprite.set_tiles(*n.own_tiles);
+            return;         // (never happens: make_sprite always sets them)
         }
 
         if(! nibble_mask_ready)
@@ -922,8 +983,17 @@ namespace tl
             return;
         }
 
-        bn::sprite_ptr sprite = item->create_sprite(0, 0, graphic_of(who, facing, 0));
+        bn::optional<bn::sprite_tiles_ptr> own;
+        bn::optional<bn::sprite_ptr> made = make_sprite(item, 0, own);
+
+        if(! made)
+        {
+            return;
+        }
+
+        bn::sprite_ptr sprite = *made;
         _npcs.push_back(npc{ bn::move(sprite), who, x, y, facing, -1, x, y, 0, 0, bn::fixed(x), bn::fixed(y), -1, 0, 0, false });
+        _npcs.back().own_tiles = own;
         _blockers[_npcs.size() - 1] = { x, y };
         _set_frame(_npcs.back());
         _set_priority(_npcs.back());

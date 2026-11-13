@@ -34,6 +34,9 @@ namespace tl::ui
 
     // Night style when true (set from the game clock; the title screen always uses it).
     void set_night(bool night);
+
+    // s81: black cards: the sprite palettes are faded to black (every actor / HUD sprite vanishes) except the UI style palette, so only UI text shows.
+    void black_card_palette();
     [[nodiscard]] bool night();
 
     [[nodiscard]] int text_width(const font_data& font, const bn::string_view& text);

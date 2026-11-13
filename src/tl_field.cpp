@@ -38,8 +38,8 @@ namespace tl
     {
         constexpr int fade_frames = 12;
         constexpr int frames_per_game_minute = 60;     // 1 real second = 1 game minute
-        constexpr int frames_per_game_minute_asleep = 4;   // time flies while sleeping on a bench
-        constexpr int frames_per_game_minute_bed = 8;      // in the bed the clock runs 8x
+        constexpr int frames_per_game_minute_asleep = 2;   // s81: 30x (1 game hour per 2 real seconds) while sleeping on a bench
+        constexpr int frames_per_game_minute_bed = 2;      // s81: in the bed (and naps) the clock also runs 30x
         constexpr int nap_minutes = 60;
         constexpr int bed_lift = 14;                       // the lying figure is raised onto the mattress (pixels)
         constexpr int hud_slots = needs::count + 1;   // five needs + Social
@@ -243,6 +243,7 @@ namespace tl
         _map_id = id;
         audio::set_map(id);
         _npcs.load(*_map, id, _day, _minutes);
+        _npcs.prime(x, y);
         _player.set_blockers(_npcs.blockers(), _npcs.count());
         _story_check_due = true;
         _update_gates();
@@ -1734,6 +1735,7 @@ namespace tl
             {
                 _begin_activity(drink_frames);
                 _act.gain[needs::hygiene] = -6;
+                _act.gain[needs::hunger] = 5;           // s81: drinking water also fills Hunger a little
                 _act.gain[needs::energy] = 3;
                 _act.gain[needs::bladder] = -15;
                 _needs.bladder_boost = bladder_boost_minutes;
@@ -1758,6 +1760,7 @@ namespace tl
             else
             {
                 _begin_activity(drink_frames);
+                _act.gain[needs::hunger] = 5;           // s81
                 _act.gain[needs::energy] = 3;
                 _act.gain[needs::bladder] = -15;
                 _needs.bladder_boost = bladder_boost_minutes;
@@ -1943,6 +1946,16 @@ namespace tl
         }
     }
 
+    void field::_begin_message(const char* text)
+    {
+        if(! _script.active)
+        {
+            _npcs.focus_none();
+        }
+
+        _conversation.start_message(text);
+    }
+
     void field::_start_conversation(int npc_index)
     {
         int npc = int(_npcs.id_of(npc_index));
@@ -2096,11 +2109,12 @@ namespace tl
         _set_hud_hidden(true);
         ui::set_night(is_night(_minutes));
         audio::play(audio::sfx::mission);
-        _conversation.start_message(_story_text.c_str());
+        _begin_message(_story_text.c_str());
     }
 
     void field::update()
     {
+        _update_letterbox();
         audio::duck(_pause_mode != pause_mode::none || _conversation.active() || _menu.is_open() || _phone_open);
         audio::set_night(is_night(_minutes));
         audio::update();
@@ -2162,6 +2176,8 @@ namespace tl
                     else if(_conversation.is_message())
                     {
                         _set_hud_hidden(false);
+                        _npcs.unfocus();
+                        _player.set_blockers(_npcs.blockers(), _npcs.count());
                     }
                     else
                     {
@@ -2254,7 +2270,7 @@ namespace tl
                 {
                     _set_hud_hidden(true);
                     ui::set_night(is_night(_minutes));
-                    _conversation.start_message(text);
+                    _begin_message(text);
                     break;
                 }
 

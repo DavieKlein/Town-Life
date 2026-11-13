@@ -150,14 +150,14 @@ namespace tl
             _story_text.append(". Pay at the City Clinic reception desk when you can.");
             _set_hud_hidden(true);
             ui::set_night(is_night(_minutes));
-            _conversation.start_message(_story_text.c_str());
+            _begin_message(_story_text.c_str());
         }
         else if(_sick && _cough_min >= cough_every)
         {
             _cough_min = 0;
             _set_hud_hidden(true);
             ui::set_night(is_night(_minutes));
-            _conversation.start_message("*cough cough* You feel sick. Rest, or see Dr. Okafor at the City Clinic.");
+            _begin_message("*cough cough* You feel sick. Rest, or see Dr. Okafor at the City Clinic.");
         }
     }
 
@@ -374,7 +374,7 @@ namespace tl
             _redraw_hud_text();
             _set_hud_hidden(true);
             ui::set_night(is_night(_minutes));
-            _conversation.start_message(_story_text.c_str());
+            _begin_message(_story_text.c_str());
         }
     }
 
