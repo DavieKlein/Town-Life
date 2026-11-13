@@ -61,6 +61,7 @@ namespace tl
 
         void _update_pigeon(critter& c, int player_x, int player_y);
         void _update_squirrel(critter& c, int player_x, int player_y);
+        void _update_rat(critter& c, int player_x, int player_y);
         void _place_sprite(critter& c, int cam_x, int cam_y);
         [[nodiscard]] int _random_int(int limit)
         {

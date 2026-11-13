@@ -80,7 +80,7 @@ namespace tl
         { npc_id::okafor, map_id::clinic, 1, 1, 255, 115, 40, 480, 1200, -1, -1, -1 },
         { npc_id::pimm, map_id::city_centre, 5, 1, 255, 320, 675, 960, 1170, -1, -1, 0 },
         { npc_id::pruitt, map_id::old_block, 7, 1, 255, 136, 334, 0, 1439, -1, -1, -1 },
-        { npc_id::trench_e, map_id::old_block, 1, 1, 255, 196, 340, 0, 1439, -1, -1, -1 },
+        { npc_id::trench_e, map_id::old_block, 1, 1, 255, 204, 316, 0, 1439, -1, -1, -1 },
         { npc_id::valdez, map_id::old_block, 1, 1, 255, 329, 308, 480, 1260, -1, -1, -1 },
         { npc_id::captain, map_id::old_block, 1, 1, 255, 318, 299, 480, 1260, -1, -1, -1 },
         { npc_id::teo, map_id::old_block, 7, 1, 255, 328, 352, 600, 1140, -1, -1, 3 },

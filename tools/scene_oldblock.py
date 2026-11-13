@@ -1164,7 +1164,6 @@ OB_FURNITURE = {
 }
 # extra interaction points that are not catalog pieces: (map, kind, x, y, reach, quality)
 OB_EXTRA_THINGS = [
-    ("laundromat", "sign", 12.2, 1.1, 0.5, 5),
     ("bakery", "oven", 8.9, 1.7, 0.5, 0),
     ("laundromat", "bin", 0.7, 6.4, 0.0, 0),
     ("bakery", "bin", 9.2, 6.6, 0.0, 0),

@@ -885,6 +885,30 @@ Details and numbers: **docs/features_backlog.md "Built in s64"**. Pointers for t
 - **Tools:** `tools/reach_check.py [ids]` (flood fill of the collision grid: warps, interactables and NPC spots reachable; gates open for Old Block),
   `tools/door_audit.py`. `build_assets.py --only city_centre,old_block,diner,bakery --no-actors` (about 2 h on 4 cores without art_cache).
 
+## s82 round 2 (owner phone test of s81): PLATE RUSH, interactables, sewer rats, TRENCH-E, Old Block Rev 3 proposal
+
+- **PLATE RUSH never "completes" without play (bug):** root cause = the start card let B skip the page and a shift with NO input ended "SHIFT CUT SHORT" (3 broken plates)
+  with the full $16 wage, the staff meal and the once-a-day flag. Now: B on the start card cancels (`minigame_result::cancelled`, nothing changes: no pay, flag, meal or
+  clock; the card shows "B: cancel the shift"), and a shift with zero washed plates is `completed = false` (wage $0, "No wash, no wage"; `apply_minigame_result` returns
+  early, toast "No plates washed. No wage."). Plates washed > 0 still pays (bot run: $20 -> $41, flag set). B-skip of dialogue only applies effects of skipped nodes, it
+  cannot start a shift by itself. Release builds contain no `TL_DEBUG_*` define (Makefile / CI checked). STOCK IT! is unchanged (story-critical).
+- **Interactables audit (`tools/interact_audit.py OUTDIR [maps]`):** rebuilds every map image from `data/*.bin` + the palettes in `src/tl_world_data.cpp` and writes a contact
+  sheet of 4x crops with a red cross at every interactable (labelled `idx kind (x,y)`) plus a full map with the markers and the NPC spots. Findings and fixes: old garden bench
+  (22.4, 36.6) stood on the scarecrow ("sit on nothing") -> removed, new `("bench", 19.8, 38.9)` on the real garden bench; the garden "water the beds" point moved onto the
+  watering can / rain barrel (18.2, 38.6); City Centre bin (38.5, 31.0) is hidden behind the bus shelter -> interactable removed; the laundromat bulletin `sign` sat behind
+  the stairs -> removed. Menu-less activities (chess, garden, hoops) now name themselves with a label at the top ("Watering the garden beds", ...) via `name_it`. Known
+  occlusions kept for the Rev 3 redesign: the Old Block pocket square (basin, benches, poster wall) is hidden behind row house 4 in this projection.
+- **Sewer (`scene_sewer.py`):** bridge handrails removed (bridges are plain grates with side girders), baked rats removed, five floor drains (`DRAINS`) added. Rats are critters
+  now: `critter_kind::rat` (`tl_critters.cpp::_update_rat`: sniff / sit up / short scurries around the home spot, run to the hole (`tree_x / tree_y` of the spawn) at 52 units,
+  vanish, come out of the hole again after 360-860 frames once the player is 150+ units away). Sprite `graphics/rat.bmp` (4 frames 32x32: stand, run A / B, sit up) rendered by
+  `blender_critter.py` from the Everything Library rat (CC BY 4.0, already credited): `art_source/everything_library_animals/rat.glb` was exported alone from the Drive
+  `EverythingLibrary_Animals_002.blend` (the .blend holds 11 stacked pose variants Rat.001..010; only the `Rat` tree is kept; the model is already lying down, `RAT_PITCH` 0,
+  `YAW` 135). `--no-actors` skips critters: run `python3 -c "import build_assets as b; b.build_critters(False, False)"` after changing critter art. Spawns in
+  `tools/critters.py` (7 in the sewer, 2 in the Old Block alleys at the yard bin and the north gate).
+- **TRENCH-E** stands at (12.8, 19.8) (x - y = -7: between the two arch pillars' screen columns), no re-render needed.
+- **Old Block Rev 3 proposal** (nothing built, owner approval pending): `tools/proposals/s82/` (`rev3.py` scene built from the real helpers + new `shopfront / market_hall /
+  bandstand / cafe_terrace / cinema / workshop / playground / allotments`, `render.py` + `shots.py` real-renderer crops, `plan.py` labelled plans); text in `proposal.md`.
+
 ## s73 playtest (headless, details: docs/playtest_s73.md)
 
 - The prologue plays from New Game to mission X1 and all systems were exercised headlessly; fixes: flyers info line cut off, an open menu is now

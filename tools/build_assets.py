@@ -807,7 +807,7 @@ def main():
     build_ui_sprites()
 
 
-CRITTER_FRAMES = {"pigeon": 5, "squirrel": 4}
+CRITTER_FRAMES = {"pigeon": 5, "squirrel": 4, "rat": 4}
 
 
 def sprite_frame(path, ss, w, h):
@@ -1096,9 +1096,10 @@ def build_critters(force, fast):
     h = hashlib.sha1()
     for f in ("scene.py", "blender_critter.py"):
         h.update(open(os.path.join(TOOLS, f), "rb").read())
+    h.update(open(os.path.join(ROOT, "art_source", "everything_library_animals", "rat.glb"), "rb").read())
     h.update(f"{ss}{samples}".encode())
     out_dir = os.path.join(CACHE, "critters_" + h.hexdigest()[:12])
-    last = os.path.join(out_dir, "squirrel_3.png")
+    last = os.path.join(out_dir, "rat_3.png")
     if force or not os.path.exists(last):
         print("rendering animals...", flush=True)
         r = subprocess.run(["blender", "-b", "-noaudio", "--python", os.path.join(TOOLS, "blender_critter.py"),

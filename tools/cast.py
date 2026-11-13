@@ -127,7 +127,7 @@ PLACEMENTS = [
 
     # ---- s76: Old Block residents (map old_block, cells; the bakery / laundromat interiors) ----
     ("pruitt", "old_block", 8.5, 20.9, "se", "0:00", "23:59", 1, 255),                # folding chair on a drum at the VaultLink cable works
-    ("trench_e", "old_block", 12.3, 21.3, "sw", "0:00", "23:59", 1, 255),             # digging in the trench
+    ("trench_e", "old_block", 12.8, 19.8, "sw", "0:00", "23:59", 1, 255),             # s82: digging in the trench, between the two arch pillars (x - y = -7) so no pillar hides him
     ("valdez", "old_block", 20.6, 19.3, "sw", "8:00", "21:00", 1, 255),               # s81: beside her stoop, NOT in front of the door (house 16.5..21, door 18.6)
     ("captain", "old_block", 19.9, 18.7, "sw", "8:00", "21:00", 1, 255),              # parrot on his perch next to her (right of the door)
     ("teo", "old_block", 20.5, 22.0, "se", "10:00", "19:00", 1, 255, None, None, "teo_round"),

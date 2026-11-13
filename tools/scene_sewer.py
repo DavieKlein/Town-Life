@@ -78,6 +78,17 @@ def ladder_rungs(s, x, y, z0, z1, width=0.5, depth=0.0, axis="x", step=0.28, thi
         z += step
 
 
+DRAINS = ((7.0, 1.3), (19.8, 1.3), (5.0, 7.4), (14.0, 7.3), (27.0, 7.4))      # rat holes (tools/critters.py runs the rats into them)
+
+
+def rat_drain(s, x, y):
+    """Floor drain with a dark opening and a few bars: where the rats vanish."""
+    s.cyl(x, y, 0.0, 0.014, 0.3, "sw_iron", layer="floor", verts=14)
+    s.cyl(x, y, 0.0, 0.02, 0.22, "metal_dark", layer="floor", verts=14)
+    for k in range(3):
+        s.box(x - 0.22, y - 0.2 + k * 0.2, x + 0.22, y - 0.17 + k * 0.2, 0.0, 0.03, "sw_iron", layer="floor")
+
+
 def rat(s, x, y, ang=0.0, big=1.0):
     """A cartoon-sized rat (about 0.7 m with big=1.7, so it reads at GBA size): plump grey-brown body, pointed head with a pink nose, two big pink ears,
     a long thick pink tail curling away and four little feet."""
@@ -141,11 +152,7 @@ def grate_bridge(s, x0, x1, y0=2.5, y1=5.1):
         s.box(x0, y, x1, y + 0.09, -0.12, 0.1, "sw_iron")
     for x in (x0 + 0.02, x1 - 0.12):
         s.box(x, y0 - 0.05, x + 0.1, y1 + 0.05, -0.02, 0.07, "sw_iron")
-    # handrails on both sides (thin tubes on posts), low so they do not hide the walkway
-    for y in (y0 + 0.08, y1 - 0.1):
-        s.tube([(x0 + 0.05, y, 0.85), (x1 - 0.05, y, 0.85)], 0.025, "sw_iron")
-        for x in (x0 + 0.1, (x0 + x1) / 2, x1 - 0.1):
-            s.cyl(x, y, 0.07, 0.86, 0.022, "sw_iron", verts=6)
+    # s82: no handrails (the player walked through them); the bridges are plain grates with side girders
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -302,9 +309,9 @@ def sewer():
     for (x, y) in ((6.2, 3.8), (7.0, 4.2), (17.0, 3.2), (24.0, 4.3)):
         s.cyl(x, y, -0.549, -0.54, 0.18, "sw_foam", layer="floor", verts=12)
     # ---- rats ------------------------------------------------------------------------------------------------------------
-    rat(s, 10.0, 7.5, ang=math.radians(10), big=1.25)
-    rat(s, 18.4, 1.3, ang=math.radians(190), big=1.25)
-    rat(s, 27.4, 6.3, ang=math.radians(170), big=1.2)
+    # s82: the baked rats are gone: rats are animated critters now (tools/critters.py, they run into these drains)
+    for (x, y) in DRAINS:
+        rat_drain(s, x, y)
     # ---- a hanging dead bulb and drips in the middle of the tunnel (they cast no vault, so a cable from the wall) ---------
     s.point_light(14.5, 4.0, 3.0, 55, colour=(0.7, 0.85, 0.8), radius=0.4)                                        # cold glow over the channel
     s.point_light(23.2, 2.0, 2.2, 40, colour=(1.0, 0.8, 0.55), radius=0.3)                                        # warm spill on the nook

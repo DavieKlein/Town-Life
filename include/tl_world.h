@@ -67,7 +67,8 @@ namespace tl
     enum class critter_kind : uint8_t
     {
         pigeon,
-        squirrel
+        squirrel,
+        rat             // s82: sewer / alley rats; tree_x / tree_y = the hole they run into
     };
 
     struct critter_spawn

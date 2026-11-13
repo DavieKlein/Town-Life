@@ -877,6 +877,14 @@ namespace tl
                 minigame_result result;
                 fade_in(0);
                 _title();
+
+                if(_cancelled)
+                {
+                    result.cancelled = true;
+                    fade_out(0);
+                    return result;
+                }
+
                 _play();
                 result = _finish();
                 fade_out(0);
@@ -925,6 +933,7 @@ namespace tl
             int _total_plates = 0;
             int _bot_hold = 0;
             bool _early = false;
+            bool _cancelled = false;
 
             [[nodiscard]] bn::fixed _speed() const
             {
@@ -1053,7 +1062,7 @@ namespace tl
                 ui::set_night(is_night(_req.start_minutes));
                 ui::panel banner;
                 ui::label banner_title;
-                ui::label help[4];
+                ui::label help[5];
                 banner.open(112, 4, 124, 49, true);
                 banner_title.set_centre(ui::font11, 174, 18, "PLATE RUSH", ui::role::title);
                 ui::label special_label;
@@ -1062,6 +1071,7 @@ namespace tl
                 help[1].set(ui::font9, 118, 66, "A scrub   B rinse", ui::role::hud_clock);
                 help[2].set(ui::font9, 118, 77, "Up stack  Pan: mash A", ui::role::hud_clock);
                 help[3].set(ui::font9, 118, 88, "3 broken plates: over", ui::role::hud_clock);
+                help[4].set(ui::font9, 118, 99, "B: cancel the shift", ui::role::hud_clock);
                 dialogue_box box;
                 box.open(int(npc_id::lou), false, 0);
                 static constexpr const char* lou_lines[7] = {
@@ -1073,7 +1083,37 @@ namespace tl
                     "A VIP guest eats here today. Break nothing!",
                     "Sunday brunch! Fast and generous."
                 };
-                say_auto(box, lou_lines[_req.special < 0 || _req.special > 6 ? 0 : _req.special], 1, _req.bot);
+                const char* line = lou_lines[_req.special < 0 || _req.special > 6 ? 0 : _req.special];
+
+                if(_req.bot)
+                {
+                    say_auto(box, line, 1, _req.bot);
+                }
+                else
+                {
+                    // s82: A starts the shift, B walks away (the old card let B skip the page and then a shift with no input paid the full wage)
+                    box.set_expression(1);
+                    box.say(line);
+
+                    while(true)
+                    {
+                        if(box.update_text(false))
+                        {
+                            break;
+                        }
+
+                        if(bn::keypad::b_pressed())
+                        {
+                            _cancelled = true;
+                            break;
+                        }
+
+                        bn::core::update();
+                    }
+
+                    bn::core::update();
+                }
+
                 box.close();
                 bn::core::update();
                 apply_fade(0, 0);
@@ -1500,15 +1540,15 @@ namespace tl
             minigame_result _finish()
             {
                 minigame_result result;
-                result.completed = true;
+                result.completed = _washed > 0;      // s82: a shift without a single washed plate does not count (no wage, no flag)
                 result.early_end = _early;
                 result.count = _washed;
                 result.perfect = _perfect;
                 result.broken = _broken;
                 result.mistakes = _misses;
-                result.wage = 16;
+                result.wage = _washed > 0 ? 16 : 0;
                 int vip = (_req.vip_bonus > 0 && _broken == 0 && ! _early) ? _req.vip_bonus : 0;
-                result.tip = _tip() + vip;
+                result.tip = _washed > 0 ? _tip() + vip : 0;
                 {
                     int total = _plates_total();
                     int minutes = (240 * (_washed + _broken)) / (total > 0 ? total : 1);
@@ -1526,7 +1566,7 @@ namespace tl
                 value.append('%');
                 rows[count++] = { "Perfect", value, false };
                 rows[count++] = { "Broken", bn::string<16>(bn::to_string<8>(_broken)), false };
-                rows[count++] = { "Wage", money_text(16), false };
+                rows[count++] = { "Wage", money_text(_washed > 0 ? 16 : 0), false };
                 bn::string<16> tip_text = money_text(_tip());
 
                 if(_broken > 0)
@@ -1544,7 +1584,7 @@ namespace tl
                     rows[count++] = { "VIP guest", money_text(vip), true };
                 }
 
-                rows[count++] = { "Total", money_text(16 + _tip() + vip), true };
+                rows[count++] = { "Total", money_text(_washed > 0 ? 16 + _tip() + vip : 0), true };
                 result_panel panel;
                 _clock.clear();
                 _rush_label.clear();
@@ -1554,7 +1594,11 @@ namespace tl
                 dialogue_box box;
                 box.open(int(npc_id::lou), false, 0);
 
-                if(_early)
+                if(_washed == 0)
+                {
+                    say_auto(box, "Not one plate? No wash, no wage, kid. Come back when you mean it.", 3, _req.bot);
+                }
+                else if(_early)
                 {
                     say_auto(box, "Three plates... Take a breather, kid. Wage's on me.", 3, _req.bot);
                 }

@@ -28,7 +28,11 @@ FEET_X, FEET_Y = 16, 23
 GLB = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                    "art_source", "everything_library_animals", "city_animals.glb")
 # rotations that make each model face right on screen (picked from a yaw test render)
-YAW = {"GroundedPigeon": 135, "Pigeon": 270, "GraySquirrel": 90}
+YAW = {"GroundedPigeon": 135, "Pigeon": 270, "GraySquirrel": 90, "Rat": float(os.environ.get("TL_RAT_YAW", "135"))}
+RAT_GLB = os.path.join(os.path.dirname(GLB), "rat.glb")      # s82: the Everything Library "Rat" (CC BY 4.0), exported alone from the Drive .blend
+RAT_LENGTH_M = 0.95                                           # cartoon-sized so it reads at GBA size (a real rat body is ~0.22 m)
+RAT_PITCH = float(os.environ.get("TL_RAT_PITCH", "0"))
+UNITS = {}
 UNIT = 0.01             # the GLB meshes are in centimetres
 BASE_PITCH = float(os.environ.get("TL_BASE_PITCH", "90"))   # the GLB lost the FBX up-axis rotation
 
@@ -72,6 +76,13 @@ def setup_scene(ss, samples):
 
 
 def load_models():
+    # the rat file also holds a dozen stacked pose variants (Rat.001..010): keep only the "Rat" tree, imported first so the names are clean
+    bpy.ops.import_scene.gltf(filepath=RAT_GLB)
+    rat_root = bpy.data.objects["Rat"]
+    keep = {rat_root.name} | {o.name for o in rat_root.children_recursive}
+    for o in list(bpy.data.objects):
+        if o.name not in keep:
+            bpy.data.objects.remove(o, do_unlink=True)
     bpy.ops.import_scene.gltf(filepath=GLB)
     # colours are vertex colours: wire them to Base Color
     for m in bpy.data.materials:
@@ -87,7 +98,7 @@ def load_models():
         vc = nt.nodes.new("ShaderNodeVertexColor")
         nt.links.new(vc.outputs["Color"], bsdf.inputs["Base Color"])
     roots = {}
-    for name in ("Pigeon", "GroundedPigeon", "GraySquirrel"):
+    for name in ("Pigeon", "GroundedPigeon", "GraySquirrel", "Rat"):
         r = bpy.data.objects[name]
         holder = bpy.data.objects.new("H_" + name, None)
         bpy.context.scene.collection.objects.link(holder)
@@ -111,6 +122,11 @@ def load_models():
         cy = (min(p.y for p in pts) + max(p.y for p in pts)) / 2
         mz = min(p.z for p in pts)
         r.matrix_world.translation -= Vector((cx, cy, mz))
+        if name == "Rat":
+            dims = [max(p[i] for p in pts) - min(p[i] for p in pts) for i in range(3)]
+            UNITS[name] = RAT_LENGTH_M / max(dims)
+        else:
+            UNITS[name] = UNIT
         roots[name] = holder
     return roots
 
@@ -135,10 +151,10 @@ def main():
                 o.hide_render = n != name
         h = roots[name]
         h.location = (shift, shift, z)   # metres; (+1, +1) in Blender = screen right
-        h.scale = (scale * UNIT, scale * UNIT, scale * UNIT)
+        h.scale = (scale * UNITS[name], scale * UNITS[name], scale * UNITS[name])
         # pitch tilts around the model's own side axis (applied before the yaw)
         h.rotation_mode = "XYZ"
-        h.rotation_euler = (math.radians(pitch + BASE_PITCH), 0, math.radians(yaw))
+        h.rotation_euler = (math.radians(pitch + (RAT_PITCH if name == "Rat" else BASE_PITCH)), 0, math.radians(yaw))
         meshes = [o for o in h.children_recursive if o.type == "MESH"]
         for i, o in enumerate(meshes):
             if mesh_index is not None:
@@ -158,6 +174,7 @@ def main():
             render("GroundedPigeon", f"yaw_pigeon_{yaw}.png", 2.0, yaw=yaw)
             render("GraySquirrel", f"yaw_squirrel_{yaw}.png", 2.0, yaw=yaw, mesh_index=0)
             render("Pigeon", f"yaw_fly_{yaw}.png", 1.4, yaw=yaw, z=0.3)
+            render("Rat", f"yaw_rat_{yaw}.png", 1.0, yaw=yaw)
         return
 
     render("GroundedPigeon", "pigeon_0.png", 2.0)
@@ -168,6 +185,11 @@ def main():
     render("GraySquirrel", "squirrel_1.png", 1.6, pitch=12, mesh_index=0)
     render("GraySquirrel", "squirrel_2.png", 1.6, pitch=-12, mesh_index=0)
     render("GraySquirrel", "squirrel_3.png", 1.8, pitch=-75, z=0.0, mesh_index=0)
+    # s82 rat: 0 stand (sniffing), 1 / 2 run A / B (body tilted forward / back), 3 sits up on its haunches
+    render("Rat", "rat_0.png", 1.0)
+    render("Rat", "rat_1.png", 1.0, pitch=10)
+    render("Rat", "rat_2.png", 1.0, pitch=-10)
+    render("Rat", "rat_3.png", 1.0, pitch=-40)
 
 
 main()

@@ -4,6 +4,7 @@
 #include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_items_pigeon.h"
 #include "bn_sprite_items_squirrel.h"
+#include "bn_sprite_items_rat.h"
 
 namespace tl
 {
@@ -16,6 +17,11 @@ namespace tl
         constexpr int squirrel_sit = 0;
         constexpr int squirrel_run_a = 1;
         constexpr int squirrel_climb = 3;
+
+        constexpr int rat_stand = 0;                  // s82 rats: 0 stand (sniffing), 1 / 2 run, 3 sits up
+        constexpr int rat_run_a = 1;
+        constexpr int rat_sit_up = 3;
+        constexpr int rat_scare_distance = 52;
 
         constexpr int pigeon_scare_distance = 56;     // world units
         constexpr int squirrel_scare_distance = 60;
@@ -64,7 +70,8 @@ namespace tl
             const critter_spawn& spawn = map.critters[index];
             bn::sprite_ptr sprite = spawn.kind == critter_kind::pigeon ?
                         bn::sprite_items::pigeon.create_sprite(0, 0) :
-                        bn::sprite_items::squirrel.create_sprite(0, 0);
+                        (spawn.kind == critter_kind::rat ? bn::sprite_items::rat.create_sprite(0, 0) :
+                                                          bn::sprite_items::squirrel.create_sprite(0, 0));
             sprite.set_visible(false);
             critter c { bn::move(sprite), &spawn, spawn.x, spawn.y, 0, 0, 0, 0 };
             c.timer = _random_int(90);
@@ -75,25 +82,24 @@ namespace tl
 
     void critters::set_lighting(const light_params& params)
     {
-        bn::color pigeon_colours[16];
-        bn::color squirrel_colours[16];
-        light_colours(bn::sprite_items::pigeon.palette_item().colors_ref().data(), pigeon_colours, 16, params);
-        light_colours(bn::sprite_items::squirrel.palette_item().colors_ref().data(), squirrel_colours, 16, params);
-        bool pigeon_done = false;
-        bool squirrel_done = false;
+        bn::color colours[3][16];
+        light_colours(bn::sprite_items::pigeon.palette_item().colors_ref().data(), colours[0], 16, params);
+        light_colours(bn::sprite_items::squirrel.palette_item().colors_ref().data(), colours[1], 16, params);
+        light_colours(bn::sprite_items::rat.palette_item().colors_ref().data(), colours[2], 16, params);
+        bool done[3] = {};
 
         for(critter& c : _critters)
         {
-            bool pigeon = c.spawn->kind == critter_kind::pigeon;
+            int kind = int(c.spawn->kind);
 
-            if(pigeon ? pigeon_done : squirrel_done)
+            if(done[kind])
             {
                 continue;
             }
 
             bn::sprite_palette_ptr palette = c.sprite.palette();
-            palette.set_colors(bn::span<const bn::color>(pigeon ? pigeon_colours : squirrel_colours, 16));
-            (pigeon ? pigeon_done : squirrel_done) = true;
+            palette.set_colors(bn::span<const bn::color>(colours[kind], 16));
+            done[kind] = true;
         }
     }
 
@@ -104,6 +110,10 @@ namespace tl
             if(c.spawn->kind == critter_kind::pigeon)
             {
                 _update_pigeon(c, player_x, player_y);
+            }
+            else if(c.spawn->kind == critter_kind::rat)
+            {
+                _update_rat(c, player_x, player_y);
             }
             else
             {
@@ -326,6 +336,143 @@ namespace tl
         }
     }
 
+    // s82 rats: they sniff, sit up and scurry around their spot; when the player comes near they dash into their hole (spawn tree_x / tree_y)
+    // and vanish, and come out of it again later once the player is far away.
+    void critters::_update_rat(critter& c, int player_x, int player_y)
+    {
+        switch(c.current)
+        {
+        case state::idle:
+            if(distance2(c.x, c.y, player_x, player_y) < rat_scare_distance * rat_scare_distance)
+            {
+                bn::fixed dx = c.spawn->tree_x - c.x;
+                bn::fixed dy = c.spawn->tree_y - c.y;
+                bn::fixed len = bn::abs(dx) + bn::abs(dy);
+
+                if(len < 1)
+                {
+                    len = 1;
+                }
+
+                c.vx = dx * bn::fixed(2.6) / len;
+                c.vy = dy * bn::fixed(2.6) / len;
+                c.current = state::fleeing;
+                c.timer = 120;
+                c.anim = 0;
+                break;
+            }
+
+            if(c.anim > 0)
+            {
+                // scurrying to a nearby spot (vx / vy set when the walk started)
+                bn::fixed nx = c.x + c.vx;
+                bn::fixed ny = c.y + c.vy;
+                c.flip = (c.vx - c.vy) < 0;
+                c.frame = rat_run_a + ((++c.timer / 3) % 2);
+
+                if(--c.anim == 0 || _map->solid_at(nx.integer(), ny.integer()) ||
+                   bn::abs(nx - c.spawn->x) > 40 || bn::abs(ny - c.spawn->y) > 40)
+                {
+                    c.anim = 0;
+                    c.frame = rat_stand;
+                    c.timer = 20 + _random_int(80);
+                }
+                else
+                {
+                    c.x = nx;
+                    c.y = ny;
+                }
+
+                break;
+            }
+
+            if(--c.timer <= 0)
+            {
+                int action = _random_int(4);
+                c.timer = 25 + _random_int(70);
+
+                if(action == 0)
+                {
+                    c.frame = rat_sit_up;
+                }
+                else if(action == 1)
+                {
+                    c.frame = rat_stand;
+                    c.flip = ! c.flip;
+                }
+                else
+                {
+                    // a short scurry in a random direction (along one of the iso axes)
+                    int dir = _random_int(4);
+                    bn::fixed speed = bn::fixed(0.9);
+                    c.vx = dir == 0 ? speed : (dir == 1 ? -speed : 0);
+                    c.vy = dir == 2 ? speed : (dir == 3 ? -speed : 0);
+                    c.anim = 14 + _random_int(20);
+                    c.timer = 0;
+                }
+            }
+            break;
+
+        case state::fleeing:
+            {
+                bn::fixed dx = c.spawn->tree_x - c.x;
+                bn::fixed dy = c.spawn->tree_y - c.y;
+                c.flip = (dx - dy) < 0;
+                c.frame = rat_run_a + ((++c.anim / 2) % 2);
+
+                if((bn::abs(dx) < 5 && bn::abs(dy) < 5) || --c.timer <= 0)
+                {
+                    c.current = state::gone;           // down the hole
+                    c.timer = 360 + _random_int(500);
+                }
+                else
+                {
+                    c.x += c.vx;
+                    c.y += c.vy;
+                }
+            }
+            break;
+
+        case state::gone:
+            if(--c.timer <= 0 &&
+               distance2(bn::fixed(c.spawn->tree_x), bn::fixed(c.spawn->tree_y), player_x, player_y) > return_distance * return_distance)
+            {
+                // out of the hole again, back to the home spot
+                c.x = c.spawn->tree_x;
+                c.y = c.spawn->tree_y;
+                c.current = state::returning;
+                c.anim = 0;
+            }
+            break;
+
+        case state::returning:
+            {
+                bn::fixed dx = c.spawn->x - c.x;
+                bn::fixed dy = c.spawn->y - c.y;
+                bn::fixed len = bn::abs(dx) + bn::abs(dy);
+                c.flip = (dx - dy) < 0;
+                c.frame = rat_run_a + ((++c.anim / 3) % 2);
+
+                if(len < 4)
+                {
+                    c.current = state::idle;
+                    c.frame = rat_stand;
+                    c.anim = 0;
+                    c.timer = 30 + _random_int(60);
+                }
+                else
+                {
+                    c.x += dx * bn::fixed(0.8) / len;
+                    c.y += dy * bn::fixed(0.8) / len;
+                }
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
     void critters::_place_sprite(critter& c, int cam_x, int cam_y)
     {
         if(c.current == state::gone)
@@ -351,7 +498,8 @@ namespace tl
         c.sprite.set_position(screen_x, screen_y - feet_y);
         c.sprite.set_horizontal_flip(c.flip);     // frames face right; flip = facing left
         bn::sprite_tiles_item tiles = c.spawn->kind == critter_kind::pigeon ?
-                    bn::sprite_items::pigeon.tiles_item() : bn::sprite_items::squirrel.tiles_item();
+                    bn::sprite_items::pigeon.tiles_item() :
+                    (c.spawn->kind == critter_kind::rat ? bn::sprite_items::rat.tiles_item() : bn::sprite_items::squirrel.tiles_item());
         c.sprite.set_tiles(tiles, c.frame);
 
         // Flying birds above everything except the HUD; on the ground the same depth rule as the player.

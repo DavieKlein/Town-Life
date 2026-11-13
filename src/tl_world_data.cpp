@@ -479,7 +479,6 @@ namespace
         { interactable_kind::bin, 272, 337, 0, 0 },
         { interactable_kind::bin, 899, 337, 0, 0 },
         { interactable_kind::bin, 1088, 337, 0, 0 },
-        { interactable_kind::bin, 616, 496, 0, 0 },
         { interactable_kind::manhole, 1062, 441, 0, 0 },
     };
     constexpr lamp city_centre_lamps[] = {
@@ -1715,6 +1714,8 @@ namespace
     };
 
     constexpr critter_spawn old_block_critters[] = {
+        { critter_kind::rat, 566, 262, 572, 236 },
+        { critter_kind::rat, 350, 270, 361, 238 },
         { critter_kind::pigeon, 256, 368, -1, -1 },
         { critter_kind::pigeon, 268, 377, -1, -1 },
         { critter_kind::pigeon, 992, 403, -1, -1 },
@@ -1738,10 +1739,10 @@ namespace
         { interactable_kind::hatch, 1104, 360, 24, 0 },
         { interactable_kind::shop_stall, 1011, 377, 0, 0 },
         { interactable_kind::chess, 515, 462, 0, 0 },
-        { interactable_kind::garden, 355, 489, 19, 0 },
+        { interactable_kind::garden, 291, 617, 16, 0 },
         { interactable_kind::hoop, 918, 536, 0, 0 },
         { interactable_kind::hoop, 1049, 536, 0, 0 },
-        { interactable_kind::bench, 358, 585, 0, 0 },
+        { interactable_kind::bench, 316, 622, 0, 0 },
         { interactable_kind::bench, 944, 449, 0, 0 },
         { interactable_kind::bench, 1024, 449, 0, 0 },
         { interactable_kind::bench, 624, 582, 0, 0 },
@@ -1861,7 +1862,6 @@ namespace
         { interactable_kind::seat, 51, 86, 12, 0 },
         { interactable_kind::seat, 70, 86, 12, 0 },
         { interactable_kind::seat, 89, 86, 12, 0 },
-        { interactable_kind::sign, 195, 17, 8, 5 },
         { interactable_kind::bin, 11, 102, 0, 0 },
     };
     constexpr int bakery_floor_tiles_count = 554;
@@ -2086,26 +2086,26 @@ namespace
         { interactable_kind::shop_lane, 91, 60, 8, 1 },
         { interactable_kind::bin, 11, 92, 0, 0 },
     };
-    constexpr int sewer_floor_tiles_count = 1250;
+    constexpr int sewer_floor_tiles_count = 1257;
     constexpr bn::color sewer_floor_palette[] = {
-        bn::color(0, 0, 0), bn::color(5, 5, 4), bn::color(0, 0, 0), bn::color(3, 6, 2), bn::color(7, 7, 5), bn::color(3, 4, 3), bn::color(5, 6, 5), bn::color(3, 3, 1), bn::color(2, 1, 0), bn::color(5, 4, 2), bn::color(2, 3, 2), bn::color(4, 4, 3), bn::color(8, 8, 6), bn::color(1, 2, 1), bn::color(1, 1, 0), bn::color(6, 7, 6),
-        bn::color(0, 0, 0), bn::color(9, 9, 6), bn::color(9, 8, 5), bn::color(9, 10, 8), bn::color(14, 13, 9), bn::color(31, 31, 30), bn::color(2, 4, 4), bn::color(7, 10, 4), bn::color(6, 6, 4), bn::color(12, 11, 8), bn::color(11, 11, 8), bn::color(8, 12, 4), bn::color(7, 7, 5), bn::color(10, 10, 6), bn::color(13, 12, 9), bn::color(8, 8, 6),
-        bn::color(0, 0, 0), bn::color(25, 26, 23), bn::color(15, 18, 14), bn::color(20, 22, 18), bn::color(26, 27, 23), bn::color(19, 21, 17), bn::color(16, 19, 15), bn::color(22, 24, 19), bn::color(13, 16, 13), bn::color(18, 20, 16), bn::color(14, 17, 13), bn::color(24, 25, 22), bn::color(21, 23, 18), bn::color(15, 18, 13), bn::color(17, 19, 16), bn::color(18, 21, 17),
-        bn::color(0, 0, 0), bn::color(10, 9, 7), bn::color(7, 8, 6), bn::color(0, 0, 0), bn::color(4, 5, 4), bn::color(5, 6, 5), bn::color(13, 12, 10), bn::color(10, 10, 8), bn::color(2, 2, 2), bn::color(8, 9, 7), bn::color(8, 8, 7), bn::color(5, 8, 3), bn::color(6, 7, 5), bn::color(4, 4, 3), bn::color(9, 10, 8), bn::color(6, 10, 4),
-        bn::color(0, 0, 0), bn::color(5, 4, 3), bn::color(0, 0, 0), bn::color(13, 11, 14), bn::color(3, 3, 2), bn::color(3, 5, 4), bn::color(9, 7, 9), bn::color(4, 3, 2), bn::color(10, 9, 8), bn::color(7, 7, 6), bn::color(6, 6, 5), bn::color(8, 9, 8), bn::color(11, 10, 9), bn::color(7, 8, 7), bn::color(2, 2, 1), bn::color(9, 8, 6),
-        bn::color(0, 0, 0), bn::color(8, 9, 7), bn::color(3, 5, 5), bn::color(23, 25, 20), bn::color(15, 18, 14), bn::color(14, 15, 13), bn::color(6, 6, 5), bn::color(10, 11, 9), bn::color(9, 10, 8), bn::color(16, 19, 15), bn::color(5, 5, 4), bn::color(10, 10, 9), bn::color(7, 8, 6), bn::color(18, 20, 16), bn::color(2, 3, 2), bn::color(11, 13, 11),
-        bn::color(0, 0, 0), bn::color(5, 8, 4), bn::color(22, 23, 19), bn::color(1, 3, 1), bn::color(4, 7, 3), bn::color(10, 10, 8), bn::color(7, 8, 6), bn::color(18, 19, 16), bn::color(9, 9, 7), bn::color(11, 11, 9), bn::color(3, 5, 2), bn::color(13, 15, 12), bn::color(26, 29, 30), bn::color(30, 31, 31), bn::color(22, 26, 28), bn::color(4, 7, 3),
-        bn::color(0, 0, 0), bn::color(2, 5, 2), bn::color(4, 7, 4), bn::color(0, 0, 0), bn::color(3, 6, 3), bn::color(8, 8, 7), bn::color(2, 2, 1), bn::color(0, 2, 0), bn::color(9, 10, 8), bn::color(1, 3, 1), bn::color(5, 5, 4), bn::color(4, 3, 2), bn::color(26, 29, 30), bn::color(30, 31, 31), bn::color(22, 26, 28), bn::color(4, 7, 3),
+        bn::color(0, 0, 0), bn::color(6, 6, 5), bn::color(3, 2, 2), bn::color(0, 0, 0), bn::color(11, 11, 9), bn::color(7, 8, 6), bn::color(5, 4, 3), bn::color(7, 9, 7), bn::color(2, 3, 1), bn::color(3, 3, 2), bn::color(9, 7, 9), bn::color(13, 11, 14), bn::color(3, 5, 4), bn::color(4, 3, 2), bn::color(10, 9, 10), bn::color(8, 9, 8),
+        bn::color(0, 0, 0), bn::color(8, 8, 7), bn::color(23, 25, 20), bn::color(9, 10, 8), bn::color(13, 15, 12), bn::color(7, 8, 6), bn::color(5, 6, 5), bn::color(10, 11, 9), bn::color(2, 3, 2), bn::color(18, 20, 16), bn::color(31, 31, 30), bn::color(4, 5, 4), bn::color(16, 18, 14), bn::color(21, 23, 18), bn::color(6, 7, 5), bn::color(9, 9, 8),
+        bn::color(0, 0, 0), bn::color(24, 26, 22), bn::color(17, 19, 16), bn::color(20, 23, 18), bn::color(26, 27, 23), bn::color(13, 16, 12), bn::color(19, 21, 17), bn::color(22, 24, 20), bn::color(25, 27, 23), bn::color(18, 20, 17), bn::color(14, 17, 13), bn::color(22, 24, 19), bn::color(15, 18, 14), bn::color(21, 23, 19), bn::color(20, 22, 18), bn::color(16, 19, 15),
+        bn::color(0, 0, 0), bn::color(2, 1, 0), bn::color(7, 8, 6), bn::color(5, 5, 4), bn::color(0, 0, 0), bn::color(12, 9, 12), bn::color(3, 3, 2), bn::color(4, 5, 3), bn::color(3, 2, 2), bn::color(6, 7, 5), bn::color(4, 4, 3), bn::color(6, 6, 5), bn::color(1, 1, 0), bn::color(8, 7, 8), bn::color(1, 2, 1), bn::color(4, 4, 3),
+        bn::color(0, 0, 0), bn::color(7, 7, 5), bn::color(14, 17, 13), bn::color(7, 11, 4), bn::color(13, 13, 9), bn::color(5, 5, 3), bn::color(9, 10, 8), bn::color(9, 7, 8), bn::color(0, 0, 0), bn::color(12, 12, 8), bn::color(8, 8, 6), bn::color(10, 11, 9), bn::color(10, 10, 7), bn::color(11, 11, 8), bn::color(6, 6, 4), bn::color(9, 9, 6),
+        bn::color(0, 0, 0), bn::color(3, 4, 4), bn::color(8, 7, 8), bn::color(12, 11, 8), bn::color(0, 0, 0), bn::color(2, 2, 1), bn::color(7, 7, 5), bn::color(8, 8, 6), bn::color(5, 5, 4), bn::color(6, 6, 5), bn::color(9, 9, 7), bn::color(13, 12, 9), bn::color(10, 9, 7), bn::color(5, 4, 4), bn::color(2, 3, 3), bn::color(11, 10, 8),
+        bn::color(0, 0, 0), bn::color(8, 9, 7), bn::color(22, 23, 19), bn::color(1, 2, 0), bn::color(4, 7, 3), bn::color(10, 10, 9), bn::color(3, 6, 3), bn::color(5, 8, 4), bn::color(6, 9, 5), bn::color(5, 8, 4), bn::color(2, 4, 2), bn::color(14, 16, 13), bn::color(26, 29, 30), bn::color(30, 31, 31), bn::color(22, 26, 28), bn::color(4, 7, 3),
+        bn::color(0, 0, 0), bn::color(0, 0, 0), bn::color(4, 7, 4), bn::color(2, 4, 1), bn::color(10, 10, 8), bn::color(3, 6, 3), bn::color(8, 8, 7), bn::color(0, 1, 0), bn::color(4, 3, 1), bn::color(2, 2, 1), bn::color(2, 5, 2), bn::color(1, 3, 1), bn::color(26, 29, 30), bn::color(30, 31, 31), bn::color(22, 26, 28), bn::color(4, 7, 3),
     };
-    constexpr int sewer_objects_tiles_count = 1548;
+    constexpr int sewer_objects_tiles_count = 1558;
     constexpr bn::color sewer_objects_palette[] = {
-        bn::color(0, 0, 0), bn::color(7, 5, 3), bn::color(31, 20, 2), bn::color(22, 10, 1), bn::color(14, 20, 11), bn::color(13, 11, 8), bn::color(9, 6, 4), bn::color(3, 2, 2), bn::color(31, 29, 5), bn::color(22, 16, 11), bn::color(29, 31, 17), bn::color(29, 14, 1), bn::color(16, 7, 2), bn::color(10, 8, 9), bn::color(20, 26, 15), bn::color(17, 13, 8),
-        bn::color(0, 0, 0), bn::color(9, 7, 9), bn::color(0, 0, 0), bn::color(5, 3, 2), bn::color(6, 4, 3), bn::color(3, 5, 6), bn::color(11, 9, 12), bn::color(4, 3, 1), bn::color(1, 1, 1), bn::color(6, 5, 5), bn::color(2, 2, 3), bn::color(8, 6, 7), bn::color(2, 2, 1), bn::color(3, 3, 2), bn::color(0, 4, 10), bn::color(2, 3, 1),
-        bn::color(0, 0, 0), bn::color(31, 31, 31), bn::color(13, 17, 19), bn::color(7, 8, 7), bn::color(18, 20, 22), bn::color(23, 29, 31), bn::color(16, 8, 1), bn::color(10, 9, 11), bn::color(28, 31, 31), bn::color(20, 24, 26), bn::color(20, 10, 1), bn::color(27, 29, 28), bn::color(25, 26, 23), bn::color(11, 11, 12), bn::color(6, 4, 3), bn::color(12, 14, 16),
-        bn::color(0, 0, 0), bn::color(8, 9, 8), bn::color(24, 11, 1), bn::color(5, 5, 3), bn::color(10, 7, 4), bn::color(12, 13, 12), bn::color(18, 8, 1), bn::color(9, 7, 9), bn::color(12, 8, 5), bn::color(28, 14, 0), bn::color(7, 6, 4), bn::color(15, 17, 13), bn::color(11, 8, 11), bn::color(10, 11, 10), bn::color(2, 2, 2), bn::color(7, 6, 7),
-        bn::color(0, 0, 0), bn::color(10, 11, 10), bn::color(5, 5, 3), bn::color(19, 20, 17), bn::color(11, 10, 11), bn::color(13, 10, 7), bn::color(10, 8, 11), bn::color(15, 16, 14), bn::color(1, 1, 1), bn::color(18, 13, 8), bn::color(8, 7, 5), bn::color(16, 12, 8), bn::color(23, 15, 8), bn::color(11, 8, 5), bn::color(8, 8, 7), bn::color(12, 13, 12),
-        bn::color(0, 0, 0), bn::color(6, 5, 4), bn::color(3, 4, 2), bn::color(11, 16, 10), bn::color(18, 10, 2), bn::color(4, 9, 6), bn::color(8, 6, 8), bn::color(9, 6, 4), bn::color(11, 12, 11), bn::color(5, 5, 3), bn::color(7, 5, 3), bn::color(9, 13, 5), bn::color(11, 8, 12), bn::color(14, 6, 1), bn::color(10, 4, 1), bn::color(9, 7, 9),
-        bn::color(0, 0, 0), bn::color(8, 8, 8), bn::color(17, 17, 15), bn::color(31, 31, 30), bn::color(22, 17, 14), bn::color(3, 3, 2), bn::color(12, 12, 11), bn::color(24, 28, 22), bn::color(20, 21, 17), bn::color(26, 20, 16), bn::color(26, 10, 2), bn::color(14, 15, 12), bn::color(19, 14, 12), bn::color(30, 24, 19), bn::color(6, 5, 4), bn::color(11, 9, 9),
+        bn::color(0, 0, 0), bn::color(11, 13, 11), bn::color(15, 7, 1), bn::color(19, 9, 1), bn::color(1, 1, 1), bn::color(12, 8, 5), bn::color(28, 14, 1), bn::color(4, 4, 3), bn::color(24, 11, 1), bn::color(7, 6, 7), bn::color(6, 10, 7), bn::color(6, 5, 4), bn::color(10, 5, 1), bn::color(9, 8, 10), bn::color(9, 7, 4), bn::color(15, 18, 13),
+        bn::color(0, 0, 0), bn::color(4, 3, 2), bn::color(11, 9, 12), bn::color(0, 0, 0), bn::color(9, 7, 4), bn::color(2, 2, 1), bn::color(7, 6, 4), bn::color(0, 4, 9), bn::color(8, 6, 8), bn::color(5, 4, 3), bn::color(6, 4, 3), bn::color(6, 5, 4), bn::color(9, 7, 10), bn::color(3, 4, 2), bn::color(5, 4, 2), bn::color(2, 3, 2),
+        bn::color(0, 0, 0), bn::color(26, 27, 24), bn::color(12, 17, 19), bn::color(11, 11, 12), bn::color(31, 31, 31), bn::color(20, 24, 26), bn::color(7, 7, 7), bn::color(11, 5, 2), bn::color(28, 31, 31), bn::color(23, 29, 31), bn::color(10, 8, 10), bn::color(16, 18, 19), bn::color(18, 9, 1), bn::color(13, 14, 16), bn::color(18, 21, 22), bn::color(4, 3, 4),
+        bn::color(0, 0, 0), bn::color(22, 24, 18), bn::color(2, 2, 2), bn::color(9, 7, 7), bn::color(12, 10, 9), bn::color(31, 16, 1), bn::color(17, 8, 1), bn::color(15, 12, 9), bn::color(31, 31, 10), bn::color(23, 15, 9), bn::color(31, 23, 2), bn::color(13, 8, 5), bn::color(24, 11, 1), bn::color(18, 14, 9), bn::color(7, 5, 3), bn::color(8, 10, 7),
+        bn::color(0, 0, 0), bn::color(4, 9, 6), bn::color(2, 2, 1), bn::color(8, 6, 3), bn::color(11, 8, 11), bn::color(7, 6, 3), bn::color(4, 4, 3), bn::color(14, 6, 1), bn::color(11, 7, 4), bn::color(10, 7, 4), bn::color(9, 10, 9), bn::color(6, 5, 3), bn::color(10, 4, 1), bn::color(9, 7, 10), bn::color(6, 11, 8), bn::color(8, 6, 7),
+        bn::color(0, 0, 0), bn::color(11, 10, 11), bn::color(3, 2, 2), bn::color(9, 9, 7), bn::color(14, 15, 12), bn::color(13, 10, 6), bn::color(17, 17, 14), bn::color(11, 8, 5), bn::color(16, 12, 7), bn::color(8, 7, 5), bn::color(12, 13, 12), bn::color(9, 7, 9), bn::color(10, 12, 10), bn::color(11, 9, 11), bn::color(9, 11, 10), bn::color(6, 5, 4),
+        bn::color(0, 0, 0), bn::color(9, 8, 8), bn::color(16, 17, 14), bn::color(31, 31, 31), bn::color(23, 29, 20), bn::color(26, 21, 17), bn::color(8, 6, 5), bn::color(11, 12, 11), bn::color(19, 19, 16), bn::color(23, 18, 14), bn::color(29, 31, 23), bn::color(19, 24, 17), bn::color(15, 14, 12), bn::color(30, 24, 19), bn::color(4, 3, 3), bn::color(20, 15, 12),
     };
     constexpr uint8_t sewer_solid[] = {
         1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
@@ -2155,6 +2155,15 @@ namespace
         { 336, 105, 352, 118, 385, 421, 414, 450 },
     };
 
+    constexpr critter_spawn sewer_critters[] = {
+        { critter_kind::rat, 89, 25, 112, 20 },
+        { critter_kind::rat, 144, 30, 112, 20 },
+        { critter_kind::rat, 294, 24, 316, 20 },
+        { critter_kind::rat, 131, 108, 80, 118 },
+        { critter_kind::rat, 185, 121, 224, 116 },
+        { critter_kind::rat, 272, 112, 224, 116 },
+        { critter_kind::rat, 406, 102, 432, 118 },
+    };
     constexpr interactable sewer_interactables[] = {
         { interactable_kind::ladder, 38, 9, 0, 0 },
         { interactable_kind::ladder, 438, 9, 0, 1 },
@@ -2183,7 +2192,7 @@ namespace
         { "Bellini Bakery", { bakery_floor_tiles_bin, bakery_floor_tiles_count, bakery_floor_cells_bin, bakery_floor_palette, int(sizeof(bakery_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 0, 0, 0, 0, 0 }, { bakery_objects_tiles_bin, bakery_objects_tiles_count, bakery_objects_cells_bin, bakery_objects_palette, int(sizeof(bakery_objects_palette) / sizeof(bn::color)) / 16, bakery_objects_depth_bin, bakery_objects_depthpx_bin, 0, 0, 0, 13, 15 }, 15, 8, 152, 64, 416, 288, 24, 0, 392, 256, bakery_solid, bakery_warps, int(sizeof(bakery_warps) / sizeof(warp)), bakery_occluders, int(sizeof(bakery_occluders) / sizeof(occluder)), nullptr, 0, bakery_interactables, int(sizeof(bakery_interactables) / sizeof(interactable)), nullptr, 0, nullptr, 0, false, nullptr, 0 },
         { "Mia's flat", { mia_flat_floor_tiles_bin, mia_flat_floor_tiles_count, mia_flat_floor_cells_bin, mia_flat_floor_palette, int(sizeof(mia_flat_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 0, 0, 0, 0, 0 }, { mia_flat_objects_tiles_bin, mia_flat_objects_tiles_count, mia_flat_objects_cells_bin, mia_flat_objects_palette, int(sizeof(mia_flat_objects_palette) / sizeof(bn::color)) / 16, mia_flat_objects_depth_bin, mia_flat_objects_depthpx_bin, 0, 0, 0, 0, 0 }, 7, 6, 120, 64, 256, 208, 24, 0, 232, 176, mia_flat_solid, mia_flat_warps, int(sizeof(mia_flat_warps) / sizeof(warp)), mia_flat_occluders, int(sizeof(mia_flat_occluders) / sizeof(occluder)), nullptr, 0, mia_flat_interactables, int(sizeof(mia_flat_interactables) / sizeof(interactable)), nullptr, 0, nullptr, 0, false, nullptr, 0 },
         { "Lane Grocery", { lane_shop_floor_tiles_bin, lane_shop_floor_tiles_count, lane_shop_floor_cells_bin, lane_shop_floor_palette, int(sizeof(lane_shop_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 0, 0, 0, 0, 0 }, { lane_shop_objects_tiles_bin, lane_shop_objects_tiles_count, lane_shop_objects_cells_bin, lane_shop_objects_palette, int(sizeof(lane_shop_objects_palette) / sizeof(bn::color)) / 16, lane_shop_objects_depth_bin, lane_shop_objects_depthpx_bin, 0, 0, 0, 13, 15 }, 8, 7, 136, 64, 288, 224, 24, 0, 264, 192, lane_shop_solid, lane_shop_warps, int(sizeof(lane_shop_warps) / sizeof(warp)), lane_shop_occluders, int(sizeof(lane_shop_occluders) / sizeof(occluder)), nullptr, 0, lane_shop_interactables, int(sizeof(lane_shop_interactables) / sizeof(interactable)), nullptr, 0, nullptr, 0, false, nullptr, 0 },
-        { "Old Block Sewer", { sewer_floor_tiles_bin, sewer_floor_tiles_count, sewer_floor_cells_bin, sewer_floor_palette, int(sizeof(sewer_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 192, 12, 4, 0, 0 }, { sewer_objects_tiles_bin, sewer_objects_tiles_count, sewer_objects_cells_bin, sewer_objects_palette, int(sizeof(sewer_objects_palette) / sizeof(bn::color)) / 16, sewer_objects_depth_bin, sewer_objects_depthpx_bin, 0, 0, 0, 0, 0 }, 30, 9, 168, 215, 672, 568, 24, 0, 648, 535, sewer_solid, sewer_warps, int(sizeof(sewer_warps) / sizeof(warp)), sewer_occluders, int(sizeof(sewer_occluders) / sizeof(occluder)), nullptr, 0, sewer_interactables, int(sizeof(sewer_interactables) / sizeof(interactable)), nullptr, 0, sewer_lamps, int(sizeof(sewer_lamps) / sizeof(lamp)), false, nullptr, 0 },
+        { "Old Block Sewer", { sewer_floor_tiles_bin, sewer_floor_tiles_count, sewer_floor_cells_bin, sewer_floor_palette, int(sizeof(sewer_floor_palette) / sizeof(bn::color)) / 16, nullptr, nullptr, 192, 12, 4, 0, 0 }, { sewer_objects_tiles_bin, sewer_objects_tiles_count, sewer_objects_cells_bin, sewer_objects_palette, int(sizeof(sewer_objects_palette) / sizeof(bn::color)) / 16, sewer_objects_depth_bin, sewer_objects_depthpx_bin, 0, 0, 0, 0, 0 }, 30, 9, 168, 215, 672, 568, 24, 0, 648, 535, sewer_solid, sewer_warps, int(sizeof(sewer_warps) / sizeof(warp)), sewer_occluders, int(sizeof(sewer_occluders) / sizeof(occluder)), sewer_critters, int(sizeof(sewer_critters) / sizeof(critter_spawn)), sewer_interactables, int(sizeof(sewer_interactables) / sizeof(interactable)), nullptr, 0, sewer_lamps, int(sizeof(sewer_lamps) / sizeof(lamp)), false, nullptr, 0 },
     };
 }
 

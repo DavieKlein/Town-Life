@@ -76,6 +76,19 @@ namespace tl
     void apply_minigame_result(save_data& snap, const minigame_request& request, const minigame_result& result)
     {
         story_state& s = story();
+
+        if(request.kind == minigame_kind::plate_rush && ! result.completed)
+        {
+            // s82: cancelled on the start card, or not a single plate washed: no wage, no flag, no staff meal, the clock only moves for the
+            // minutes spent at the sink when something was tried
+            if(! result.cancelled)
+            {
+                pending_text = "No plates washed. No wage.";
+            }
+
+            return;
+        }
+
         int minutes = result.minutes;
 
         // natural decay of the game minutes that passed, plus the job's own costs

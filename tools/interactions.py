@@ -60,7 +60,7 @@ INTERACTABLES = {
         ("fountain", 53.0, 41.0, 2.2),
         # trash cans along the avenue (scene.py city_centre)
         ("kiosk", 45.5, 32.4),          # the two newspaper boxes at the bus stop
-        ("bin", 5.0, 21.1), ("bin", 17.0, 21.1), ("bin", 56.2, 21.1), ("bin", 68.0, 21.1), ("bin", 38.5, 31.0),
+        ("bin", 5.0, 21.1), ("bin", 17.0, 21.1), ("bin", 56.2, 21.1), ("bin", 68.0, 21.1),
     ],
     "corner_market": [
         ("shop_market", 12.2, 15.0), ("shop_market", 13.9, 15.0), ("shop_market", 15.2, 15.0),
@@ -117,8 +117,8 @@ INTERACTABLES["old_block"] = [
     ("sign", 9.9, 19.9, 0, 0), ("sign", 14.0, 22.0, 0, 1), ("sign", 67.3, 22.0, 0, 2), ("sign", 52.5, 13.2, 0, 4),
     ("hatch", 69.0, 22.5, 1.5),
     ("shop_stall", 63.2, 23.6),
-    ("chess", 32.2, 28.9), ("garden", 22.2, 30.6, 1.2), ("hoop", 57.4, 33.5), ("hoop", 65.6, 33.5),
-    ("bench", 22.4, 36.6), ("bench", 59.0, 28.1), ("bench", 64.0, 28.1), ("bench", 39.0, 36.4), ("bench", 62.0, 46.5),
+    ("chess", 32.2, 28.9), ("garden", 18.2, 38.6, 1.0), ("hoop", 57.4, 33.5), ("hoop", 65.6, 33.5),
+    ("bench", 19.8, 38.9), ("bench", 59.0, 28.1), ("bench", 64.0, 28.1), ("bench", 39.0, 36.4), ("bench", 62.0, 46.5),
     ("bench", 48.5, 17.2), ("bench", 51.5, 17.2),
 ]
 

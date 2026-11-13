@@ -33,7 +33,8 @@ namespace tl
 
     struct minigame_result
     {
-        bool completed = false;
+        bool completed = false;         // s82: true only when the minigame was really played (PLATE RUSH: at least one plate washed)
+        bool cancelled = false;         // s82: B on the PLATE RUSH start card: nothing happens (no shift, no pay, no time)
         bool early_end = false;         // PLATE RUSH: three broken plates
         int rank = 0;                   // STOCK IT!: 0 C, 1 B, 2 A, 3 S
         int score = 0;

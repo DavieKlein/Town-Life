@@ -48,6 +48,14 @@ namespace tl
             _player.approach(at.x, at.y, 14);
             _player.start_action(anim, at.x, at.y, _act.frames);
         };
+        // s82: the activities of this district have no menu, so the object is named right away (non-modal label at the top)
+        auto name_it = [this](const char* text)
+        {
+            _toast_text = text;
+            _toast_wait = false;
+            _toast_label.set_centre(ui::font9, 120, 30, text, ui::role::hud_money);
+            _toast_frames = 170;
+        };
 
         switch(target.kind)
         {
@@ -74,17 +82,20 @@ namespace tl
 
         case interactable_kind::chess:
             begin(240, player::action_kind::read, target);
+            name_it("Watching Grigor's chess game");
             _act.gain[needs::fun] = 6;
             break;
 
         case interactable_kind::garden:
             begin(210, player::action_kind::search, target);
+            name_it("Watering the garden beds");
             _act.gain[needs::fun] = 4;
             _act.gain[needs::hygiene] = -3;
             break;
 
         case interactable_kind::hoop:
             begin(240, player::action_kind::pickup, target);
+            name_it("Shooting hoops");
             _act.gain[needs::fun] = 8;
             _act.gain[needs::energy] = -4;
             _act.gain[needs::hygiene] = -3;
