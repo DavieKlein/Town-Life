@@ -312,7 +312,7 @@ namespace tl
         _player.approach(target.x + 3, target.y - 4, 2);          // step into the tray, east side
         _begin_activity(shower_frames);
         _act.gain[needs::hygiene] = bn::fixed(98) - _needs.values[needs::hygiene];
-        _act.gain[needs::fun] = 2;
+        // Owner (s81): showering gives Hygiene only, no Fun.
         _player.start_action(player::action_kind::shower, _player.x(), _player.y() + 32, _act.frames);
     }
 

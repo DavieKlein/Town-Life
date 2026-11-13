@@ -85,7 +85,7 @@ Status: **now** = built in s63 (code/text only), **proposal** = mock-up made in 
   Set rewards (paid when the 4th item is found): Coins $10 + Mr. Pimm +6 friendship; Postcards $5 + 1 City Coin + Mia +5; Flyers $8 +
   Rosa +6. Saved (`collect_mask`, `collect_paid`).
 - **Shower** in the public toilet (replaces the mop / bucket / broom corner, one bin, sink and WC stay): cubicle with glass pane, curtain,
-  chrome head, valve and a coin box. A at it: "Take a shower ($1)": Hygiene to 98 over 6 s (B cancels, partial gain stays), Fun +2.
+  chrome head, valve and a coin box. A at it: "Take a shower ($1)": Hygiene to 98 over 6 s (B cancels, partial gain stays); no Fun (owner, s81).
   Animation `player_shower` (64x64, 8 facings x 4, blender_acts `shower_pose`: hands scrubbing the hair, water streaks).
 - **City Clinic** (new building on the brick lot north of the avenue, x 34.7..38.9, facade y 18; interior map `clinic` 13 x 9): waiting
   chairs and sofa, reception counter (Dr. Okafor behind it 8:00-20:00), medicine cabinet, exam corner (couch, basin, scale, screen).
