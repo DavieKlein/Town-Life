@@ -43,7 +43,7 @@ LAYOUT3 = [
     ("lane", "BAKER'S LANE", 50.0, 24.5, 55.0, 58.0, "r"),
     ("orchard_row", "ORCHARD ROW (NEW, closes the loop)", 28.5, 56.0, 55.0, 60.0, "n"),
     ("cottages", "cottages (Lane Grocery stays)", 38.0, 40.0, 49.3, 56.0, "b"),
-    ("cottages2", "3 cottages on Orchard Row (NEW)", 32.0, 50.0, 47.0, 56.0, "n"),
+    ("cottages2", "2 cottages on Orchard Row (NEW)", 32.0, 50.0, 47.0, 56.0, "n"),
     ("playground", "PLAYGROUND + basketball cage (NEW)", 56.0, 28.5, 67.0, 47.0, "n"),
     ("allot", "ALLOTMENTS + sheds (was orchard)", 56.0, 48.0, 79.0, 62.0, "o"),
     ("meadow", "meadow / orchard (quiet)", 14.0, 41.0, 28.0, 62.0, "o"),
@@ -238,7 +238,7 @@ def ground3(s, rnd):
     s.box(15.7, 18.0, 68.0, 19.5, -0.1, 0.008, "paving_flat", layer="floor")
     s.box(16.0, 24.5, 68.0, 26.2, -0.1, 0.008, "paving_flat", layer="floor")
     # Mill Lane (N-S, new), Baker's Lane (N-S), Orchard Row (E-W, new): the loop
-    s.box(30.5, 26.2, 33.0, 58.0, -0.1, 0.012, "cobble", layer="floor")
+    s.box(30.5, 26.2, 33.0, 55.5, -0.1, 0.012, "cobble", layer="floor")
     s.box(50.0, 26.2, 55.0, 58.0, -0.1, 0.012, "cobble", layer="floor")
     s.box(33.0, 55.5, 50.0, 59.5, -0.1, 0.012, "cobble", layer="floor")
     s.box(30.5, 55.5, 33.0, 59.5, -0.1, 0.012, "cobble", layer="floor")
@@ -297,7 +297,7 @@ def old_block_rev3():
     # ---- Baker's Lane (cottages west side incl. Lane Grocery), Orchard Row cottages, playground, allotments ----
     ob.cottage(s, 49.0, 41.0, colours="cream")
     ob.cottage(s, 49.0, 49.5, name="2Story_GableRoof_Mat", colours="blue")
-    for (cx, col) in ((35.0, "orange"), (40.0, "mint"), (45.0, "cream")):
+    for (cx, col) in ((34.0, "orange"), (41.0, "cream")):
         s.model("1Story_GableRoof_Mat", cx, 55.4, front="left", colours=col, scale=2.1)
     playground(s, 57.0, 28.5, 67.0, 47.0, rnd)
     ob.court(s, 56.0, 28.5, 67.0, 37.5, rnd) if False else None
