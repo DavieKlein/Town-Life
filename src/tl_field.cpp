@@ -2620,7 +2620,7 @@ namespace tl
         {
             if(_audio_money_valid)
             {
-                audio::play(_money > _audio_money ? audio::sfx::coin : audio::sfx::cash);
+                audio::play_money(_money > _audio_money);
             }
 
             _audio_money = _money;

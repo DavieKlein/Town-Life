@@ -14,8 +14,8 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import headless_run as H  # noqa: E402
 
-NAMES = {1: "city", 2: "old_block", 3: "market", 4: "stock_it", 5: "plate_rush"}
-LOOP_SECONDS = {1: 55.4, 2: 60.0, 3: 35.6, 4: 30.0, 5: 28.2}
+NAMES = {1: "city", 2: "old_block", 3: "market", 4: "stock_it", 5: "plate_rush", 6: "victor", 7: "sad"}
+LOOP_SECONDS = {1: 55.4, 2: 60.0, 3: 35.6, 4: 30.0, 5: 28.2, 6: 37.0, 7: 43.7}
 RATE = 32768
 FPS = 59.7275
 
@@ -90,7 +90,7 @@ def main():
     for t in tracks:
         while cur != t:
             cap.press("a")
-            cur = cur % 5 + 1
+            cur = cur % 7 + 1
         cap.r.run(10)
         x = cap.record(LOOP_SECONDS[t] * loops)
         wav = f"{prefix}_{NAMES[t]}.wav"

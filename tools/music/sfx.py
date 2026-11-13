@@ -82,6 +82,10 @@ def make():
     parts.append((0.56, gl(96, 1.2), 0.25))
     fx["mission_complete"] = finish(place(parts, 2.5))
     fx.update(make_activity())
+    fx.update(make_scene_sfx())
+    fx.update(make_voices())
+    # round 4: the mission jingle must be clearly audible: fuller, longer, soft-saturated for a higher average level
+    fx["mission_complete"] = finish(sat(make_mission_jingle()), 0.95)
     return fx
 
 
@@ -214,6 +218,155 @@ def make_activity():
     fx["mg_bad"] = finish(lp(saw, 0.16) * np.exp(-t / 0.12) * np.minimum(t / 0.006, 1), 0.7)
     t = t_(0.3)
     fx["mg_clink"] = finish(np.sin(2 * math.pi * 3100 * t) * np.exp(-t / 0.07) + 0.5 * np.sin(2 * math.pi * 4700 * t) * np.exp(-t / 0.04), 0.7)
+    return fx
+
+
+# ---------------------------------------------------------------------------------------------- round 4: scene sounds, voices, jingles
+def sat(x, k=2.2):
+    return np.tanh(k * x / max(np.max(np.abs(x)), 1e-9)) / math.tanh(k)
+
+
+def make_mission_jingle():
+    def gl(m, d):
+        f = S.mtof(m)
+        t = t_(d)
+        return (np.sin(2 * math.pi * f * t) * np.exp(-t / 0.7) + 0.35 * np.sin(2 * math.pi * f * 2.76 * t) * np.exp(-t / 0.25)
+                + 0.15 * np.sin(2 * math.pi * f * 5.4 * t) * np.exp(-t / 0.1)) * np.minimum(t / 0.002, 1)
+
+    def pad(m, d):
+        f = S.mtof(m)
+        t = t_(d)
+        env = np.minimum(t / 0.06, 1) * np.exp(-t / 1.6)
+        return (np.sin(2 * math.pi * f * t) + 0.4 * np.sin(2 * math.pi * 2 * f * t) + 0.2 * np.sin(2 * math.pi * 3 * f * t)) * env
+
+    parts = []
+    for i, m in enumerate((72, 76, 79, 84)):                # C5 E5 G5 C6 arpeggio (the motif's 3-5-8 shape)
+        parts.append((0.14 * i, gl(m, 1.0), 0.9))
+    for i, m in enumerate((88, 91, 96)):                    # a sparkle on top
+        parts.append((0.62 + 0.09 * i, gl(m, 1.0), 0.55))
+    for m, g in ((48, 0.7), (60, 0.6), (64, 0.55), (67, 0.55), (72, 0.5)):
+        parts.append((0.6, pad(m, 2.6), g))
+    parts.append((0.6, gl(84, 2.0), 0.8))
+    return place(parts, 3.2)
+
+
+def make_scene_sfx():
+    fx = {}
+    # soft click for every dialogue page
+    t = t_(0.06)
+    click = np.sin(2 * math.pi * 1700 * t) * np.exp(-t / 0.012) + 0.4 * hp(S.noise(len(t)), 0.3) * np.exp(-t / 0.004)
+    fx["click"] = finish(place([(0.0, click, 1.0)], 0.2), 0.8)      # padded: very short samples are not reliably played by maxmod
+
+    # "received": a bright three-note pluck run (distinct from the coin)
+    def pluck(m, d=0.7):
+        f = S.mtof(m)
+        t = t_(d)
+        return (np.sin(2 * math.pi * f * t) * np.exp(-t / 0.18) + 0.4 * np.sin(2 * math.pi * 2 * f * t) * np.exp(-t / 0.1)
+                + 0.2 * np.sin(2 * math.pi * 3 * f * t) * np.exp(-t / 0.05)) * np.minimum(t / 0.002, 1)
+    fx["received"] = finish(sat(place([(0.0, pluck(79), 0.8), (0.1, pluck(83), 0.85), (0.2, pluck(86), 0.9), (0.32, pluck(91, 0.9), 1.0)], 1.2)), 0.9)
+
+    def engine(f_curve, amp_curve, d, noise_amp=0.3):
+        t = t_(d)
+        f = f_curve(t)
+        ph = 2 * math.pi * np.cumsum(f) / R
+        saw = np.zeros(len(t))
+        for h in range(1, 9):
+            saw += np.sin(h * ph) / h ** 0.9
+        saw = lp(saw, 0.18) * (1 + 0.25 * np.sin(2 * math.pi * 13 * t))
+        road = lp(S.noise(len(t)), 0.12)
+        return (saw + noise_amp * road) * amp_curve(t)
+    # golden car approaches (a smooth luxury purr, rising then easing off)
+    d = 2.6
+    fx["car_arrive"] = finish(engine(lambda t: 52 + 38 * np.sin(math.pi * np.clip(t / d, 0, 1) * 0.9),
+                                     lambda t: np.minimum(t / 1.7, 1) ** 1.5 * (1 - 0.35 * np.clip((t - 1.8) / 0.8, 0, 1)), d), 0.8)
+    # brake: soft squeal + hiss + engine settling
+    t = t_(0.9)
+    squeal = np.sin(2 * math.pi * np.cumsum(2300 - 700 * t / 0.9) / R) * np.sin(math.pi * np.clip(t / 0.6, 0, 1)) ** 2 * 0.35
+    hiss = hp(lp(S.noise(len(t)), 0.5), 0.08) * np.exp(-t / 0.35) * 0.6
+    fx["car_brake"] = finish(squeal + hiss + 0.5 * engine(lambda t: 46 + 0 * t, lambda t: np.exp(-t / 0.6), 0.9, 0.1), 0.75)
+
+    # door open + close
+    def thunk(d=0.2):
+        t = t_(d)
+        return np.sin(2 * math.pi * (115 - 40 * t / d) * t) * np.exp(-t / 0.05) + 0.4 * lp(S.noise(len(t)), 0.15) * np.exp(-t / 0.03)
+    fx["car_door"] = finish(place([(0.0, burst(0.025, 0.5, 0.15, 0.1, 0.002), 0.7), (0.02, thunk(), 0.9), (0.7, thunk(), 1.0),
+                                   (0.69, burst(0.02, 0.5, 0.2, 0.01), 0.6)], 1.0), 0.8)
+    d = 2.8
+    fx["car_leave"] = finish(engine(lambda t: 44 + 70 * np.clip(t / 1.2, 0, 1) ** 0.8 - 20 * np.clip((t - 1.8) / 1.0, 0, 1),
+                                    lambda t: np.minimum(t / 0.5, 1) * np.exp(-np.maximum(t - 1.0, 0) / 0.9), d, 0.35), 0.8)
+    # VaultMart swap: a cold electric whoosh
+    t = t_(0.5)
+    sweep = np.sin(2 * math.pi * np.cumsum(2400 * np.exp(-t / 0.18) + 300) / R) * np.exp(-t / 0.2)
+    fx["flash"] = finish(0.7 * sweep + hp(lp(S.noise(len(t)), 0.7), 0.1) * np.exp(-t / 0.15) * 0.6, 0.8)
+    # newspaper: big paper rustle
+    n = int(R * 1.1)
+    crack = np.zeros(n)
+    for _ in range(14):
+        at = int(S.RNG.uniform(0, n - 1500))
+        b = burst(0.08, 0.5, 0.1, 0.03, 0.01)
+        crack[at:at + len(b)] += b * S.RNG.uniform(0.4, 1.0)
+    fx["newspaper"] = finish(crack + 0.4 * hp(lp(S.noise(n), 0.4), 0.06) * slow_noise(n, 8), 0.75)
+
+    # phone ring: two rings
+    def ring():
+        t = t_(0.42)
+        return ((np.sin(2 * math.pi * 1040 * t) + np.sin(2 * math.pi * 1340 * t)) * (0.5 + 0.5 * np.sin(2 * math.pi * 24 * t))
+                * np.minimum(t / 0.01, 1) * np.minimum((0.42 - t) / 0.01, 1))
+    fx["phone_ring"] = finish(place([(0.0, ring(), 1.0), (0.6, ring(), 1.0)], 1.1), 0.7)
+    return fx
+
+
+# character voices: short vowel blips (gibberish "syllables"), played every few letters at a per-character speed (pitch)
+def vowel_blip(f0, d, formants, glide=0.0, saw=False, tilt=1.0):
+    t = t_(d)
+    f = f0 * (1 + glide * t / d)
+    ph = 2 * math.pi * np.cumsum(f) / R
+    x = np.zeros(len(t))
+    for h in range(1, 24):
+        if f0 * h > 6500:
+            break
+        w = 0.0
+        for (fc, a, bw) in formants:
+            w += a * math.exp(-(((h * f0) - fc) / bw) ** 2)
+        x += (w / h ** (0.6 if saw else tilt)) * np.sin(h * ph)
+    env = np.minimum(t / 0.006, 1) * np.sin(math.pi * np.clip(t / d, 0, 1)) ** 0.6
+    return x * env
+
+
+def robot_blip(freqs, d=0.03):
+    parts = []
+    for i, f in enumerate(freqs):
+        t = t_(d)
+        sqr = np.where(np.sin(2 * math.pi * f * t) > 0, 1.0, -1.0)
+        parts.append((i * d * 1.2, lp(sqr, 0.3) * np.minimum(t / 0.003, 1) * np.minimum((d - t) / 0.004, 1), 1.0))
+    return place(parts, len(freqs) * d * 1.2 + 0.01)
+
+
+TIMBRES = {
+    "soft": dict(f0=330, fm=[(520, 1.0, 250), (1100, 0.4, 300)], fmb=[(400, 1.0, 220), (900, 0.4, 260)], d=0.07, saw=False),
+    "warm": dict(f0=170, fm=[(700, 1.0, 300), (1200, 0.5, 300)], fmb=[(500, 1.0, 250), (900, 0.5, 200)], d=0.09, saw=False),
+    "bright": dict(f0=400, fm=[(700, 1.0, 250), (2100, 0.7, 350)], fmb=[(450, 1.0, 250), (2300, 0.7, 300)], d=0.06, saw=False),
+    "pomp": dict(f0=140, fm=[(600, 1.0, 500), (1500, 0.8, 600)], fmb=[(450, 1.0, 400), (1300, 0.9, 500)], d=0.10, saw=True),
+}
+
+
+def make_voices():
+    fx = {}
+    for name, p in TIMBRES.items():
+        fx[f"voice_{name}_a"] = finish(vowel_blip(p["f0"], p["d"], p["fm"], -0.05 if name == "pomp" else 0.04, p["saw"]), 0.7)
+        fx[f"voice_{name}_b"] = finish(vowel_blip(p["f0"] * (1.15 if name == "pomp" else 0.84), p["d"] * 1.1, p["fmb"], 0.0, p["saw"]), 0.7)
+        # reactions: positive = a happy rising hum, negative = a falling groan
+        pos = vowel_blip(p["f0"] * 0.95, 0.24, p["fm"], 0.55, p["saw"])
+        neg = vowel_blip(p["f0"] * 1.1, 0.32, p["fmb"], -0.42, p["saw"])
+        if name == "pomp":
+            pos = place([(0.0, vowel_blip(p["f0"] * 1.1, 0.09, p["fm"], 0.0, True), 1.0),
+                         (0.13, vowel_blip(p["f0"] * 1.3, 0.1, p["fm"], 0.0, True), 1.0)], 0.28)
+        fx[f"pos_{name}"] = finish(pos, 0.75)
+        fx[f"neg_{name}"] = finish(neg, 0.75)
+    fx["voice_robot_a"] = finish(robot_blip([440, 587]), 0.6)
+    fx["voice_robot_b"] = finish(robot_blip([523, 392]), 0.6)
+    fx["pos_robot"] = finish(robot_blip([523, 659, 784], 0.045), 0.6)
+    fx["neg_robot"] = finish(robot_blip([196, 147], 0.09), 0.6)
     return fx
 
 

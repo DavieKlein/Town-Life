@@ -12,7 +12,7 @@ out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "audi
 os.makedirs(out, exist_ok=True)
 import fetch_vcsl  # noqa: E402
 fetch_vcsl.main([])      # downloads the CC0 VCSL recordings once (art_source/audio/vcsl/, git-ignored)
-for fn in (songs.city_day, songs.old_block, songs.market, songs.stock_it, songs.plate_rush):
+for fn in (songs.city_day, songs.old_block, songs.market, songs.stock_it, songs.plate_rush, songs.victor, songs.sad):
     print(fn.__name__, fn(out), "bytes")
 for name, x in sfx.make().items():
     print(name, sfx.write_wav(os.path.join(out, name + ".wav"), x), "bytes")

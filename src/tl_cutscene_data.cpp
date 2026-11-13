@@ -40,6 +40,7 @@ namespace tl
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // stock_react
         { cs_op::pan, 128, 160, 0, 0, 0, nullptr },  // pimm_arrives
         { cs_op::wait, 15, 0, 0, 0, 0, nullptr },  // pimm_arrives
+        { cs_op::sfx, 5, 0, 0, 0, 0, nullptr },  // pimm_arrives
         { cs_op::spawn, int(npc_id::pimm), 128, 280, 4, 0, nullptr },  // pimm_arrives
         { cs_op::move, int(npc_id::pimm), 168, 262, 0, 0, nullptr },  // pimm_arrives
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // pimm_arrives
@@ -63,6 +64,7 @@ namespace tl
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::move, int(npc_id::pimm), 128, 286, 0, 0, nullptr },  // pimm_leaves
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // pimm_leaves
+        { cs_op::sfx, 5, 0, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::despawn, int(npc_id::pimm), 0, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::flag, story_flag::pimm_left, 1, 0, 0, 0, nullptr },  // pimm_leaves
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // pimm_leaves
@@ -70,6 +72,7 @@ namespace tl
         { cs_op::wait, 10, 0, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::say, dlg::pro_lunch, 0, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::pan_player, 0, 0, 0, 0, 0, nullptr },  // staff_lunch
+        { cs_op::sfx, 27, 0, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::info, 0, 0, 0, 0, 0, "Mia gave you Bread." },  // staff_lunch
         { cs_op::eat, 15, 3, 0, 0, 0, nullptr },  // staff_lunch
         { cs_op::fade_out, 14, 0, 0, 0, 0, nullptr },  // staff_lunch
@@ -103,12 +106,16 @@ namespace tl
         { cs_op::letterbox, 1, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 28, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::car_move, 709, 370, 170, 1, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 29, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 25, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 30, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::robot), 717, 336, 4, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::robot), 720, 307, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 40, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::music, 6, 85, 0, 0, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::victor), 694, 336, 4, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::victor), 701, 304, 0, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
@@ -117,6 +124,7 @@ namespace tl
         { cs_op::car_remove, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_out, 12, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::warp, int(map_id::corner_market), 128, 262, 1, 0, nullptr },  // vault_day
+        { cs_op::music, 6, 85, 0, 0, 0, nullptr },  // vault_day
         { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::mia), 222, 214, 1, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::rosa), 198, 214, 1, 0, nullptr },  // vault_day
@@ -125,9 +133,11 @@ namespace tl
         { cs_op::letterbox, 1, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 30, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 5, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::robot), 128, 282, 4, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::robot), 182, 246, 0, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 5, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::spawn, int(npc_id::victor), 128, 282, 4, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::victor), 205, 246, 0, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
@@ -139,6 +149,7 @@ namespace tl
         { cs_op::move, int(npc_id::victor), 128, 286, 1, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::robot), 138, 286, 1, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 5, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::despawn, int(npc_id::victor), 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::despawn, int(npc_id::robot), 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::dex_vault), 160, 250, 0, 0, nullptr },  // vault_day
@@ -146,6 +157,7 @@ namespace tl
         { cs_op::say, dlg::pro_vault_5, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::dex_vault), 128, 286, 1, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 5, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::despawn, int(npc_id::dex_vault), 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::move, int(npc_id::rosa), 166, 214, 0, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
@@ -154,6 +166,7 @@ namespace tl
         { cs_op::move, int(npc_id::rosa), 205, 246, 0, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::actor_face, int(npc_id::rosa), 2, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::music, 7, 85, 0, 0, 0, nullptr },  // vault_day
         { cs_op::money_rank, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::say, dlg::pro_vault_3, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::letterbox, 0, 0, 0, 0, 0, nullptr },  // vault_day
@@ -163,6 +176,7 @@ namespace tl
         { cs_op::flag, story_flag::vault_scene, 1, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_out, 12, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::warp, int(map_id::city_centre), 704, 304, 0, 0, nullptr },  // vault_day
+        { cs_op::music, 7, 85, 0, 0, 0, nullptr },  // vault_day
         { cs_op::scene_begin, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::player_at, 650, 317, 3, 0, 0, nullptr },  // vault_day
         { cs_op::pan_now, 672, 301, 0, 0, 0, nullptr },  // vault_day
@@ -180,8 +194,10 @@ namespace tl
         { cs_op::despawn, int(npc_id::victor), 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::despawn, int(npc_id::robot), 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::despawn, int(npc_id::dex_vault), 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 30, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 15, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::car_spawn, 709, 377, 7, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 31, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::car_move, 1248, 377, 150, 2, 0, nullptr },  // vault_day
         { cs_op::wait_moves, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::car_remove, 0, 0, 0, 0, 0, nullptr },  // vault_day
@@ -207,16 +223,20 @@ namespace tl
         { cs_op::player_at, 704, 314, 0, 0, 0, nullptr },  // vault_day
         { cs_op::scene_end, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 20, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 32, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::vaultmart_swap, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::music_restore, 0, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::fade_in, 14, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::wait, 30, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::say, dlg::pro_vaultmart, 0, 0, 0, 0, nullptr },  // vault_day
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // vault_day
+        { cs_op::sfx, 33, 0, 0, 0, 0, nullptr },  // news_day2
         { cs_op::say, dlg::pro_news, 0, 0, 0, 0, nullptr },  // news_day2
         { cs_op::flag, story_flag::news_due, 0, 0, 0, 0, nullptr },  // news_day2
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // news_day2
         { cs_op::say, dlg::pro_mia_tip, 0, 0, 0, 0, nullptr },  // mia_tip
         { cs_op::end, 0, 0, 0, 0, 0, nullptr },  // mia_tip
+        { cs_op::sfx, 17, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::fade_out, 24, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::card, 0, 0, 0, 0, 0, "You fainted..." },  // faint
         { cs_op::warp, int(map_id::clinic), 190, 40, 0, 0, nullptr },  // faint
@@ -230,9 +250,9 @@ namespace tl
         { cs_op::say, dlg::faint_wake, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::get_up, 0, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::wait, 10, 0, 0, 0, 0, nullptr },  // faint
-        { cs_op::ifflag, story_flag::clinic_paid, 1, 224, 0, 0, nullptr },  // faint
+        { cs_op::ifflag, story_flag::clinic_paid, 1, 244, 0, 0, nullptr },  // faint
         { cs_op::say, dlg::faint_debt, 0, 0, 0, 0, nullptr },  // faint
-        { cs_op::jump, 225, 0, 0, 0, 0, nullptr },  // faint
+        { cs_op::jump, 245, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::say, dlg::faint_pay, 0, 0, 0, 0, nullptr },  // faint
         { cs_op::actor_face_player, int(npc_id::okafor), 0, 0, 0, 0, nullptr },  // faint
         { cs_op::scene_end, 0, 0, 0, 0, 0, nullptr },  // faint
@@ -243,16 +263,16 @@ namespace tl
             { 0, 13 },
             { 13, 9 },
             { 22, 7 },
-            { 29, 15 },
-            { 44, 13 },
-            { 57, 13 },
-            { 70, 6 },
-            { 76, 6 },
-            { 82, 3 },
-            { 85, 118 },
-            { 203, 3 },
-            { 206, 2 },
-            { 208, 21 },
+            { 29, 16 },
+            { 45, 14 },
+            { 59, 14 },
+            { 73, 6 },
+            { 79, 6 },
+            { 85, 3 },
+            { 88, 133 },
+            { 221, 4 },
+            { 225, 2 },
+            { 227, 22 },
         };
         constexpr cs_cond all_conds[] = {
             { cs_cond_kind::map, int(map_id::player_room), 0 },

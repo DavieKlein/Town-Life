@@ -488,8 +488,105 @@ def plate_rush(out):
     return song.build(os.path.join(out, "plate_rush.xm"))
 
 
+# =============================================================================================== Victor Vault's theme (cutscenes)
+def victor(out):
+    """Eb major, 104 BPM, straight and cold: glassy synths, brass hits, a gated snare. The Town motif (3 5 8 | b7 5) in its robotic, "wrong" form:
+    the b7 is replaced by a natural 4th-degree tritone (A over Eb) - pompous and slightly off, a bit menacing-comic."""
+    insts = [S.inst_synth_brass(), S.inst_zbass(), S.inst_glass(), P.gated_snare()]
+    kit = P.drum_kit()
+    insts += [kit[k] for k in ("kick", "hat")]
+    song = Song("Victor Vault", 104, 16, 7, insts, swing=0)
+    song.master = 1.5
+    song.gain = {"brass": 0.8, "zbass": 0.6, "glass": 1.0, "gsnare": 1.5, "kick": 1.6, "hat": 1.8}
+    Eb = C("Eb2", "Bb3", "Eb4", "Eb G Bb")
+    Ab = C("Ab2", "Eb4", "Ab4", "Ab C Eb")
+    Cm = C("C3", "G3", "C4", "C Eb G")
+    Bb = C("Bb2", "F3", "Bb3", "Bb D F")
+    Bb7 = C("Bb2", "A3", "D4", "Bb D F Ab")
+    prog = [[(0, 16, Eb)], [(0, 16, Eb)], [(0, 16, Ab)], [(0, 16, Ab)], [(0, 16, Cm)], [(0, 16, Cm)], [(0, 16, Bb)], [(0, 16, Bb7)]]
+    prog = prog + prog
+    chord_at = index_chords(prog)
+    for b in range(16):
+        d = song.drum_line
+        d(0, b, "x.....x.x.......", "kick", {"x": 40})
+        d(0, b, "....g.......g...", "gsnare", {"g": 38})
+        d(1, b, "h.h.h.h.h.h.h.h.", "hat", {"h": 14})
+        for (r0, r1, chd) in prog[b]:
+            r = chd["root"]
+            for (rr, m, ln) in [(0, r, 2), (3, r + 12, 1), (6, r, 2), (8, r + 7, 2), (11, r + 12, 1), (14, r, 2)]:
+                song.put(2, b, rr, m, "zbass", 52 if rr % 4 == 0 else 40, ln)
+            lo, hi = chd["dy"]
+            for rr in (0, 8):
+                song.put(3, b, rr, lo, "brass", 30, 6)
+                song.put(4, b, rr, hi, "brass", 28, 6)
+            # glass arpeggio (cold, even 8ths)
+            for k, rr in enumerate(range(0, 16, 2)):
+                song.put(6, b, rr, [r + 24, r + 31, r + 36, r + 31][k % 4], "glass", 14 if k % 2 else 18, 1)
+    mel = [
+        [(0, "G4", 2), (2, "Bb4", 2), (4, "Eb5", 6), (10, "A4", 2), (12, "Bb4", 4)],
+        [(0, "Eb5", 3), (4, "G5", 4), (8, "Bb5", 4), (12, "G5", 4)],
+        [(0, "Ab4", 2), (2, "C5", 2), (4, "Eb5", 6), (10, "D5", 2), (12, "C5", 4)],
+        [(0, "Eb5", 4), (4, "Ab5", 4), (8, "G5", 4), (12, "Eb5", 4)],
+        [(0, "G4", 2), (2, "C5", 2), (4, "Eb5", 6), (10, "D5", 2), (12, "C5", 4)],
+        [(0, "Eb5", 4), (4, "G5", 4), (8, "F5", 4), (12, "Eb5", 4)],
+        [(0, "F5", 4), (4, "D5", 4), (8, "Bb4", 4), (12, "F5", 4)],
+        [(0, "F5", 8), (8, "A5", 4), (12, "Bb5", 4)],
+    ]
+    for b in range(16):
+        melody(song, 5, b, mel[b % 8], "brass", 40)
+    cl = chord_pcs(prog)
+    print("victor melody check:")
+    check_melody(song, 5, cl, {3, 5, 7, 8, 10, 0, 2, 9, 1}, "lead")
+    return song.build(os.path.join(out, "victor.xm"))
+
+
+# =============================================================================================== sad / tender cue
+def sad(out):
+    """A minor, 66 BPM: the Town motif (3 5 8 | b7 5) tender on a solo electric piano with a soft vibraphone echo and a quiet harmonica pad."""
+    insts = [P.inst_epiano(), S.inst_bass(upright=True), P.inst_vibes(), P.inst_harmonica()]
+    song = Song("Tender", 66, 12, 7, insts, swing=0)
+    song.master = 2.0
+    song.gain = {"epiano": 1.4, "bass_up": 0.5, "vibes": 1.0, "harmonica": 0.8}
+    Am = C("A2", "E4", "A4", "A C E")
+    F = C("F2", "A3", "C4", "F A C")
+    Cc = C("C3", "G3", "C4", "C E G")
+    G = C("G2", "B3", "D4", "G B D")
+    Dm = C("D3", "A3", "D4", "D F A")
+    E7 = C("E3", "G#3", "D4", "E G# B D")
+    prog = [[(0, 16, x)] for x in (Am, F, Cc, G, Am, F, Dm, E7, F, G, Am, Am)]
+    for b in range(12):
+        chd = prog[b][0][2]
+        r = chd["root"]
+        song.put(2, b, 0, r, "bass_up", 40, 10)
+        lo, hi = chd["dy"]
+        # broken chord, very gentle
+        for k, (rr, m) in enumerate([(0, lo), (4, hi), (8, lo + 12), (12, hi)]):
+            song.put(3, b, rr, m, "epiano", 24 if k % 2 else 28, 4)
+        song.put(5, b, 0, hi - 12 if hi - 12 > 55 else hi, "harmonica", 14, 15)
+    mel = [
+        [(0, "C5", 4), (4, "E5", 4), (8, "A5", 8)],
+        [(0, "G5", 4), (4, "E5", 4), (8, "F5", 8)],
+        [(0, "E5", 4), (4, "G5", 4), (8, "C6", 8)],
+        [(0, "B5", 4), (4, "G5", 4), (8, "D5", 8)],
+        [(0, "C5", 4), (4, "E5", 4), (8, "A5", 4), (12, "G5", 4)],
+        [(0, "A5", 4), (4, "F5", 4), (8, "C5", 8)],
+        [(0, "D5", 4), (4, "F5", 4), (8, "A5", 8)],
+        [(0, "G#5", 4), (4, "E5", 4), (8, "B4", 8)],
+        [(0, "C5", 8), (8, "A4", 8)],
+        [(0, "D5", 8), (8, "B4", 8)],
+        [(0, "C5", 4), (4, "E5", 4), (8, "A5", 8)],
+        [(0, "E5", 16)],
+    ]
+    for b in range(12):
+        melody(song, 4, b, mel[b], "epiano", 36, (6, 6, "vibes", 0.3))
+    cl = chord_pcs(prog)
+    print("sad melody check:")
+    check_melody(song, 4, cl, {9, 11, 0, 2, 4, 5, 7, 8}, "lead")
+    return song.build(os.path.join(out, "sad.xm"))
+
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "."
     os.makedirs(out, exist_ok=True)
-    for fn in (city_day, old_block, market, stock_it, plate_rush):
+    for fn in (city_day, old_block, market, stock_it, plate_rush, victor, sad):
         print(fn.__name__, fn(out), "bytes")

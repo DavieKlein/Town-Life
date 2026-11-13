@@ -71,6 +71,42 @@ int main()
     bn::core::init();
     tl::blackbox::init();
 
+#ifdef TL_DEBUG_VOICES
+    // Debug build only: every character in turn says 12 gibberish syllables, then reacts happily and unhappily (capture: tools/music/capture_voices.py)
+    {
+        int who = 0;
+        int frame = 0;
+        constexpr int cast_size = 21;
+
+        while(true)
+        {
+            int speaker = who == 20 ? 253 : who;
+
+            if(frame < 12 * 6 && frame % 6 == 0)
+            {
+                tl::audio::voice(speaker, frame / 6 + 1);
+            }
+            else if(frame == 110)
+            {
+                tl::audio::reaction(speaker, true);
+            }
+            else if(frame == 170)
+            {
+                tl::audio::reaction(speaker, false);
+            }
+
+            if(++frame >= 230)
+            {
+                frame = 0;
+                who = (who + 1) % cast_size;
+            }
+
+            tl::audio::update();
+            bn::core::update();
+        }
+    }
+#endif
+
 #ifdef TL_DEBUG_SFX
     // Debug build only: every A press plays the next sound effect (loops are held for 3 s, then stopped) - capture tests, tools/music/capture_sfx.py
     {
@@ -111,7 +147,7 @@ int main()
 
 #ifdef TL_DEBUG_MUSIC
     // Debug build only: plays one track from the start, nothing else (audio capture tests: tools/music/capture.py).
-    // 1 city, 2 old_block, 3 market, 4 stock_it, 5 plate_rush
+    // 1 city, 2 old_block, 3 market, 4 stock_it, 5 plate_rush, 6 victor, 7 sad
     {
         int which = TL_DEBUG_MUSIC;
         tl::audio::set_track(tl::audio::track(which), 100, true);
@@ -120,7 +156,7 @@ int main()
         {
             if(bn::keypad::a_pressed())
             {
-                which = which % 5 + 1;      // A = next track
+                which = which % 7 + 1;      // A = next track
                 tl::audio::set_track(tl::audio::track(which), 100, true);
             }
 

@@ -12,7 +12,7 @@ import capture as C  # noqa: E402
 
 NAMES = ["menu_blip", "confirm", "menu_back", "coin", "cash", "door_bell", "mission_complete", "water(loop)", "shower(loop)", "munch(loop)",
          "gulp(loop)", "flush", "page(loop)", "rustle(loop)", "clink", "whirr", "snore(loop)", "thud", "door", "beep", "scratch", "ladder",
-         "manhole", "mg_good", "mg_bad", "mg_clink"]
+         "manhole", "mg_good", "mg_bad", "mg_clink", "click", "received", "car_arrive", "car_brake", "car_door", "car_leave", "flash", "newspaper", "phone_ring"]
 LOOPS = {"water(loop)", "shower(loop)", "munch(loop)", "gulp(loop)", "page(loop)", "rustle(loop)", "snore(loop)"}
 
 
@@ -21,8 +21,11 @@ def main():
     cap.r.run(30)
     pieces = []
     for name in NAMES:
+        cap.chunks = []             # start recording BEFORE the press so very short effects (click) are not cut off
         cap.press("a")
-        x = cap.record(3.4 if name in LOOPS else (2.8 if name in ("mission_complete", "flush") else 1.8))
+        seconds = 3.4 if name in LOOPS else (2.8 if name in ("mission_complete", "flush", "car_arrive", "car_leave") else 1.8)
+        cap.r.run(int(seconds * C.FPS))
+        x = np.concatenate(cap.chunks).astype(np.float64).reshape(-1, 2).mean(axis=1) / 32768.0
         # trim trailing silence
         idx = np.where(np.abs(x) > 0.004)[0]
         x = x[:idx[-1] + int(0.2 * C.RATE)] if len(idx) else x[:int(0.2 * C.RATE)]

@@ -380,6 +380,11 @@ namespace tl
             return;
         }
 
+        if(expr == expr_happy || expr == expr_angry || expr == expr_sad)
+        {
+            audio::reaction(_layout == layout::two && _partner >= 0 ? _partner : _speaker, expr == expr_happy);
+        }
+
         _expr = expr;
         const portrait_set* set = portrait_for(_layout == layout::two && _partner >= 0 ? _partner : _speaker);
 
@@ -575,12 +580,18 @@ namespace tl
         {
             if(TL_A_PRESSED() || (b_advances && bn::keypad::b_pressed()))
             {
+                audio::play(audio::sfx::click);
                 _shown = _total;
                 _draw_lines(false);
             }
             else
             {
                 _shown += b_advances && bn::keypad::b_held() ? 3 : 1;
+
+                if((_shown & 3) == 0 && _shown < _total)
+                {
+                    audio::voice(_speaker, _shown);         // s78 round 4: the speaker's gibberish blip every 4th letter
+                }
 
                 if(_shown > _total)
                 {
@@ -612,6 +623,7 @@ namespace tl
 
         if(TL_A_PRESSED() || (b_advances && bn::keypad::b_pressed()))
         {
+            audio::play(audio::sfx::click);
             _a_icon.reset();
 
             if(_next_page())
@@ -801,6 +813,7 @@ namespace tl
 
         if(delta)
         {
+            audio::reaction(_layout == layout::two && _partner >= 0 ? _partner : _speaker, delta > 0);
             bn::string<8> text;
             text.append(delta > 0 ? "+" : "-");
             text.append(bn::to_string<4>(delta > 0 ? delta : -delta));

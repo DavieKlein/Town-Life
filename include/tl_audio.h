@@ -13,7 +13,9 @@ namespace tl::audio
         old_block,      // Old Block streets
         market,         // shops / interiors loop
         stock_it,       // minigame STOCK IT!
-        plate_rush      // minigame PLATE RUSH
+        plate_rush,     // minigame PLATE RUSH
+        victor,         // Victor Vault's theme (cutscenes)
+        sad             // tender cue (Rosa's last pay, Mia's goodbye)
     };
 
     enum class sfx
@@ -45,6 +47,16 @@ namespace tl::audio
         mg_good,        // minigames
         mg_bad,
         mg_clink,
+        // round 4: scenes and dialogue
+        click,          // dialogue page
+        received,       // somebody gives you something
+        car_arrive,
+        car_brake,
+        car_door,
+        car_leave,
+        flash,          // VaultMart swap
+        newspaper,
+        phone_ring,
         none
     };
 
@@ -67,6 +79,21 @@ namespace tl::audio
     void duck(bool on);
 
     void play(sfx s);
+
+    // Character voices (round 4): a short "syllable" blip while a speaker's text is typed (speaker = npc_id, speaker_player = 253;
+    // anything else is silent), and a happy / unhappy reaction (friendship up / down, happy / angry / sad expression).
+    void voice(int speaker, int letter_index);
+    void reaction(int speaker, bool positive);
+
+    // Somebody gives you something: the "received" jingle (money, voucher, coins, items); the coin sound that would follow is skipped.
+    void received();
+    void play_money(bool up);
+
+    // Music dips for a few frames under a jingle (mission complete).
+    void jingle_duck(int frames, int percent);
+
+    // Back to the track of the current place after a cutscene changed the music (`music_restore`).
+    void restore();
 
     // The looping activity sound that should be heard right now (sfx::none = silence). The clip is replayed back to back while it is
     // wanted and stops at once when it is not (activity over or cancelled with B).

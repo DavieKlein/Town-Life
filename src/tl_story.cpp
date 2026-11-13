@@ -1,4 +1,5 @@
 #include "tl_story.h"
+#include "tl_audio.h"
 
 #include "tl_story_ids.h"
 
@@ -253,10 +254,22 @@ namespace tl
 
         case dlg_op::money:
             _money_delta += effect.b;
+
+            if(effect.b > 0)
+            {
+                audio::received();
+            }
+
             break;
 
         case dlg_op::set_flag:
             set_flag(effect.a, effect.b);
+
+            if(effect.a == story_flag::has_coffee_voucher && effect.b > 0)
+            {
+                audio::received();      // Mia hands over the coffee voucher
+            }
+
             break;
 
         case dlg_op::start_mission:
@@ -269,6 +282,12 @@ namespace tl
 
         case dlg_op::coins:
             _coins = uint16_t(_coins + effect.b);
+
+            if(effect.b > 0)
+            {
+                audio::received();
+            }
+
             break;
 
         default:

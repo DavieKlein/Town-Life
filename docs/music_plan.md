@@ -5,7 +5,8 @@ recordings + a synthesised bass, 26 SFX (UI, money, doors, every activity, minig
 CPU (headless mGBA, `-DTL_DEBUG_CPU`, City Centre running average / missed frames per 1180 frames): no audio 30.7 % / 7, 21 kHz 42.5 % / 20, 27 kHz 46.6 % / 24,
 31 kHz 49.2 % / 37 (Old Block idle 32 / 42 / 45 / 47 %). 21 kHz was chosen: the mixer's cost grows with the rate while the captured spectra of the three rates
 are almost identical (the artefacts come from the instruments and from skipping samples, which the sampler now avoids by resampling to the mixing rate).
-Still open: title / minigame-result / Victor tracks, night variants, volume options, a real-device check in Lemuroid.
+Round 4 added Victor's theme, the tender cue, cutscene music / SFX ops, character voices and reaction sounds, dialogue clicks and the "received" jingle (CLAUDE.md s78 round 4).
+Still open: title / minigame-result tracks, night variants, volume options, a real-device check in Lemuroid.
 
 (Original text below.) Status: PROPOSAL. No audio exists yet (`audio/` and `dmg_audio/` are empty; the Makefile already has `AUDIOBACKEND := maxmod`,
 `DMGAUDIOBACKEND := default`). All music is **fully original**: we describe the *approach* of earlier life-sims, never reuse a melody,

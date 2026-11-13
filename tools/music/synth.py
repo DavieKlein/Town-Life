@@ -320,7 +320,7 @@ def zoned_additive(name, zones, parts, attack_periods, detune_k=None, reps=1, en
     harmonics below the mixer Nyquist are kept."""
     samples, km = [], [0] * 96
     for zi, (lo, hi, root) in enumerate(zones):
-        P = max(10, int(15768 / mtof(hi)))
+        P = max(10, int(21024 / mtof(hi)))
         kept = [(h, a) for h, a in parts if h < P / 2 and h * mtof(hi) < 7200]
         samples.append(additive_loop(root, P, kept, attack_periods=attack_periods, reps=reps,
                                      detune_k=detune_k, name=name))
@@ -376,3 +376,22 @@ def inst_clav():
 def drum_kit():
     return {"kick": kick(), "snare": snare_brush(), "rim": rim(), "hat": hat_closed(), "ohat": hat_open(),
             "shaker": shaker(), "swish": brush_swish(), "clave": clave(), "wood": woodblock()}
+
+
+# ---------------------------------------------------------------- round 4: cold VaultTech voices (smooth, band-limited synths)
+def inst_synth_brass():
+    parts = [(h, 1.0 / h ** 0.85) for h in range(1, 9)]
+    return zoned_additive("brass", [(0, 71, 63), (72, 108, 75)], parts, attack_periods=8, env=[(0, 64), (4, 0)])
+
+
+def inst_glass():
+    parts = [(1, 1.0), (2, 0.45), (3, 0.2), (5, 0.08)]
+    return zoned_additive("glass", [(0, 74, 70), (75, 108, 82)], parts, attack_periods=14, env=[(0, 64), (6, 0)])
+
+
+def inst_zbass():
+    P = 112
+    parts = [(1, 1.0, 0.8, 0.2), (3, 0.3, 0.3, 0.1), (5, 0.12, 0.1, 0.06)]
+    lo = plucked_loop(36, P, parts, T_loop=0.3, name="zbass")
+    hi = plucked_loop(48, P // 2, parts, T_loop=0.3, name="zbass")
+    return Instrument("zbass", [lo, hi], split(48), env=[(0, 64), (4, 0)])

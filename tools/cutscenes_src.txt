@@ -44,6 +44,7 @@ trigger stock_react when map=corner_market flag=shelves_stocked !flag=stock_reac
 script pimm_arrives
   pan 8 10
   wait 15
+  sfx door_bell
   spawn pimm 8.0 17.5 n
   move pimm 10.5 16.4
   wait_moves
@@ -69,6 +70,7 @@ script pimm_leaves
   wait_moves
   move pimm 8.0 17.9
   wait_moves
+  sfx door_bell
   despawn pimm
   flag pimm_left
 trigger pimm_leaves when map=corner_market flag=rye_delivered !flag=pimm_left
@@ -79,6 +81,7 @@ script staff_lunch
   wait 10
   say pro_lunch
   pan_player
+  sfx received
   info "Mia gave you Bread."
   eat 15 3 0
   fade_out 14
@@ -123,12 +126,16 @@ script vault_day
   letterbox on
   fade_in 14
   wait 20
+  sfx car_arrive
   car_move 44.3 23.1 170 1
   wait_moves
+  sfx car_brake
   wait 25
+  sfx car_door
   spawn robot 44.8 21.0 n
   move robot 45.0 19.2
   wait 40
+  music victor 85
   spawn victor 43.4 21.0 n
   move victor 43.8 19.0
   wait_moves
@@ -138,6 +145,7 @@ script vault_day
   # beat 2: inside the shop
   fade_out 12
   warp corner_market 8.0 16.4 up
+  music victor 85
   scene_begin
   spawn mia 13.9 13.4 sw
   spawn rosa 12.4 13.4 sw
@@ -146,9 +154,11 @@ script vault_day
   letterbox on
   fade_in 14
   wait 30
+  sfx door_bell
   spawn robot 8.0 17.6 n
   move robot 11.4 15.4
   wait_moves
+  sfx door_bell
   spawn victor 8.0 17.6 n
   move victor 12.8 15.4
   wait_moves
@@ -161,6 +171,7 @@ script vault_day
   move victor 8.0 17.9 fast
   move robot 8.6 17.9 fast
   wait_moves
+  sfx door_bell
   despawn victor
   despawn robot
   move dex_vault 10.0 15.6
@@ -168,6 +179,7 @@ script vault_day
   say pro_vault_5
   move dex_vault 8.0 17.9 fast
   wait_moves
+  sfx door_bell
   despawn dex_vault
   # Rosa hands over the last pay (the rank wage of STOCK IT!)
   move rosa 10.4 13.4
@@ -177,6 +189,7 @@ script vault_day
   move rosa 12.8 15.4
   wait_moves
   actor_face rosa w
+  music sad 85
   money_rank
   say pro_vault_3
   letterbox off
@@ -187,6 +200,7 @@ script vault_day
   # outside, in front of the shop: Vault, Valet and Dex get into the golden car and it drives off to the east
   fade_out 12
   warp city_centre 44.0 19.0 down
+  music sad 85
   scene_begin
   player_at 40.6 19.8 right
   pan_now 42.0 18.8
@@ -204,8 +218,10 @@ script vault_day
   despawn victor
   despawn robot
   despawn dex_vault
+  sfx car_door
   wait 15
   car_spawn 44.3 23.55 se
+  sfx car_leave
   car_move 78.0 23.55 150 2
   wait_moves
   car_remove
@@ -232,7 +248,9 @@ script vault_day
   player_at 44.0 19.6 down
   scene_end
   wait 20
+  sfx flash
   vaultmart_swap
+  music_restore
   fade_in 14
   wait 30
   say pro_vaultmart
@@ -240,6 +258,7 @@ trigger vault_day when day=1 time>=14:00 flag=lunch_given !flag=vault_scene
 
 # ------------------------------------------------------------------------------------------------ Scene 10: Day 2
 script news_day2
+  sfx newspaper
   say pro_news
   flag news_due 0
 trigger news_day2 when flag=news_due !flag=read_newspaper
@@ -252,6 +271,7 @@ trigger mia_tip when map=diner day>=2 flag=read_newspaper !flag=deposit_tip time
 # ------------------------------------------------------------------------------------------------ s64: fainting (a need stayed empty for an hour)
 # Started from C++ (field::update, _faint_pending). You wake up on the exam couch of the City Clinic two hours later.
 script faint
+  sfx thud
   fade_out 24
   card "You fainted..."
   warp clinic 11.85 2.5 down

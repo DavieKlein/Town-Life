@@ -1007,7 +1007,23 @@ Owner-approved proposal `tools/proposals/s77/` (entrance variant A) is built; th
   shop music when the golden car arrives.
 - **Build flags (Makefile `USERFLAGS`):** 8 music channels, 3 sound channels, mixing rate 21 kHz (maxmod allows neither mono nor dynamic mixing). CPU numbers:
   docs/music_plan.md. Debug: `-DTL_AUDIO_OFF` = no sound (CPU baseline).
-- Not done: title / name-entry music, night tracks, Victor's theme, minigame result stingers, volume options in the pause menu, footsteps, a real bass recording.
+- **Round 4 (cutscene audio, voices):** two more tracks, `victor` (Eb, 104 BPM: glassy synth + brass hits + gated snare, the Town motif with a "wrong" tritone;
+  synth brass / glass / bass in `synth.py`, samples for drums) and `sad` (A minor 66 BPM: tender FM piano with vibraphone echo, harmonica pad). Cutscene ops
+  (tools/cutscene_data.py, names parsed from the enums in `include/tl_audio.h`, so new tracks / sfx need no tool change): `music <track> [vol]`, `music_stop`,
+  `music_restore` (back to the place's track: `audio::restore()` + `set_map`), `sfx <name>`. `vault_day` (tools/cutscenes_src.txt): silence -> car_arrive / car_brake /
+  car_door -> `music victor` -> shop door bells as Valet / Victor / Dex enter and leave -> `music sad` at Rosa's pay (+ `received` jingle) and Mia's goodbye -> car_door /
+  car_leave -> `sfx flash` + `music_restore` at the VaultMart swap. Other scenes: Pimm's door bell, newspaper, thud (faint), `received` for Mia's bread.
+  Script warps do not ring bells when the music op cleared `_has_map` (the script adds `sfx door_bell` itself).
+  **Voices:** `audio::voice(speaker, n)` every 4th typed letter from `dialogue_box::update_text` (5 timbres soft / warm / bright / pomp / robot, two vowel shapes,
+  per-character speed = pitch, table `voice_of` in tl_audio.cpp: npc_id order + 253 player), `audio::reaction(speaker, positive)` from `set_friendship` (delta sign) and
+  `set_expression` (happy = positive, angry / sad = negative; 40-frame cooldown), `click` on every page advance, `received` jingle (story effects money / coins /
+  coffee voucher in `story_state::apply_effect`, script ops money / money_rank) with the coin sound skipped for 150 frames (`play_money`). The mission jingle is longer
+  and soft-saturated and ducks the music to 25 % for 3.5 s (`jingle_duck`): verified to start once per completion (vault_day: after the whole scene, with the message page).
+  Sound channels are now 4 (a loop, a voice, two one-shots).
+  Debug / measuring: `-DTL_DEBUG_VOICES` (every character in turn) + `capture_voices.py`, `capture_run.py OUT.mp3 ROM "driver commands"` records any scripted run
+  (and with `-DTL_DEBUG_AUDIOLOG` prints every sfx started, voice and reaction counts), `fetch_vcsl.py`, `capture_sfx.py`.
+- Not done: title / name-entry music, night tracks, minigame result stingers, volume options in the pause menu, footsteps, a real bass recording, a "morning at the shop" cue
+  (the market loop plays there).
 
 ## s79: NPC visibility audit and "B gets you out" (branch `claude/intelligent-hawking-y0vl2t`)
 

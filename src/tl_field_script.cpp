@@ -706,10 +706,15 @@ namespace tl
 
         case cs_op::money:
             _money += step.a;
+            if(step.a > 0)
+            {
+                audio::received();
+            }
             _redraw_hud_text();
             break;
 
         case cs_op::money_rank:
+            audio::received();
             _money += stock_pay_for_rank(s.flag(story_flag::stock_rank) - 1);
             _redraw_hud_text();
             break;
@@ -771,6 +776,11 @@ namespace tl
 
         case cs_op::music_stop:
             audio::stop(false);
+            break;
+
+        case cs_op::music_restore:
+            audio::restore();
+            audio::set_map(_map_id);
             break;
 
         case cs_op::sfx:

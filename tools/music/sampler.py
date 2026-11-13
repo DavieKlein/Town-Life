@@ -207,3 +207,10 @@ def drum_kit():
     for key, ins in k.items():
         ins.name = key
     return k
+
+
+def gated_snare():
+    """cold gated snare: the recorded snare cut hard after 0.11 s"""
+    ins = drum_sample("Snare2_HitSN_v3_rr1_Mid.wav", 0.11, 0.012, 0.42)
+    ins.name = "gsnare"
+    return ins
