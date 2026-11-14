@@ -1248,6 +1248,12 @@ blender_render.py code is in commit `c3aaccc` (WIP). It adds projecting shop sig
 lamps, a café table, a mailbox, etc. It was reverted from main until the owner wants details.
 
 **Owner decisions (latest):**
+- **Old Block Rev 3 (s82, APPROVED but NOT YET BUILT - owner: "build nothing yet, just remember it for later"):** build the proposal in
+  `tools/proposals/s82/proposal.md` (plan `layout_plan.png` from `plan.py`) WITHOUT the workshop and WITHOUT the Roxy cinema. Yes to: continuous
+  north-row frontages with the Ruiz corner shop, Figaro barber and Cafe Aurora (terrace); the Market Square (covered hall, bandstand, basin,
+  chess, stalls) replacing the pond park; the Mill Lane + Orchard Row loop joining Baker's Lane (no dead ends); playground + basketball cage
+  and allotments at the east end; the community garden stays where it is. Fill the freed cinema/workshop plots with row houses / greenery.
+  Measure the street window tile count at full quality before committing.
 - **Story answers (s66, details in docs/story_overview.md):** lent space = Ines's laundromat back room; Co-op Hall + penthouse as planned; Co-op Charter of 1931 as
   the legal key; Victor = Rosa's fired delivery boy "Vic" (fate: stocking shelves at Corner Market); Valet turns good at the Gala; odd job "The Tester" stays;
   mentors Bo-Ra, Wren, Nadia, Gus, Odette approved as characters (looks need proposals); soft demolition countdown (Day 86) kept; later raise gossip

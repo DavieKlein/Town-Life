@@ -1,3 +1,6 @@
+> **Owner decision (s82):** approved WITHOUT the workshop and WITHOUT the cinema; yes to everything else (market square, corner shop,
+> barber, cafe terrace, loop streets, playground + allotments, garden stays). Not built yet: build later when the owner says so.
+
 # Old Block REV 3 - proposal (s82, nothing built, waiting for the owner)
 
 Files (scratchpad `ob_rev3/`): `layout_plan.png` (current plan with 9 numbered problems | proposed plan), `layout_plan_current_iso.png` (the real current
