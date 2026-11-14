@@ -1,3 +1,4 @@
+#include "tl_palette.h"
 #include "tl_npcs.h"
 
 #include "tl_story.h"
@@ -197,7 +198,15 @@ namespace tl
         {
             int count = (item->shape_size().width() * item->shape_size().height()) / 64;
 
-            if(bn::sprite_tiles::available_tiles_count() < count + reserve || bn::sprites::available_items_count() < 4)
+            // palettes: placed NPCs keep 4 palettes free for the UI (portrait, activity sheet, style swap, light pool); actors (reserve 0) may use them
+            if(bn::sprite_tiles::available_tiles_count() < count + reserve || bn::sprites::available_items_count() < 4 || ! palette_room(reserve > 0 ? 4 : 0))
+            {
+                return bn::nullopt;
+            }
+
+            bn::optional<bn::sprite_palette_ptr> palette = bn::sprite_palette_ptr::create_optional(item->palette_item());
+
+            if(! palette)
             {
                 return bn::nullopt;
             }
@@ -209,7 +218,7 @@ namespace tl
                 return bn::nullopt;
             }
 
-            bn::sprite_builder builder(item->shape_size(), bn::sprite_tiles_ptr(*own), bn::sprite_palette_ptr::create(item->palette_item()));
+            bn::sprite_builder builder(item->shape_size(), bn::sprite_tiles_ptr(*own), bn::move(*palette));
             builder.set_bg_priority(2);
             return builder.release_build();
         }
@@ -378,7 +387,50 @@ namespace tl
                 if(! exists && item_of(p.who))
                 {
                     // a wandering NPC that left its spot is not respawned on top of the player
+                    int before = _npcs.size();
                     _spawn_placement(index);
+
+                    if(_npcs.size() == before && ! palette_room(4))
+                    {
+                        // s83: no sprite palette free (16 for everything): the placed NPC farthest from the player makes room for this nearer one
+                        auto sdist = [&](int x, int y)
+                        {
+                            int sx = (x - px) - (y - py);
+                            int sy = ((x - px) + (y - py)) / 2;
+                            return (sx < 0 ? -sx : sx) + (sy < 0 ? -sy : sy);
+                        };
+
+                        int wanted = sdist(p.x, p.y);
+                        int worst = -1;
+                        int worst_d = wanted + 24;
+
+                        for(int other = 0; other < _npcs.size(); ++other)
+                        {
+                            const npc& n = _npcs[other];
+
+                            if(n.placement >= 0 && ! n.walking && sdist(n.x, n.y) > worst_d)
+                            {
+                                worst = other;
+                                worst_d = sdist(n.x, n.y);
+                            }
+                        }
+
+                        if(worst >= 0)
+                        {
+                            bn::vector<npc, max_npcs> keep;
+
+                            for(int other = 0; other < _npcs.size(); ++other)
+                            {
+                                if(other != worst)
+                                {
+                                    keep.push_back(bn::move(_npcs[other]));
+                                }
+                            }
+
+                            _npcs = bn::move(keep);
+                        }
+                    }
+
                     changed = true;
                     break;
                 }

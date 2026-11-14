@@ -1,3 +1,4 @@
+#include "tl_palette.h"
 #include "tl_deposit.h"
 
 #include "bn_sprite_palette_ptr.h"
@@ -53,11 +54,17 @@ namespace tl
         {
             if(spot[index] && int(pickup_spots[index].map) == _map)
             {
-                bn::sprite_ptr sprite = bn::sprite_items::pickups.create_sprite(0, 0);
-                sprite.set_bg_priority(3);          // behind the objects layer (under benches), above the floor
-                sprite.set_z_order(3);
-                sprite.set_visible(false);
-                _sprites.push_back(bn::move(sprite));
+                bn::optional<bn::sprite_ptr> sprite = palette_room(2) ? bn::sprite_items::pickups.create_sprite_optional(0, 0) : bn::optional<bn::sprite_ptr>();
+
+                if(! sprite)
+                {
+                    break;          // s83: no palette / tiles free: no pickups for now
+                }
+
+                sprite->set_bg_priority(3);          // behind the objects layer (under benches), above the floor
+                sprite->set_z_order(3);
+                sprite->set_visible(false);
+                _sprites.push_back(bn::move(*sprite));
                 _sprite_spot.push_back(index);
             }
         }

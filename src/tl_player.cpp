@@ -734,19 +734,26 @@ namespace tl
 
             if(! _run_sprite)
             {
-                _run_sprite = bn::sprite_items::player_run.create_sprite(0, 0, run_frame);
-                _run_sprite->set_bg_priority(2);
-                _run_sprite->set_visible(_visible);
-                _sprite.set_visible(false);
-                _apply_lighting();
-                update_sprite(_last_cam_x, _last_cam_y);
+                _run_sprite = bn::sprite_items::player_run.create_sprite_optional(0, 0, run_frame);       // s83: no free palette: keep walking frames
+
+                if(_run_sprite)
+                {
+                    _run_sprite->set_bg_priority(2);
+                    _run_sprite->set_visible(_visible);
+                    _sprite.set_visible(false);
+                    _apply_lighting();
+                    update_sprite(_last_cam_x, _last_cam_y);
+                }
             }
             else
             {
                 _run_sprite->set_tiles(bn::sprite_items::player_run.tiles_item(), run_frame);
             }
 
-            return;
+            if(_run_sprite)
+            {
+                return;
+            }
         }
 
         if(_run_sprite)

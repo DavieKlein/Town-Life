@@ -123,7 +123,7 @@ class Runner:
         cur = struct.unpack_from("<8I", data, pos)
         prev = getattr(self, "_prev_stats", (0, 0, 0, 0, 0, 0, 0, 0))
         frames, missed, ssum = cur[1] - prev[1], cur[2] - prev[2], cur[4] - prev[4]
-        print("STATS %-28s frames %5d missed %4d peak(cum) %3d >85%%frames %3d avg %5.1f%% | sprite tiles peak used %d, lowest free %d" % (label, frames, missed, cur[3], cur[5] - prev[5], ssum / max(frames, 1), cur[6], cur[7]))
+        print("STATS %-28s frames %5d missed %4d peak(cum) %3d >85%%frames %3d avg %5.1f%% | sprite tiles peak used %d, lowest free %d | palettes peak used %d, lowest free %d" % (label, frames, missed, cur[3], cur[5] - prev[5], ssum / max(frames, 1), cur[6] & 0xFFFF, cur[7] & 0xFFFF, cur[6] >> 16, max((cur[7] >> 16) - 1, 0)))
         if "hist" in label:
             hist = data[pos + 32:pos + 32 + 1024]
             n = cur[1] - prev[1]

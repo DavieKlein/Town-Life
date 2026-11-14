@@ -1,3 +1,4 @@
+#include "tl_palette.h"
 #include "tl_map_sprites.h"
 
 #include "bn_sprite_palette_ptr.h"
@@ -17,11 +18,17 @@ namespace tl
         {
             if(int(map_sprite_table[index].map) == id)
             {
-                bn::sprite_ptr sprite = bn::sprite_items::map_sprites.create_sprite(0, 0, map_sprite_table[index].frame);
-                sprite.set_bg_priority(3);          // behind the objects layer, in front of the floor (like the pickups)
-                sprite.set_z_order(3);
-                sprite.set_visible(false);
-                _sprites.push_back(bn::move(sprite));
+                bn::optional<bn::sprite_ptr> sprite = palette_room(1) ? bn::sprite_items::map_sprites.create_sprite_optional(0, 0, map_sprite_table[index].frame) : bn::optional<bn::sprite_ptr>();
+
+                if(! sprite)
+                {
+                    break;          // s83
+                }
+
+                sprite->set_bg_priority(3);          // behind the objects layer, in front of the floor (like the pickups)
+                sprite->set_z_order(3);
+                sprite->set_visible(false);
+                _sprites.push_back(bn::move(*sprite));
                 _entry.push_back(index);
             }
         }

@@ -1,3 +1,4 @@
+#include "tl_palette.h"
 #include "tl_field.h"
 
 #include "bn_core.h"
@@ -412,11 +413,18 @@ namespace tl
 
             if(used == _pool_sprites.size())
             {
-                bn::sprite_ptr pool = bn::sprite_items::light_pool.create_sprite(0, 0);
-                pool.set_bg_priority(3);
-                pool.set_blending_enabled(true);
-                pool.set_z_order(2);
-                _pool_sprites.push_back(bn::move(pool));
+                // s83: decoration: not created when the palettes / tiles are short
+                bn::optional<bn::sprite_ptr> pool = palette_room(1) ? bn::sprite_items::light_pool.create_sprite_optional(0, 0) : bn::optional<bn::sprite_ptr>();
+
+                if(! pool)
+                {
+                    break;
+                }
+
+                pool->set_bg_priority(3);
+                pool->set_blending_enabled(true);
+                pool->set_z_order(2);
+                _pool_sprites.push_back(bn::move(*pool));
             }
 
             _pool_sprites[used].set_position(sx - 120, sy - 80);
@@ -1631,6 +1639,11 @@ namespace tl
 
     void field::_handle_menu_choice(int choice)
     {
+        if(palettes_free() < 2)
+        {
+            _make_room(false);      // s83: the player's activity sheet / seat sprite needs a free sprite palette: drop the decoration first
+        }
+
         const interactable* target = _menu_target;
         menu_mode mode = _menu_mode;
         _menu_mode = menu_mode::none;

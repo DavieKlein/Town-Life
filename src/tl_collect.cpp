@@ -1,3 +1,4 @@
+#include "tl_palette.h"
 #include "tl_collect.h"
 
 #include "bn_sprite_palette_ptr.h"
@@ -52,11 +53,17 @@ namespace tl
         {
             if(! found(index))
             {
-                bn::sprite_ptr sprite = bn::sprite_items::collectibles.create_sprite(0, 0);
-                sprite.set_bg_priority(3);          // behind the objects layer, above the floor (like the deposit pickups)
-                sprite.set_z_order(3);
-                sprite.set_visible(false);
-                _sprites.push_back(bn::move(sprite));
+                bn::optional<bn::sprite_ptr> sprite = palette_room(2) ? bn::sprite_items::collectibles.create_sprite_optional(0, 0) : bn::optional<bn::sprite_ptr>();
+
+                if(! sprite)
+                {
+                    break;          // s83
+                }
+
+                sprite->set_bg_priority(3);          // behind the objects layer, above the floor (like the deposit pickups)
+                sprite->set_z_order(3);
+                sprite->set_visible(false);
+                _sprites.push_back(bn::move(*sprite));
                 _sprite_item.push_back(index);
             }
         }

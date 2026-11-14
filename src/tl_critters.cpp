@@ -1,3 +1,4 @@
+#include "tl_palette.h"
 #include "tl_critters.h"
 
 #include "bn_math.h"
@@ -68,10 +69,22 @@ namespace tl
         for(int index = 0; index < map.critters_count && ! _critters.full(); ++index)
         {
             const critter_spawn& spawn = map.critters[index];
-            bn::sprite_ptr sprite = spawn.kind == critter_kind::pigeon ?
-                        bn::sprite_items::pigeon.create_sprite(0, 0) :
-                        (spawn.kind == critter_kind::rat ? bn::sprite_items::rat.create_sprite(0, 0) :
-                                                          bn::sprite_items::squirrel.create_sprite(0, 0));
+            // s83: critters are decoration: skipped when the sprite palettes (or tiles) are short
+            bn::optional<bn::sprite_ptr> made;
+
+            if(palette_room(3))
+            {
+                made = spawn.kind == critter_kind::pigeon ? bn::sprite_items::pigeon.create_sprite_optional(0, 0) :
+                        (spawn.kind == critter_kind::rat ? bn::sprite_items::rat.create_sprite_optional(0, 0) :
+                                                          bn::sprite_items::squirrel.create_sprite_optional(0, 0));
+            }
+
+            if(! made)
+            {
+                continue;
+            }
+
+            bn::sprite_ptr sprite = *made;
             sprite.set_visible(false);
             critter c { bn::move(sprite), &spawn, spawn.x, spawn.y, 0, 0, 0, 0 };
             c.timer = _random_int(90);

@@ -1109,6 +1109,30 @@ Owner-approved proposal `tools/proposals/s77/` (entrance variant A) is built; th
   without a crash or hang; mission X1 was not reached by random input.
 - **Diner jukebox (item 5) was handed to another helper (the diner also gets a toilet room); my jukebox attempt was not committed.**
 
+## Sprite palette budget (s83, owner crash "BPP4 palette create failed ... no more available colors")
+
+The GBA has **16 sprite palettes** (16 colours each) for every sprite. Butano shares a palette only between sprites made from the same palette item, and an NPC whose palette
+was changed by `set_colors` (day/night lighting) is a private palette. Measured with the `-DTL_DEBUG_CPU` readout (`stats` line now ends with "palettes peak used N, lowest free M";
+packed into `dbg_stats[6]/[7]` high 16 bits): an empty room uses **7** (player, shadow, HUD bars, ui_icons, UI style palette [paper OR night, both while a style swap is
+pending], and two more that were not itemised), Old Block at midday used **15** (crash) before this change.
+
+| User | Palettes | Rule (tl_palette.h `palette_room(reserve)` = free palettes > reserve) |
+|---|---|---|
+| player, shadow, HUD bars, ui_icons, UI style | ~5-7 fixed | always |
+| player run sheet | 1 while B is held | `create_sprite_optional`: no palette -> walking frames |
+| player activity / seat sheet (eat, drink, read, wash, sit, sleep ...) | 1 while it runs | non-optional: `_handle_menu_choice` calls `_make_room(false)` when < 2 are free |
+| NPC (cast, residents, TRENCH-E, Duchess, Captain) | 1 each | placed NPCs need `palette_room(4)`; an NPC that is nearer evicts the farthest placed NPC when none is free (`npcs::_cull`); cutscene actors may use the last ones |
+| critters (pigeon, squirrel, rat) | 1 per kind | `palette_room(3)`, skipped otherwise |
+| pickups, collectibles | 1 each | `palette_room(2)` |
+| map sprites (barrier, bridge, manhole, cone), light pool | 1 each | `palette_room(1)` |
+| dialogue portrait (per speaker), meter, panels / text | 1 + style | `create_*_optional`; no palette: the box shows without portrait / text piece is skipped |
+| car pieces, shadow blobs, sewer climb sprite | 1-2 | scripts only, non-optional (`scene_begin` clears the NPCs first) |
+
+Conversation / pause / phone / message: NPCs go through `npcs::focus` / `focus_none`, decoration through `field::_make_room` (waits one core update so the palettes are
+released before the portrait palette is created). Soak results (36000 frames each, talking to every Old Block resident twice, pause -> Mission log, phone, Old Block day and night
+and City Centre): palettes peak used 13-15 of 16 (lowest free 1-3), sprite tiles peak 678-746 (lowest free 278+), no crash. Side effect: in a crowded Old Block street the farthest
+resident or ambient critter may be missing until you walk closer.
+
 ## Roadmap / status
 
 **Development is district by district.** We finish one district (map, systems, story, polish)

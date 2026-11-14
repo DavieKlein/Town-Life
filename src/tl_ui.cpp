@@ -58,9 +58,17 @@ namespace tl::ui
 
         bool night_style = false;
 
-        [[nodiscard]] bn::sprite_palette_ptr style_palette()
+        // s83: optional: when no palette slot is free the UI piece / text is simply not drawn (the other style's palette is reused if it is alive)
+        [[nodiscard]] bn::optional<bn::sprite_palette_ptr> style_palette()
         {
-            return bn::sprite_palette_ptr::create(night_style ? night_item : paper_item);
+            bn::optional<bn::sprite_palette_ptr> palette = bn::sprite_palette_ptr::create_optional(night_style ? night_item : paper_item);
+
+            if(! palette)
+            {
+                palette = bn::sprite_palette_ptr::find(night_style ? paper_item : night_item);
+            }
+
+            return palette;
         }
 
         struct role_colours
@@ -106,7 +114,8 @@ namespace tl::ui
         // s81: every UI piece is optional: when VRAM / OAM is short the piece is simply not drawn (never a crash)
         [[nodiscard]] bn::optional<bn::sprite_ptr> place(const bn::sprite_item& item, int x, int y, int graphics, bool hflip, int z)
         {
-            bn::optional<bn::sprite_tiles_ptr> tiles = item.tiles_item().create_tiles_optional(graphics);
+            bn::optional<bn::sprite_palette_ptr> palette = style_palette();
+            bn::optional<bn::sprite_tiles_ptr> tiles = palette ? item.tiles_item().create_tiles_optional(graphics) : bn::optional<bn::sprite_tiles_ptr>();
 
             if(! tiles)
             {
@@ -115,7 +124,7 @@ namespace tl::ui
 
             bn::optional<bn::sprite_ptr> sprite = bn::sprite_ptr::create_optional(
                     x + (item.shape_size().width() / 2) - 120, y + (item.shape_size().height() / 2) - 80,
-                    item.shape_size(), bn::move(*tiles), style_palette());
+                    item.shape_size(), bn::move(*tiles), bn::move(*palette));
 
             if(sprite)
             {
@@ -139,8 +148,12 @@ namespace tl::ui
     void black_card_palette()
     {
         bn::sprite_palettes::set_fade(bn::color(0, 0, 0), 1);
-        bn::sprite_palette_ptr palette = style_palette();
-        palette.set_fade(bn::color(0, 0, 0), 0);
+        bn::optional<bn::sprite_palette_ptr> palette = style_palette();
+
+        if(palette)
+        {
+            palette->set_fade(bn::color(0, 0, 0), 0);
+        }
     }
 
     void set_night(bool value)
@@ -233,7 +246,12 @@ namespace tl::ui
         }
 
         int top = baseline_y - font.baseline;
-        bn::sprite_palette_ptr palette = style_palette();
+        bn::optional<bn::sprite_palette_ptr> palette = style_palette();
+
+        if(! palette)
+        {
+            return;
+        }
 
         for(int chunk = 0; chunk < chunks && ! _sprites.full(); ++chunk)
         {
@@ -293,7 +311,7 @@ namespace tl::ui
 
             int left = x - cell_margin + (chunk * 32);
             bn::sprite_ptr sprite = bn::sprite_ptr::create(left + 16 - 120, top + 8 - 80, bn::sprite_shape_size(32, 16),
-                                                           bn::move(tiles), palette);
+                                                           bn::move(tiles), *palette);
             sprite.set_bg_priority(0);
             sprite.set_z_order(z_order);
             _sprites.push_back(bn::move(sprite));

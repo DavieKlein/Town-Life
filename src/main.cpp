@@ -19,6 +19,7 @@
 #include "bn_core.h"
 #include "bn_string.h"
 #include "bn_sprite_tiles.h"
+#include "bn_sprite_palettes.h"
 #include "tl_ui.h"
 #endif
 
@@ -292,8 +293,17 @@ int main()
         {
             unsigned used = bn::sprite_tiles::used_tiles_count();
             unsigned avail = bn::sprite_tiles::available_tiles_count();
-            dbg_stats[6] = used > dbg_stats[6] ? used : dbg_stats[6];                      // peak used sprite tiles
-            dbg_stats[7] = dbg_stats[7] == 0 || avail < dbg_stats[7] ? avail : dbg_stats[7];   // lowest available sprite tiles
+            // s83: low 16 bits = tiles, high 16 bits = sprite palettes (16 colours each): peak used / lowest available
+            unsigned pal_used = unsigned(bn::sprite_palettes::used_colors_count()) / 16;
+            unsigned pal_avail = unsigned(bn::sprite_palettes::available_colors_count()) / 16;
+            unsigned peak_t = dbg_stats[6] & 0xFFFF, peak_p = dbg_stats[6] >> 16;
+            unsigned low_t = dbg_stats[7] & 0xFFFF, low_p = dbg_stats[7] >> 16;
+            peak_t = used > peak_t ? used : peak_t;
+            peak_p = pal_used > peak_p ? pal_used : peak_p;
+            low_t = low_t == 0 || avail < low_t ? avail : low_t;
+            low_p = (dbg_stats[7] >> 16) == 0 || pal_avail + 1 < low_p ? pal_avail + 1 : low_p;     // +1 so that 0 free is stored as 1 (0 = unset)
+            dbg_stats[6] = peak_t | (peak_p << 16);
+            dbg_stats[7] = low_t | (low_p << 16);
         }
 
         if(++frame % 30 == 0)
